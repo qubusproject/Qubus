@@ -36,7 +36,10 @@ public:
     transform_operator(const sparse_tensor<std::complex<double>, 2>& op) const;
     tensor<std::complex<double>, 4>
     transform_operator(const sparse_tensor<std::complex<double>, 4>& op) const;
-
+    tensor<std::complex<double>, 2>
+    concatenate_transforms(const tensor<std::complex<double>, 2>& op) const;
+    tensor<std::complex<double>, 2>
+    concatenate_backtransforms(const tensor<std::complex<double>, 2>& op) const;
 private:
     Eigen::MatrixXcd b_;
 };

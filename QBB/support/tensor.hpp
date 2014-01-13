@@ -1,4 +1,4 @@
-#ifndef QBB_ENSOR_HPP
+#ifndef QBB_TENSOR_HPP
 #define QBB_TENSOR_HPP
 
 #include <QBB/support/integers.hpp>
@@ -14,8 +14,10 @@ class tensor
 public:
     using value_type = T;
     
+    tensor() = default;
+    
     template <typename... Integers>
-    tensor(Integers... shape_)
+    explicit tensor(Integers... shape_)
     : shape_({to_uindex(shape_)...}),
       data_(boost::accumulate(this->shape_, 1, std::multiplies<index_t>()))
     {

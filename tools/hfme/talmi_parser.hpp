@@ -2,14 +2,11 @@
 #define QBB_TALMI_PARSER_HPP
 
 #include <QBB/support/sparse_tensor.hpp>
+#include <QBB/support/tensor.hpp>
 
 #include <complex>
 #include <string>
-#include <fstream>
-#include <sstream>
-#include <utility>
-#include <cassert>
-#include <stdexcept>    
+#include <vector>
 
 namespace qbb
 {
@@ -24,6 +21,18 @@ public:
 private:
     sparse_tensor<std::complex<double>,2> one_particle_hamiltonian_;
     sparse_tensor<std::complex<double>,4> two_particle_interaction_operator_;
+};
+
+class talmi_spatial_representation_loader
+{
+public:
+    explicit talmi_spatial_representation_loader(const std::string& path);
+    
+    const std::vector<double>& get_spatial_coordinates() const;
+    const tensor<std::complex<double>,2>& get_transformation_matrix() const;
+private:
+    std::vector<double> spatial_coordinates_;
+    tensor<std::complex<double>,2> transformation_matrix_;
 };
     
 }
