@@ -63,15 +63,17 @@ talmi_matrix_elements_loader::talmi_matrix_elements_loader(const std::string& pa
         while (fin >> value)
         {
 
-            // counter = ((i * Nb + j) * Nb + k) * Nb + l
-            index_t l = counter % Nb;
+            // counter = ((i * Nb + l) * Nb + j) * Nb + k
+            index_t k = counter % Nb;
             index_t ijk = counter / Nb;
-            index_t k = ijk % Nb;
+            index_t j = ijk % Nb;
             index_t ij = ijk / Nb;
-            index_t j = ij % Nb;
+            index_t l = ij % Nb;
             index_t i = ij / Nb;
+            
+            //std::cout << i << "  " << j << "  " << k << "  " << l << std::endl;
 
-            if (value != 0.0)
+            if (lambda * value != 0.0)
             {
                 nonzeros.push_back(
                     qbb::indices_value_pair<std::complex<double>, 4>({i, j, k, l}, lambda * value));
@@ -164,8 +166,8 @@ const std::vector<double>& talmi_spatial_representation_loader::get_spatial_coor
     return spatial_coordinates_;
 }
 
-const tensor<std::complex<double>, 2>& talmi_spatial_representation_loader::get_transformation_matrix()
-    const
+const tensor<std::complex<double>, 2>&
+talmi_spatial_representation_loader::get_transformation_matrix() const
 {
     return transformation_matrix_;
 }

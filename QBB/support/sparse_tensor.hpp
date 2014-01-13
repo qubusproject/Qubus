@@ -12,6 +12,7 @@
 #include <numeric>
 #include <utility>
 #include <algorithm>
+#include <cassert>
 
 namespace qbb
 {
@@ -175,14 +176,14 @@ public:
     T operator()(Indices... indices) const
     {
         static_assert(Rank == sizeof...(indices), "sparse_tensor: insufficient number of indices");
-
+        
         return data_.get({to_uindex(indices)...});
     }
 
     T operator()(const std::array<index_t, Rank>& indices) const
     {
         assert(indices.size() == Rank);
-
+        
         return data_.get(indices);
     }
 

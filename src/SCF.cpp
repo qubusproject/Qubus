@@ -32,7 +32,7 @@ Eigen::MatrixXcd calculate_fock_operator(const sparse_tensor<std::complex<double
     }
 
     Eigen::MatrixXcd D = b * b.adjoint();
-
+    
     for (auto nonzero_value : w.nonzeros())
     {
         const auto& indices = nonzero_value.indices();
@@ -54,8 +54,34 @@ double calculate_HF_energy(const sparse_tensor<std::complex<double>, 2>& h,
                            const sparse_tensor<std::complex<double>, 4>& w,
                            const Eigen::MatrixXcd& b)
 {
-    auto F = calculate_fock_operator(h, w, b);
+    Eigen::MatrixXcd F = Eigen::MatrixXcd::Zero(h.shape()[0], h.shape()[1]);
 
+    for (auto nonzero_value : h.nonzeros())
+    {
+        const auto& indices = nonzero_value.indices();
+
+        index_t i = indices[0];
+        index_t l = indices[1];
+
+        F(i, l) = nonzero_value.value();
+    }
+
+    Eigen::MatrixXcd D = b * b.adjoint();
+    
+    for (auto nonzero_value : w.nonzeros())
+    {
+        const auto& indices = nonzero_value.indices();
+        auto w_ijkl = nonzero_value.value();
+
+        index_t i = indices[0];
+        index_t j = indices[1];
+        index_t k = indices[2];
+        index_t l = indices[3];
+
+        F(i, l) += 0.5*w_ijkl * D(j, k);
+        F(i, k) += -0.5*w_ijkl * D(j, l);
+    } 
+   
     Eigen::MatrixXcd F_HF = b.adjoint() * F * b;
 
     auto E = F_HF.trace();
@@ -72,7 +98,7 @@ hartree_fock_state calculate_SCF_solution(const sparse_tensor<std::complex<doubl
 
     QBB_ASSERT(N_alpha == 0 || N_beta == 0, "calculate_SCF_solution: only spin-polarized HF is "
                                             "implemented (N_alpha == 0 || N_beta == 0)");
-
+    
     if(N_beta != 0)
     {
         N_alpha = N_beta;
@@ -80,15 +106,28 @@ hartree_fock_state calculate_SCF_solution(const sparse_tensor<std::complex<doubl
     }
     
     index_t Nb = h.shape()[0];
-
-    Eigen::MatrixXcd hf_basis = Eigen::MatrixXcd::Random(Nb, Nb);
-
-    for (index_t i = 0; i < Nb; ++i)
-    {
-        hf_basis.col(i).normalize();
-    }
     
-    //FIXME: should we orthonormalize the basis here??
+    Eigen::MatrixXcd hf_basis;
+    
+    {
+        
+    Eigen::MatrixXcd h_ideal = Eigen::MatrixXcd::Zero(Nb,Nb);
+    
+    for (auto nonzero_value : h.nonzeros())
+    {
+        const auto& indices = nonzero_value.indices();
+
+        index_t i = indices[0];
+        index_t l = indices[1];
+        
+        h_ideal(i,l) = nonzero_value.value();
+    }
+
+    Eigen::SelfAdjointEigenSolver<Eigen::MatrixXcd> eigensolver(h_ideal);
+    
+    hf_basis = eigensolver.eigenvectors();
+
+    }
     
     Eigen::MatrixXcd b = hf_basis.block(0,0,Nb,N_alpha);
 
@@ -100,19 +139,19 @@ hartree_fock_state calculate_SCF_solution(const sparse_tensor<std::complex<doubl
 
         prev_energy = current_energy;
 
-        std::cout << current_energy << std::endl;
+        std::cout << "current_energy: " << current_energy << std::endl;
 
         auto F = calculate_fock_operator(h, w, b);
 
         Eigen::SelfAdjointEigenSolver<Eigen::MatrixXcd> eigensolver(F);
-
+      
         hf_basis = eigensolver.eigenvectors();
         b = hf_basis.block(0, 0, Nb, N_alpha);
 
         current_energy = calculate_HF_energy(h, w, b);
 
     } while (std::abs(current_energy - prev_energy) > epsilon);
-
+    
     return hartree_fock_state{hf_basis, N_alpha + N_beta};
 }
 }

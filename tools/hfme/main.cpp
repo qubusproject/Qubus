@@ -10,6 +10,46 @@
 #include <string>
 #include <iostream>
 
+qbb::sparse_tensor<std::complex<double>,2> get_hubbard_hamiltonian(qbb::index_t Nb)
+{
+    std::vector<qbb::indices_value_pair<std::complex<double>,2>> nonzeros;
+    
+    for(qbb::index_t i = 0; i < Nb; ++i)
+    {
+        if(i + 1 < Nb)
+        {
+            nonzeros.push_back(qbb::indices_value_pair<std::complex<double>,2>({i,i+1},-1.0));
+        }
+        
+        if(i - 1 >= 0)
+        {
+            nonzeros.push_back(qbb::indices_value_pair<std::complex<double>,2>({i,i-1},-1.0));
+        }
+    }
+    
+    qbb::sparse_tensor<std::complex<double>,2> h(Nb,Nb);
+    
+    h.set(nonzeros);
+    
+    return h;
+}
+
+qbb::sparse_tensor<std::complex<double>,4> get_hubbard_interaction(qbb::index_t Nb,double lambda)
+{
+    std::vector<qbb::indices_value_pair<std::complex<double>,4>> nonzeros;
+    
+    for(qbb::index_t i = 0; i < Nb; ++i)
+    {
+        nonzeros.push_back(qbb::indices_value_pair<std::complex<double>,4>({i,i,i,i},lambda));
+    }
+    
+    qbb::sparse_tensor<std::complex<double>,4> w(Nb,Nb,Nb,Nb);
+    
+    w.set(nonzeros);
+    
+    return w;
+}
+
 int main(int argc, char** argv)
 {   
     std::string input_file;
@@ -90,13 +130,13 @@ int main(int argc, char** argv)
     std::cout << "lambda = " << lambda << std::endl;
         
     std::cout << "parsing the talmi input file..." << std::endl;
-    qbb::talmi_matrix_elements_loader loader(input_file, 1.0);
+    qbb::talmi_matrix_elements_loader loader(input_file, lambda);
 
     std::cout << "solving the self-consistent field equation..." << std::endl;
     auto hf_state =
         calculate_SCF_solution(loader.get_one_particle_hamiltonian(),
                                loader.get_two_particle_interaction_operator(), N, 0, 1e-10);
-       
+
     const auto& hf_basis = hf_state.basis().single_particle_basis();    
         
     std::cout << "transforming the matrix elements..." << std::endl;
@@ -144,7 +184,7 @@ int main(int argc, char** argv)
         
         auto hf_spatial_transform = hf_basis.concatenate_backtransforms(sp_loader.get_transformation_matrix());
         
-        qbb::index_t Nx = hf_spatial_transform.shape()[1];
+        std::size_t Nx = hf_spatial_transform.shape()[1];
         
         auto hf_sp_trans_dataset = fout.create_dataset<std::complex<double>>("hf_spatial_transform", {Nb, Nx});
         hf_sp_trans_dataset <<= hf_spatial_transform;
