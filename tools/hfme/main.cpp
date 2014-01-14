@@ -8,6 +8,7 @@
 #include <boost/filesystem.hpp>
 
 #include <string>
+#include <fstream>
 #include <iostream>
 
 qbb::sparse_tensor<std::complex<double>,2> get_hubbard_hamiltonian(qbb::index_t Nb)
@@ -48,6 +49,42 @@ qbb::sparse_tensor<std::complex<double>,4> get_hubbard_interaction(qbb::index_t 
     w.set(nonzeros);
     
     return w;
+}
+
+void dump_matrix_elements(const qbb::tensor<std::complex<double>, 2>& h,
+                          const qbb::tensor<std::complex<double>, 4>& w, const std::string& path)
+{
+    std::ofstream fout(path);
+
+    auto Nb = h.shape()[0];
+
+    fout << "one electron integrals:\n";
+
+    for (qbb::index_t i = 0; i < Nb; ++i)
+    {
+        for (qbb::index_t j = 0; j < Nb; ++j)
+        {
+            fout << (std::abs(real(h(i, j))) > 1e-6 ? real(h(i, j)) : 0.0) << "  ";
+        }
+        fout << "\n";
+    }
+    fout << "\n";
+
+    fout << "two electron integrals:\n";
+
+    for (qbb::index_t i = 0; i < Nb; ++i)
+    {
+        for (qbb::index_t l = 0; l < Nb; ++l)
+        {
+            for (qbb::index_t j = 0; j < Nb; ++j)
+            {
+                for (qbb::index_t k = 0; k < Nb; ++k)
+                {
+                    fout << real(w(i, j, k, l)) << "\n";
+                }
+            }
+        }
+    }
 }
 
 int main(int argc, char** argv)
@@ -135,7 +172,7 @@ int main(int argc, char** argv)
     std::cout << "solving the self-consistent field equation..." << std::endl;
     auto hf_state =
         calculate_SCF_solution(loader.get_one_particle_hamiltonian(),
-                               loader.get_two_particle_interaction_operator(), N, 0, 1e-10);
+                               loader.get_two_particle_interaction_operator(), N, 0, 1e-14);
 
     const auto& hf_basis = hf_state.basis().single_particle_basis();    
         
@@ -165,6 +202,8 @@ int main(int argc, char** argv)
 
     auto w_dataset = fout.create_dataset<std::complex<double>>("w", {Nb, Nb, Nb, Nb});
     w_dataset <<= hf_two_particle_interaction_operator;
+    
+    dump_matrix_elements(hf_one_particle_hamiltonian,hf_two_particle_interaction_operator,"test_basis.dat");    
     
     if (!spatial_repr_file.empty())
     {

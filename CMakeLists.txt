@@ -14,5 +14,11 @@ message(STATUS "The cmake module path is: ${CMAKE_MODULE_PATH}")
 
 set(QBB_ROOT_DIR ${PROJECT_SOURCE_DIR})
 
+include (CheckSIMD)
+include (CheckFMA)
+
+CheckSIMD()
+CheckFMA()
+
 add_subdirectory(src)
 add_subdirectory(tools)

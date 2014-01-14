@@ -63,15 +63,13 @@ talmi_matrix_elements_loader::talmi_matrix_elements_loader(const std::string& pa
         while (fin >> value)
         {
 
-            // counter = ((i * Nb + l) * Nb + j) * Nb + k
+            // counter = ((i * Nb + l) * Nb + j) * Nb + k (i,l,j,k)
             index_t k = counter % Nb;
             index_t ijk = counter / Nb;
             index_t j = ijk % Nb;
             index_t ij = ijk / Nb;
             index_t l = ij % Nb;
             index_t i = ij / Nb;
-            
-            //std::cout << i << "  " << j << "  " << k << "  " << l << std::endl;
 
             if (lambda * value != 0.0)
             {

@@ -107,9 +107,9 @@ hartree_fock_state calculate_SCF_solution(const sparse_tensor<std::complex<doubl
     
     index_t Nb = h.shape()[0];
     
-    Eigen::MatrixXcd hf_basis;
+    Eigen::MatrixXcd hf_basis = Eigen::MatrixXcd::Random(Nb,Nb);
     
-    {
+    /*{
         
     Eigen::MatrixXcd h_ideal = Eigen::MatrixXcd::Zero(Nb,Nb);
     
@@ -127,13 +127,16 @@ hartree_fock_state calculate_SCF_solution(const sparse_tensor<std::complex<doubl
     
     hf_basis = eigensolver.eigenvectors();
 
-    }
+    }*/
     
     Eigen::MatrixXcd b = hf_basis.block(0,0,Nb,N_alpha);
 
     double prev_energy;
     double current_energy = calculate_HF_energy(h, w, b);
 
+    Eigen::MatrixXcd dD;
+    Eigen::MatrixXcd prev_D = b*b.adjoint();
+    
     do
     {
 
@@ -150,7 +153,11 @@ hartree_fock_state calculate_SCF_solution(const sparse_tensor<std::complex<doubl
 
         current_energy = calculate_HF_energy(h, w, b);
 
-    } while (std::abs(current_energy - prev_energy) > epsilon);
+        Eigen::MatrixXcd D =  b*b.adjoint();
+        dD = D - prev_D;
+        prev_D = D;
+        
+    } while (std::abs(current_energy - prev_energy) > epsilon || dD.lpNorm<2>() > epsilon);
     
     return hartree_fock_state{hf_basis, N_alpha + N_beta};
 }
