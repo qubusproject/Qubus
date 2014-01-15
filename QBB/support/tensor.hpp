@@ -136,21 +136,6 @@ inline tensor<T, Rank> operator*(T lhs, const tensor<T, Rank>& rhs)
     return result;
 }
 
-//workaround for echelon; this should eventually be fixed in echelon itself
-template <typename T, int Rank>
-inline std::vector<std::size_t> shape(const tensor<T, Rank>& container)
-{
-    std::vector<std::size_t> shape;
-    shape.reserve(Rank);
-    
-    for(auto dim : container.shape())
-    {
-        shape.push_back(dim);
-    }
-    
-    return shape;
-}
-
 }
 
 #endif
