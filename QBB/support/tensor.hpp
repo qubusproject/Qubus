@@ -8,7 +8,7 @@
 namespace qbb
 {
 
-template <typename T, int Rank>
+template <typename T, index_t Rank>
 class tensor
 {
 public:
@@ -27,13 +27,13 @@ public:
     template <typename... Indices>
     T& operator()(Indices... indices)
     {
-        static_assert(Rank == sizeof...(indices), "tensor: too many indices");
+        static_assert(Rank == sizeof...(indices), "tensor: insufficient number of indices");
 
         index_t linear_index = 0;
 
         std::vector<index_t> indices_{to_uindex(indices)...};
 
-        for (index_t i = 0; i < sizeof...(Indices); ++i)
+        for (index_t i = 0; i < Rank; ++i)
         {
             linear_index = shape_[i] * linear_index + indices_[i];
         }
@@ -53,7 +53,7 @@ public:
 
         std::vector<index_t> indices_{to_uindex(indices)...};
 
-        for (index_t i = 0; i < sizeof...(Indices); ++i)
+        for (index_t i = 0; i < Rank; ++i)
         {
             linear_index = shape_[i] * linear_index + indices_[i];
         }

@@ -136,6 +136,8 @@ talmi_spatial_representation_loader::talmi_spatial_representation_loader(const s
 
         prev_x = x;
     }
+    
+    func_coeffs.push_back(current_function);
 
     index_t Nb = func_coeffs.size();
 
