@@ -129,23 +129,23 @@ public:
     virtual generic_ptr ptr() const = 0;
 };
 
-handle_factory object_handle_factory;
+qbb::util::handle_factory object_handle_factory;
 
 class object_space
 {
 public:
     virtual ~object_space() = default;
 
-    handle register_object(std::shared_ptr<object> new_object)
+    qbb::util::handle register_object(std::shared_ptr<object> new_object)
     {
-        handle new_handle = object_handle_factory.create();
+        qbb::util::handle new_handle = object_handle_factory.create();
 
         objects_.insert(std::make_pair(new_handle, new_object));
 
         return new_handle;
     }
 
-    std::shared_ptr<object> get_object(const handle& object_handle) const
+    std::shared_ptr<object> get_object(const qbb::util::handle& object_handle) const
     {
         auto iter = objects_.find(object_handle);
 
@@ -182,7 +182,7 @@ public:
         std::cout.flush();
     }
 
-    bool evict_objects(std::size_t KUBUS_UNUSED(hint))
+    bool evict_objects(std::size_t QBB_UNUSED(hint))
     {
         for(auto first = objects_.begin(); first != objects_.end(); ++first)
         {
@@ -197,9 +197,9 @@ public:
         return false;
     }
 private:
-    std::shared_ptr<object> clone_object(const handle& object_handle) const;
+    std::shared_ptr<object> clone_object(const qbb::util::handle& object_handle) const;
 
-    mutable std::map<handle, std::shared_ptr<object>>
+    mutable std::map<qbb::util::handle, std::shared_ptr<object>>
     objects_; // FIXME: we need to protect this with a mutex
     std::vector<object_space*> fallback_spaces_;
 };
@@ -247,7 +247,7 @@ private:
 
 clone_multimethod clone_object = {}; 
 
-std::shared_ptr<object> object_space::clone_object(const handle& object_handle) const
+std::shared_ptr<object> object_space::clone_object(const qbb::util::handle& object_handle) const
 {
     for (auto& fallback_space : fallback_spaces_)
     {
@@ -311,18 +311,18 @@ private:
     std::unique_ptr<cpu_memory_block> mem_block_;
 };
 
-std::shared_ptr<object> allocate_cpu_tensor(const std::vector<index_t> shape)
+std::shared_ptr<object> allocate_cpu_tensor(const std::vector<qbb::util::index_t> shape)
 {
     memory_allocator allocator;
 
-    index_t number_of_elements = std::accumulate(begin(shape), end(shape), 1, std::multiplies<index_t>());
+    qbb::util::index_t number_of_elements = std::accumulate(begin(shape), end(shape), 1, std::multiplies<qbb::util::index_t>());
     
     auto new_object = std::make_shared<cpu_tensor_object>(allocator.allocate(sizeof(double)*number_of_elements));
     
     return new_object;
 }
 
-int main(int KUBUS_UNUSED(argc), char** KUBUS_UNUSED(argv))
+int main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
 {
     object_space disk_space;
     object_space cpu_space;
@@ -331,7 +331,7 @@ int main(int KUBUS_UNUSED(argc), char** KUBUS_UNUSED(argv))
     cpu_space.register_fallback_space(&disk_space);
     gpu_space.register_fallback_space(&cpu_space);
 
-    handle obj_handle = disk_space.register_object(allocate_cpu_tensor({10, 10}));
+    qbb::util::handle obj_handle = disk_space.register_object(allocate_cpu_tensor({10, 10}));
     
     disk_space.dump();
     std::cout << std::endl;
