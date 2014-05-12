@@ -189,11 +189,11 @@ int main(int argc, char** argv)
     auto hf_two_particle_interaction_operator =
         hf_basis.transform_operator(
             loader.get_two_particle_interaction_operator());
-        
+    
     std::cout << " - done" << std::endl;
-        
+    
     echelon::file fout(output_file, echelon::file::create_mode::truncate);
-    fout.attributes.create<std::string>("version", "1.0");
+    fout.attributes().create<std::string>("version", "1.0");
 
     std::size_t Nb = hf_one_particle_hamiltonian.shape()[0];
 
@@ -228,8 +228,8 @@ int main(int argc, char** argv)
         auto hf_sp_trans_dataset = fout.create_dataset<std::complex<double>>("hf_spatial_transform", {Nb, Nx});
         hf_sp_trans_dataset <<= hf_spatial_transform;
         
-        hf_sp_trans_dataset.dimensions[1].relabel("x");
-        auto sp_coords_scale = hf_sp_trans_dataset.dimensions[1].attach_dimension_scale<double>("x");
+        hf_sp_trans_dataset.dimensions()[1].relabel("x");
+        auto sp_coords_scale = hf_sp_trans_dataset.dimensions()[1].attach_dimension_scale<double>("x");
 
         sp_coords_scale <<= sp_loader.get_spatial_coordinates();
     }
