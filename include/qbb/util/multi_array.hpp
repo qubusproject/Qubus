@@ -1,12 +1,19 @@
-#ifndef MULTI_ARRAY_HPP
-#define MULTI_ARRAY_HPP
+#ifndef QBB_UTIL_MULTI_ARRAY_HPP
+#define QBB_UTIL_MULTI_ARRAY_HPP
+
+#include <qbb/util/integers.hpp>
 
 #include <vector>
 #include <array>
 #include <algorithm>
 #include <functional>
 
-template <typename T, int Rank>
+namespace qbb
+{
+namespace util
+{
+
+template <typename T, index_t Rank>
 class multi_array
 {
 public:
@@ -14,9 +21,9 @@ public:
 
     multi_array() = default;
 
-    explicit multi_array(const std::vector<std::size_t>& shape_, const T& value_ = T())
-    : data_(std::accumulate(std::begin(shape_), std::end(shape_), std::size_t(1),
-                            std::multiplies<std::size_t>()),
+    explicit multi_array(const std::vector<index_t>& shape_, const T& value_ = T())
+    : data_(std::accumulate(std::begin(shape_), std::end(shape_), index_t(1),
+                            std::multiplies<index_t>()),
             value_),
       shape_(shape_)
     {
@@ -25,20 +32,20 @@ public:
     template <typename... Indices>
     const T& operator()(Indices... indices) const
     {
-        return operator()({static_cast<long int>(indices)...});
+        return operator()({{to_uindex(indices)...}});
     }
 
     template <typename... Indices>
     T& operator()(Indices... indices)
     {        
-        return operator()({static_cast<long int>(indices)...});
+        return operator()({{to_uindex(indices)...}});
     }
 
-    const T& operator()(const std::array<std::size_t, Rank>& indices) const
+    const T& operator()(const std::array<index_t, Rank>& indices) const
     {
-        long int linear_index = 0;
+        index_t linear_index = 0;
         
-        for (long int i = 0; i < Rank; ++i)
+        for (index_t i = 0; i < Rank; ++i)
         {
             linear_index = shape_[i] * linear_index + indices[i];
         }
@@ -47,11 +54,11 @@ public:
     }
 
     template <typename... Indices>
-    T& operator()(const std::array<std::size_t, Rank>& indices)
+    T& operator()(const std::array<index_t, Rank>& indices)
     {
-        long int linear_index = 0;
+        index_t linear_index = 0;
         
-        for (long int i = 0; i < Rank; ++i)
+        for (index_t i = 0; i < Rank; ++i)
         {
             linear_index = shape_[i] * linear_index + indices[i];
         }
@@ -89,23 +96,25 @@ public:
         return data_.end();
     }
 
-    const std::array<std::size_t, Rank>& shape() const
+    const std::array<index_t, Rank>& shape() const
     {
         return shape_;
     }
 
-    void reshape(const std::array<std::size_t, Rank>& new_shape)
+    void reshape(const std::array<index_t, Rank>& new_shape)
     {
-        data_.resize(std::accumulate(std::begin(new_shape), std::end(new_shape), std::size_t(1),
-                                     std::multiplies<std::size_t>()));
+        data_.resize(std::accumulate(std::begin(new_shape), std::end(new_shape), index_t(1),
+                                     std::multiplies<index_t>()));
 
         shape_ = new_shape;
     }
 
 private:
     std::vector<T> data_;
-    std::array<std::size_t, Rank> shape_;
+    std::array<index_t, Rank> shape_;
 };
 
+}
+}
 
 #endif

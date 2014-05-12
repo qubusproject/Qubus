@@ -97,12 +97,12 @@ public:
         }
     }
 
-    std::size_t tag() const
+    qbb::util::index_t tag() const
     {
         return self_->tag();
     }
 
-    static const implementation_table& get_implementation_table()
+    static const qbb::util::implementation_table& get_implementation_table()
     {
         return implementation_table_;
     }
@@ -121,14 +121,14 @@ private:
         }
 
         virtual std::type_index rtti() const = 0;
-        virtual std::size_t tag() const = 0;
+        virtual qbb::util::index_t tag() const = 0;
     };
 
     template <typename T>
     class foo_wrapper final : public foo_interface
     {
     public:
-        explicit foo_wrapper(T value_, std::size_t tag_) : value_(value_), tag_(tag_)
+        explicit foo_wrapper(T value_, qbb::util::index_t tag_) : value_(value_), tag_(tag_)
         {
         }
 
@@ -146,22 +146,22 @@ private:
             return typeid(T);
         }
 
-        std::size_t tag() const override
+        qbb::util::index_t tag() const override
         {
             return tag_;
         }
 
     private:
         T value_;
-        std::size_t tag_;
+        qbb::util::index_t tag_;
     };
 
     std::shared_ptr<foo_interface> self_;
 
-    static implementation_table implementation_table_;
+    static qbb::util::implementation_table implementation_table_;
 };
 
-implementation_table foo::implementation_table_ = {};
+qbb::util::implementation_table foo::implementation_table_ = {};
 
 class bar
 {
@@ -194,12 +194,12 @@ public:
         }
     }
 
-    std::size_t tag() const
+    qbb::util::index_t tag() const
     {
         return self_->tag();
     }
 
-    static const implementation_table& get_implementation_table()
+    static const qbb::util::implementation_table& get_implementation_table()
     {
         return implementation_table_;
     }
@@ -218,14 +218,14 @@ private:
         }
 
         virtual std::type_index rtti() const = 0;
-        virtual std::size_t tag() const = 0;
+        virtual qbb::util::index_t tag() const = 0;
     };
 
     template <typename T>
     class bar_wrapper final : public bar_interface
     {
     public:
-        explicit bar_wrapper(T value_, std::size_t tag_) : value_(value_), tag_(tag_)
+        explicit bar_wrapper(T value_, qbb::util::index_t tag_) : value_(value_), tag_(tag_)
         {
         }
 
@@ -243,29 +243,29 @@ private:
             return typeid(T);
         }
 
-        std::size_t tag() const override
+        qbb::util::index_t tag() const override
         {
             return tag_;
         }
 
     private:
         T value_;
-        std::size_t tag_;
+        qbb::util::index_t tag_;
     };
 
     std::shared_ptr<bar_interface> self_;
 
-    static implementation_table implementation_table_;
+    static qbb::util::implementation_table implementation_table_;
 };
 
-implementation_table bar::implementation_table_ = {};
+qbb::util::implementation_table bar::implementation_table_ = {};
 
-sparse_multi_method<void(const virtual_<foo>&, const virtual_<foo>&)> blub = {};
+qbb::util::sparse_multi_method<void(const qbb::util::virtual_<foo>&, const qbb::util::virtual_<foo>&)> blub = {};
 
-sparse_multi_method<void(const virtual_<foo>&, const virtual_<foo>&, const virtual_<bar>&)> blab =
+qbb::util::sparse_multi_method<void(const qbb::util::virtual_<foo>&, const qbb::util::virtual_<foo>&, const qbb::util::virtual_<bar>&)> blab =
     {};
 
-multi_method<void(int, const virtual_<foo>&, const virtual_<bar>&)> blib = {};
+qbb::util::multi_method<void(int, const qbb::util::virtual_<foo>&, const qbb::util::virtual_<bar>&)> blib = {};
 
 void blab1(const foo1&, const foo2&, const bar1&)
 {
@@ -303,8 +303,8 @@ int main(int, char**)
     for (int i = 0; i < 100000000; ++i)
     {
         blub(foo1_value, foo2_value);
-        //blab(foo1_value, foo2_value, bar1_value);
-        //blib(0, foo2_value, bar1_value);
+        blab(foo1_value, foo2_value, bar1_value);
+        blib(0, foo2_value, bar1_value);
     }
 
     return 0;

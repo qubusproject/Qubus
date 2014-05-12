@@ -1,7 +1,12 @@
-#ifndef FUNCTION_TRAITS_HPP
-#define FUNCTION_TRAITS_HPP
+#ifndef QBB_UTIL_FUNCTION_TRAITS_HPP
+#define QBB_UTIL_FUNCTION_TRAITS_HPP
 
 #include <type_traits>
+
+namespace qbb
+{
+namespace util
+{
 
 template <typename T>
 struct function_traits : public function_traits<decltype(&T::operator())>
@@ -35,5 +40,8 @@ struct function_traits<ReturnType (ClassType::*)(Args...) const>
 
 template <typename F, std::size_t i>
 using arg_type = typename function_traits<F>::template arg<i>::type;
+
+}
+}
 
 #endif

@@ -1,8 +1,15 @@
-#ifndef TYPE_SEQUENCE_HPP
-#define TYPE_SEQUENCE_HPP
+#ifndef QBB_UTIL_META_TYPE_SEQUENCE_HPP
+#define QBB_UTIL_META_TYPE_SEQUENCE_HPP
 
 #include <tuple>
 
+namespace qbb
+{
+namespace util
+{
+namespace meta
+{
+    
 template <typename... Values>
 struct type_sequence
 {
@@ -14,5 +21,9 @@ struct type_sequence
         return sizeof...(Values);
     }
 };
+
+}
+}
+}
 
 #endif

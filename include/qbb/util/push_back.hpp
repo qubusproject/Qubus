@@ -1,9 +1,14 @@
-#ifndef PUSH_BACK_HPP
-#define PUSH_BACK_HPP
+#ifndef QBB_UTIL_PUSH_BACK_HPP
+#define QBB_UTIL_PUSH_BACK_HPP
 
 #include <qbb/util/integer_sequence.hpp>
 
 #include <array>
+
+namespace qbb
+{
+namespace util
+{
 
 namespace detail
 {
@@ -22,5 +27,8 @@ inline std::array<T, N + 1> push_back(const std::array<T, N>& seq, const T& valu
 {
     return detail::push_back_impl(seq, value, make_index_sequence<N>());
 } 
+
+}
+}
 
 #endif

@@ -1,9 +1,14 @@
-#ifndef MAKE_ARRAY_HPP
-#define MAKE_ARRAY_HPP
+#ifndef QBB_UTIL_MAKE_ARRAY_HPP
+#define QBB_UTIL_MAKE_ARRAY_HPP
 
 #include <qbb/util/push_back.hpp>
 
 #include <array>
+
+namespace qbb
+{
+namespace util
+{
 
 namespace detail
 {
@@ -35,6 +40,9 @@ template <typename T, std::size_t N, typename ForwardRange>
 std::array<T, N> make_array(const ForwardRange& range)
 {
     return detail::make_array_impl<T, N>::eval(begin(range), end(range));
+}
+
+}
 }
 
 #endif

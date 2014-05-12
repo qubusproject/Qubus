@@ -1,9 +1,11 @@
 cmake_minimum_required(VERSION 2.8)
 project(multi_method)
 
-add_executable(multi_method examples/multi_method/main.cpp)
-target_compile_options(multi_method PUBLIC -std=c++11 -Wall -Wextra -pthread -funroll-loops)
-target_include_directories(multi_method PUBLIC ${CMAKE_SOURCE_DIR}/include/)
-target_link_libraries(multi_method -pthread)
+add_library(qbb_util SHARED src/handle.cpp )
+target_compile_options(qbb_util PUBLIC -std=c++11 -Wall -Wextra -pthread)
+target_include_directories(qbb_util PUBLIC ${CMAKE_SOURCE_DIR}/include/)
+target_link_libraries(qbb_util -pthread)
 
-install(TARGETS multi_method RUNTIME DESTINATION bin)
+install(TARGETS qbb_util PUBLIC_HEADER DESTINATION include LIBRARY DESTINATION lib)
+
+add_subdirectory(examples)

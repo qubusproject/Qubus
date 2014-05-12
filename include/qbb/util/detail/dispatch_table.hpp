@@ -1,5 +1,5 @@
-#ifndef DISPATCH_TABLE_HPP
-#define DISPATCH_TABLE_HPP
+#ifndef QBB_UTIL_DISPATCH_TABLE_HPP
+#define QBB_UTIL_DISPATCH_TABLE_HPP
 
 #include <qbb/util/detail/virtual.hpp>
 #include <qbb/util/multi_array.hpp>
@@ -22,15 +22,20 @@
 #include <condition_variable>
 #include <atomic>
 
+namespace qbb
+{
+namespace util
+{
+
 class implementation
 {
 public:
-    explicit implementation(const std::pair<std::type_index, std::size_t>& rtti_tag_pair_)
+    explicit implementation(const std::pair<std::type_index, index_t>& rtti_tag_pair_)
     : rtti_tag_pair_(rtti_tag_pair_)
     {
     }
 
-    std::size_t tag() const
+    index_t tag() const
     {
         return rtti_tag_pair_.second;
     }
@@ -41,7 +46,7 @@ public:
     }
 
 private:
-    std::pair<std::type_index, std::size_t> rtti_tag_pair_;
+    std::pair<std::type_index, index_t> rtti_tag_pair_;
 };
 
 class makes_implementation
@@ -49,7 +54,7 @@ class makes_implementation
 public:
     using result_type = implementation;
 
-    implementation operator()(const std::pair<std::type_index, std::size_t>& rtti_tag_pair) const
+    implementation operator()(const std::pair<std::type_index, index_t>& rtti_tag_pair) const
     {
         return implementation(rtti_tag_pair);
     }
@@ -69,9 +74,9 @@ public:
 class implementation_tag
 {
 public:
-    using result_type = std::type_index;
+    using result_type = index_t;
 
-    std::size_t operator()(const implementation& impl) const
+    index_t operator()(const implementation& impl) const
     {
         return impl.tag();
     }
@@ -81,10 +86,10 @@ class implementation_table
 {
 public:
     template <typename T>
-    std::size_t register_type()
+    index_t register_type()
     {
         auto iter_result_pair = implementations_.insert(
-            std::make_pair(std::type_index(typeid(T)), implementations_.size()));
+            std::make_pair(std::type_index(typeid(T)), to_uindex(implementations_.size())));
 
         if (iter_result_pair.second)
         {
@@ -95,7 +100,7 @@ public:
     }
 
     auto implementations() const
-        -> decltype(std::declval<const std::map<std::type_index, std::size_t>&>() |
+        -> decltype(std::declval<const std::map<std::type_index, index_t>&>() |
                     boost::adaptors::transformed(makes_implementation()))
     {
         return implementations_ | boost::adaptors::transformed(makes_implementation());
@@ -112,7 +117,7 @@ public:
     }
 
 private:
-    std::map<std::type_index, std::size_t> implementations_;
+    std::map<std::type_index, index_t> implementations_;
     std::atomic<int> version_;
 };
 
@@ -127,16 +132,16 @@ public:
     }
 };
 
-template <typename T, std::size_t Rank>
+template <typename T, index_t Rank>
 class dense_table
 {
 public:
-    void set(const std::array<std::size_t, Rank>& indices, const T& value)
+    void set(const std::array<index_t, Rank>& indices, const T& value)
     {
         table_(indices) = value;
     }
 
-    const T& lookup(const std::array<std::size_t, Rank>& indices) const
+    const T& lookup(const std::array<index_t, Rank>& indices) const
     {
         const auto& entry = table_(indices);
 
@@ -155,7 +160,7 @@ public:
         std::fill(table_.begin(), table_.end(), T{});
     }
 
-    void reshape(const std::array<std::size_t, Rank>& shape)
+    void reshape(const std::array<index_t, Rank>& shape)
     {
         table_.reshape(shape);
     }
@@ -164,16 +169,16 @@ private:
     multi_array<T, Rank> table_;
 };
 
-template <typename T, std::size_t Rank>
+template <typename T, index_t Rank>
 class sparse_table
 {
 public:
-    void set(const std::array<std::size_t, Rank>& indices, const T& value)
+    void set(const std::array<index_t, Rank>& indices, const T& value)
     {
         map_.insert({indices, value});
     }
 
-    const T& lookup(const std::array<std::size_t, Rank>& indices) const
+    const T& lookup(const std::array<index_t, Rank>& indices) const
     {
         auto iter = map_.find(indices);
 
@@ -192,12 +197,12 @@ public:
         map_.clear();
     }
 
-    void reshape(const std::array<std::size_t, Rank>&)
+    void reshape(const std::array<index_t, Rank>&)
     {
     }
 
 private:
-    std::map<std::array<std::size_t, Rank>, T> map_;
+    std::map<std::array<index_t, Rank>, T> map_;
 };
 
 namespace detail
@@ -205,7 +210,7 @@ namespace detail
 
 template <typename... PolymorphicArgs>
 std::array<const implementation_table*, sizeof...(PolymorphicArgs)>
-get_implementation_tables_impl(type_sequence<PolymorphicArgs...>)
+get_implementation_tables_impl(meta::type_sequence<PolymorphicArgs...>)
 {
     return {{&PolymorphicArgs::get_implementation_table()...}};
 }
@@ -228,20 +233,20 @@ public:
     }
 };
 
-template <typename, template <typename, std::size_t> class Table>
+template <typename, template <typename, index_t> class Table>
 class dispatch_table;
 
-template <typename ReturnType, typename... Args, template <typename, std::size_t> class Table>
+template <typename ReturnType, typename... Args, template <typename, index_t> class Table>
 class dispatch_table<ReturnType(Args...), Table>
 {
 public:
     using specialization_t = std::function<ReturnType(remove_virtual<Args>...)>;
-    using tag_type = std::size_t;
+    using tag_type = index_t;
 
-    using args = type_sequence<Args...>;
+    using args = meta::type_sequence<Args...>;
     
-    using polymorphic_args_seq = polymorphic_args<type_sequence<Args...>>;
-    using polymorphic_types_seq = unique<polymorphic_args_seq>;
+    using polymorphic_args_seq = polymorphic_args<meta::type_sequence<Args...>>;
+    using polymorphic_types_seq = meta::unique<polymorphic_args_seq>;
 
     static constexpr std::size_t arity()
     {
@@ -277,7 +282,7 @@ public:
 
             table_.clear();
             
-            std::array<std::size_t, arity()> table_shape;
+            std::array<index_t, arity()> table_shape;
             
             for(std::size_t i = 0; i < arity(); ++i)
             {
@@ -303,8 +308,8 @@ public:
 
     bool is_outdated() const
     {
-        using polymorphic_args_seq = polymorphic_args<type_sequence<Args...>>;
-        using polymorphic_types_seq = unique<polymorphic_args_seq>;
+        using polymorphic_args_seq = polymorphic_args<meta::type_sequence<Args...>>;
+        using polymorphic_types_seq = meta::unique<polymorphic_args_seq>;
 
         return is_outdated_impl(
             polymorphic_types_seq(), std::integral_constant<std::size_t, 0>(),
@@ -393,7 +398,7 @@ private:
 
         if (best_specialization)
         {
-            auto tags = make_array<std::size_t, arity()>(
+            auto tags = make_array<index_t, arity()>(
                 implementations | boost::adaptors::transformed(implementation_tag()));
 
             table_.set(tags, best_specialization);
@@ -413,5 +418,8 @@ using sparse_dispatch_table = dispatch_table<T, sparse_table>;
 
 template <typename T>
 using dense_dispatch_table = dispatch_table<T, dense_table>;
+
+}
+}
 
 #endif

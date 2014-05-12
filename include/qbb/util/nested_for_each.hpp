@@ -1,8 +1,13 @@
-#ifndef NESTED_FOR_EACH_HPP
-#define NESTED_FOR_EACH_HPP
+#ifndef QBB_UTIL_NESTED_FOR_EACH_HPP
+#define QBB_UTIL_NESTED_FOR_EACH_HPP
 
 #include <vector>
 #include <iterator>
+
+namespace qbb
+{
+namespace util
+{
 
 namespace detail
 {
@@ -40,6 +45,9 @@ void nested_for_each(Iterator first, Iterator last, RangeSelector range_selector
     std::vector<value_type> scratch_space;
 
     detail::nested_for_each_impl(first, last, range_selector, f, scratch_space);
+}
+
+}
 }
 
 #endif

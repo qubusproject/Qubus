@@ -1,5 +1,12 @@
-#ifndef EXPAND_HPP
-#define EXPAND_HPP
+#ifndef QBB_UTIL_META_EXPAND_HPP
+#define QBB_UTIL_META_EXPAND_HPP
+
+namespace qbb
+{
+namespace util
+{
+namespace meta
+{
 
 struct expand
 {
@@ -8,5 +15,9 @@ struct expand
     {
     }
 };
+
+}
+}
+}
 
 #endif

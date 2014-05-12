@@ -1,8 +1,15 @@
-#ifndef CONTAINS_HPP
-#define CONTAINS_HPP
+#ifndef QBB_UTIL_META_CONTAINS_HPP
+#define QBB_UTIL_META_CONTAINS_HPP
 
 #include <type_traits>
 
+namespace qbb
+{
+namespace util
+{
+namespace meta
+{
+    
 template <typename Seq, typename T>
 struct contains;
 
@@ -20,5 +27,9 @@ template <typename T>
 struct contains<type_sequence<>, T> : std::false_type
 {
 };
+
+}
+}
+}
 
 #endif

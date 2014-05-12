@@ -1,6 +1,10 @@
-#ifndef INTEGER_SEQUENCE_HPP
-#define INTEGER_SEQUENCE_HPP
+#ifndef QBB_UTIL_INTEGER_SEQUENCE_HPP
+#define QBB_UTIL_INTEGER_SEQUENCE_HPP
 
+namespace qbb
+{
+namespace util
+{
 
 template <typename T, T... I>
 struct integer_sequence
@@ -50,5 +54,8 @@ using make_integer_sequence = typename detail::make_indices<T, N>::type;
 
 template <std::size_t N>
 using make_index_sequence = make_integer_sequence<std::size_t, N>;
+
+}
+}
 
 #endif

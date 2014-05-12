@@ -1,5 +1,5 @@
-#ifndef MULTI_METHOD_HPP
-#define MULTI_METHOD_HPP
+#ifndef QBB_UTIL_MULTI_METHOD_HPP
+#define QBB_UTIL_MULTI_METHOD_HPP
 
 #include <qbb/util/detail/dispatch_table.hpp>
 #include <qbb/util/detail/virtual.hpp>
@@ -11,7 +11,11 @@
 #include <memory>
 #include <utility>
 #include <type_traits>
-#include <cstring>
+
+namespace qbb
+{
+namespace util
+{
 
 template <typename Arg, typename Param,
           typename Enabler = typename std::enable_if<!is_polymorphic_arg<Arg>::value, int>::type>
@@ -48,13 +52,13 @@ struct deduce_key<ParamsHead>
 {
 
     template <typename Head>
-    static std::array<std::size_t, 1> call_impl(std::true_type, const Head& head)
+    static std::array<index_t, 1> call_impl(std::true_type, const Head& head)
     {
         return {{head.tag()}};
     }
 
     template <typename Head>
-    static std::array<std::size_t, 0> call_impl(std::false_type, const Head&)
+    static std::array<index_t, 0> call_impl(std::false_type, const Head&)
     {
         return {};
     }
@@ -125,7 +129,7 @@ public:
 
     static constexpr std::size_t polymorphic_arity()
     {
-        return polymorphic_args<type_sequence<Args...>>::size();
+        return polymorphic_args<meta::type_sequence<Args...>>::size();
     }
 
     template <typename F>
@@ -174,5 +178,8 @@ using sparse_multi_method = basic_multi_method<T, sparse_dispatch_table<T>>;
 
 template <typename T>
 using multi_method = basic_multi_method<T, dense_dispatch_table<T>>;
+
+}
+}
 
 #endif
