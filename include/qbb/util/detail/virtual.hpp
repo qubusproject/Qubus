@@ -139,7 +139,7 @@ inline auto specialization_args_rtti_impl(
           is_polymorphic_arg<ArgsHead>::value,
           decltype(push_front(specialization_args_rtti_impl(meta::type_sequence<ParamsTail...>{},
                                                             meta::type_sequence<ArgsTail...>{}),
-                              std::type_index(typeid(ParamsHead))))>::type
+                              std::declval<std::type_index>()))>::type
 {
     return push_front(specialization_args_rtti_impl(meta::type_sequence<ParamsTail...>{},
                                                     meta::type_sequence<ArgsTail...>{}),

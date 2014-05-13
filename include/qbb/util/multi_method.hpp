@@ -60,7 +60,7 @@ struct deduce_key<ParamsHead>
     template <typename Head>
     static std::array<index_t, 0> call_impl(std::false_type, const Head&)
     {
-        return {};
+        return {{}};
     }
 
     template <typename Arg>
