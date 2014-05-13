@@ -69,14 +69,15 @@ template <typename Args, typename PolymorphicArgs>
 struct polymorphic_args_impl;
 
 template <typename Head, typename... Tail, typename... PolymorphicArgs>
-struct polymorphic_args_impl<meta::type_sequence<Head, Tail...>, meta::type_sequence<PolymorphicArgs...>>
+struct polymorphic_args_impl<meta::type_sequence<Head, Tail...>,
+                             meta::type_sequence<PolymorphicArgs...>>
 {
     using type = typename std::conditional<
         is_polymorphic_arg<Head>::value,
         typename polymorphic_args_impl<
             meta::type_sequence<Tail...>,
             meta::type_sequence<PolymorphicArgs...,
-                          remove_virtual<typename std::decay<Head>::type>>>::type,
+                                remove_virtual<typename std::decay<Head>::type>>>::type,
         typename polymorphic_args_impl<meta::type_sequence<Tail...>,
                                        meta::type_sequence<PolymorphicArgs...>>::type>::type;
 };
@@ -103,36 +104,54 @@ polymorphic_args_rtti()
 {
     using polymorphic_args_seq = polymorphic_args<meta::type_sequence<Args...>>;
 
-    return polymorphic_args_rtti_impl<polymorphic_args_seq>(make_index_sequence<polymorphic_args_seq::size()>());
+    return polymorphic_args_rtti_impl<polymorphic_args_seq>(
+        make_index_sequence<polymorphic_args_seq::size()>());
 }
 
-inline std::array<std::type_index, 0> specialization_args_rtti_impl(meta::type_sequence<>, meta::type_sequence<>)
+inline std::array<std::type_index, 0> specialization_args_rtti_impl(meta::type_sequence<>,
+                                                                    meta::type_sequence<>)
 {
     return {{}};
 }
 
-template <typename ParamsHead, typename... ParamsTail, typename ArgsHead, typename... ArgsTail>
-inline auto specialization_args_rtti_impl(meta::type_sequence<ParamsHead, ParamsTail...>, meta::type_sequence<ArgsHead, ArgsTail...>) ->
- typename std::enable_if<is_polymorphic_arg<ArgsHead>::value, decltype(push_front(specialization_args_rtti_impl(meta::type_sequence<ParamsTail...>{}, meta::type_sequence<ArgsTail...>{}),
-                      std::type_index(typeid(ParamsHead))))>::type
+struct specialization_args_rtti_adl_enabler
 {
-    return push_front(specialization_args_rtti_impl(meta::type_sequence<ParamsTail...>{}, meta::type_sequence<ArgsTail...>{}),
+};
+
+template <typename ParamsHead, typename... ParamsTail, typename ArgsHead, typename... ArgsTail>
+inline auto specialization_args_rtti_impl(
+    meta::type_sequence<ParamsHead, ParamsTail...>, meta::type_sequence<ArgsHead, ArgsTail...>,
+    specialization_args_rtti_adl_enabler = specialization_args_rtti_adl_enabler{})
+    -> typename std::enable_if<
+          !is_polymorphic_arg<ArgsHead>::value,
+          decltype(specialization_args_rtti_impl(meta::type_sequence<ParamsTail...>{},
+                                                 meta::type_sequence<ArgsTail...>{}))>::type
+{
+    return specialization_args_rtti_impl(meta::type_sequence<ParamsTail...>{},
+                                         meta::type_sequence<ArgsTail...>{});
+}
+
+template <typename ParamsHead, typename... ParamsTail, typename ArgsHead, typename... ArgsTail>
+inline auto specialization_args_rtti_impl(
+    meta::type_sequence<ParamsHead, ParamsTail...>, meta::type_sequence<ArgsHead, ArgsTail...>,
+    specialization_args_rtti_adl_enabler = specialization_args_rtti_adl_enabler{})
+    -> typename std::enable_if<
+          is_polymorphic_arg<ArgsHead>::value,
+          decltype(push_front(specialization_args_rtti_impl(meta::type_sequence<ParamsTail...>{},
+                                                            meta::type_sequence<ArgsTail...>{}),
+                              std::type_index(typeid(ParamsHead))))>::type
+{
+    return push_front(specialization_args_rtti_impl(meta::type_sequence<ParamsTail...>{},
+                                                    meta::type_sequence<ArgsTail...>{}),
                       std::type_index(typeid(ParamsHead)));
 }
 
-template <typename ParamsHead, typename... ParamsTail, typename ArgsHead, typename... ArgsTail>
-inline auto specialization_args_rtti_impl(meta::type_sequence<ParamsHead, ParamsTail...>, meta::type_sequence<ArgsHead, ArgsTail...>) ->
- typename std::enable_if<!is_polymorphic_arg<ArgsHead>::value, decltype(specialization_args_rtti_impl(meta::type_sequence<ParamsTail...>{}, meta::type_sequence<ArgsTail...>{}))>::type
-{
-    return specialization_args_rtti_impl(meta::type_sequence<ParamsTail...>{}, meta::type_sequence<ArgsTail...>{});
-}
-
 template <typename Params, typename... Args>
-inline auto specialization_args_rtti() -> decltype(specialization_args_rtti_impl(Params{}, meta::type_sequence<Args...>{}))
+inline auto specialization_args_rtti()
+    -> decltype(specialization_args_rtti_impl(Params{}, meta::type_sequence<Args...>{}))
 {
     return specialization_args_rtti_impl(Params{}, meta::type_sequence<Args...>{});
 }
-
 }
 }
 
