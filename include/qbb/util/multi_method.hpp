@@ -162,7 +162,7 @@ private:
         specialization_t thunk = [=](remove_virtual<Args>... args)
         { return specialization(unwrap_arg<Args, arg_type<F, Indices>>(args)...); };
 
-        specializations_->insert({polymorphic_args_rtti<Args...>(), std::move(thunk)});
+        specializations_->insert({specialization_args_rtti<meta::type_sequence<arg_type<F, Indices>...> ,Args...>(), std::move(thunk)});
     }
 
     mutable std::unique_ptr<DispatchTable> dispatch_table_;

@@ -374,7 +374,7 @@ private:
                 implementations | boost::adaptors::transformed(implementation_rtti()));
 
             int distance = overload_distance(specialization.first, call_arg_types);
-
+            
             if (distance < 0)
             {
                 continue;
