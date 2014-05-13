@@ -160,7 +160,7 @@ private:
     void add_specialization_impl(F specialization, index_sequence<Indices...>)
     {
         specialization_t thunk = [=](remove_virtual<Args>... args)
-        { specialization(unwrap_arg<Args, arg_type<F, Indices>>(args)...); };
+        { return specialization(unwrap_arg<Args, arg_type<F, Indices>>(args)...); };
 
         specializations_->insert({polymorphic_args_rtti<Args...>(), std::move(thunk)});
     }
