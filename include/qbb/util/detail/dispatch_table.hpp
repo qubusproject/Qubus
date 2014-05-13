@@ -387,7 +387,7 @@ private:
             }
             else if (distance == current_distance)
             {
-                best_specialization = [](remove_virtual<Args>...)
+                best_specialization = [](remove_virtual<Args>...) -> ReturnType
                 { throw ambiguous_call_exception(); };
 
                 current_distance = 0;
