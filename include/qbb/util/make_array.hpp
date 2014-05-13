@@ -19,9 +19,9 @@ struct make_array_impl
     template <typename ForwardIterator>
     static std::array<T, N> eval(ForwardIterator first, ForwardIterator last)
     {
-        const auto& value = *first;
+        const auto& value = *(--last);
         
-        return push_back(make_array_impl<T, N - 1>::eval(++first, last), value);
+        return push_back(make_array_impl<T, N - 1>::eval(first, last), value);
     }
 };
 

@@ -180,6 +180,10 @@ public:
 
     const T& lookup(const std::array<index_t, Rank>& indices) const
     {
+        for(const auto& pair : map_)
+            for(auto value : pair.first)
+                std::cout << value << "  ";
+        
         auto iter = map_.find(indices);
 
         if (iter != map_.end())
@@ -263,6 +267,9 @@ public:
 
         try
         {
+            for(auto value : key)
+                std::cout << value << "  ";
+            
             return table_.lookup(key);
         }
         catch (const invalid_key_exception&)
@@ -290,7 +297,7 @@ public:
             }
             
             table_.reshape(table_shape);
-
+            
             nested_for_each(begin(implementation_tables), end(implementation_tables),
                             [](const implementation_table*& impl_table)
                             { return impl_table->implementations(); },
