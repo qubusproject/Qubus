@@ -1,20 +1,25 @@
 #include <iostream>
 
+#include <qbb/kubus/type.hpp>
+#include <qbb/kubus/object.hpp>
+#include <qbb/kubus/memory_type.hpp>
+#include <qbb/kubus/allocator.hpp>
+#include <qbb/kubus/memory_block.hpp>
+
+#include <qbb/util/multi_method.hpp>
+
 #include <qbb/util/integers.hpp>
 #include <qbb/util/unused.hpp>
 #include <qbb/util/handle.hpp>
 
 #include "cpu_memory_allocator.hpp"
-#include "memory_block.hpp"
 
 #include <boost/thread/future.hpp>
 #include <boost/thread/shared_mutex.hpp>
-#include <boost/range/adaptor/map.hpp>
-#include <boost/range/algorithm/sort.hpp>
-#include <boost/container/flat_map.hpp>
 
 #include <ostream>
 #include <memory>
+#include <cstring>
 #include <utility>
 #include <map>
 #include <vector>
@@ -24,119 +29,66 @@
 #include <numeric>
 #include <typeindex>
 
-class generic_ptr
+namespace qbb
+{
+namespace kubus
+{
+
+qbb::util::handle_factory object_handle_factory;
+
+class mock_allocator
 {
 public:
-    template <typename T>
-    explicit generic_ptr(T ptr_)
-    : self_{new generic_ptr_wrapper<T>(ptr_)}
+    mock_allocator(allocator underlying_allocator_, std::size_t allocated_memory_,
+                   std::size_t total_memory_)
+    : underlying_allocator_{std::move(underlying_allocator_)}, allocated_memory_{allocated_memory_},
+      total_memory_{total_memory_}
     {
     }
 
-    generic_ptr(const generic_ptr& other) : self_{other.self_->clone()}
+    memory_block allocate(std::size_t size)
     {
-    }
-
-    generic_ptr(generic_ptr&&) = default;
-
-    generic_ptr& operator=(const generic_ptr& other)
-    {
-        *this = generic_ptr(other);
-
-        return *this;
-    }
-
-    generic_ptr& operator=(generic_ptr&&) = default;
-
-    template <typename T>
-    T as() const
-    {
-        if (typeid(*self_) == typeid(generic_ptr_wrapper<T>))
+        if(allocated_memory_ + size < total_memory_)
         {
-            return static_cast<const generic_ptr_wrapper<T>*>(self_.get())->get();
+            allocated_memory_ += size;
+            return underlying_allocator_.allocate(size);
         }
         else
         {
-            throw 0;
+            return {};
         }
     }
-
-    void dump(std::ostream& os) const
-    {
-        self_->dump(os);
-    }
-
 private:
-    class generic_ptr_interface
-    {
-    public:
-        generic_ptr_interface() = default;
-        virtual ~generic_ptr_interface() = default;
-
-        generic_ptr_interface(const generic_ptr_interface&) = delete;
-        generic_ptr_interface& operator=(const generic_ptr_interface&) = delete;
-
-        virtual std::unique_ptr<generic_ptr_interface> clone() const = 0;
-        virtual void dump(std::ostream& os) const = 0;
-    };
-
-    template <typename T>
-    class generic_ptr_wrapper final : public generic_ptr_interface
-    {
-    public:
-        generic_ptr_wrapper(T wrapped_ptr_) : wrapped_ptr_{std::move(wrapped_ptr_)}
-        {
-        }
-
-        virtual ~generic_ptr_wrapper() = default;
-
-        T get() const
-        {
-            return wrapped_ptr_;
-        }
-
-        std::unique_ptr<generic_ptr_interface> clone() const override
-        {
-            return std::unique_ptr<generic_ptr_interface>{new generic_ptr_wrapper<T>(wrapped_ptr_)};
-        }
-
-        void dump(std::ostream& os) const override
-        {
-            os << wrapped_ptr_;
-        }
-
-    private:
-        T wrapped_ptr_;
-    };
-
-    std::unique_ptr<generic_ptr_interface> self_;
+    allocator underlying_allocator_;
+    std::size_t allocated_memory_;
+    std::size_t total_memory_;
 };
 
-std::ostream& operator<<(std::ostream& os, const generic_ptr& value)
-{
-    value.dump(os);
+class object_space;
 
-    return os;
-}
-
-class object
+class evicting_allocator
 {
 public:
-    virtual ~object() = default;
+    evicting_allocator(allocator underlying_allocator_, object_space* ospace_);
 
-    virtual std::size_t size() const = 0;
+    memory_block allocate(std::size_t size);
 
-    virtual generic_ptr ptr() const = 0;
+private:
+    allocator underlying_allocator_;
+    object_space* ospace_;
 };
-
-qbb::util::handle_factory object_handle_factory;
 
 class object_space
 {
 public:
+    explicit object_space(memory_type mem_type_)
+    : allocator_(memory_allocator(), this), mem_type_(mem_type_)
+    {
+    }
+
     virtual ~object_space() = default;
 
-    qbb::util::handle register_object(std::shared_ptr<object> new_object)
+    qbb::util::handle register_object(object new_object)
     {
         qbb::util::handle new_handle = object_handle_factory.create();
 
@@ -145,7 +97,8 @@ public:
         return new_handle;
     }
 
-    std::shared_ptr<object> get_object(const qbb::util::handle& object_handle) const
+    // FIXME: return a future
+    object get_object(const qbb::util::handle& object_handle) const
     {
         auto iter = objects_.find(object_handle);
 
@@ -155,7 +108,7 @@ public:
         }
         else
         {
-            std::shared_ptr<object> new_object = clone_object(object_handle);
+            object new_object = clone_object(object_handle);
 
             objects_.insert(std::make_pair(object_handle, new_object));
 
@@ -175,7 +128,7 @@ public:
 
         for (const auto& handle_object_pair : objects_)
         {
-            std::cout << handle_object_pair.first << " -> " << handle_object_pair.second->ptr()
+            std::cout << handle_object_pair.first << " -> " << handle_object_pair.second.ptr()
                       << "\n";
         }
 
@@ -184,70 +137,54 @@ public:
 
     bool evict_objects(std::size_t QBB_UNUSED(hint))
     {
-        for(auto first = objects_.begin(); first != objects_.end(); ++first)
+        for (auto first = objects_.begin(); first != objects_.end(); ++first)
         {
-            if(first->second.unique())
+            if (!first->second.is_pinned())
             {
                 objects_.erase(first);
-                
+
                 return true;
             }
         }
-        
+
         return false;
     }
 private:
-    std::shared_ptr<object> clone_object(const qbb::util::handle& object_handle) const;
+    object clone_object(const qbb::util::handle& object_handle) const;
 
-    mutable std::map<qbb::util::handle, std::shared_ptr<object>>
+    mutable std::map<qbb::util::handle, object>
     objects_; // FIXME: we need to protect this with a mutex
     std::vector<object_space*> fallback_spaces_;
+
+    mutable evicting_allocator allocator_;
+    memory_type mem_type_;
 };
 
-class evicting_allocator
+evicting_allocator::evicting_allocator(allocator underlying_allocator_, object_space* ospace_)
+: underlying_allocator_(underlying_allocator_), ospace_(ospace_)
 {
-public:
-    evicting_allocator(memory_allocator underlying_alloactor_, object_space* ospace_)
-    : underlying_alloactor_(underlying_alloactor_), ospace_(ospace_)
-    {
-    }
-    
-    std::unique_ptr<cpu_memory_block> allocate(std::size_t size)
-    {
-        std::unique_ptr<cpu_memory_block> memblock = underlying_alloactor_.allocate(size);
-        
-        while(!memblock)
-        {
-            if(!ospace_->evict_objects(0))
-                return nullptr;
-            
-            memblock = underlying_alloactor_.allocate(size);
-        }
-        
-        return memblock;
-    }
-private:
-    memory_allocator underlying_alloactor_;
-    object_space* ospace_;
-};
+}
 
-class clone_multimethod
+memory_block evicting_allocator::allocate(std::size_t size)
 {
-public:
-    using specialization_t = std::function<std::shared_ptr<object>(std::shared_ptr<object>)>;
-    
-    std::shared_ptr<object> operator()(std::type_index type, std::shared_ptr<object> cloned_object)
+    memory_block memblock = underlying_allocator_.allocate(size);
+
+    while (!memblock)
     {
-        return nullptr;
+        if (!ospace_->evict_objects(0))
+            return {};
+
+        memblock = underlying_allocator_.allocate(size);
     }
-    
-private:
-    boost::container::flat_map<std::type_index, specialization_t> specialization_;
-};
 
-clone_multimethod clone_object = {}; 
+    return memblock;
+}
 
-std::shared_ptr<object> object_space::clone_object(const qbb::util::handle& object_handle) const
+qbb::util::sparse_multi_method<object(const qbb::util::virtual_<object>&,
+                                      const qbb::util::virtual_<memory_type>&, allocator_view)>
+clone_object_dispatcher = {};
+
+object object_space::clone_object(const qbb::util::handle& object_handle) const
 {
     for (auto& fallback_space : fallback_spaces_)
     {
@@ -257,14 +194,8 @@ std::shared_ptr<object> object_space::clone_object(const qbb::util::handle& obje
 
             std::cout << "fetching object from fallback space" << std::endl;
 
-            //memory_allocator allocator;
+            object new_object = clone_object_dispatcher(cloned_object, mem_type_, allocator_);
 
-            //auto new_object = std::make_shared<cpu_tensor_object>(allocator.allocate(10));
-
-            // clone object here
-
-            std::shared_ptr<object> new_object = ::clone_object(typeid(object), cloned_object);
-            
             return new_object;
         }
         catch (const int&)
@@ -275,64 +206,135 @@ std::shared_ptr<object> object_space::clone_object(const qbb::util::handle& obje
     throw 0; // error: object not available
 }
 
-class tensor_object : public object
+class disk_tensor_object
 {
 public:
-    virtual ~tensor_object() = default;
-};
-
-class sparse_tensor_object : public object
-{
-public:
-    virtual ~sparse_tensor_object() = default;
-};
-
-class cpu_tensor_object final : public tensor_object
-{
-public:
-    explicit cpu_tensor_object(std::unique_ptr<cpu_memory_block> mem_block_)
-    : mem_block_{std::move(mem_block_)}
+    explicit disk_tensor_object(cpu_memory_block mem_block_) : mem_block_{std::move(mem_block_)}
     {
     }
 
-    virtual ~cpu_tensor_object() = default;
-
-    std::size_t size() const override
+    std::size_t size() const
     {
-        return mem_block_->size();
+        return mem_block_.size();
     }
 
-    generic_ptr ptr() const override
+    const void* ptr() const
     {
-        return generic_ptr{mem_block_->data()};
+        return mem_block_.data();
     }
 
 private:
-    std::unique_ptr<cpu_memory_block> mem_block_;
+    cpu_memory_block mem_block_;
 };
 
-std::shared_ptr<object> allocate_cpu_tensor(const std::vector<qbb::util::index_t> shape)
+class gpu_tensor_object
+{
+public:
+    explicit gpu_tensor_object(cpu_memory_block mem_block_) : mem_block_{std::move(mem_block_)}
+    {
+    }
+
+    std::size_t size() const
+    {
+        return mem_block_.size();
+    }
+
+    const void* ptr() const
+    {
+        return mem_block_.data();
+    }
+
+private:
+    cpu_memory_block mem_block_;
+};
+
+class cpu_tensor_object
+{
+public:
+    explicit cpu_tensor_object(cpu_memory_block mem_block_) : mem_block_{std::move(mem_block_)}
+    {
+    }
+
+    std::size_t size() const
+    {
+        return mem_block_.size();
+    }
+
+    const void* ptr() const
+    {
+        return mem_block_.data();
+    }
+
+private:
+    cpu_memory_block mem_block_;
+};
+
+object allocate_disk_tensor(const std::vector<qbb::util::index_t> shape)
 {
     memory_allocator allocator;
 
-    qbb::util::index_t number_of_elements = std::accumulate(begin(shape), end(shape), 1, std::multiplies<qbb::util::index_t>());
-    
-    auto new_object = std::make_shared<cpu_tensor_object>(allocator.allocate(sizeof(double)*number_of_elements));
-    
+    qbb::util::index_t number_of_elements =
+        std::accumulate(begin(shape), end(shape), 1, std::multiplies<qbb::util::index_t>());
+
+    object new_object = disk_tensor_object(allocator.allocate(sizeof(double) * number_of_elements));
+
     return new_object;
 }
 
+object allocate_cpu_tensor(const std::vector<qbb::util::index_t> shape)
+{
+    memory_allocator allocator;
+
+    qbb::util::index_t number_of_elements =
+        std::accumulate(begin(shape), end(shape), 1, std::multiplies<qbb::util::index_t>());
+
+    object new_object = cpu_tensor_object(allocator.allocate(sizeof(double) * number_of_elements));
+
+    return new_object;
+}
+
+object clone_tensor_disk_to_cpu(const disk_tensor_object& other, const cpu_memory&,
+                                allocator_view allocator)
+{
+    auto& memory = allocator.allocate(other.size()).as<cpu_memory_block>();
+
+    std::memcpy(memory.data(), other.ptr(), other.size());
+
+    object new_object = cpu_tensor_object(std::move(memory));
+
+    return new_object;
+}
+
+object clone_tensor_cpu_to_gpu(const cpu_tensor_object& other, const gpu_memory&,
+                               allocator_view allocator)
+{
+    auto& memory = allocator.allocate(other.size()).as<cpu_memory_block>();
+
+    std::memcpy(memory.data(), other.ptr(), other.size());
+
+    object new_object = gpu_tensor_object(std::move(memory));
+
+    return new_object;
+}
+}
+}
+
+using namespace qbb::kubus;
+
 int main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
 {
-    object_space disk_space;
-    object_space cpu_space;
-    object_space gpu_space;
+    clone_object_dispatcher.add_specialization(clone_tensor_disk_to_cpu);
+    clone_object_dispatcher.add_specialization(clone_tensor_cpu_to_gpu);
+
+    object_space disk_space(disk_memory{});
+    object_space cpu_space(cpu_memory{});
+    object_space gpu_space(gpu_memory{});
 
     cpu_space.register_fallback_space(&disk_space);
     gpu_space.register_fallback_space(&cpu_space);
 
-    qbb::util::handle obj_handle = disk_space.register_object(allocate_cpu_tensor({10, 10}));
-    
+    qbb::util::handle obj_handle = disk_space.register_object(allocate_disk_tensor({10, 10}));
+
     disk_space.dump();
     std::cout << std::endl;
 
@@ -340,8 +342,12 @@ int main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
 
     cpu_space.dump();
     std::cout << std::endl;
-    
-    std::cout << obj->ptr() << std::endl;
+
+    gpu_space.get_object(obj_handle);
+
+    std::cout << obj.ptr() << std::endl;
+
+    qbb::kubus::type t = qbb::kubus::types::double_();
 
     return 0;
 }
