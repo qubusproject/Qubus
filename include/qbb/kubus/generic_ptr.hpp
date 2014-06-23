@@ -12,13 +12,15 @@ namespace kubus
 class generic_ptr
 {
 public:
+    generic_ptr() = default;
+    
     template <typename T>
     generic_ptr(T ptr_)
     : self_{new generic_ptr_wrapper<T>(ptr_)}
     {
     }
 
-    generic_ptr(const generic_ptr& other) : self_{other.self_->clone()}
+    generic_ptr(const generic_ptr& other) : self_{other.self_ ? other.self_->clone() : nullptr}
     {
     }
 
@@ -36,6 +38,9 @@ public:
     template <typename T>
     T as() const
     {
+        if(!self_)
+            return T{};
+        
         if (typeid(*self_) == typeid(generic_ptr_wrapper<T>))
         {
             return static_cast<const generic_ptr_wrapper<T>*>(self_.get())->get();
@@ -51,6 +56,10 @@ public:
         self_->dump(os);
     }
 
+    explicit operator bool() const
+    {
+        return self_ && self_->is_valid();
+    }
 private:
     class generic_ptr_interface
     {
@@ -63,6 +72,8 @@ private:
 
         virtual std::unique_ptr<generic_ptr_interface> clone() const = 0;
         virtual void dump(std::ostream& os) const = 0;
+        
+        virtual bool is_valid() const = 0;
     };
 
     template <typename T>
@@ -90,6 +101,10 @@ private:
             os << wrapped_ptr_;
         }
 
+        bool is_valid() const override
+        {
+            return wrapped_ptr_;
+        }
     private:
         T wrapped_ptr_;
     };

@@ -46,7 +46,22 @@ public:
     }
     
     template <typename T>
-    T as() const
+    const T& as() const &
+    {
+        using value_type = typename std::decay<T>::type;
+
+        if (self_->rtti() == typeid(value_type))
+        {
+            return static_cast<object_wrapper<value_type>*>(self_.get())->get();
+        }
+        else
+        {
+            throw std::bad_cast();
+        }
+    }
+    
+    template <typename T>
+    T& as() &
     {
         using value_type = typename std::decay<T>::type;
 
@@ -60,6 +75,21 @@ public:
         }
     }
 
+    template <typename T>
+    T as() &&
+    {
+        using value_type = typename std::decay<T>::type;
+
+        if (self_->rtti() == typeid(value_type))
+        {
+            return static_cast<object_wrapper<value_type>*>(self_.get())->get();
+        }
+        else
+        {
+            throw std::bad_cast();
+        }
+    }
+    
     qbb::util::index_t tag() const
     {
         return self_->tag();
@@ -105,6 +135,11 @@ private:
             return value_;
         }
 
+        T& get()
+        {
+            return value_;
+        }
+        
         std::size_t size() const override
         {
             return value_.size();

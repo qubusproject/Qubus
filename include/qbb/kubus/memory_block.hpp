@@ -4,6 +4,7 @@
 #include <qbb/util/make_unique.hpp>
 
 #include <memory>
+#include <typeindex>
 
 class memory_block
 {
@@ -15,32 +16,39 @@ public:
     {
         self_ = qbb::util::make_unique<memory_block_wrapper<T>>(std::move(value));
     }
+    
+    memory_block(memory_block& other)
+    : self_{other.self_ ? other.self_->clone() : nullptr}
+    {
+    }
+    
+    memory_block(const memory_block& other)
+    : self_{other.self_ ? other.self_->clone() : nullptr}
+    {
+    }
+    
+    memory_block& operator=(const memory_block& other)
+    {
+        self_ = other.self_ ? other.self_->clone() : nullptr;
+        
+        return *this;
+    }
 
     std::type_index rtti() const
     {
+        //FIXME: what should we do here if self_ == nullptr ?
+        
         return self_->rtti();
     }
     
     template <typename T>
-    const T& as() const
+    T as() const
     {
         using value_type = typename std::decay<T>::type;
 
-        if (self_->rtti() == typeid(value_type))
-        {
-            return static_cast<memory_block_wrapper<value_type>*>(self_.get())->get();
-        }
-        else
-        {
-            throw std::bad_cast();
-        }
-    }
-    
-    template <typename T>
-    T& as()
-    {
-        using value_type = typename std::decay<T>::type;
-
+        if(!self_)
+            return T{};
+        
         if (self_->rtti() == typeid(value_type))
         {
             return static_cast<memory_block_wrapper<value_type>*>(self_.get())->get();
@@ -53,12 +61,12 @@ public:
     
     std::size_t size() const
     {
-        return self_->size();
+        return self_ ? self_->size() : 0;
     }
     
     explicit operator bool() const
     {
-        return !!self_;
+        return self_ && self_->is_valid();
     }
 private:
     class memory_block_interface
@@ -68,7 +76,11 @@ private:
 
         virtual std::type_index rtti() const = 0;
         
+        virtual std::unique_ptr<memory_block_interface> clone() const = 0;
+        
         virtual std::size_t size() const = 0;
+        
+        virtual bool is_valid() const = 0;
     };
 
     template <typename T>
@@ -81,6 +93,11 @@ private:
 
         virtual ~memory_block_wrapper()
         {
+        }
+        
+        std::unique_ptr<memory_block_interface> clone() const override
+        {
+            return qbb::util::make_unique<memory_block_wrapper<T>>(value_);
         }
         
         const T& get() const
@@ -101,6 +118,11 @@ private:
         std::size_t size() const override
         {
             return value_.size();
+        }
+        
+        bool is_valid() const override
+        {
+            return !!value_;
         }
     private:
         T value_;
