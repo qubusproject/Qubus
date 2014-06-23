@@ -2,6 +2,7 @@
 #define QBB_UTIL_MAKE_UNIQUE_HPP
 
 #include <utility>
+#include <memory>
 
 namespace qbb
 {
