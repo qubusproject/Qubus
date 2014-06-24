@@ -25,7 +25,7 @@ public:
 
     allocator(allocator&) = default;
     allocator(const allocator&) = default;
-    
+
     std::type_index rtti() const
     {
         return self_->rtti();
@@ -60,7 +60,7 @@ public:
             throw std::bad_cast();
         }
     }
-    
+
     memory_block allocate(std::size_t size)
     {
         return self_->allocate(size);
@@ -80,7 +80,7 @@ private:
         virtual std::type_index rtti() const = 0;
 
         virtual memory_block allocate(std::size_t size) = 0;
-        
+
         virtual void deallocate(memory_block& mem_block) = 0;
     };
 
@@ -105,7 +105,7 @@ private:
         {
             return value_;
         }
-        
+
         std::type_index rtti() const override
         {
             return typeid(T);
@@ -136,21 +136,19 @@ public:
     {
         self_ = qbb::util::make_unique<allocator_view_wrapper<T>>(value);
     }
-    
-    allocator_view(allocator_view& other)
-    : self_{other.self_->clone()}
+
+    allocator_view(allocator_view& other) : self_{other.self_->clone()}
     {
     }
-    
-    allocator_view(const allocator_view& other)
-    : self_{other.self_->clone()}
-    { 
+
+    allocator_view(const allocator_view& other) : self_{other.self_->clone()}
+    {
     }
-    
+
     allocator_view& operator=(const allocator_view& other)
     {
         self_ = other.self_->clone();
-        
+
         return *this;
     }
 
@@ -188,7 +186,7 @@ public:
             throw std::bad_cast();
         }
     }
-    
+
     memory_block allocate(std::size_t size)
     {
         return self_->allocate(size);
@@ -198,6 +196,7 @@ public:
     {
         self_->deallocate(mem_block);
     }
+
 private:
     class allocator_view_interface
     {
@@ -205,11 +204,11 @@ private:
         virtual ~allocator_view_interface() = default;
 
         virtual std::type_index rtti() const = 0;
-        
+
         virtual std::unique_ptr<allocator_view_interface> clone() const = 0;
 
         virtual memory_block allocate(std::size_t size) = 0;
-        
+
         virtual void deallocate(memory_block& mem_block) = 0;
     };
 
@@ -234,12 +233,12 @@ private:
         {
             return *value_;
         }
-        
+
         std::type_index rtti() const override
         {
             return typeid(T);
         }
-        
+
         std::unique_ptr<allocator_view_interface> clone() const override
         {
             return qbb::util::make_unique<allocator_view_wrapper<T>>(*value_);
@@ -254,6 +253,7 @@ private:
         {
             value_->deallocate(mem_block);
         }
+
     private:
         T* value_;
     };
