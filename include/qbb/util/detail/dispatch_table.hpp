@@ -95,13 +95,13 @@ public:
         {
             ++version_;
         }
-        
+
         return iter_result_pair.first->second;
     }
 
-    auto implementations() const
-        -> decltype(std::declval<const std::map<std::type_index, index_t>&>() |
-                    boost::adaptors::transformed(makes_implementation()))
+    auto implementations() const -> decltype(
+                                       std::declval<const std::map<std::type_index, index_t>&>() |
+                                       boost::adaptors::transformed(makes_implementation()))
     {
         return implementations_ | boost::adaptors::transformed(makes_implementation());
     }
@@ -125,7 +125,7 @@ class invalid_key_exception : public std::exception
 {
 public:
     virtual ~invalid_key_exception() = default;
-    
+
     const char* what() const noexcept override
     {
         return "Invalid key during table lookup";
@@ -226,7 +226,7 @@ class ambiguous_call_exception : public std::exception
 {
 public:
     virtual ~ambiguous_call_exception() = default;
-    
+
     const char* what() const noexcept override
     {
         return "Multimethod call is ambiguous.";
@@ -244,7 +244,7 @@ public:
     using tag_type = index_t;
 
     using args = meta::type_sequence<Args...>;
-    
+
     using polymorphic_args_seq = polymorphic_args<meta::type_sequence<Args...>>;
     using polymorphic_types_seq = meta::unique<polymorphic_args_seq>;
 
@@ -272,25 +272,26 @@ public:
     }
 
     void build_dispatch_table(
-        const std::map<std::array<std::type_index, arity()>, specialization_t>& specializations)
+        const std::map<std::array<std::type_index, arity()>, specialization_t>& specializations,
+        bool updated_specializations)
     {
-        if (is_outdated())
+        if (updated_specializations || is_outdated())
         {
             std::lock_guard<std::mutex> guard(table_mutex_);
 
             auto implementation_tables = get_implementation_tables<polymorphic_args_seq>();
 
             table_.clear();
-            
+
             std::array<index_t, arity()> table_shape;
-            
-            for(std::size_t i = 0; i < arity(); ++i)
+
+            for (std::size_t i = 0; i < arity(); ++i)
             {
                 table_shape[i] = implementation_tables[i]->number_of_implementations();
             }
-            
+
             table_.reshape(table_shape);
-            
+
             nested_for_each(begin(implementation_tables), end(implementation_tables),
                             [](const implementation_table*& impl_table)
                             { return impl_table->implementations(); },
@@ -374,7 +375,7 @@ private:
                 implementations | boost::adaptors::transformed(implementation_rtti()));
 
             int distance = overload_distance(specialization.first, call_arg_types);
-            
+
             if (distance < 0)
             {
                 continue;
@@ -418,7 +419,6 @@ using sparse_dispatch_table = dispatch_table<T, sparse_table>;
 
 template <typename T>
 using dense_dispatch_table = dispatch_table<T, dense_table>;
-
 }
 }
 

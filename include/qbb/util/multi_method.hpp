@@ -115,7 +115,7 @@ public:
         if (!specializations_)
             throw std::bad_function_call();
 
-        init_dispatch_table();
+        init_dispatch_table(false);
 
         const auto& specialization = dispatch_table_->find(deduce_key<Args...>::call(args...));
 
@@ -144,16 +144,16 @@ public:
 
         add_specialization_impl(std::move(specialization), make_index_sequence<arity()>());
 
-        init_dispatch_table();
+        init_dispatch_table(true);
     }
 
 private:
-    void init_dispatch_table() const
+    void init_dispatch_table(bool updated_specializations) const
     {
         std::call_once(initialization_flag_, [this]()
                        { dispatch_table_.reset(new DispatchTable()); });
 
-        dispatch_table_->build_dispatch_table(*specializations_);
+        dispatch_table_->build_dispatch_table(*specializations_, updated_specializations);
     }
 
     template <typename F, std::size_t... Indices>
