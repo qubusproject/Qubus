@@ -103,7 +103,7 @@ private:
 
         bool is_valid() const override
         {
-            return wrapped_ptr_;
+            return !!wrapped_ptr_;
         }
     private:
         T wrapped_ptr_;

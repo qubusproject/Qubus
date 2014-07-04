@@ -1,6 +1,6 @@
 #include <iostream>
 
-#include <qbb/kubus/type.hpp>
+#include <qbb/kubus/IR/type.hpp>
 #include <qbb/kubus/object.hpp>
 #include <qbb/kubus/memory_type.hpp>
 #include <qbb/kubus/allocator.hpp>
@@ -367,11 +367,13 @@ object clone_tensor_cpu_to_gpu(const cpu_tensor_object& other, const gpu_memory&
 }
 }
 
+#include <qbb/kubus/IR_emitter.hpp>
+
 using namespace qbb::kubus;
 
 int main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
 {
-    clone_object_dispatcher.add_specialization(clone_tensor_disk_to_cpu);
+    /*clone_object_dispatcher.add_specialization(clone_tensor_disk_to_cpu);
     clone_object_dispatcher.add_specialization(clone_tensor_cpu_to_gpu);
 
     object_space disk_space(disk_memory{}, mock_allocator(memory_allocator(), 1600, 10000));
@@ -411,7 +413,25 @@ int main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
     gpu_space.dump();
     std::cout << std::endl;
 
-    // qbb::kubus::type t = qbb::kubus::types::double_();
+    // qbb::kubus::type t = qbb::kubus::types::double_();*/
 
+    qbb::util::handle_factory fac;
+    
+    qbb::kubus::index<'i'> i;
+    qbb::kubus::index<'j'> j;
+    qbb::kubus::index<'k'> k;
+    
+    using ttype = proto::terminal<tensor_variable>::type;
+    
+    tensor A(fac.create(), 1000,1000);
+    tensor B(fac.create(), 1000,1000);
+    tensor C(fac.create(), 1000,1000);
+    
+    //boost::proto::display_expr(C(i,j) = sum( A(i,k) * B(k,j), k ));
+    
+    auto expr = emit_AST()( C(i,j) = sum( A(i,k) * B(k,j), k ) );  
+    
+    pretty_print(expr);
+    
     return 0;
 }

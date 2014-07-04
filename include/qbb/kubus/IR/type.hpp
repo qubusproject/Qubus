@@ -12,10 +12,26 @@ namespace qbb
 {
 namespace kubus
 {
-    
+
+namespace types
+{
+class unknown
+{
+public:
+    bool is_primitive() const
+    {
+        return true;
+    }
+};
+}
+
 class type
 {
 public:
+    type() : type(types::unknown{})
+    {
+    }
+
     template <typename T>
     type(T value)
     {
@@ -23,7 +39,10 @@ public:
 
         self_ = std::make_shared<type_wrapper<T>>(value, tag);
     }
-    
+
+    type(const type&) = default;
+    type(type&) = default;
+
     bool is_primitive() const
     {
         return self_->is_primitive();
@@ -38,7 +57,7 @@ public:
     T as() const
     {
         using value_type = typename std::decay<T>::type;
-        
+
         if (self_->rtti() == typeid(value_type))
         {
             return static_cast<type_wrapper<value_type>*>(self_.get())->get();
@@ -69,7 +88,7 @@ private:
     {
     public:
         virtual ~type_interface() = default;
-        
+
         virtual bool is_primitive() const = 0;
 
         virtual std::type_index rtti() const = 0;
@@ -92,7 +111,7 @@ private:
         {
             return value_;
         }
-        
+
         bool is_primitive() const override
         {
             return value_.is_primitive();
@@ -130,23 +149,41 @@ public:
     }
 };
 
+class float_
+{
+public:
+    bool is_primitive() const
+    {
+        return true;
+    }
+};
+
+class integer
+{
+public:
+    bool is_primitive() const
+    {
+        return true;
+    }
+};
+
 class tensor
 {
 public:
-    explicit tensor(type value_type_)
-    : value_type_{std::move(value_type_)}
+    explicit tensor(type value_type_) : value_type_{std::move(value_type_)}
     {
     }
-    
+
     const type& value_type() const
     {
         return value_type_;
     }
-    
+
     bool is_primitive() const
     {
         return false;
     }
+
 private:
     type value_type_;
 };
@@ -154,26 +191,24 @@ private:
 class sparse_tensor
 {
 public:
-    explicit sparse_tensor(type value_type_)
-    : value_type_{std::move(value_type_)}
+    explicit sparse_tensor(type value_type_) : value_type_{std::move(value_type_)}
     {
     }
-    
+
     const type& value_type() const
     {
         return value_type_;
     }
-    
+
     bool is_primitive() const
     {
         return false;
     }
+
 private:
     type value_type_;
 };
-
 }
-
 }
 }
 #endif

@@ -2,6 +2,8 @@ cmake_minimum_required(VERSION 2.8)
 
 project(kubus)
 
+add_subdirectory(src/IR)
+
 add_library(asan INTERFACE)
 target_compile_options(asan INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fsanitize=address -fno-omit-frame-pointer>)
 target_link_libraries(asan INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fsanitize=address -fno-omit-frame-pointer>)
@@ -31,13 +33,13 @@ llvm_map_components_to_libraries(REQ_LLVM_LIBRARIES mcjit ipo native NVPTX)
 
 message(STATUS "LLVM libraries: ${REQ_LLVM_LIBRARIES}")
 
-file(GLOB kubus_header_files ${CMAKE_CURRENT_SOURCE_DIR}/include/qbb/kubus/*.hpp)
-file(GLOB kubus_source_files src/*.cpp)
+file(GLOB kubus_header_files ${CMAKE_CURRENT_SOURCE_DIR}/include/qbb/kubus/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/include/qbb/kubus/IR/*.hpp)
+file(GLOB kubus_source_files src/*.cpp src/IR/*.cpp)
 
 add_executable(kubus ${kubus_header_files}  main.cpp ${kubus_source_files})
 
 target_include_directories(kubus PUBLIC ${Boost_LIBRARY_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_options(kubus PUBLIC -std=c++11)
-target_link_libraries(kubus PUBLIC ${Boost_LIBRARIES} qbb_util asan wall)
+target_link_libraries(kubus PUBLIC ${Boost_LIBRARIES} qbb_util wall)
 
 feature_summary(WHAT ALL)
