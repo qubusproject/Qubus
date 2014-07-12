@@ -3,6 +3,7 @@ cmake_minimum_required(VERSION 2.8)
 project(kubus)
 
 add_subdirectory(src/IR)
+add_subdirectory(src/isl)
 
 add_library(asan INTERFACE)
 target_compile_options(asan INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fsanitize=address -fno-omit-frame-pointer>)
@@ -40,6 +41,6 @@ add_executable(kubus ${kubus_header_files}  main.cpp ${kubus_source_files})
 
 target_include_directories(kubus PUBLIC ${Boost_LIBRARY_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include)
 target_compile_options(kubus PUBLIC -std=c++11)
-target_link_libraries(kubus PUBLIC ${Boost_LIBRARIES} qbb_util wall)
+target_link_libraries(kubus PUBLIC ${Boost_LIBRARIES} qbb_kubus_isl qbb_util wall)
 
 feature_summary(WHAT ALL)
