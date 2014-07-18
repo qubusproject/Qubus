@@ -121,17 +121,6 @@ private:
     std::atomic<int> version_;
 };
 
-class invalid_key_exception : public std::exception
-{
-public:
-    virtual ~invalid_key_exception() = default;
-
-    const char* what() const noexcept override
-    {
-        return "Invalid key during table lookup";
-    }
-};
-
 template <typename T, index_t Rank>
 class dense_table
 {
@@ -141,17 +130,17 @@ public:
         table_(indices) = value;
     }
 
-    const T& lookup(const std::array<index_t, Rank>& indices) const
+    const T* lookup(const std::array<index_t, Rank>& indices) const
     {
         const auto& entry = table_(indices);
 
         if (entry)
         {
-            return entry;
+            return &entry;
         }
         else
         {
-            throw invalid_key_exception();
+            return nullptr;
         }
     }
 
@@ -178,17 +167,17 @@ public:
         map_.insert({indices, value});
     }
 
-    const T& lookup(const std::array<index_t, Rank>& indices) const
+    const T* lookup(const std::array<index_t, Rank>& indices) const
     {
         auto iter = map_.find(indices);
 
         if (iter != map_.end())
         {
-            return iter->second;
+            return &iter->second;
         }
         else
         {
-            throw invalid_key_exception();
+            return nullptr;
         }
     }
 
@@ -261,14 +250,23 @@ public:
             table_updated_cv_.wait(lock_guard);
         }
 
-        try
+        if (auto specialization = table_.lookup(key))
         {
-            return table_.lookup(key);
+            return *specialization;
         }
-        catch (const invalid_key_exception&)
+        else if (fallback_)
+        {
+            return fallback_;
+        }
+        else
         {
             throw std::bad_function_call();
         }
+    }
+
+    void set_fallback(specialization_t fallback)
+    {
+        fallback_ = std::move(fallback);
     }
 
     void build_dispatch_table(
@@ -407,6 +405,8 @@ private:
     }
 
     Table<specialization_t, arity()> table_;
+
+    specialization_t fallback_;
 
     std::array<std::atomic<int>, polymorphic_types_seq::size()> versions_;
 

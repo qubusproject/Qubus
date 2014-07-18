@@ -147,6 +147,12 @@ public:
         init_dispatch_table(true);
     }
 
+    void set_fallback(specialization_t fallback)
+    {
+        init_dispatch_table(false);
+        
+        dispatch_table_->set_fallback(std::move(fallback));
+    }
 private:
     void init_dispatch_table(bool updated_specializations) const
     {
