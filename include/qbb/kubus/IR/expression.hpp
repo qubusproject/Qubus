@@ -57,6 +57,21 @@ public:
         }
     }
 
+    template <typename T>
+    const T* try_as() const
+    {
+        using value_type = typename std::decay<T>::type;
+
+        if (self_->rtti() == typeid(value_type))
+        {
+            return &static_cast<expression_wrapper<value_type>*>(self_.get())->get();
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+    
     qbb::util::index_t tag() const
     {
         return self_->tag();
@@ -108,6 +123,11 @@ private:
         }
         
         const T& get() const
+        {
+            return value_;
+        }
+        
+        T& get()
         {
             return value_;
         }

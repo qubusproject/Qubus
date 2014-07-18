@@ -137,6 +137,8 @@ private:
     static qbb::util::implementation_table implementation_table_;
 };
 
+bool operator==(const type& lhs, const type& rhs);
+
 namespace types
 {
 

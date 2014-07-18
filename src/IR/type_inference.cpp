@@ -3,6 +3,7 @@
 #include <qbb/kubus/IR/kir.hpp>
 
 #include <qbb/util/multi_method.hpp>
+#include <qbb/util/assert.hpp>
 
 #include <mutex>
 
@@ -140,6 +141,11 @@ type infer_type_sum_expr(const sum_expr& expr)
     return body_type;
 }
 
+type infer_type_for_all_expr(const for_all_expr&)
+{
+    return types::unknown{};
+}
+
 type infer_type_for_expr(const for_expr&)
 {
     return types::unknown{};
@@ -154,9 +160,13 @@ type infer_type_subscription_expr(const subscription_expr& expr)
     return val_type;
 }
 
-type infer_type_tensor_variable_expr(const tensor_variable_expr& expr)
+type infer_type_tensor_variable_expr(const tensor_access_expr& expr)
 {
-    return expr.tensor_type();
+    const auto& var = expr.variable();
+    
+    QBB_ASSERT(var, "var must always not be null");
+    
+    return var->tensor_type();
 }
 
 type infer_type_type_conversion_expr(const type_conversion_expr& expr)
@@ -191,15 +201,19 @@ type infer_type_integer_literal_expr(const integer_literal_expr&)
 
 type infer_type_intrinsic_function_expr(const intrinsic_function_expr& expr)
 {
-    //TODO: implement a more general approach
-    if(expr.args().size() == 1)
+    std::vector<type> arg_types;
+    
+    for(const auto& arg : expr.args())
     {
-        return typeof_(expr.args()[0]);
+        arg_types.push_back(typeof_(arg));
     }
-    else
-    {
-        return types::unknown{};
-    }
+    
+    return lookup_intrinsic_result_type(expr.name(), arg_types);
+}
+
+type infer_type_compound_expr(const compound_expr&)
+{
+    return types::unknown{};
 }
 
 void init_infer_type()
@@ -207,6 +221,7 @@ void init_infer_type()
     infer_type.add_specialization(infer_type_binary_op_expr);
     infer_type.add_specialization(infer_type_unary_op_expr);
     infer_type.add_specialization(infer_type_sum_expr);
+    infer_type.add_specialization(infer_type_for_all_expr);
     infer_type.add_specialization(infer_type_for_expr);
     infer_type.add_specialization(infer_type_subscription_expr);
     infer_type.add_specialization(infer_type_tensor_variable_expr);
@@ -217,6 +232,7 @@ void init_infer_type()
     infer_type.add_specialization(infer_type_float_literal_expr);
     infer_type.add_specialization(infer_type_integer_literal_expr);
     infer_type.add_specialization(infer_type_intrinsic_function_expr);
+    infer_type.add_specialization(infer_type_compound_expr);
 }
 
 std::once_flag infer_type_init_flag = {};

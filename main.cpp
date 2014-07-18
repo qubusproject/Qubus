@@ -13,6 +13,10 @@
 #include <qbb/util/unused.hpp>
 #include <qbb/util/handle.hpp>
 
+#include <qbb/kubus/emit_implicit_loops_pass.hpp>
+#include <qbb/kubus/lower_top_level_sums_pass.hpp>
+#include <qbb/kubus/deduce_loop_bounds_pass.hpp>
+
 #include "cpu_memory_allocator.hpp"
 
 #include <boost/thread/future.hpp>
@@ -421,7 +425,9 @@ int main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
     qbb::kubus::index<'j'> j;
     qbb::kubus::index<'k'> k;
     
-    using ttype = proto::terminal<tensor_variable>::type;
+    qbb::kubus::index<'l'> l;
+    
+    using ttype = proto::terminal<tensor_var>::type;
     
     tensor A(fac.create(), 1000,1000);
     tensor B(fac.create(), 1000,1000);
@@ -429,9 +435,25 @@ int main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
     
     //boost::proto::display_expr(C(i,j) = sum( A(i,k) * B(k,j), k ));
     
-    auto expr = emit_AST()( C(i,j) = sum( A(i,k) * B(k,j), k ) );  
+    auto expr = emit_ast( C(i,j) = sum(A(i,k) * B(k,j), k ) );  
     
     pretty_print(expr);
+    std::cout << "\n" << std::endl;
+    
+    expr = emit_implicit_loops(expr);
+    
+    pretty_print(expr);
+    std::cout << "\n" << std::endl;
+    
+    expr = lower_top_level_sums(expr);
+    
+    pretty_print(expr);
+    std::cout << "\n" << std::endl;
+    
+    expr = deduce_loop_bounds(expr);
+    
+    pretty_print(expr);
+    std::cout << "\n" << std::endl;
     
     return 0;
 }

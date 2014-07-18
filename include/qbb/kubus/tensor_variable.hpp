@@ -1,5 +1,5 @@
-#ifndef KUBUS_TENSOR_VARIABLE_HPP
-#define KUBUS_TENSOR_VARIABLE_HPP
+#ifndef KUBUS_TENSOR_VAR_HPP
+#define KUBUS_TENSOR_VAR_HPP
 
 #include <qbb/util/handle.hpp>
 #include <qbb/kubus/IR/type.hpp>
@@ -15,11 +15,10 @@ namespace qbb
 namespace kubus
 {
 
-class tensor_variable
+class tensor_var
 {
 public:
-    tensor_variable(qbb::util::handle handle_, type value_type_,
-                    std::vector<qbb::util::index_t> shape_)
+    tensor_var(qbb::util::handle handle_, type value_type_, std::vector<qbb::util::index_t> shape_)
     : data_{std::move(handle_)}, value_type_{std::move(value_type_)}, shape_(std::move(shape_))
     {
     }
@@ -34,6 +33,11 @@ public:
         return shape_;
     }
 
+    const qbb::util::handle& data_handle() const
+    {
+        return data_;
+    }
+
 private:
     qbb::util::handle data_;
     type value_type_;
@@ -41,7 +45,7 @@ private:
     std::vector<qbb::util::index_t> shape_;
 };
 
-class tensor : public tensor_expr<typename boost::proto::terminal<tensor_variable>::type>
+class tensor : public tensor_expr<typename boost::proto::terminal<tensor_var>::type>
 {
 public:
     typedef double value_type;
@@ -49,16 +53,15 @@ public:
     template <typename... SizeTypes>
     explicit tensor(qbb::util::handle h, SizeTypes... sizes_)
     : tensor::proto_derived_expr{
-          tensor::proto_base_expr::make(tensor_variable(h, types::double_{}, {sizes_...}))}
+          tensor::proto_base_expr::make(tensor_var(h, types::double_{}, {sizes_...}))}
     {
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os,const tensor_variable&)
+inline std::ostream& operator<<(std::ostream& os, const tensor_var&)
 {
     return os << "tensor ( Rank = " << 2 << " )";
 }
-
 }
 }
 

@@ -37,7 +37,7 @@ struct is_tensor : boost::mpl::false_
 {};
 
 template<>
-struct is_tensor<tensor_variable> : boost::mpl::true_
+struct is_tensor<tensor_var> : boost::mpl::true_
 {};
 
 struct tensor_terminal
