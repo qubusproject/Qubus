@@ -13,6 +13,7 @@ namespace isl
 class ast_node;
 class union_map;
 class basic_set;
+class set;
 class context;
     
 class printer
@@ -27,6 +28,8 @@ public:
     printer& operator=(const printer& other) = delete;
 
     void print(const basic_set& set);
+    
+    void print(const set& s);
 
     void print(const union_map& map);
 

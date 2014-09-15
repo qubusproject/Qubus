@@ -75,6 +75,8 @@ public:
     space get_space() const;
 
     void add_constraint(constraint c);
+    
+    static map universe(space s);
 
 private:
     isl_map* handle_;
@@ -108,6 +110,8 @@ public:
     isl_union_map* native_handle() const;
 
     isl_union_map* release() noexcept;
+    
+    static union_map empty(space s);
 
 private:
     isl_union_map* handle_;
@@ -123,7 +127,7 @@ union_map intersect_domain(union_map lhs, union_set rhs);
 
 union_map union_(union_map lhs, union_map rhs);
 
-
+union_map add_map(union_map umap, map m);
 }
 }
 }

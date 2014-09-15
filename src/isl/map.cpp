@@ -140,6 +140,11 @@ void map::add_constraint(constraint c)
     handle_ = isl_map_add_constraint(handle_, c.release());
 }
 
+map map::universe(space s)
+{
+    return map(isl_map_universe(s.release()));
+}
+
 map project_out(map m, isl_dim_type type, unsigned int first, unsigned int n)
 {
     return map(isl_map_project_out(m.release(), type, first, n));
@@ -210,6 +215,11 @@ isl_union_map* union_map::release() noexcept
     return temp;
 }
 
+union_map union_map::empty(space s)
+{
+    return union_map(isl_union_map_empty(s.release()));
+}
+
 union_map apply_domain(union_map lhs, union_map rhs)
 {
     isl_union_map* temp = isl_union_map_apply_domain(lhs.release(), rhs.release());
@@ -243,6 +253,11 @@ union_map union_(union_map lhs, union_map rhs)
     isl_union_map* temp = isl_union_map_union(lhs.release(), rhs.release());
 
     return union_map(temp);
+}
+
+union_map add_map(union_map umap, map m)
+{
+    return union_map(isl_union_map_add_map(umap.release(), m.release()));
 }
 }
 }

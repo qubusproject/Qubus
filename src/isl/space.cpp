@@ -46,6 +46,11 @@ isl_space* space::release() noexcept
     return temp;
 }
 
+unsigned space::dim(isl_dim_type type) const
+{
+    return isl_space_dim(handle_, type);
+}
+
 void space::set_tuple_name(isl_dim_type type, const std::string& name)
 {
     handle_ = isl_space_set_tuple_name(handle_, type, name.c_str());
@@ -54,6 +59,13 @@ void space::set_tuple_name(isl_dim_type type, const std::string& name)
 void space::set_dim_name(isl_dim_type type, int pos, const std::string& name)
 {
     handle_ = isl_space_set_dim_name(handle_, type, pos, name.c_str());
+}
+
+space drop_all_dims(space s, isl_dim_type type)
+{
+    auto n = s.dim(type);
+    
+    return space(isl_space_drop_dims(s.release(), type, 0, n));
 }
 }
 }

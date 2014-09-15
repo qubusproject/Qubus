@@ -31,6 +31,8 @@ public:
 
     isl_space* release() noexcept;
 
+    unsigned dim(isl_dim_type type) const;
+    
     void set_tuple_name(isl_dim_type type, const std::string& name);
 
     void set_dim_name(isl_dim_type type, int pos, const std::string& name);
@@ -38,6 +40,8 @@ public:
 private:
     isl_space* handle_;
 };
+
+space drop_all_dims(space s, isl_dim_type type);
 
 }
 }

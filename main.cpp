@@ -15,7 +15,7 @@
 
 #include <qbb/kubus/emit_implicit_loops_pass.hpp>
 #include <qbb/kubus/lower_top_level_sums_pass.hpp>
-#include <qbb/kubus/deduce_loop_bounds_pass.hpp>
+#include <qbb/kubus/loop_optimizer.hpp>
 
 #include "cpu_memory_allocator.hpp"
 
@@ -450,10 +450,12 @@ int main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
     pretty_print(expr);
     std::cout << "\n" << std::endl;
     
-    expr = deduce_loop_bounds(expr);
+    //expr = deduce_loop_bounds(expr);
     
-    pretty_print(expr);
+    //pretty_print(expr);
     std::cout << "\n" << std::endl;
+    
+    optimize_loops(expr);
     
     return 0;
 }

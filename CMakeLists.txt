@@ -30,7 +30,7 @@ find_package(LLVM 3.5 EXACT REQUIRED)
 
 message(STATUS "found LLVM version: ${LLVM_PACKAGE_VERSION}")
 
-llvm_map_components_to_libraries(REQ_LLVM_LIBRARIES mcjit ipo native NVPTX)
+llvm_map_components_to_libnames(REQ_LLVM_LIBRARIES mcjit ipo native NVPTX)
 
 message(STATUS "LLVM libraries: ${REQ_LLVM_LIBRARIES}")
 
@@ -39,8 +39,9 @@ file(GLOB kubus_source_files src/*.cpp src/IR/*.cpp)
 
 add_executable(kubus ${kubus_header_files}  main.cpp ${kubus_source_files})
 
-target_include_directories(kubus PUBLIC ${Boost_LIBRARY_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include)
+target_include_directories(kubus PUBLIC ${Boost_LIBRARY_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include ${LLVM_INCLUDE_DIRS})
 target_compile_options(kubus PUBLIC -std=c++11)
+target_compile_definitions(kubus PUBLIC ${LLVM_DEFINITIONS})
 target_link_libraries(kubus PUBLIC ${Boost_LIBRARIES} qbb_kubus_isl qbb_util wall)
 
 feature_summary(WHAT ALL)
