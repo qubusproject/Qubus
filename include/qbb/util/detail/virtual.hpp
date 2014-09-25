@@ -108,49 +108,57 @@ polymorphic_args_rtti()
         make_index_sequence<polymorphic_args_seq::size()>());
 }
 
-inline std::array<std::type_index, 0> specialization_args_rtti_impl(meta::type_sequence<>,
-                                                                    meta::type_sequence<>)
-{
-    return {{}};
-}
-
 struct specialization_args_rtti_adl_enabler
 {
 };
 
-template <typename ParamsHead, typename... ParamsTail, typename ArgsHead, typename... ArgsTail>
-inline auto specialization_args_rtti_impl(
-    meta::type_sequence<ParamsHead, ParamsTail...>, meta::type_sequence<ArgsHead, ArgsTail...>,
-    specialization_args_rtti_adl_enabler = specialization_args_rtti_adl_enabler{})
-    -> typename std::enable_if<
-          !is_polymorphic_arg<ArgsHead>::value,
-          decltype(specialization_args_rtti_impl(meta::type_sequence<ParamsTail...>{},
-                                                 meta::type_sequence<ArgsTail...>{}))>::type
+inline std::array<std::type_index, 0>
+specialization_args_rtti_impl(meta::type_sequence<>, meta::type_sequence<>,
+                              specialization_args_rtti_adl_enabler)
 {
-    return specialization_args_rtti_impl(meta::type_sequence<ParamsTail...>{},
-                                         meta::type_sequence<ArgsTail...>{});
+    return {{}};
 }
 
 template <typename ParamsHead, typename... ParamsTail, typename ArgsHead, typename... ArgsTail>
-inline auto specialization_args_rtti_impl(
-    meta::type_sequence<ParamsHead, ParamsTail...>, meta::type_sequence<ArgsHead, ArgsTail...>,
-    specialization_args_rtti_adl_enabler = specialization_args_rtti_adl_enabler{})
+inline auto specialization_args_rtti_impl(meta::type_sequence<ParamsHead, ParamsTail...>,
+                                          meta::type_sequence<ArgsHead, ArgsTail...>,
+                                          specialization_args_rtti_adl_enabler)
+    -> typename std::enable_if<
+          !is_polymorphic_arg<ArgsHead>::value,
+          decltype(specialization_args_rtti_impl(meta::type_sequence<ParamsTail...>{},
+                                                 meta::type_sequence<ArgsTail...>{},
+                                                 specialization_args_rtti_adl_enabler{}))>::type
+{
+    return specialization_args_rtti_impl(meta::type_sequence<ParamsTail...>{},
+                                         meta::type_sequence<ArgsTail...>{},
+                                         specialization_args_rtti_adl_enabler{});
+}
+
+template <typename ParamsHead, typename... ParamsTail, typename ArgsHead, typename... ArgsTail>
+inline auto specialization_args_rtti_impl(meta::type_sequence<ParamsHead, ParamsTail...>,
+                                          meta::type_sequence<ArgsHead, ArgsTail...>,
+                                          specialization_args_rtti_adl_enabler)
     -> typename std::enable_if<
           is_polymorphic_arg<ArgsHead>::value,
           decltype(push_front(specialization_args_rtti_impl(meta::type_sequence<ParamsTail...>{},
-                                                            meta::type_sequence<ArgsTail...>{}),
+                                                            meta::type_sequence<ArgsTail...>{},
+                                                            specialization_args_rtti_adl_enabler{}),
                               std::declval<std::type_index>()))>::type
 {
     return push_front(specialization_args_rtti_impl(meta::type_sequence<ParamsTail...>{},
-                                                    meta::type_sequence<ArgsTail...>{}),
+                                                    meta::type_sequence<ArgsTail...>{},
+                                                    specialization_args_rtti_adl_enabler{}),
                       std::type_index(typeid(ParamsHead)));
 }
 
 template <typename Params, typename... Args>
-inline auto specialization_args_rtti()
-    -> decltype(specialization_args_rtti_impl(Params{}, meta::type_sequence<Args...>{}))
+inline auto specialization_args_rtti() -> decltype(specialization_args_rtti_impl(
+    Params{}, meta::type_sequence<Args...>{}, specialization_args_rtti_adl_enabler{}))
 {
-    return specialization_args_rtti_impl(Params{}, meta::type_sequence<Args...>{});
+    static_assert(Params::size() == sizeof...(Args), "internal error: arity mismatch");
+
+    return specialization_args_rtti_impl(Params{}, meta::type_sequence<Args...>{},
+                                         specialization_args_rtti_adl_enabler{});
 }
 }
 }
