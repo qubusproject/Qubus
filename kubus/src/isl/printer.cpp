@@ -5,6 +5,8 @@
 #include <qbb/kubus/isl/ast.hpp>
 #include <qbb/kubus/isl/context.hpp>
 
+#include <iostream>
+
 namespace qbb
 {
 namespace kubus

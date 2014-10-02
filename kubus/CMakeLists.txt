@@ -37,7 +37,7 @@ message(STATUS "LLVM libraries: ${REQ_LLVM_LIBRARIES}")
 file(GLOB kubus_header_files ${CMAKE_CURRENT_SOURCE_DIR}/include/qbb/kubus/*.hpp ${CMAKE_CURRENT_SOURCE_DIR}/include/qbb/kubus/IR/*.hpp)
 file(GLOB kubus_source_files src/*.cpp src/IR/*.cpp)
 
-add_executable(kubus ${kubus_header_files}  main.cpp ${kubus_source_files})
+add_executable(kubus ${kubus_header_files} main.cpp ${kubus_source_files})
 
 target_include_directories(kubus PUBLIC ${Boost_LIBRARY_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/include ${LLVM_INCLUDE_DIRS})
 target_compile_options(kubus PUBLIC -std=c++11)
