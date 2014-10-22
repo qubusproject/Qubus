@@ -455,7 +455,7 @@ int main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
     //pretty_print(expr);
     std::cout << "\n" << std::endl;
     
-    optimize_loops(expr);
+    //optimize_loops(expr);
     
     return 0;
 }

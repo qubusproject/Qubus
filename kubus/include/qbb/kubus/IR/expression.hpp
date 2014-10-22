@@ -151,6 +151,10 @@ private:
 
     static qbb::util::implementation_table implementation_table_;
 };
+
+bool operator==(const expression& lhs, const expression& rhs);
+bool operator!=(const expression& lhs, const expression& rhs);
+
 }
 }
 
