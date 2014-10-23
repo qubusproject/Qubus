@@ -52,7 +52,7 @@ index_pattern<ID> index(ID id)
     return index_pattern<ID>(id);
 }
 
-index_pattern<any> index()
+inline index_pattern<any> index()
 {
     return index_pattern<any>(_);
 }

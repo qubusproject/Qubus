@@ -52,7 +52,7 @@ public:
             };
         };
         
-        auto matcher = boost::fusion::reverse_fold(cases_, [](const BaseType&) { throw std::logic_error("no case is applicable"); }, f);
+        auto matcher = boost::fusion::reverse_fold(cases_, [](const BaseType&) -> ResultType { throw std::logic_error("no case is applicable"); }, f);
         
         return matcher(value);
     }
