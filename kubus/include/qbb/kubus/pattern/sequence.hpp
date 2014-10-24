@@ -3,6 +3,8 @@
 
 #include <qbb/kubus/pattern/variable.hpp>
 
+#include <qbb/util/integers.hpp>
+
 #include <boost/fusion/container/vector.hpp>
 #include <boost/fusion/sequence/intrinsic/size.hpp>
 #include <boost/fusion/algorithm/iteration/fold.hpp>
@@ -26,7 +28,7 @@ public:
     template <typename Sequence>
     bool match(const Sequence& sequence, const variable<Sequence>* var = nullptr) const
     {
-        if (size(values_) == sequence.size())
+        if (size(values_) == util::to_uindex(sequence.size()))
         {
             if (boost::fusion::fold(values_, true, [&, i = 0 ](bool acc, const auto& value) mutable
                                     {

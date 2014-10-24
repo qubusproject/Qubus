@@ -7,6 +7,7 @@
 
 #include <qbb/util/make_unique.hpp>
 #include <qbb/util/integer_sequence.hpp>
+#include <qbb/util/unused.hpp>
 
 #include <memory>
 #include <functional>
@@ -326,8 +327,8 @@ struct emit_index_node : proto::transform<emit_index_node<Evaluator>>
     {
         using result_type = expression;
 
-        result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
-                               typename impl::data_param data) const
+        result_type operator()(typename impl::expr_param expr, typename impl::state_param QBB_UNUSED(state),
+                               typename impl::data_param QBB_UNUSED(data)) const
         {
             return index_expr(std::string(1, id(proto::value(expr))));
         }
@@ -344,7 +345,7 @@ inline std::vector<expression> emit_indices(const Expr& expr, const State& state
 {
     std::vector<expression> indices;
 
-    auto dummy = {
+    auto QBB_UNUSED(dummy) = {
         (indices.push_back(Evaluator()(proto::child_c<Indices>(expr), state, data)), 0)...};
 
     return indices;
