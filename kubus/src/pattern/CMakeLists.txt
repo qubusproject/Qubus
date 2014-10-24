@@ -1,1 +1,0 @@
-add_library(kubus_pattern INTERFACE)

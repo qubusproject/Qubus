@@ -1,0 +1,38 @@
+set(kubus_ir_header_file_names annotations.hpp binary_operator_expr.hpp compound_expr.hpp
+                               delta_expr.hpp expression.hpp for_all_expr.hpp for_expr.hpp
+                               index_expr.hpp intrinsic_function_expr.hpp intrinsic_function_table.hpp
+                               literal_expr.hpp pretty_printer.hpp subscription_expr.hpp
+                               sum_expr.hpp tensor_access_expr.hpp tensor_variable.hpp type.hpp
+                               type_conversion_expr.hpp type_inference.hpp unary_operator_expr.hpp
+                               kir.hpp)
+
+set(kubus_ir_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../include/qbb/kubus/IR/)
+
+foreach(file_name IN LISTS kubus_ir_header_file_names)
+    list(APPEND kubus_ir_header_files ${kubus_ir_include_dir}/${file_name})
+endforeach()
+
+set(kubus_ir_source_files annotations.cpp binary_operator_expr.cpp compound_expr.cpp
+                          delta_expr.cpp expression.cpp for_all_expr.cpp for_expr.cpp
+                          index_expr.cpp intrinsic_function_expr.cpp intrinsic_function_table.cpp
+                          literal_expr.cpp pretty_printer.cpp subscription_expr.cpp
+                          sum_expr.cpp tensor_access_expr.cpp tensor_variable.cpp type.cpp
+                          type_conversion_expr.cpp type_inference.cpp unary_operator_expr.cpp)
+        
+set(kubus_pattern_header_file_names any.hpp binary_operator.hpp bind_to.hpp compound.hpp core.hpp
+                                    for.hpp for_all.hpp index.hpp intrinsic_function.hpp IR.hpp
+                                    literal.hpp match.hpp matcher.hpp pattern.hpp sequence.hpp subscription.hpp
+                                    sum.hpp tensor.hpp type_conversion.hpp unary_operator.hpp variable.hpp)
+
+set(kubus_pattern_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../include/qbb/kubus/pattern/)
+
+foreach(file_name IN LISTS kubus_pattern_header_file_names)
+    list(APPEND kubus_pattern_header_files ${kubus_pattern_include_dir}/${file_name})
+endforeach()
+
+add_library(qbb_kubus_ir SHARED ${kubus_pattern_header_files} ${kubus_ir_header_files} ${kubus_ir_source_files})
+
+target_include_directories(qbb_kubus_ir PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
+target_compile_definitions(qbb_kubus_ir PUBLIC -DFUSION_MAX_VECTOR_SIZE=20)
+target_compile_options(qbb_kubus_ir PUBLIC -std=c++14)
+target_link_libraries(qbb_kubus_ir PUBLIC qbb_util)
