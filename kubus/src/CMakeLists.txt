@@ -12,7 +12,7 @@ message(STATUS "LLVM libraries: ${REQ_LLVM_LIBRARIES}")
 
 set(kubus_header_file_names allocator.hpp deduce_loop_bounds_pass.hpp emit_implicit_loops_pass.hpp
                             generic_ptr.hpp grammar.hpp index.hpp indexed_tensor_expr_context.hpp
-                            IR_emitter.hpp kronecker_delta_folding_pass.hpp loop_optimizer.hpp
+                            IR_emitter.hpp loop_optimizer.hpp
                             lower_top_level_sums_pass.hpp managed_memory_block.hpp
                             memory_block.hpp memory_type.hpp object.hpp tensor_variable.hpp)
 
@@ -23,7 +23,7 @@ foreach(file_name IN LISTS kubus_header_file_names)
 endforeach()
 
 set(kubus_source_files allocator.cpp deduce_loop_bounds_pass.cpp
-                       emit_implicit_loops_pass.cpp kronecker_delta_folding_pass.cpp
+                       emit_implicit_loops_pass.cpp
                        loop_optimizer.cpp lower_top_level_sums_pass.cpp
                        memory_type.cpp object.cpp)
 

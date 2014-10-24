@@ -33,7 +33,6 @@ void init_equal()
     equal.add_specialization(always_true<double_literal_expr>);
     equal.add_specialization(always_true<integer_literal_expr>);
     equal.add_specialization(always_true<compound_expr>);
-    equal.add_specialization(always_true<delta_expr>);
     equal.add_specialization(always_true<for_all_expr>);
     equal.add_specialization(always_true<for_expr>);
     equal.add_specialization(always_true<index_expr>);

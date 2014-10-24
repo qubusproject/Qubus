@@ -196,6 +196,17 @@ void print(const expression& expr, pretty_printer_context& ctx)
 
                 std::cout << ")";
             })
+            .case_(delta(a, b), [&]
+                   {
+                std::cout << id.get() << "[";
+
+
+                print(a.get(), ctx);
+                std::cout << ", ";
+                print(b.get(), ctx);
+
+                std::cout << "]";
+            })
             .case_(double_literal(dval), [&]
                    {
                 std::cout << dval.get();

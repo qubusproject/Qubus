@@ -174,11 +174,6 @@ type infer_type_type_conversion_expr(const type_conversion_expr& expr)
     return expr.target_type();
 }
 
-type infer_type_delta_expr(const delta_expr&)
-{
-    return types::integer{};
-}
-
 type infer_type_index_expr(const index_expr&)
 {
     return types::integer{};
@@ -226,7 +221,6 @@ void init_infer_type()
     infer_type.add_specialization(infer_type_subscription_expr);
     infer_type.add_specialization(infer_type_tensor_variable_expr);
     infer_type.add_specialization(infer_type_type_conversion_expr);
-    infer_type.add_specialization(infer_type_delta_expr);
     infer_type.add_specialization(infer_type_index_expr);
     infer_type.add_specialization(infer_type_double_literal_expr);
     infer_type.add_specialization(infer_type_float_literal_expr);

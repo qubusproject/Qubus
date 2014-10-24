@@ -12,7 +12,6 @@
 #include <qbb/kubus/IR/type_conversion_expr.hpp>
 #include <qbb/kubus/IR/for_all_expr.hpp>
 #include <qbb/kubus/IR/for_expr.hpp>
-#include <qbb/kubus/IR/delta_expr.hpp>
 #include <qbb/kubus/IR/compound_expr.hpp>
 
 

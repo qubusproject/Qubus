@@ -24,7 +24,7 @@ public:
     }
 
     template <typename Sequence>
-    bool match(const Sequence& sequence, const variable<sum_expr>* var = nullptr) const
+    bool match(const Sequence& sequence, const variable<Sequence>* var = nullptr) const
     {
         if (size(values_) == sequence.size())
         {

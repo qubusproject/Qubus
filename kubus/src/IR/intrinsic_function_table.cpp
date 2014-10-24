@@ -81,6 +81,8 @@ public:
             add_intrinsic_function("extent", {types::tensor(t), types::integer{}}, t);
             add_intrinsic_function("extent", {types::sparse_tensor(t), types::integer{}}, t);
         }
+        
+        add_intrinsic_function("delta", {types::integer{}, types::integer{}}, types::integer{});
     }
 
     const type& lookup_result_type(const std::string& name, const std::vector<type>& arg_types)
