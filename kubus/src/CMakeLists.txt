@@ -32,3 +32,5 @@ add_library(kubus SHARED ${kubus_header_files} ${kubus_source_files})
 target_include_directories(kubus PUBLIC ${Boost_LIBRARY_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/../include ${LLVM_INCLUDE_DIRS})
 target_compile_options(kubus PUBLIC -std=c++14)
 target_link_libraries(kubus PUBLIC ${Boost_LIBRARIES} qbb_kubus_ir qbb_kubus_isl qbb_util wall)
+
+install(TARGETS kubus PUBLIC_HEADER DESTINATION include LIBRARY DESTINATION lib)

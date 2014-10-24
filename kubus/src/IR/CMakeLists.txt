@@ -36,3 +36,5 @@ target_include_directories(qbb_kubus_ir PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../..
 target_compile_definitions(qbb_kubus_ir PUBLIC -DFUSION_MAX_VECTOR_SIZE=20)
 target_compile_options(qbb_kubus_ir PUBLIC -std=c++14)
 target_link_libraries(qbb_kubus_ir PUBLIC qbb_util)
+
+install(TARGETS qbb_kubus_ir PUBLIC_HEADER DESTINATION include LIBRARY DESTINATION lib)

@@ -18,3 +18,5 @@ target_include_directories(qbb_kubus_isl PUBLIC ${CMAKE_SOURCE_DIR}/kubus/includ
 
 target_compile_options(qbb_kubus_isl PUBLIC -std=c++14)
 target_link_libraries(qbb_kubus_isl PUBLIC isl)
+
+install(TARGETS qbb_kubus_isl PUBLIC_HEADER DESTINATION include LIBRARY DESTINATION lib)
