@@ -1,7 +1,8 @@
 #ifndef QBB_UTIL_HANDLE_HPP
 #define QBB_UTIL_HANDLE_HPP
 
-#include <memory>
+#include <cstddef>
+#include <atomic>
 #include <ostream>
 
 namespace qbb
@@ -21,15 +22,22 @@ public:
 private:
     friend class handle_factory;
 
-    handle();
+    explicit handle(std::size_t id_);
 
-    std::shared_ptr<char> id_;
+    std::size_t id_;
 };
 
 class handle_factory
 {
 public:
+    handle_factory() = default;
+    handle_factory(const handle_factory&) = delete;
+    handle_factory& operator=(const handle_factory&) = delete;
+    
     handle create() const;
+    void release(handle h) const;
+private:
+    mutable std::atomic<std::size_t> next_free_id_{0};
 };
 
 }
