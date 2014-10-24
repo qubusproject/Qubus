@@ -27,3 +27,6 @@ add_executable(kubus_test main.cpp)
 target_link_libraries(kubus_test kubus)
 
 feature_summary(WHAT ALL)
+
+install(DIRECTORY include/ DESTINATION include
+        FILES_MATCHING PATTERN "*.hpp")
