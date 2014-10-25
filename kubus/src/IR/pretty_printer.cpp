@@ -20,7 +20,7 @@ namespace kubus
 
 namespace
 {
-
+    
 class pretty_printer_context
 {
 public:
@@ -136,16 +136,14 @@ void print(const expression& expr, pretty_printer_context& ctx)
             })
             .case_(sum(a, indices), [&]
                    {
-                std::cout << "sum( ";
+                std::cout << "sum(";
 
                 print(a.get(), ctx);
 
-                std::cout << ", ";
-
                 for (const auto& index : indices.get())
                 {
-                    print(index, ctx);
                     std::cout << ", ";
+                    print(index, ctx);
                 }
 
                 std::cout << ")";
