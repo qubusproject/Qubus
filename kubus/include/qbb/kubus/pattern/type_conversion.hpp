@@ -4,6 +4,7 @@
 #include <qbb/kubus/IR/type_conversion_expr.hpp>
 
 #include <qbb/kubus/pattern/variable.hpp>
+#include <qbb/kubus/pattern/any.hpp>
 
 #include <utility>
 
@@ -13,11 +14,11 @@ namespace kubus
 {
 namespace pattern
 {
-template <typename Arg>
+template <typename TargetType, typename Arg>
 class type_conversion_pattern
 {
 public:
-    type_conversion_pattern(Arg arg_) : arg_(std::move(arg_))
+    type_conversion_pattern(TargetType target_type_, Arg arg_) : target_type_(std::move(target_type_)), arg_(std::move(arg_))
     {
     }
 
@@ -41,14 +42,22 @@ public:
     }
 
 private:
+    TargetType target_type_;
     Arg arg_;
 };
 
-template <typename Arg>
-type_conversion_pattern<Arg> type_conversion(Arg arg)
+template <typename TargetType, typename Arg>
+type_conversion_pattern<TargetType, Arg> type_conversion(TargetType target_type, Arg arg)
 {
-    return type_conversion_pattern<Arg>(arg);
+    return type_conversion_pattern<TargetType, Arg>(target_type, arg);
 }
+
+template <typename Arg>
+auto type_conversion(Arg arg)
+{
+    return type_conversion(_, arg);
+}
+
 }
 }
 }
