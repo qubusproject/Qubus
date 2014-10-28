@@ -4,6 +4,7 @@ set(kubus_ir_header_file_names annotations.hpp binary_operator_expr.hpp compound
                                literal_expr.hpp pretty_printer.hpp subscription_expr.hpp
                                sum_expr.hpp tensor_access_expr.hpp tensor_variable.hpp type.hpp
                                type_conversion_expr.hpp type_inference.hpp unary_operator_expr.hpp
+                               variable_ref_expr.hpp variable_declaration_expr.hpp
                                kir.hpp)
 
 set(kubus_ir_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../include/qbb/kubus/IR/)
@@ -17,7 +18,8 @@ set(kubus_ir_source_files annotations.cpp binary_operator_expr.cpp compound_expr
                           index_expr.cpp intrinsic_function_expr.cpp intrinsic_function_table.cpp
                           literal_expr.cpp pretty_printer.cpp subscription_expr.cpp
                           sum_expr.cpp tensor_access_expr.cpp tensor_variable.cpp type.cpp
-                          type_conversion_expr.cpp type_inference.cpp unary_operator_expr.cpp)
+                          type_conversion_expr.cpp type_inference.cpp unary_operator_expr.cpp
+                          variable_ref_expr.cpp variable_declaration_expr.cpp)
         
 set(kubus_pattern_header_file_names any.hpp binary_operator.hpp bind_to.hpp compound.hpp core.hpp
                                     for.hpp for_all.hpp index.hpp intrinsic_function.hpp IR.hpp

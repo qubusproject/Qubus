@@ -22,6 +22,9 @@
 
 #include <qbb/kubus/IR/tensor_variable.hpp>
 
+#include <qbb/kubus/IR/variable_ref_expr.hpp>
+#include <qbb/kubus/IR/variable_declaration_expr.hpp>
+
 #include <qbb/kubus/IR/pretty_printer.hpp>
 
 #endif
