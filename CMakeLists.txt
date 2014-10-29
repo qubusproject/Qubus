@@ -2,6 +2,14 @@ cmake_minimum_required (VERSION 2.8.12)
 
 project(QBB)
 
+if(POLICY CMP0053)
+  cmake_policy(SET CMP0053 NEW)
+endif()
+
+if(POLICY CMP0054)
+  cmake_policy(SET CMP0054 NEW)
+endif()
+
 if (NOT CMAKE_BUILD_TYPE)
   set(CMAKE_BUILD_TYPE "Release")
 endif()
