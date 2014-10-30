@@ -8,10 +8,12 @@
 #include <qbb/util/multi_method.hpp>
 #include <qbb/util/unique_name_generator.hpp>
 
+#include <qbb/util/unreachable.hpp>
+#include <qbb/util/assert.hpp>
+
 #include <iostream>
 #include <mutex>
 #include <map>
-#include <cassert>
 
 namespace qbb
 {
@@ -83,8 +85,8 @@ const char* translate_binary_op_tag(binary_op_tag tag)
     case binary_op_tag::logical_or:
         return "||";
     default:
-        assert(false);
-        break;
+        QBB_ASSERT(false, "default case should never be reached");
+        QBB_UNREACHABLE();
     }
 }
 
@@ -99,8 +101,8 @@ const char* translate_unary_op_tag(unary_op_tag tag)
     case unary_op_tag::logical_not:
         return "*";
     default:
-        assert(false);
-        break;
+        QBB_ASSERT(false, "default case should never be reached");
+        QBB_UNREACHABLE();
     }
 }
 
@@ -166,7 +168,7 @@ void print(const expression& expr, pretty_printer_context& ctx)
 
                 std::cout << "]";
             })
-            .case_(pattern::tensor(tensor_var), [&]
+            .case_(tensor(tensor_var), [&]
                    {
                 std::cout << ctx.get_name_for_handle(tensor_var.get()->data_handle());
             })
