@@ -10,6 +10,8 @@ llvm_map_components_to_libnames(REQ_LLVM_LIBRARIES mcjit ipo native NVPTX)
 
 message(STATUS "LLVM libraries: ${REQ_LLVM_LIBRARIES}")
 
+find_package(HPX 0.9.9 REQUIRED)
+
 set(kubus_header_file_names allocator.hpp deduce_loop_bounds_pass.hpp emit_implicit_loops_pass.hpp
                             generic_ptr.hpp grammar.hpp index.hpp indexed_tensor_expr_context.hpp
                             IR_emitter.hpp loop_optimizer.hpp
