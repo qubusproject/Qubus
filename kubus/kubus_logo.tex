@@ -1,0 +1,39 @@
+\documentclass{standalone}
+\usepackage[utf8]{inputenc}
+
+\usepackage{color}
+\usepackage{tikz}
+\usepackage{anyfontsize}
+
+\usetikzlibrary{arrows,decorations.pathmorphing}
+
+\definecolor{mycolor}{RGB}{0,137,255}
+
+\begin{document}
+
+\begin{tikzpicture}
+ \draw[mycolor,fill=mycolor,line width=60pt] (0,0) circle (125pt);
+ \draw[white,line width=15pt] (0,0) circle (125pt);
+
+ \draw[white,fill=mycolor,line width=7pt,rotate=0] (0,125pt) circle (15pt);
+ \draw[white,fill=mycolor,line width=7pt,rotate=75] (0,125pt) circle (15pt);
+ \draw[white,fill=mycolor,line width=7pt,rotate=-75] (0,125pt) circle (15pt);
+ \draw[white,fill=mycolor,line width=7pt,rotate=135] (0,125pt) circle (15pt);
+ \draw[white,fill=mycolor,line width=7pt,rotate=-135] (0,125pt) circle (15pt);
+ 
+ \draw[white,line width=30pt] (0,0) circle (80pt);
+ 
+ \draw[mycolor,line width=25pt,rotate=0] (0pt,80pt)--(0pt,60pt);
+ \draw[mycolor,line width=25pt,rotate=40] (0pt,80pt)--(0pt,60pt);
+ \draw[mycolor,line width=25pt,rotate=80] (0pt,80pt)--(0pt,60pt);
+ \draw[mycolor,line width=25pt,rotate=120] (0pt,80pt)--(0pt,60pt);
+ \draw[mycolor,line width=25pt,rotate=160] (0pt,80pt)--(0pt,60pt);
+ \draw[mycolor,line width=25pt,rotate=200] (0pt,80pt)--(0pt,60pt);
+ \draw[mycolor,line width=25pt,rotate=240] (0pt,80pt)--(0pt,60pt);
+ \draw[mycolor,line width=25pt,rotate=280] (0pt,80pt)--(0pt,60pt);
+ \draw[mycolor,line width=25pt,rotate=320] (0pt,80pt)--(0pt,60pt);
+ 
+ \draw[white,fill=white] (0,0) circle (44pt);
+\end{tikzpicture}
+
+\end{document}
