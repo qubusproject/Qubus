@@ -46,6 +46,11 @@ public:
         return false;
     }
 
+    void reset() const
+    {
+        indexed_expr_.reset();
+        indices_.reset();
+    }
 private:
     IndexedExpr indexed_expr_;
     Indices indices_;

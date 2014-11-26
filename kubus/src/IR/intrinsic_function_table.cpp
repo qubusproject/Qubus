@@ -43,7 +43,9 @@ public:
         auto iter =
             std::find_if(begin(overloads_), end(overloads_),
                          [&](const std::pair<std::vector<type>, intrinsic_function_info>& value)
-                         { return value.first == arg_types; });
+                         {
+                             return value.first == arg_types;
+                         });
 
         if (iter == end(overloads_))
             throw 0;
@@ -61,32 +63,39 @@ public:
     intrinsic_function_table()
     {
         const char* math_functions[] = {"sin", "cos", "tan", "exp", "abs", "sqrt"};
-        type math_types[] = {types::double_{}, types::float_{}};
+        type real_types[] = {types::double_{}, types::float_{}};
+        type math_types[] = {types::double_{}, types::float_{}, types::complex(types::double_{}),
+                             types::complex(types::float_{})};
 
         for (auto function : math_functions)
         {
-            for (const auto& t : math_types)
+            for (const auto& t : real_types)
             {
                 add_intrinsic_function(function, {t}, t);
             }
         }
 
-        for (const auto& t : math_types)
+        for (const auto& t : real_types)
         {
             add_intrinsic_function("pow", {t, types::integer{}}, t);
         }
-        
+
         for (const auto& t : math_types)
         {
-            add_intrinsic_function("extent", {types::tensor(t), types::integer{}}, t);
-            add_intrinsic_function("extent", {types::sparse_tensor(t), types::integer{}}, t);
+            add_intrinsic_function("extent", {types::tensor(t), types::integer{}},
+                                   types::integer{});
+            add_intrinsic_function("extent", {types::sparse_tensor(t), types::integer{}},
+                                   types::integer{});
         }
-        
+
         add_intrinsic_function("delta", {types::integer{}, types::integer{}}, types::integer{});
+
+        add_intrinsic_function("min", {types::integer{}, types::integer{}}, types::integer{});
+        add_intrinsic_function("max", {types::integer{}, types::integer{}}, types::integer{});
     }
 
-    const type& lookup_result_type(const std::string& name, const std::vector<type>& arg_types)
-        const
+    const type& lookup_result_type(const std::string& name,
+                                   const std::vector<type>& arg_types) const
     {
         const overload_set& os = lookup_overload_set(name);
 
@@ -137,13 +146,12 @@ void init_intrinsic_function_table() noexcept
 }
 
 std::once_flag intrinsic_function_table_init_flag = {};
-
 }
 
 type lookup_intrinsic_result_type(const std::string& name, const std::vector<type>& arg_types)
 {
     std::call_once(intrinsic_function_table_init_flag, init_intrinsic_function_table);
-    
+
     return intrinsic_function_table_->lookup_result_type(name, arg_types);
 }
 }

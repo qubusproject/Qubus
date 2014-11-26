@@ -1,5 +1,6 @@
 #include <qbb/kubus/IR/pretty_printer.hpp>
 
+#include <qbb/kubus/IR/type_inference.hpp>
 #include <qbb/kubus/IR/kir.hpp>
 
 #include <qbb/kubus/pattern/core.hpp>
@@ -7,6 +8,7 @@
 
 #include <qbb/util/multi_method.hpp>
 #include <qbb/util/unique_name_generator.hpp>
+#include <qbb/util/handle.hpp>
 
 #include <qbb/util/unreachable.hpp>
 #include <qbb/util/assert.hpp>
@@ -22,7 +24,7 @@ namespace kubus
 
 namespace
 {
-    
+
 class pretty_printer_context
 {
 public:
@@ -64,6 +66,10 @@ const char* translate_binary_op_tag(binary_op_tag tag)
         return "*";
     case binary_op_tag::divides:
         return "/";
+    case binary_op_tag::modulus:
+        return "%";
+    case binary_op_tag::div_floor:
+        return "//";
     case binary_op_tag::assign:
         return "=";
     case binary_op_tag::plus_assign:
@@ -106,7 +112,46 @@ const char* translate_unary_op_tag(unary_op_tag tag)
     }
 }
 
-void print(const expression& expr, pretty_printer_context& ctx)
+void print_type(const type& t)
+{
+    pattern::variable<type> subtype;
+    
+    auto m = pattern::make_matcher<type, void>()
+                 .case_(pattern::double_t,
+                        [&]
+                        {
+                            std::cout << "double";
+                        })
+                 .case_(pattern::integer_t, [&]
+                        {
+                            std::cout << "integer";
+                        })
+                 .case_(complex_t(subtype),
+                        [&]
+                        {
+                            std::cout << "complex<";
+                            
+                            print_type(subtype.get());
+                            
+                            std::cout << ">";
+                        })
+                 .case_(tensor_t(subtype), [&]
+                        {
+                            std::cout << "tensor<";
+                            
+                            print_type(subtype.get());
+                            
+                            std::cout << ">";
+                        })
+                 .case_(pattern::_, [&]
+                     {
+                     }
+                );
+
+    pattern::match(t, m);
+}
+
+void print(const expression& expr, pretty_printer_context& ctx, bool print_types)
 {
     pattern::variable<expression> a, b, c, d;
     pattern::variable<binary_op_tag> btag;
@@ -121,135 +166,252 @@ void print(const expression& expr, pretty_printer_context& ctx)
     pattern::variable<float> fval;
     pattern::variable<qbb::util::index_t> ival;
 
-    pattern::variable<std::shared_ptr<tensor_variable>> tensor_var;
+    pattern::variable<variable_declaration> decl;
+    pattern::variable<type> t;
 
     auto m =
         pattern::make_matcher<expression, void>()
-            .case_(binary_operator(btag, a, b), [&]
+            .case_(binary_operator(btag, a, b),
+                   [&]
                    {
-                print(a.get(), ctx);
-                std::cout << " " << translate_binary_op_tag(btag.get()) << " ";
-                print(b.get(), ctx);
-            })
-            .case_(unary_operator(utag, a), [&]
+                       std::cout << "(";
+                       print(a.get(), ctx, print_types);
+                       std::cout << " " << translate_binary_op_tag(btag.get()) << " ";
+                       print(b.get(), ctx, print_types);
+                       std::cout << ")";
+                   })
+            .case_(unary_operator(utag, a),
+                   [&]
                    {
-                std::cout << " " << translate_unary_op_tag(utag.get()) << " ";
-                print(a.get(), ctx);
-            })
-            .case_(sum(a, indices), [&]
+                       std::cout << " " << translate_unary_op_tag(utag.get());
+                       print(a.get(), ctx, print_types);
+                   })
+            .case_(sum(a, decl),
+                   [&]
                    {
-                std::cout << "sum(";
+                       std::cout << "sum(";
 
-                print(a.get(), ctx);
+                       print(a.get(), ctx, print_types);
 
-                for (const auto& index : indices.get())
-                {
-                    std::cout << ", ";
-                    print(index, ctx);
-                }
+                       std::cout << ", ";
 
-                std::cout << ")";
-            })
-            .case_(index(id), [&]
-                   {
-                std::cout << id.get();
-            })
-            .case_(subscription(a, indices), [&]
-                   {
-                print(a.get(), ctx);
+                       if (auto debug_name = decl.get().annotations().lookup("kubus.debug.name"))
+                       {
+                           std::cout << debug_name.as<std::string>();
+                       }
+                       else
+                       {
+                           std::cout << ctx.get_name_for_handle(decl.get().id());
+                       }
 
-                std::cout << "[";
+                       std::cout << ")";
+                   })
+            .case_(subscription(a, indices),
+                   [&]
+                   {
+                       print(a.get(), ctx, print_types);
 
-                for (const auto& index : indices.get())
-                {
-                    print(index, ctx);
-                    std::cout << ", ";
-                }
+                       std::cout << "[";
 
-                std::cout << "]";
-            })
-            .case_(tensor(tensor_var), [&]
-                   {
-                std::cout << ctx.get_name_for_handle(tensor_var.get()->data_handle());
-            })
-            .case_(type_conversion(a), [&]
-                   {
-                print(a.get(), ctx);
-            })
-            .case_(compound(subexprs), [&]
-                   {
-                for (const auto& sub_expr : subexprs.get())
-                {
-                    print(sub_expr, ctx);
-                    std::cout << " \n";
-                }
-            })
-            .case_(delta(a, b), [&]
-                   {
-                std::cout << id.get() << "[";
+                       for (const auto& index : indices.get())
+                       {
+                           print(index, ctx, print_types);
+                           std::cout << ", ";
+                       }
 
+                       std::cout << "]";
+                   })
+            .case_(variable_ref(decl),
+                   [&]
+                   {
+                       if (auto debug_name = decl.get().annotations().lookup("kubus.debug.name"))
+                       {
+                           std::cout << debug_name.as<std::string>();
+                       }
+                       else
+                       {
+                           std::cout << ctx.get_name_for_handle(decl.get().id());
+                       }
+                       
+                       if (print_types)
+                       {
+                           std::cout << " :: ";
+                           
+                           print_type(decl.get().var_type());
+                       }
+                   })
+            .case_(type_conversion(t, a),
+                   [&]
+                   {
+                       std::cout << "cast<";
+                       print_type(t.get());
+                       std::cout << ">(";
+                       print(a.get(), ctx, print_types);
+                       std::cout << ")";
+                   })
+            .case_(compound(subexprs),
+                   [&]
+                   {
+                       for (const auto& sub_expr : subexprs.get())
+                       {
+                           print(sub_expr, ctx, print_types);
+                           std::cout << " \n";
+                       }
+                   })
+            .case_(delta(a, b),
+                   [&]
+                   {
+                       std::cout << id.get() << "[";
 
-                print(a.get(), ctx);
-                std::cout << ", ";
-                print(b.get(), ctx);
+                       print(a.get(), ctx, print_types);
+                       std::cout << ", ";
+                       print(b.get(), ctx, print_types);
 
-                std::cout << "]";
-            })
-            .case_(intrinsic_function(id, args), [&]
+                       std::cout << "]";
+                   })
+            .case_(intrinsic_function(id, args),
+                   [&]
                    {
-                std::cout << id.get() << "(";
+                       std::cout << id.get() << "(";
 
-                for (const auto& arg : args.get())
-                {
-                    print(arg, ctx);
-                    std::cout << ", ";
-                }
+                       for (const auto& arg : args.get())
+                       {
+                           print(arg, ctx, print_types);
+                           std::cout << ", ";
+                       }
 
-                std::cout << ")";
-            })
-            .case_(double_literal(dval), [&]
+                       std::cout << ")";
+                   })
+            .case_(double_literal(dval),
+                   [&]
                    {
-                std::cout << dval.get();
-            })
-            .case_(float_literal(fval), [&]
+                       std::cout << dval.get();
+                       
+                       if (print_types)
+                       {
+                           std::cout << " :: ";
+                           print_type(types::double_{});
+                       }
+                   })
+            .case_(float_literal(fval),
+                   [&]
                    {
-                std::cout << fval.get();
-            })
-            .case_(integer_literal(ival), [&]
+                       std::cout << fval.get();
+                       
+                       if (print_types)
+                       {
+                           std::cout << " :: ";
+                           print_type(types::float_{});
+                       }
+                   })
+            .case_(integer_literal(ival),
+                   [&]
                    {
-                std::cout << ival.get();
-            })
-            .case_(for_(a, b, c, d), [&]
+                       std::cout << ival.get();
+    
+                       if (print_types)
+                       {
+                           std::cout << " :: ";
+                           print_type(types::integer{});
+                       }
+                   })
+            .case_(for_(decl, a, b, c, d),
+                   [&]
                    {
-                std::cout << "for ";
-                print(a.get(), ctx);
-                std::cout << " in [";
-                print(b.get(), ctx);
-                std::cout << ", ";
-                print(c.get(), ctx);
-                std::cout << "]";
-                std::cout << "\n{\n";
-                print(d.get(), ctx);
-                std::cout << "\n}";
-            })
-            .case_(for_all(a, b), [&]
+                       std::cout << "for ";
+
+                       if (auto debug_name = decl.get().annotations().lookup("kubus.debug.name"))
+                       {
+                           std::cout << debug_name.as<std::string>();
+                       }
+                       else
+                       {
+                           std::cout << ctx.get_name_for_handle(decl.get().id());
+                       }
+
+                       std::cout << " in [";
+                       print(a.get(), ctx, print_types);
+                       std::cout << ", ";
+                       print(b.get(), ctx, print_types);
+                       std::cout << ", ";
+                       print(c.get(), ctx, print_types);
+                       std::cout << "]";
+                       std::cout << "\n{\n";
+                       print(d.get(), ctx, print_types);
+                       std::cout << "\n}";
+                   })
+            .case_(for_all(decl, b), [&]
                    {
-                std::cout << "for all ";
-                print(a.get(), ctx);
-                std::cout << "\n{\n";
-                print(b.get(), ctx);
-                std::cout << "\n}";
-            });
+                       std::cout << "for all ";
+
+                       if (auto debug_name = decl.get().annotations().lookup("kubus.debug.name"))
+                       {
+                           std::cout << debug_name.as<std::string>();
+                       }
+                       else
+                       {
+                           std::cout << ctx.get_name_for_handle(decl.get().id());
+                       }
+
+                       std::cout << "\n{\n";
+                       print(b.get(), ctx, print_types);
+                       std::cout << "\n}";
+                   });
 
     pattern::match(expr, m);
 }
 }
 
-void pretty_print(const expression& expr)
+void pretty_print(const expression& expr, bool print_types)
 {
     pretty_printer_context ctx;
 
-    print(expr, ctx);
+    print(expr, ctx, print_types);
+}
+
+namespace
+{
+
+const char* intent_to_string(variable_intent intent)
+{
+    switch (intent)
+    {
+    case variable_intent::generic:
+        return "";
+    case variable_intent::in_param:
+        return "in ";
+    case variable_intent::out_param:
+        return "out ";
+    case variable_intent::inout_param:
+        return "inout ";
+    }
+}
+}
+
+void pretty_print(const function_declaration& decl, bool print_types)
+{
+    pretty_printer_context ctx;
+
+    std::cout << "def entry(";
+
+    for (const auto& param : decl.params())
+    {
+        std::cout << intent_to_string(param.intent());
+
+        std::cout << ctx.get_name_for_handle(param.id());
+
+        std::cout << ", ";
+    }
+
+    std::cout << ")";
+
+    std::cout << " -> (" << ctx.get_name_for_handle(decl.result().id()) << ")";
+
+    std::cout << "\n{\n";
+
+    print(decl.body(), ctx, print_types);
+
+    std::cout << "\n}" << std::endl;
 }
 }
 }

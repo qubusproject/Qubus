@@ -1,7 +1,7 @@
 #ifndef KUBUS_INDEX_HPP
 #define KUBUS_INDEX_HPP
 
-#include <qbb/util/unused.hpp>
+#include <qbb/util/handle.hpp>
 
 #include <cstddef>
 #include <memory>
@@ -12,39 +12,53 @@ namespace qbb
 namespace kubus
 {
 
-template <char id>
-struct index
+class index
 {
+public:
+    constexpr index()
+    : debug_name_(nullptr)
+    {
+    }
+    
+    explicit constexpr index(const char* debug_name_)
+    : debug_name_(debug_name_)
+    {
+    }
+    
+    index(const index&) = delete;
+    index& operator=(const index&) = delete;
+    
+    qbb::util::handle id() const
+    {
+        return qbb::util::handle_from_ptr(this);
+    }
+    
+    const char* debug_name() const
+    {
+        return debug_name_;
+    }
+private:
+    const char* debug_name_;
 };
 
-template <char id_lhs, char id_rhs>
-inline bool operator==(const index<id_lhs>& QBB_UNUSED(lhs), const index<id_rhs>& QBB_UNUSED(rhs))
+inline bool operator==(const index& lhs, const index& rhs)
 {
-    return false;
+    return lhs.id() == rhs.id();
 }
 
-template <char id>
-inline bool operator==(const index<id>& QBB_UNUSED(lhs), const index<id>& QBB_UNUSED(rhs))
-{
-    return true;
-}
-
-template <char id_lhs, char id_rhs>
-inline bool operator!=(const index<id_lhs>& QBB_UNUSED(lhs), const index<id_rhs>& QBB_UNUSED(rhs))
+inline bool operator!=(const index& lhs, const index& rhs)
 {
     return !(lhs == rhs);
 }
 
-template <char id>
-inline std::ostream& operator<<(std::ostream& os, const index<id>&)
+inline std::ostream& operator<<(std::ostream& os, const index& idx)
 {
-    return os << "index( " << id << " )";
+    return os << "index( " << idx.debug_name() << " )";
 }
 
-template <char ID>
-inline char id(const index<ID>&)
+inline qbb::util::handle id(const index& value)
 {
-    return ID;
+    return value.id();
 }
 }
 }

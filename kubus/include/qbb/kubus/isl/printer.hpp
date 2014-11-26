@@ -2,6 +2,7 @@
 #define QBB_KUBUS_ISL_PRINTER_HPP
 
 #include <isl/printer.h>
+#include <isl/ast.h>
 
 namespace qbb
 {
@@ -34,6 +35,8 @@ public:
     void print(const union_map& map);
 
     void print(const ast_node& ast);
+    
+    void print_macro(isl_ast_op_type op_type);
 
     isl_printer* native_handle() const;
 

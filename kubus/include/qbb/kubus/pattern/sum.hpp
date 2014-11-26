@@ -15,12 +15,12 @@ namespace kubus
 namespace pattern
 {
 
-template <typename Body, typename Indices>
+template <typename Body, typename Index>
 class sum_pattern
 {
 public:
-    sum_pattern(Body body_, Indices indices_)
-    : body_(std::move(body_)), indices_(std::move(indices_))
+    sum_pattern(Body body_, Index index_)
+    : body_(std::move(body_)), index_(std::move(index_))
     {
     }
 
@@ -31,7 +31,7 @@ public:
         {
             if (body_.match(concret_value->body()))
             {
-                if (indices_.match(concret_value->indices()))
+                if (index_.match(concret_value->index_decl()))
                 {
                     if (var)
                     {
@@ -46,22 +46,21 @@ public:
         return false;
     }
 
+    void reset() const
+    {
+        body_.reset();
+        index_.reset();
+    }
 private:
     Body body_;
-    Indices indices_;
+    Index index_;
 };
 
 
-template <typename Body, typename Indices>
-sum_pattern<Body, Indices> sum(Body body, Indices indices)
+template <typename Body, typename Index>
+sum_pattern<Body, Index> sum(Body body, Index index)
 {
-    return sum_pattern<Body, Indices>(body, indices);
-}
-
-template <typename Body, typename... Indices>
-auto sum_n(Body body, Indices... indices)
-{
-    return sum(body, sequence(indices...));
+    return sum_pattern<Body, Index>(body, index);
 }
 
 }

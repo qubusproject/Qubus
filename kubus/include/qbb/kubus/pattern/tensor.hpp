@@ -1,10 +1,11 @@
 #ifndef QBB_KUBUS_PATTERN_TENSOR_HPP
 #define QBB_KUBUS_PATTERN_TENSOR_HPP
 
-#include <qbb/kubus/IR/tensor_access_expr.hpp>
-
+#include <qbb/kubus/IR/variable_ref_expr.hpp>
 #include <qbb/kubus/pattern/variable.hpp>
 #include <qbb/kubus/pattern/any.hpp>
+#include <qbb/kubus/IR/type.hpp>
+#include <qbb/kubus/pattern/type.hpp>
 
 #include <utility>
 
@@ -14,41 +15,48 @@ namespace kubus
 {
 namespace pattern
 {
-template <typename Variable>
+template <typename Declaration>
 class tensor_pattern
 {
 public:
-    tensor_pattern(Variable variable_) : variable_(variable_)
+    explicit tensor_pattern(Declaration declaration_) : declaration_(declaration_)
     {
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<tensor_access_expr>* var = nullptr) const
-    {
-        if (auto concret_value = value.template try_as<tensor_access_expr>())
+    bool match(const BaseType& value, const variable<variable_ref_expr>* var = nullptr) const
+    {        
+        if (auto concret_value = value.template try_as<variable_ref_expr>())
         {
-            if (variable_.match(concret_value->variable()))
+            if (tensor_t(_).match(concret_value->declaration().var_type()))
             {
-                if (var)
+                if (declaration_.match(concret_value->declaration()))
                 {
-                    var->set(*concret_value);
-                }
+                    if (var)
+                    {
+                        var->set(*concret_value);
+                    }
 
-                return true;
+                    return true;
+                }
             }
         }
 
         return false;
     }
 
+    void reset() const
+    {
+        declaration_.reset();
+    }
 private:
-    Variable variable_;
+    Declaration declaration_;
 };
 
-template <typename Variable>
-tensor_pattern<Variable> tensor(Variable variable)
+template <typename Declaration>
+tensor_pattern<Declaration> tensor(Declaration declaration)
 {
-    return tensor_pattern<Variable>(variable);
+    return tensor_pattern<Declaration>(declaration);
 }
 }
 }

@@ -135,6 +135,11 @@ space map::get_space() const
     return space(isl_map_get_space(handle_));
 }
 
+int map::dim(isl_dim_type type) const
+{
+    return isl_map_dim(handle_, type);
+}
+
 void map::add_constraint(constraint c)
 {
     handle_ = isl_map_add_constraint(handle_, c.release());
@@ -145,6 +150,11 @@ map map::universe(space s)
     return map(isl_map_universe(s.release()));
 }
 
+map map::empty(space s)
+{
+    return map(isl_map_empty(s.release()));
+}
+
 map project_out(map m, isl_dim_type type, unsigned int first, unsigned int n)
 {
     return map(isl_map_project_out(m.release(), type, first, n));
@@ -153,6 +163,35 @@ map project_out(map m, isl_dim_type type, unsigned int first, unsigned int n)
 map make_map_from_domain_and_range(set domain, set range)
 {
     return map(isl_map_from_domain_and_range(domain.release(), range.release()));
+}
+
+map apply_domain(map lhs, map rhs)
+{
+    isl_map* temp = isl_map_apply_domain(lhs.release(), rhs.release());
+
+    return map(temp);
+}
+
+map apply_range(map lhs, map rhs)
+{
+    isl_map* temp = isl_map_apply_range(lhs.release(), rhs.release());
+
+    return map(temp);
+}
+
+map union_(map lhs, map rhs)
+{
+    return map(isl_map_union(lhs.release(), rhs.release()));
+}
+
+map add_dims(map m, isl_dim_type type, int num)
+{
+    return map(isl_map_add_dims(m.release(), type, num));
+}
+
+map fix_dimension(map m, isl_dim_type type, int pos, int value)
+{
+    return map(isl_map_fix_si(m.release(), type, pos, value));
 }
 
 union_map::union_map(isl_union_map* handle_) noexcept : handle_{handle_}
@@ -199,6 +238,35 @@ union_map& union_map::operator=(union_map&& other) noexcept
 union_map::~union_map()
 {
     isl_union_map_free(handle_);
+}
+
+space union_map::get_space() const
+{
+    return space(isl_union_map_get_space(handle_));
+}
+
+namespace
+{
+extern "C" int add_map(isl_map* m, void* user) noexcept;   
+}
+
+std::vector<map> union_map::get_maps() const
+{
+    std::vector<map> result;
+    
+    isl_union_map_foreach_map(handle_, add_map, & result);
+    
+    return result;
+}
+
+union_set union_map::domain() const
+{
+    return union_set(isl_union_map_domain(isl_union_map_copy(handle_)));
+}
+
+union_set union_map::range() const
+{
+    return union_set(isl_union_map_range(isl_union_map_copy(handle_)));
 }
 
 isl_union_map* union_map::native_handle() const
@@ -259,6 +327,37 @@ union_map add_map(union_map umap, map m)
 {
     return union_map(isl_union_map_add_map(umap.release(), m.release()));
 }
+
+union_map flat_range_product(union_map lhs, union_map rhs)
+{
+    return union_map(isl_union_map_flat_range_product(lhs.release(), rhs.release()));
+}
+
+union_map align_params(union_map m, space s)
+{
+    return union_map(isl_union_map_align_params(m.release(), s.release()));
+}
+
+union_map project_out(union_map m, isl_dim_type type, unsigned int first, unsigned int n)
+{
+    return union_map(isl_union_map_project_out(m.release(), type, first, n));
+}
+
+namespace
+{
+extern "C" {
+
+int add_map(isl_map* m, void* user) noexcept
+{
+    auto& maps = *static_cast<std::vector<map>*>(user);
+
+    maps.emplace_back(m);
+
+    return 1;
+}
+}
+}
+
 }
 }
 }

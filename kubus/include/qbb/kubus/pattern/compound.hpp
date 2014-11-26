@@ -42,6 +42,10 @@ public:
         return false;
     }
 
+    void reset() const
+    {
+        body_.reset();
+    }
 private:
     Body body_;
 };

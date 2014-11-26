@@ -3,8 +3,12 @@
 
 #include <qbb/kubus/isl/set.hpp>
 #include <qbb/kubus/isl/map.hpp>
+#include <qbb/kubus/isl/band.hpp>
+#include <qbb/kubus/isl/schedule_node.hpp>
 
 #include <isl/schedule.h>
+
+#include <vector>
 
 namespace qbb
 {
@@ -41,17 +45,33 @@ class schedule
 public:
     explicit schedule(schedule_constraints constraints);
 
+    explicit schedule(isl_schedule* handle_);
+    
+    schedule(const schedule& other); 
+    
     ~schedule();
+    
+    schedule& operator=(const schedule& other);
 
     void dump();
 
+    schedule_node get_root() const;
+    
     union_map get_map() const;
+    union_set get_domain() const;
+
+    std::vector<band> get_band_forest() const;
 
     isl_schedule* native_handle() const;
-
+    isl_schedule* release() noexcept;
+    
+    static schedule from_domain(union_set domain);
 private:
     isl_schedule* handle_;
 };
+
+schedule get_schedule(const schedule_node& node);
+
 }
 }
 }

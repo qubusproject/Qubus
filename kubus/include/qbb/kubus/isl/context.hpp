@@ -27,6 +27,16 @@ private:
     isl_ctx* handle_;
 };
 
+class context_ref
+{
+public:
+    explicit context_ref(isl_ctx* handle_);
+
+    isl_ctx* native_handle() const;
+private:
+    isl_ctx* handle_;
+};
+
 }
 }
 }

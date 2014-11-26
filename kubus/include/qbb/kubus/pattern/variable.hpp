@@ -17,6 +17,8 @@ template <typename T>
 class variable
 {
 public:
+    using value_type = T;
+    
     variable() : value_{std::make_shared<boost::optional<T>>()}
     {
     }
@@ -51,7 +53,16 @@ public:
     {
         return value_->value();
     }
+    
+    bool is_valid() const
+    {
+        return *value_;
+    }
 
+    void reset() const
+    {
+        *value_ = boost::none;
+    }
 private:
     std::shared_ptr<boost::optional<T>> value_;
 };

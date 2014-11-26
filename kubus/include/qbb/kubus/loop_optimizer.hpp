@@ -1,14 +1,14 @@
 #ifndef QBB_KUBUS_LOOP_OPTIMIZER_HPP
 #define QBB_KUBUS_LOOP_OPTIMIZER_HPP
 
-#include <qbb/kubus/IR/expression.hpp>
+#include <qbb/kubus/IR/function_declaration.hpp>
 
 namespace qbb
 {
 namespace kubus
 {
  
-expression optimize_loops(const expression& expr);
+function_declaration optimize_loops(const function_declaration& expr);
     
 }   
 }

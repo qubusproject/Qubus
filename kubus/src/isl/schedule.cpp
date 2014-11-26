@@ -59,9 +59,28 @@ schedule::schedule(schedule_constraints constraints)
 {
 }
 
+schedule::schedule(isl_schedule* handle_)
+: handle_(handle_)
+{
+}
+
+schedule::schedule(const schedule& other)
+: handle_(isl_schedule_copy(other.native_handle()))
+{
+}
+
 schedule::~schedule()
 {
     isl_schedule_free(handle_);
+}
+
+schedule& schedule::operator=(const schedule& other)
+{
+    isl_schedule_free(handle_);
+    
+    handle_ = isl_schedule_copy(other.native_handle());
+    
+    return *this;
 }
 
 void schedule::dump()
@@ -69,15 +88,76 @@ void schedule::dump()
     isl_schedule_dump(handle_);
 }
 
+schedule_node schedule::get_root() const
+{
+    return schedule_node(isl_schedule_get_root(handle_));
+}
+
 union_map schedule::get_map() const
 {
     return union_map(isl_schedule_get_map(handle_));
+}
+
+union_set schedule::get_domain() const
+{
+    return union_set(isl_schedule_get_domain(handle_));
+}
+
+namespace
+{
+extern "C" int add_band_to_forest(isl_band* child, void* user) noexcept;
+}
+
+std::vector<band> schedule::get_band_forest() const
+{
+    std::vector<band> result;
+    
+    isl_band_list* forest = isl_schedule_get_band_forest(handle_);
+    
+    isl_band_list_foreach(forest, add_band_to_forest, &result);
+    
+    isl_band_list_free(forest);
+    
+    return result;
 }
 
 isl_schedule* schedule::native_handle() const
 {
     return handle_;
 }
+
+isl_schedule* schedule::release() noexcept
+{
+    isl_schedule* tmp = handle_;
+    handle_ = nullptr;
+    return tmp;
+}
+
+schedule schedule::from_domain(union_set domain)
+{
+    return schedule(isl_schedule_from_domain(domain.release()));
+}
+
+namespace
+{
+extern "C" {
+
+int add_band_to_forest(isl_band* child, void* user) noexcept
+{
+    auto& children = *static_cast<std::vector<band>*>(user);
+
+    children.emplace_back(child);
+
+    return 1;
+}
+}
+}
+
+schedule get_schedule(const schedule_node& node)
+{
+    return schedule(isl_schedule_node_get_schedule(node.native_handle()));
+}
+
 }
 }
 }

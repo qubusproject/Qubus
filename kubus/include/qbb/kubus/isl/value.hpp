@@ -22,7 +22,11 @@ public:
     value(const value& other);
 
     ~value();
+    
+    long int as_integer() const;
 
+    bool is_int() const;
+    
     isl_val* native_handle() const;
 
     isl_val* release() noexcept;

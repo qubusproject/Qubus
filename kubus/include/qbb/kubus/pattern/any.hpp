@@ -22,6 +22,10 @@ public:
         
         return true;
     }
+    
+    void reset() const
+    {
+    }
 };
 
 static const any _ = any{}; 

@@ -2,6 +2,9 @@
 #define QBB_KUBUS_BINARY_OPERATOR_EXPR_HPP
 
 #include <qbb/kubus/IR/expression.hpp>
+#include <qbb/kubus/IR/expression_traits.hpp>
+
+#include <vector>
 
 namespace qbb
 {
@@ -13,6 +16,8 @@ enum class binary_op_tag
   minus,
   multiplies,
   divides,
+  modulus,
+  div_floor,
   assign,
   plus_assign,
   equal_to,
@@ -34,6 +39,9 @@ public:
     expression left() const;
     expression right() const;
     
+    std::vector<expression> sub_expressions() const;
+    expression substitute_subexpressions(const std::vector<expression>& subexprs) const;
+    
     annotation_map& annotations() const;
     annotation_map& annotations();
 private:
@@ -43,6 +51,15 @@ private:
     
     mutable annotation_map annotations_;
 };
+
+bool operator==(const binary_operator_expr& lhs, const binary_operator_expr& rhs);
+bool operator!=(const binary_operator_expr& lhs, const binary_operator_expr& rhs);
+
+template<>
+struct is_expression<binary_operator_expr> : std::true_type
+{
+};
+
 }
 }
 

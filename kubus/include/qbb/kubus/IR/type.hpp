@@ -3,10 +3,14 @@
 
 #include <qbb/util/multi_method.hpp>
 
+#include <qbb/kubus/IR/expression_traits.hpp>
+
 #include <memory>
 #include <typeinfo>
 #include <typeindex>
 #include <utility>
+#include <functional>
+#include <type_traits>
 
 namespace qbb
 {
@@ -23,7 +27,13 @@ public:
         return true;
     }
 };
+
 }
+
+template<>
+struct is_type<types::unknown> : std::true_type
+{
+};
 
 class type
 {
@@ -32,7 +42,7 @@ public:
     {
     }
 
-    template <typename T>
+    template <typename T, typename Enabler = typename std::enable_if<is_type<T>::value>::type>
     type(T value)
     {
         auto tag = implementation_table_.register_type<T>();
@@ -68,6 +78,21 @@ public:
         }
     }
 
+    template <typename T>
+    const T* try_as() const
+    {
+        using value_type = typename std::decay<T>::type;
+
+        if (self_->rtti() == typeid(value_type))
+        {
+            return &static_cast<type_wrapper<value_type>*>(self_.get())->get();
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+    
     qbb::util::index_t tag() const
     {
         return self_->tag();
@@ -138,6 +163,7 @@ private:
 };
 
 bool operator==(const type& lhs, const type& rhs);
+bool operator!=(const type& lhs, const type& rhs);
 
 namespace types
 {
@@ -169,10 +195,61 @@ public:
     }
 };
 
+class index
+{
+public:
+    bool is_primitive() const
+    {
+        return true;
+    }
+};
+
+class complex
+{
+public:
+    explicit complex(type real_type_)
+    : real_type_(real_type_)
+    {
+    }
+    
+    bool is_primitive() const
+    {
+        return true;
+    }
+    
+    type real_type() const
+    {
+        return real_type_;
+    }
+private:
+    type real_type_;
+};
+
 class tensor
 {
 public:
     explicit tensor(type value_type_) : value_type_{std::move(value_type_)}
+    {
+    }
+
+    const type& value_type() const
+    {
+        return value_type_;
+    }
+
+    bool is_primitive() const
+    {
+        return false;
+    }
+
+private:
+    type value_type_;
+};
+
+class array
+{
+public:
+    explicit array(type value_type_) : value_type_{std::move(value_type_)}
     {
     }
 
@@ -211,6 +288,60 @@ private:
     type value_type_;
 };
 }
+
+template<>
+struct is_type<types::double_> : std::true_type
+{
+};
+
+template<>
+struct is_type<types::float_> : std::true_type
+{
+};
+
+template<>
+struct is_type<types::integer> : std::true_type
+{
+};
+
+template<>
+struct is_type<types::index> : std::true_type
+{
+};
+
+template<>
+struct is_type<types::complex> : std::true_type
+{
+};
+
+template<>
+struct is_type<types::array> : std::true_type
+{
+};
+
+template<>
+struct is_type<types::tensor> : std::true_type
+{
+};
+
+template<>
+struct is_type<types::sparse_tensor> : std::true_type
+{
+};
+
 }
 }
+
+namespace std
+{
+    template<>
+    struct hash<qbb::kubus::type>
+    {
+        using argument_type = qbb::kubus::type;
+        using result_type = std::size_t;
+        
+        std::size_t operator()(const qbb::kubus::type& value) const noexcept;
+    };
+}
+
 #endif

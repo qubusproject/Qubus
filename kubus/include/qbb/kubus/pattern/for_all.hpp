@@ -27,7 +27,7 @@ public:
     {
         if (auto concret_value = value.template try_as<for_all_expr>())
         {
-            if (index_.match(concret_value->index()))
+            if (index_.match(concret_value->loop_index()))
             {
                 if (body_.match(concret_value->body()))
                 {
@@ -44,6 +44,11 @@ public:
         return false;
     }
 
+    void reset() const
+    {
+        index_.reset();
+        body_.reset();
+    }
 private:
     Index index_;
     Body body_;

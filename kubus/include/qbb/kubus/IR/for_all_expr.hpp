@@ -2,6 +2,8 @@
 #define QBB_KUBUS_FOR_ALL_EXPR_HPP
 
 #include <qbb/kubus/IR/expression.hpp>
+#include <qbb/kubus/IR/variable_declaration.hpp>
+#include <qbb/kubus/IR/expression_traits.hpp>
 
 #include <vector>
 
@@ -13,19 +15,30 @@ namespace kubus
 class for_all_expr
 {
 public:
-    for_all_expr(expression index_, expression body_);
+    for_all_expr(variable_declaration loop_index_, expression body_);
     
     expression body() const;
     
-    expression index() const;
+    const variable_declaration& loop_index() const;
+    
+    std::vector<expression> sub_expressions() const;
+    expression substitute_subexpressions(const std::vector<expression>& subexprs) const;
     
     annotation_map& annotations() const;
     annotation_map& annotations();
 private:
-    expression index_;
+    variable_declaration loop_index_;
     expression body_;
     
     mutable annotation_map annotations_;
+};
+
+bool operator==(const for_all_expr& lhs, const for_all_expr& rhs);
+bool operator!=(const for_all_expr& lhs, const for_all_expr& rhs);
+
+template<>
+struct is_expression<for_all_expr> : std::true_type
+{
 };
 
 }

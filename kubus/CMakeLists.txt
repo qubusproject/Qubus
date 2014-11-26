@@ -1,4 +1,5 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 2.8.12)
+enable_testing()
 
 project(kubus)
 
@@ -27,12 +28,14 @@ target_compile_options(wall INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPIL
 
 include(FeatureSummary)
 
-add_subdirectory(src/IR)
-add_subdirectory(src/isl)
 add_subdirectory(src)
+add_subdirectory(tests)
 
 add_executable(kubus_test main.cpp)
-target_link_libraries(kubus_test kubus)
+target_link_libraries(kubus_test PUBLIC kubus hpx_init)
+target_compile_options(kubus_test PRIVATE)
+target_link_libraries(kubus_test PRIVATE)
+target_compile_definitions(kubus_test PRIVATE -DEIGEN_DONT_VECTORIZE)
 
 feature_summary(WHAT ALL)
 

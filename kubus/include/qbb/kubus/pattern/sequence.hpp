@@ -8,6 +8,7 @@
 #include <boost/fusion/container/vector.hpp>
 #include <boost/fusion/sequence/intrinsic/size.hpp>
 #include <boost/fusion/algorithm/iteration/fold.hpp>
+#include <boost/fusion/algorithm/iteration/for_each.hpp>
 
 #include <utility>
 
@@ -49,6 +50,10 @@ public:
         return false;
     }
 
+    void reset() const
+    {
+        boost::fusion::for_each(values_, [](const auto& value) { value.reset(); });
+    }
 private:
     boost::fusion::vector<Values...> values_;
 };

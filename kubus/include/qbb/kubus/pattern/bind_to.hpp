@@ -3,6 +3,10 @@
 
 #include <qbb/kubus/pattern/variable.hpp>
 
+#include <qbb/util/function_traits.hpp>
+
+#include <type_traits>
+
 namespace qbb
 {
 namespace kubus
@@ -21,14 +25,31 @@ public:
     template <typename BaseType>
     bool match(const BaseType& value, const variable<T>* var = nullptr) const
     {
-        bool result = bound_pattern_.match(value, &var_);
+        using variable_type = typename std::remove_pointer<typename util::function_traits<decltype(
+            &Pattern::template match<BaseType>)>::template arg<1>::type>::type;
+        using value_type = typename variable_type::value_type;
 
-        if (var && result)
+        variable<value_type> temp_var;
+
+        bool result = bound_pattern_.match(value, &temp_var);
+
+        if (result)
         {
-            var->set(var_.get());
+            var_.set(temp_var.get());
+
+            if (var)
+            {
+                var->set(var_.get());
+            }
         }
 
         return result;
+    }
+
+    void reset() const
+    {
+        bound_pattern_.reset();
+        var_.reset();
     }
 
 private:

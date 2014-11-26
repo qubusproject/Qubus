@@ -19,7 +19,7 @@ class binary_operator_pattern
 {
 public:
     binary_operator_pattern(Tag tag_, LHS lhs_, RHS rhs_)
-    :tag_{std::move(tag_)}, lhs_{std::move(lhs_)}, rhs_{std::move(rhs_)}
+    :tag_(std::move(tag_)), lhs_(std::move(lhs_)), rhs_(std::move(rhs_))
     {
     }
 
@@ -45,6 +45,12 @@ public:
         return false;
     }
 
+    void reset() const
+    {
+        tag_.reset();
+        lhs_.reset();
+        rhs_.reset();
+    }
 private:
     Tag tag_;
     LHS lhs_;

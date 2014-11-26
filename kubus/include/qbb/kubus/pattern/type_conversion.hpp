@@ -18,7 +18,8 @@ template <typename TargetType, typename Arg>
 class type_conversion_pattern
 {
 public:
-    type_conversion_pattern(TargetType target_type_, Arg arg_) : target_type_(std::move(target_type_)), arg_(std::move(arg_))
+    type_conversion_pattern(TargetType target_type_, Arg arg_)
+    : target_type_(std::move(target_type_)), arg_(std::move(arg_))
     {
     }
 
@@ -27,18 +28,27 @@ public:
     {
         if (auto concret_value = value.template try_as<type_conversion_expr>())
         {
-            if (arg_.match(concret_value->arg()))
+            if (target_type_.match(concret_value->target_type()))
             {
-                if (var)
+                if (arg_.match(concret_value->arg()))
                 {
-                    var->set(*concret_value);
-                }
+                    if (var)
+                    {
+                        var->set(*concret_value);
+                    }
 
-                return true;
+                    return true;
+                }
             }
         }
 
         return false;
+    }
+
+    void reset() const
+    {
+        target_type_.reset();
+        arg_.reset();
     }
 
 private:
@@ -57,7 +67,6 @@ auto type_conversion(Arg arg)
 {
     return type_conversion(_, arg);
 }
-
 }
 }
 }

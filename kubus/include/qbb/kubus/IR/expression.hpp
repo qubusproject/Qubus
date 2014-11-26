@@ -4,10 +4,14 @@
 #include <qbb/util/multi_method.hpp>
 #include <qbb/kubus/IR/annotations.hpp>
 
+#include <qbb/kubus/IR/expression_traits.hpp>
+
 #include <memory>
+#include <vector>
 #include <typeinfo>
 #include <typeindex>
 #include <utility>
+#include <type_traits>
 
 namespace qbb
 {
@@ -16,7 +20,7 @@ namespace kubus
 class expression
 {
 public:
-    template <typename T>
+    template <typename T, typename Enabler = typename std::enable_if<is_expression<T>::value>::type>
     expression(T value)
     {
         auto tag = implementation_table_.register_type<T>();
@@ -31,12 +35,22 @@ public:
     {
         return self_->annotations();
     }
-    
+
     annotation_map& annotations()
     {
         return self_->annotations();
     }
-    
+
+    std::vector<expression> sub_expressions() const
+    {
+        return self_->sub_expressions();
+    }
+
+    expression substitute_subexpressions(const std::vector<expression>& new_subexprs) const
+    {
+        return self_->substitute_subexpressions(new_subexprs);
+    }
+
     std::type_index rtti() const
     {
         return self_->rtti();
@@ -71,7 +85,7 @@ public:
             return nullptr;
         }
     }
-    
+
     qbb::util::index_t tag() const
     {
         return self_->tag();
@@ -91,11 +105,15 @@ private:
     class expression_interface
     {
     public:
-        virtual ~expression_interface() = default;   
-        
+        virtual ~expression_interface() = default;
+
         virtual annotation_map& annotations() const = 0;
         virtual annotation_map& annotations() = 0;
-        
+
+        virtual std::vector<expression> sub_expressions() const = 0;
+        virtual expression
+        substitute_subexpressions(const std::vector<expression>& new_subexprs) const = 0;
+
         virtual std::type_index rtti() const = 0;
         virtual qbb::util::index_t tag() const = 0;
     };
@@ -116,22 +134,33 @@ private:
         {
             return value_.annotations();
         }
-        
+
         annotation_map& annotations() override
         {
             return value_.annotations();
         }
-        
+
+        std::vector<expression> sub_expressions() const override
+        {
+            return value_.sub_expressions();
+        }
+
+        expression
+        substitute_subexpressions(const std::vector<expression>& new_subexprs) const override
+        {
+            return value_.substitute_subexpressions(new_subexprs);
+        }
+
         const T& get() const
         {
             return value_;
         }
-        
+
         T& get()
         {
             return value_;
         }
-        
+
         std::type_index rtti() const override
         {
             return typeid(T);

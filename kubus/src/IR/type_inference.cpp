@@ -33,6 +33,11 @@ type common_type_integer_integer(const types::integer&, const types::integer&)
     return types::integer{};
 }
 
+type common_type_index_index(const types::index&, const types::index&)
+{
+    return types::index{};
+}
+
 type common_type_double_integer(const types::double_&, const types::integer&)
 {
     return types::double_{};
@@ -63,17 +68,66 @@ type common_type_float_double(const types::float_&, const types::double_&)
     return types::double_{};
 }
 
+type common_type_complex_double(const types::complex& lhs, const types::double_& rhs)
+{
+    return types::complex(common_type_(lhs.real_type(), rhs));
+}
+
+type common_type_double_complex(const types::double_& lhs, const types::complex& rhs)
+{
+    return types::complex(common_type_(lhs, rhs.real_type()));
+}
+
+type common_type_complex_float(const types::complex& lhs, const types::float_& rhs)
+{
+    return types::complex(common_type_(lhs.real_type(), rhs));
+}
+
+type common_type_float_complex(const types::float_& lhs, const types::complex& rhs)
+{
+    return types::complex(common_type_(lhs, rhs.real_type()));
+}
+
+type common_type_complex_integer(const types::complex& lhs, const types::integer& rhs)
+{
+    return types::complex(common_type_(lhs.real_type(), rhs));
+}
+
+type common_type_integer_complex(const types::integer& lhs, const types::complex& rhs)
+{
+    return types::complex(common_type_(lhs, rhs.real_type()));
+}
+
+type common_type_complex_complex(const types::complex& lhs, const types::complex& rhs)
+{
+    return types::complex(common_type_(lhs.real_type(), rhs.real_type()));
+}
+
+type common_type_tensor_tensor(const types::tensor& lhs, const types::tensor& rhs)
+{
+    return types::tensor(common_type_(lhs.value_type(), rhs.value_type()));
+}
+
 void init_common_type()
 {
     common_type_.add_specialization(common_type_double_double);
     common_type_.add_specialization(common_type_float_float);
     common_type_.add_specialization(common_type_integer_integer);
+    common_type_.add_specialization(common_type_index_index);
     common_type_.add_specialization(common_type_double_integer);
     common_type_.add_specialization(common_type_integer_double);
     common_type_.add_specialization(common_type_float_integer);
     common_type_.add_specialization(common_type_integer_float);
     common_type_.add_specialization(common_type_double_float);
     common_type_.add_specialization(common_type_float_double);
+    common_type_.add_specialization(common_type_complex_double);
+    common_type_.add_specialization(common_type_double_complex);
+    common_type_.add_specialization(common_type_complex_float);
+    common_type_.add_specialization(common_type_float_complex);
+    common_type_.add_specialization(common_type_complex_integer);
+    common_type_.add_specialization(common_type_integer_complex);
+    common_type_.add_specialization(common_type_complex_complex);
+    common_type_.add_specialization(common_type_tensor_tensor);
 }
 
 std::once_flag common_type_init_flag = {};
@@ -155,28 +209,32 @@ type infer_type_subscription_expr(const subscription_expr& expr)
 {
     type tensor_type = typeof_(expr.indexed_expr());
     
-    type val_type = value_type(tensor_type);
+    bool has_abstract_index = false;
     
-    return val_type;
-}
-
-type infer_type_tensor_variable_expr(const tensor_access_expr& expr)
-{
-    const auto& var = expr.variable();
+    for (const auto& index : expr.indices())
+    {
+        auto index_type = typeof_(index);
+        
+        if (index_type == types::index())
+        {
+            has_abstract_index = true;
+            break;
+        }
+    }
     
-    QBB_ASSERT(var, "var must always not be null");
-    
-    return var->tensor_type();
+    if (has_abstract_index)
+    {
+        return tensor_type;
+    }
+    else
+    {
+        return value_type(tensor_type);
+    }
 }
 
 type infer_type_type_conversion_expr(const type_conversion_expr& expr)
 {
     return expr.target_type();
-}
-
-type infer_type_index_expr(const index_expr&)
-{
-    return types::integer{};
 }
 
 type infer_type_double_literal_expr(const double_literal_expr&)
@@ -211,6 +269,11 @@ type infer_type_compound_expr(const compound_expr&)
     return types::unknown{};
 }
 
+type infer_type_variable_ref_expr(const variable_ref_expr& expr)
+{
+    return expr.declaration().var_type();
+}
+
 void init_infer_type()
 {
     infer_type.add_specialization(infer_type_binary_op_expr);
@@ -219,14 +282,13 @@ void init_infer_type()
     infer_type.add_specialization(infer_type_for_all_expr);
     infer_type.add_specialization(infer_type_for_expr);
     infer_type.add_specialization(infer_type_subscription_expr);
-    infer_type.add_specialization(infer_type_tensor_variable_expr);
     infer_type.add_specialization(infer_type_type_conversion_expr);
-    infer_type.add_specialization(infer_type_index_expr);
     infer_type.add_specialization(infer_type_double_literal_expr);
     infer_type.add_specialization(infer_type_float_literal_expr);
     infer_type.add_specialization(infer_type_integer_literal_expr);
     infer_type.add_specialization(infer_type_intrinsic_function_expr);
     infer_type.add_specialization(infer_type_compound_expr);
+    infer_type.add_specialization(infer_type_variable_ref_expr);
 }
 
 std::once_flag infer_type_init_flag = {};

@@ -37,6 +37,9 @@ public:
         return false;
     }
 
+    void reset() const
+    {
+    }
 private:
     T value_;
 };

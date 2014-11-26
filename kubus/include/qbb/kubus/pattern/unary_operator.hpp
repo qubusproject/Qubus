@@ -45,6 +45,11 @@ public:
         return false;
     }
 
+    void reset() const
+    {
+        tag_.reset();
+        arg_.reset();
+    }
 private:
     Tag tag_;
     Arg arg_;

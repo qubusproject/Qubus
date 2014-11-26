@@ -24,33 +24,23 @@ namespace proto = boost::proto;
 
 struct tensor_expr_domain;
 
-template<template<std::size_t Rank> class IterationEngine,typename Expr,typename Tensor,
-         typename AssignmentOp>
-inline void eval_tensor_expr(Tensor& dst,const Expr& expr,AssignmentOp assignment_op);
-
-template<std::size_t RankOfExpr>
-class simple_interation_engine;
-
-template<std::size_t RankOfExpr>
-class tiling_interation_engine;
-
 template<typename Expr>
-struct tensor_expr;
+struct tensor_expr_;
 
 struct tensor_expr_domain
-: proto::domain< proto::generator< tensor_expr > >
+: proto::domain< proto::generator< tensor_expr_ > >
 {};
 
 template<typename Expr>
-struct tensor_expr
-: proto::extends<Expr, tensor_expr<Expr>, tensor_expr_domain >
+struct tensor_expr_
+: proto::extends<Expr, tensor_expr_<Expr>, tensor_expr_domain >
 {
-        typedef proto::extends<Expr, tensor_expr<Expr>, tensor_expr_domain> base_type;
+        typedef proto::extends<Expr, tensor_expr_<Expr>, tensor_expr_domain> base_type;
 
-        BOOST_PROTO_EXTENDS_USING_ASSIGN(tensor_expr<Expr>)
+        BOOST_PROTO_EXTENDS_USING_ASSIGN(tensor_expr_<Expr>)
 
-        tensor_expr(const Expr& expr = Expr())
-        :tensor_expr::proto_extends(expr)
+        tensor_expr_(const Expr& expr = Expr())
+        :tensor_expr_::proto_extends(expr)
         {}
 };
 

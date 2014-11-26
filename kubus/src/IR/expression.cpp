@@ -19,28 +19,21 @@ namespace
 
 qbb::util::multi_method<bool(const qbb::util::virtual_<expression>&, const qbb::util::virtual_<expression>&)> equal = {};
 
-template<typename T>
-bool always_true(const T&,const T&)
-{
-    return true;
-}
-
 void init_equal()
 {
-    equal.add_specialization(always_true<binary_operator_expr>);
-    equal.add_specialization(always_true<unary_operator_expr>);
-    equal.add_specialization(always_true<float_literal_expr>);
-    equal.add_specialization(always_true<double_literal_expr>);
-    equal.add_specialization(always_true<integer_literal_expr>);
-    equal.add_specialization(always_true<compound_expr>);
-    equal.add_specialization(always_true<for_all_expr>);
-    equal.add_specialization(always_true<for_expr>);
-    equal.add_specialization(always_true<index_expr>);
-    equal.add_specialization(always_true<intrinsic_function_expr>);
-    equal.add_specialization(always_true<subscription_expr>);
-    equal.add_specialization(always_true<sum_expr>);
-    equal.add_specialization(always_true<tensor_access_expr>);
-    equal.add_specialization(always_true<type_conversion_expr>);;
+    equal.add_specialization(std::equal_to<binary_operator_expr>());
+    equal.add_specialization(std::equal_to<unary_operator_expr>());
+    equal.add_specialization(std::equal_to<float_literal_expr>());
+    equal.add_specialization(std::equal_to<double_literal_expr>());
+    equal.add_specialization(std::equal_to<integer_literal_expr>());
+    equal.add_specialization(std::equal_to<compound_expr>());
+    equal.add_specialization(std::equal_to<for_all_expr>());
+    equal.add_specialization(std::equal_to<for_expr>());
+    equal.add_specialization(std::equal_to<intrinsic_function_expr>());
+    equal.add_specialization(std::equal_to<subscription_expr>());
+    equal.add_specialization(std::equal_to<sum_expr>());
+    equal.add_specialization(std::equal_to<type_conversion_expr>());
+    equal.add_specialization(std::equal_to<variable_ref_expr>());
     
     equal.set_fallback([](const expression&, const expression&) { return false; });
 }

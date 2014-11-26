@@ -1,14 +1,31 @@
 #include <qbb/util/handle.hpp>
 
 #include <ios>
+#include <cstring>
+#include <sstream>
+#include <iomanip>
 
 namespace qbb
 {
 namespace util
 {
 
-handle::handle(std::size_t id_) : id_{id_}
+handle::handle(std::uintptr_t id_) : id_(id_)
 {
+}
+
+std::uintptr_t handle::id() const
+{
+    return id_;
+}
+
+std::string handle::str() const
+{
+    std::stringstream ss;
+    
+    ss << *this;
+    
+    return ss.str();
 }
 
 bool operator==(const handle& lhs, const handle& rhs)
@@ -23,20 +40,34 @@ bool operator<(const handle& lhs, const handle& rhs)
 
 std::ostream& operator<<(std::ostream& os, const handle& value)
 {
-    os << std::hex << value.id_;
-
+    std::ios  state(nullptr);
+    state.copyfmt(os);
+    
+    os << "0x" << std::hex << std::setw(8) << std::setfill('0') << value.id_;
+    
+    os.copyfmt(state);
+    
     return os;
 }
 
-constexpr std::size_t bucket_size = 32;
+handle handle_from_ptr(const void* ptr)
+{
+    std::uintptr_t id; 
+    std::memcpy(&id, &ptr, sizeof(std::uintptr_t));
+    
+    return handle(id);
+}
 
 handle handle_factory::create() const
 {
     return handle(next_free_id_++);
 }
 
-void handle_factory::release(handle) const
+void handle_factory::release(handle value) const
 {
+    auto expected_next_value = value.id() + 1;
+    
+    next_free_id_.compare_exchange_strong(expected_next_value, value.id());
 }
 
 }

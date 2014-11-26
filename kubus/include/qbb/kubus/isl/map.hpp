@@ -8,6 +8,7 @@
 #include <isl/map.h>
 
 #include <string>
+#include <vector>
 
 namespace qbb
 {
@@ -73,11 +74,13 @@ public:
     isl_map* release() noexcept;
 
     space get_space() const;
+    
+    int dim(isl_dim_type type) const;
 
     void add_constraint(constraint c);
     
     static map universe(space s);
-
+    static map empty(space s);
 private:
     isl_map* handle_;
 };
@@ -85,6 +88,16 @@ private:
 map project_out(map m, isl_dim_type type, unsigned int first, unsigned int n);
 
 map make_map_from_domain_and_range(set domain, set range);
+
+map apply_domain(map lhs, map rhs);
+
+map apply_range(map lhs, map rhs);
+
+map union_(map lhs, map rhs);
+
+map add_dims(map m, isl_dim_type type, int num);
+
+map fix_dimension(map m, isl_dim_type type, int pos, int value);
 
 class union_map
 {
@@ -107,6 +120,13 @@ public:
 
     ~union_map();
 
+    space get_space() const;
+    
+    std::vector<map> get_maps() const;
+    
+    union_set domain() const;
+    union_set range() const;
+    
     isl_union_map* native_handle() const;
 
     isl_union_map* release() noexcept;
@@ -128,6 +148,18 @@ union_map intersect_domain(union_map lhs, union_set rhs);
 union_map union_(union_map lhs, union_map rhs);
 
 union_map add_map(union_map umap, map m);
+
+union_map flat_range_product(union_map lhs, union_map rhs);
+
+union_map align_params(union_map m, space s);
+
+union_map project_out(union_map m, isl_dim_type type, unsigned int first, unsigned int n);
+
+inline union_set apply(union_set s, union_map m)
+{
+    return union_set(isl_union_set_apply(s.release(), m.release()));
+}
+
 }
 }
 }

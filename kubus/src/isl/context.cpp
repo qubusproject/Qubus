@@ -20,6 +20,15 @@ isl_ctx* context::native_handle() const
 {
     return handle_;
 }
+
+context_ref::context_ref(isl_ctx* handle_) : handle_(handle_)
+{
+}
+
+isl_ctx* context_ref::native_handle() const
+{
+    return handle_;
+}
 }
 }
 }

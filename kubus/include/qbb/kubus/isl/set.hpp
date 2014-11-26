@@ -31,12 +31,21 @@ public:
     isl_basic_set* native_handle() const;
 
     isl_basic_set* release() noexcept;
+    
+    void add_constraint(constraint c);
+    
+    space get_space() const;
 
     void set_tuple_name(const std::string& name);
 
+    static basic_set universe(space s);
 private:
     isl_basic_set* handle_;
 };
+
+bool is_subset(const basic_set& lhs, const basic_set& rhs);
+
+bool is_empty(const basic_set& s);
 
 class set
 {
@@ -64,6 +73,7 @@ public:
     void set_tuple_name(const std::string& name);
     
     static set universe(space s);
+    static set empty(space s);
 
 private:
     isl_set* handle_;
@@ -71,9 +81,21 @@ private:
 
 set intersect(set lhs, set rhs);
 
+set intersect_params(set lhs, set rhs);
+
+set substract(set lhs, set rhs);
+
+bool is_subset(const set& lhs, const set& rhs);
+
+bool is_strict_subset(const set& lhs, const set& rhs);
+
+bool is_empty(const set& s);
+
 set flat_product(set lhs, set rhs);
 
 set align_params(set s, space model);
+
+set project_out(set s, isl_dim_type type, unsigned int first, unsigned int n);
 
 class union_set
 {
@@ -102,6 +124,15 @@ private:
 };
 
 union_set union_(union_set lhs, union_set rhs);
+union_set intersect(union_set lhs, union_set rhs);
+
+bool is_subset(const union_set& lhs, const union_set& rhs);
+
+bool is_strict_subset(const union_set& lhs, const union_set& rhs);
+
+bool is_empty(const union_set& s);
+
+union_set add_set(union_set uset, set s);
 
 }
 }

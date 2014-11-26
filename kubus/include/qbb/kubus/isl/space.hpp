@@ -19,6 +19,8 @@ class space
 public:
     explicit space(isl_space* handle_);
 
+    space(const context& ctx, unsigned int nparam);
+    
     space(const context& ctx, unsigned int nparam, unsigned int n);
 
     space(const context& ctx, unsigned int nparam, unsigned int n_in, unsigned int n_out);
@@ -37,6 +39,7 @@ public:
 
     void set_dim_name(isl_dim_type type, int pos, const std::string& name);
 
+    int find_dim_by_name(isl_dim_type type, const std::string& name) const;
 private:
     isl_space* handle_;
 };

@@ -1,10 +1,10 @@
 #ifndef QBB_KUBUS_PATTERN_INDEX_HPP
 #define QBB_KUBUS_PATTERN_INDEX_HPP
 
-#include <qbb/kubus/IR/index_expr.hpp>
-
+#include <qbb/kubus/IR/variable_ref_expr.hpp>
 #include <qbb/kubus/pattern/variable.hpp>
 #include <qbb/kubus/pattern/any.hpp>
+#include <qbb/kubus/IR/type.hpp>
 
 #include <utility>
 
@@ -14,42 +14,48 @@ namespace kubus
 {
 namespace pattern
 {
-template <typename ID>
+template <typename Declaration>
 class index_pattern
 {
 public:
-    index_pattern(ID id_)
-    : id_(id_)
+    index_pattern(Declaration declaration_) : declaration_(declaration_)
     {
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<index_expr>* var = nullptr) const
+    bool match(const BaseType& value, const variable<variable_ref_expr>* var = nullptr) const
     {
-        if (auto concret_value = value.template try_as<index_expr>())
+        if (auto concret_value = value.template try_as<variable_ref_expr>())
         {
-            if (id_.match(concret_value->id()))
+            if (concret_value->declaration().var_type() == types::index())
             {
+                if (declaration_.match(concret_value->declaration()))
+                {
                     if (var)
                     {
                         var->set(*concret_value);
                     }
 
                     return true;
+                }
             }
         }
 
         return false;
     }
 
+    void reset() const
+    {
+        declaration_.reset();
+    }
 private:
-    ID id_;
+    Declaration declaration_;
 };
 
-template <typename ID>
-index_pattern<ID> index(ID id)
+template <typename Declaration>
+index_pattern<Declaration> index(Declaration declaration)
 {
-    return index_pattern<ID>(id);
+    return index_pattern<Declaration>(declaration);
 }
 
 inline index_pattern<any> index()

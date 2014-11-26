@@ -47,6 +47,11 @@ public:
         return false;
     }
 
+    void reset() const
+    {
+        name_.reset();
+        args_.reset();
+    }
 private:
     Name name_;
     Args args_;

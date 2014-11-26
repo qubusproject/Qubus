@@ -40,6 +40,10 @@ public:
         return false;
     }
 
+    void reset() const
+    {
+        value_.reset();
+    }
 private:
     Value value_;
 };
@@ -71,6 +75,10 @@ public:
         return false;
     }
 
+    void reset() const
+    {
+        value_.reset();
+    }
 private:
     Value value_;
 };
@@ -102,6 +110,10 @@ public:
         return false;
     }
 
+    void reset() const
+    {
+        value_.reset();
+    }
 private:
     Value value_;
 };

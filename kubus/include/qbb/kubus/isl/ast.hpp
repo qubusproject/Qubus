@@ -1,8 +1,8 @@
 #ifndef QBB_KUBUS_ISL_AST_HPP
 #define QBB_KUBUS_ISL_AST_HPP
 
-#include <qbb/kubus/isl/identifier.hpp>
 #include <qbb/kubus/isl/value.hpp>
+#include <qbb/kubus/isl/id.hpp>
 
 #include <boost/optional.hpp>
 
@@ -20,9 +20,15 @@ class ast_expr
 public:
     explicit ast_expr(isl_ast_expr* handle_);
 
+    ast_expr(const ast_expr& other);
+    
+    ~ast_expr();
+    
+    ast_expr& operator=(const ast_expr& other);
+    
     isl_ast_expr_type type() const;
 
-    identifier get_id() const;
+    id get_id() const;
 
     value get_value() const;
 
@@ -32,6 +38,8 @@ public:
 
     ast_expr get_arg(int pos) const;
 
+    isl_ast_expr* native_handle() const;
+    isl_ast_expr* release() noexcept;
 private:
     isl_ast_expr* handle_;
 };
@@ -40,10 +48,14 @@ class ast_node
 {
 public:
     explicit ast_node(isl_ast_node* root_);
-
+    ast_node(const ast_node& other);
+    
     ~ast_node();
 
+    ast_node& operator=(const ast_node& other);
+    
     isl_ast_node* native_handle() const;
+    isl_ast_node* release() noexcept;
 
     isl_ast_node_type type() const;
 
