@@ -517,7 +517,8 @@ struct emit_tensor_node : proto::transform<emit_tensor_node<Evaluator>>
 
             auto& symbol_table = state.get().variable_table();
 
-            boost::optional<variable_declaration> tensor_decl = symbol_table.lookup(util::handle_from_ptr(obj.get()));
+            boost::optional<variable_declaration> tensor_decl =
+                symbol_table.lookup(util::handle_from_ptr(obj.get()));
 
             if (!tensor_decl)
             {
@@ -664,34 +665,33 @@ void declare_index(Ctx& ctx, const index& idx)
     ctx.index_table().add(handle, decl);
 }
 
-struct declare_indices : proto::callable
+struct deduce_indices : proto::callable
 {
-    using result_type = void;
+    using result_type = std::vector<const index*>;
 
-    template <typename Ctx, typename... Indices>
-    result_type operator()(Ctx& ctx, const Indices&... indices) const
+    template <typename... Indices>
+    result_type operator()(const Indices&... indices) const
     {
-        auto dummy = {(declare_index(ctx.get(), indices), 0)...};
-        (void)dummy;
+        return {&indices...};
     }
 };
 
-struct declare_free_indices
+struct deduce_free_indices
     : proto::or_<
-          proto::when<proto::subscript<proto::_, proto::_>, declare_free_indices(proto::_left)>,
+          proto::when<proto::subscript<proto::_, proto::_>, deduce_free_indices(proto::_left)>,
           proto::when<def_tensor_<proto::vararg<proto::_>>,
-                      declare_indices(proto::_state, proto::_value(proto::pack(proto::_))...)>>
+                      deduce_indices(proto::_value(proto::pack(proto::_))...)>>
 {
 };
 
 struct add_variable : proto::callable
 {
     using result_type = std::vector<std::shared_ptr<object>>&;
-    
+
     result_type operator()(result_type variables, std::shared_ptr<object> h) const
     {
         variables.push_back(h);
-        
+
         return variables;
     }
 };
@@ -699,8 +699,8 @@ struct add_variable : proto::callable
 struct data_handle : proto::callable
 {
     using result_type = std::shared_ptr<object>;
-    
-    template<typename Expr>
+
+    template <typename Expr>
     result_type operator()(const Expr& expr) const
     {
         return proto::value(expr);
@@ -710,61 +710,81 @@ struct data_handle : proto::callable
 struct deduce_variables
     : proto::or_<
           proto::when<indexed_tensor, add_variable(proto::_data, data_handle(proto::_child0))>,
-          proto::when<proto::nary_expr<proto::_, proto::vararg<proto::_>>, proto::fold<proto::_, proto::_data, deduce_variables(proto::_)>>,
-          proto::when<proto::_, proto::_data>
-          >
+          proto::when<proto::nary_expr<proto::_, proto::vararg<proto::_>>,
+                      proto::fold<proto::_, proto::_data, deduce_variables(proto::_)>>,
+          proto::when<proto::_, proto::_data>>
 {
 };
 
 template <typename Expr>
-std::tuple<function_declaration, std::vector<std::shared_ptr<object>>> emit_ast(const type& result_type, const Expr& expr)
+std::tuple<function_declaration, std::vector<std::shared_ptr<object>>>
+emit_ast(const type& result_type, const Expr& expr)
 {
     using namespace boost::adaptors;
-    
+
     boost::proto::assert_matches<tensor_def>(expr);
-    
+
     ast_context ctx;
 
-    declare_free_indices()(expr, std::ref(ctx));
+    // declare_free_indices()(expr, std::ref(ctx));
+
+    auto free_indices = deduce_free_indices()(expr);
+
+    std::vector<variable_declaration> free_index_decls;
+    
+    for (auto ptr2idx : free_indices)
+    {
+        const auto& idx = *ptr2idx;
+        
+        auto handle = id(idx);
+
+        auto decl = variable_declaration(types::index());
+
+        if (idx.debug_name())
+        {
+            decl.annotations().add("kubus.debug.name", annotation(std::string(idx.debug_name())));
+        }
+
+        ctx.index_table().add(handle, decl);
+        free_index_decls.push_back(decl);
+    }
 
     std::vector<std::shared_ptr<object>> param_objs;
-    
+
     deduce_variables()(expr, 0, std::ref(param_objs));
-    
+
     boost::sort(param_objs);
     auto new_end = std::unique(param_objs.begin(), param_objs.end());
-    
+
     param_objs.erase(new_end, param_objs.end());
-    
+
     std::vector<variable_declaration> params;
-    
+
     for (const auto& obj : param_objs)
     {
         auto decl = variable_declaration(obj->object_type());
 
         ctx.variable_table().add(util::handle_from_ptr(obj.get()), decl);
-        
+
         params.push_back(decl);
     }
- 
+
     expression current_root = emit_AST()(proto::right(expr), std::ref(ctx));
-    
+
     variable_declaration result(result_type);
-    
+
     expression lhs = variable_ref_expr(result);
-    
+
     std::vector<expression> lhs_indices;
-    
-    for (const auto& decl : ctx.index_table().current_scope() | map_values | reversed)
+
+    for (const auto& decl : free_index_decls)
     {
         lhs_indices.push_back(variable_ref_expr(decl));
     }
-    
+
     lhs = subscription_expr(lhs, lhs_indices);
-    
-    current_root = binary_operator_expr(binary_op_tag::assign,
-                                        lhs,
-                                        current_root);
+
+    current_root = binary_operator_expr(binary_op_tag::assign, lhs, current_root);
 
     for (const auto& decl : ctx.index_table().current_scope() | map_values)
     {
@@ -772,11 +792,10 @@ std::tuple<function_declaration, std::vector<std::shared_ptr<object>>> emit_ast(
     }
 
     function_declaration entry_point(params, result, current_root);
-    
+
     return std::make_tuple(entry_point, param_objs);
 }
 }
 }
 
 #endif
-
