@@ -3,8 +3,6 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#define BOOST_TEST_DYN_LINK
-
 #include <qbb/kubus/runtime.hpp>
 
 #include <qbb/kubus/compilation_cache.hpp>
@@ -15,16 +13,15 @@
 
 #include <hpx/hpx_init.hpp>
 
+#include <qbb/util/unused.hpp>
+
 #include <vector>
 #include <random>
 
-#define BOOST_TEST_MODULE "simple contraction unit tests"
+#include <gtest/gtest.h>
 
-#include "kubus_unit_test.hpp"
 
-BOOST_AUTO_TEST_SUITE(simple_contraction_suite)
-
-BOOST_AUTO_TEST_CASE(simple_contraction)
+TEST(contractions, simple_contraction)
 {
     using namespace qbb::kubus;
     
@@ -42,9 +39,9 @@ BOOST_AUTO_TEST_CASE(simple_contraction)
 
     std::uniform_real_distribution<double> dist(-10.0, 10.0);
 
-    for (std::size_t i = 0; i < N; ++i)
+    for (long int i = 0; i < N; ++i)
     {
-        for (std::size_t j = 0; j < N; ++j)
+        for (long int j = 0; j < N; ++j)
         {
             A2[i * N + j] = dist(gen);
             B2[i * N + j] = dist(gen);
@@ -125,7 +122,22 @@ BOOST_AUTO_TEST_CASE(simple_contraction)
     execute(test, C);
     C.when_ready().wait();
     
-    BOOST_CHECK_SMALL(error, 1e-12);
+    ASSERT_NEAR(error, 0.0, 1e-12);
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+
+int hpx_main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
+{
+    auto result = RUN_ALL_TESTS();
+
+    hpx::finalize();
+    
+    return result;
+}
+
+int main(int argc, char** argv)
+{
+    ::testing::InitGoogleTest(&argc, argv);
+
+    return hpx::init(argc, argv);
+}
