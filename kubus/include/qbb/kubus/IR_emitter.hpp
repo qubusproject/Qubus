@@ -666,6 +666,28 @@ inline variable_declaration declare_index(ast_context& ctx, const index& idx)
     return decl;
 }
 
+template<long int N>
+inline variable_declaration declare_index(ast_context& ctx, const multi_index<N>& idx)
+{
+    auto handle = id(idx);
+
+    for (long int i = 0; i < idx.rank(); ++i)
+    {
+        idx[i];
+    }
+    
+    auto decl = variable_declaration(types::multi_index(idx.rank()));
+
+    if (idx.debug_name())
+    {
+        decl.annotations().add("kubus.debug.name", annotation(std::string(idx.debug_name())));
+    }
+
+    ctx.index_table().add(handle, decl);
+
+    return decl;
+}
+
 struct deduce_indices : proto::callable
 {
     using result_type = std::vector<variable_declaration>;

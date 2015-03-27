@@ -109,6 +109,42 @@ private:
     ValueType value_type_;
 };
 
+template <typename Rank>
+class multi_index_type_pattern
+{
+public:
+    multi_index_type_pattern(Rank rank_) : rank_(std::move(rank_))
+    {
+    }
+
+    template <typename BaseType>
+    bool match(const BaseType& value, const variable<types::multi_index>* var = nullptr) const
+    {
+        if (auto concret_value = value.template try_as<types::multi_index>())
+        {
+            if (rank_.match(concret_value->rank()))
+            {
+                if (var)
+                {
+                    var->set(*concret_value);
+                }
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void reset() const
+    {
+        rank_.reset();
+    }
+
+private:
+    Rank rank_;
+};
+
 constexpr primitive_type_pattern<types::double_> double_t = {};
 constexpr primitive_type_pattern<types::float_> float_t = {};
 constexpr primitive_type_pattern<types::integer> integer_t = {};
@@ -131,6 +167,13 @@ tensor_type_pattern<types::sparse_tensor, ValueType> sparse_tensor_t(ValueType v
 {
     return tensor_type_pattern<types::sparse_tensor, ValueType>(std::move(value_type));
 }
+
+template <typename Rank>
+multi_index_type_pattern<Rank> multi_index_t(Rank rank)
+{
+    return multi_index_type_pattern<Rank>(std::move(rank));
+}
+
 }
 }
 }
