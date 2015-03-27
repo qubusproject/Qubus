@@ -650,8 +650,7 @@ struct emit_AST
 {
 };
 
-template <typename Ctx>
-void declare_index(Ctx& ctx, const index& idx)
+inline variable_declaration declare_index(ast_context& ctx, const index& idx)
 {
     auto handle = id(idx);
 
@@ -663,16 +662,18 @@ void declare_index(Ctx& ctx, const index& idx)
     }
 
     ctx.index_table().add(handle, decl);
+
+    return decl;
 }
 
 struct deduce_indices : proto::callable
 {
-    using result_type = std::vector<const index*>;
+    using result_type = std::vector<variable_declaration>;
 
     template <typename... Indices>
-    result_type operator()(const Indices&... indices) const
+    result_type operator()(std::reference_wrapper<ast_context> ctx, const Indices&... indices) const
     {
-        return {&indices...};
+        return {declare_index(ctx.get(), indices)...};
     }
 };
 
@@ -680,7 +681,7 @@ struct deduce_free_indices
     : proto::or_<
           proto::when<proto::subscript<proto::_, proto::_>, deduce_free_indices(proto::_left)>,
           proto::when<def_tensor_<proto::vararg<proto::_>>,
-                      deduce_indices(proto::_value(proto::pack(proto::_))...)>>
+                      deduce_indices(proto::_state, proto::_value(proto::pack(proto::_))...)>>
 {
 };
 
@@ -726,28 +727,7 @@ emit_ast(const type& result_type, const Expr& expr)
 
     ast_context ctx;
 
-    // declare_free_indices()(expr, std::ref(ctx));
-
-    auto free_indices = deduce_free_indices()(expr);
-
-    std::vector<variable_declaration> free_index_decls;
-    
-    for (auto ptr2idx : free_indices)
-    {
-        const auto& idx = *ptr2idx;
-        
-        auto handle = id(idx);
-
-        auto decl = variable_declaration(types::index());
-
-        if (idx.debug_name())
-        {
-            decl.annotations().add("kubus.debug.name", annotation(std::string(idx.debug_name())));
-        }
-
-        ctx.index_table().add(handle, decl);
-        free_index_decls.push_back(decl);
-    }
+    auto free_indices = deduce_free_indices()(expr, std::ref(ctx));
 
     std::vector<std::shared_ptr<object>> param_objs;
 
@@ -777,7 +757,7 @@ emit_ast(const type& result_type, const Expr& expr)
 
     std::vector<expression> lhs_indices;
 
-    for (const auto& decl : free_index_decls)
+    for (const auto& decl : free_indices)
     {
         lhs_indices.push_back(variable_ref_expr(decl));
     }
