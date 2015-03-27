@@ -29,8 +29,5 @@ include (CheckFMA)
 CheckSIMD()
 CheckFMA()
 
-#add_subdirectory(src)
-#add_subdirectory(tools)
-
 add_subdirectory(util)
 add_subdirectory(kubus)
