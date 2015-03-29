@@ -5,8 +5,6 @@
 
 #include <qbb/kubus/runtime.hpp>
 
-#include <qbb/kubus/compilation_cache.hpp>
-
 #include <qbb/kubus/tensor_variable.hpp>
 
 #include <qbb/kubus/user_defined_plan.hpp>
