@@ -30,6 +30,7 @@
 
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
+#include <llvm/ExecutionEngine/JITEventListener.h>
 #include <llvm/Support/TargetSelect.h>
 
 #include <llvm/IR/Module.h>
@@ -1211,12 +1212,12 @@ void compile(const function_declaration& entry_point, llvm_environment& env, std
         symbol_table[handle] = reference(local_copy, access_path(param.id()));
         ++counter;
     };
-    
+
     for (const auto& param : entry_point.params())
     {
         add_param(param);
     }
-    
+
     add_param(entry_point.result());
 
     // body
@@ -1264,8 +1265,8 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, llvm::Execut
 
     the_module->setDataLayout(engine.getDataLayout());
 
-    //the_module->dump();
-    //std::cout << std::endl;
+    // the_module->dump();
+    // std::cout << std::endl;
 
     llvm::PassManagerBuilder pass_builder;
     pass_builder.OptLevel = 3;
@@ -1297,8 +1298,8 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, llvm::Execut
 
     pass_man.run(*the_module);
 
-    //the_module->dump();
-    //std::cout << std::endl;
+    // the_module->dump();
+    // std::cout << std::endl;
 
     /*std::cout << "The assembler output:\n\n";
 
@@ -1360,6 +1361,11 @@ public:
         builder.setMAttrs(attrs);
 
         engine_ = std::unique_ptr<llvm::ExecutionEngine>(builder.create());
+
+#if LLVM_USE_INTEL_JITEVENTS
+        llvm::JITEventListener* vtuneProfiler = llvm::JITEventListener::createIntelJITEventListener();
+        engine_->RegisterJITEventListener(vtuneProfiler);
+#endif
     }
 
     virtual ~cpu_compiler() = default;

@@ -6,7 +6,21 @@ find_package(LLVM 3.6 EXACT REQUIRED)
 
 message(STATUS "found LLVM version: ${LLVM_PACKAGE_VERSION}")
 
-llvm_map_components_to_libnames(REQ_LLVM_LIBRARIES mcjit ipa ipo vectorize native)
+list(FIND LLVM_AVAILABLE_LIBS LLVMIntelJITEvents LLVMIntelJITEvents_FIND_RESULT)
+
+if(${LLVMIntelJITEvents_FIND_RESULT} LESS 0)
+    set(LLVM_HAS_INTEL_JITEVENTS FALSE)
+else()
+    set(LLVM_HAS_INTEL_JITEVENTS TRUE)
+endif()
+
+if(LLVM_HAS_INTEL_JITEVENTS)
+    set(REQ_LLVM_TARGETS IntelJITEvents mcjit ipa ipo vectorize native)
+else()
+    set(REQ_LLVM_TARGETS mcjit ipa ipo vectorize native)
+endif()
+
+llvm_map_components_to_libnames(REQ_LLVM_LIBRARIES ${REQ_LLVM_TARGETS})
 
 message(STATUS "LLVM libraries: ${REQ_LLVM_LIBRARIES}")
 
