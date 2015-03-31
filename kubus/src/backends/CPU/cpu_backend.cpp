@@ -180,14 +180,6 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
     {
     case binary_op_tag::assign:
     {
-        auto fn_t = llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()),
-                                            {llvm::Type::getInt1PtrTy(llvm::getGlobalContext())});
-
-        auto fn = env.module().getOrInsertFunction("print_ptr", fn_t);
-
-        // builder.CreateCall(fn, left_value_ptr.addr());
-        // builder.CreateCall(fn, right_value_ptr.addr());
-
         llvm::Instruction* store = builder.CreateAlignedStore(right_value, left_value_ptr.addr(),
                                                               get_prefered_alignment());
         store->setMetadata("tbaa", env.get_tbaa_node(left_value_ptr.origin()));
@@ -746,17 +738,6 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
     return reference(result_var, access_path());
 }
 
-extern "C" void print_index(long int idx)
-{
-    std::cout << idx << std::endl;
-}
-
-extern "C" void print_ptr(void* ptr)
-{
-    if (((std::size_t)ptr) % 32 != 0)
-        std::cout << ptr << std::endl;
-}
-
 reference compile(const expression& expr, llvm_environment& env,
                   std::map<qbb::util::handle, reference>& symbol_table)
 {
@@ -951,13 +932,6 @@ reference compile(const expression& expr, llvm_environment& env,
 
                        llvm::Type* size_type = env.map_kubus_type(types::integer());
 
-                       auto fn_t = llvm::FunctionType::get(
-                           llvm::Type::getVoidTy(llvm::getGlobalContext()), {size_type});
-
-                       auto fn = env.module().getOrInsertFunction("print_index", fn_t);
-
-                       // builder.CreateCall(fn, builder.CreateLoad(extent_ptr));
-
                        llvm::Value* value = llvm::ConstantInt::get(size_type, 2000);
 
                        auto& builder = env.builder();
@@ -993,16 +967,6 @@ reference compile(const expression& expr, llvm_environment& env,
                      auto result = builder.CreateSelect(cond, left_value, right_value);
 
                      llvm::Type* size_type = env.map_kubus_type(types::integer());
-
-                     auto fn_t = llvm::FunctionType::get(
-                         llvm::Type::getVoidTy(llvm::getGlobalContext()), {size_type});
-
-                     auto fn = env.module().getOrInsertFunction("print_index", fn_t);
-
-                     // builder.CreateCall(fn, left_value);
-                     // builder.CreateCall(fn, right_value);
-                     // builder.CreateCall(fn, result);
-                     // builder.CreateCall(fn, llvm::ConstantInt::get(size_type, 10000000000));
 
                      auto result_var =
                          create_entry_block_alloca(env.get_current_function(), result->getType());
