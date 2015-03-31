@@ -107,8 +107,6 @@ void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Val
 {
     auto& builder_ = env.builder();
 
-    llvm::Type* size_type = env.map_kubus_type(types::integer());
-
     auto initialize_induction_variable =
         builder_.CreateStore(lower_bound, induction_variable.addr());
     initialize_induction_variable->setMetadata("tbaa",
@@ -965,8 +963,6 @@ reference compile(const expression& expr, llvm_environment& env,
                      auto cond = builder.CreateICmpSLT(left_value, right_value);
 
                      auto result = builder.CreateSelect(cond, left_value, right_value);
-
-                     llvm::Type* size_type = env.map_kubus_type(types::integer());
 
                      auto result_var =
                          create_entry_block_alloca(env.get_current_function(), result->getType());

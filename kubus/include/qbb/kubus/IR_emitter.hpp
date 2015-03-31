@@ -545,8 +545,8 @@ struct emit_literal_node : proto::transform<emit_literal_node<Evaluator>>
     {
         using result_type = expression;
 
-        result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
-                               typename impl::data_param data) const
+        result_type operator()(typename impl::expr_param expr, typename impl::state_param QBB_UNUSED(state),
+                               typename impl::data_param QBB_UNUSED(data)) const
         {
             return double_literal_expr(proto::value(expr));
         }
