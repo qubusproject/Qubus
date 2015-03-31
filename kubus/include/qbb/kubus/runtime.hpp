@@ -65,7 +65,7 @@ private:
     std::unique_ptr<scheduler> scheduler_;
 };
 
-void init();
+void init(int argc, char** argv);
 runtime& get_runtime();
 
 template<typename... Args>

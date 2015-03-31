@@ -78,26 +78,26 @@ using namespace qbb::kubus;
 #define __STDC_LIMIT_MACROS
 #include <llvm/Support/CommandLine.h>
 
-int hpx_main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
+int hpx_main(int argc, char** argv)
 {
     const char* arg[] = {"test", "-debug"};
 
     llvm::cl::ParseCommandLineOptions(1, arg);
 
-    qbb::kubus::init();
+    qbb::kubus::init(argc, argv);
 
     long int N = 2000;
 
-    auto my_plan = make_plan()
-                       .body([](cpu_tensor_view<const double, 2> A)
-                             {
-                                 for (long int i = 0; i < std::min((long int)(10), A.extent(0));
-    ++i)
-                                 {
-                                     std::cout << A(i, 0) << std::endl;
-                                 }
-                             })
-                       .finalize();
+    auto my_plan =
+        make_plan()
+            .body([](cpu_tensor_view<const double, 2> A)
+                  {
+                      for (long int i = 0; i < std::min((long int)(10), A.extent(0)); ++i)
+                      {
+                          std::cout << A(i, 0) << std::endl;
+                      }
+                  })
+            .finalize();
 
     {
         qbb::kubus::index i("i");
@@ -120,7 +120,7 @@ int hpx_main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        for (long int i = 0; i < 10; ++i)
+        for (long int i = 0; i < 1; ++i)
         {
             C = Cdef;
         }
@@ -137,7 +137,7 @@ int hpx_main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
         C.when_ready().wait();
     }
 
-    {
+    /*{
         std::vector<double> A(N * N);
         std::vector<double> B(N * N);
         std::vector<double> C(N * N);
@@ -219,10 +219,47 @@ int hpx_main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 
         std::cout << duration.count() / 10.0 << " seconds" << std::endl;
-    }
+    }*/
 
-    {
-        using MatrixType = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
+    /*{
+        std::vector<double> A(N * N);
+        std::vector<double> B(N * N);
+        std::vector<double> C(N * N);
+
+        auto start = std::chrono::high_resolution_clock::now();
+
+        for (long int l = 0; l < 1; ++l)
+        {
+            for (long int i = 0; i < N; ++i)
+            {
+                for (long int j = 0; j < N; ++j)
+                {
+                    C[i * N + j] = 0.0;
+                }
+            }
+
+            for (long int i = 0; i < N; ++i)
+            {
+                for (long int j = 0; j < N; ++j)
+                {
+                    for (long int k = 0; k < N; ++k)
+                    {
+                        C[i * N + j] += A[i * N + k] * B[j * N + k];
+                    }
+                }
+            }
+
+            auto end = std::chrono::high_resolution_clock::now();
+
+            auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+
+            std::cout << duration.count() / 10.0 << " seconds" << std::endl;
+        }
+    }*/
+
+    /*{
+        using MatrixType = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic,
+    Eigen::RowMajor>;
 
         MatrixType A = MatrixType::Zero(N, N);
         MatrixType B = MatrixType::Zero(N, N);
@@ -230,7 +267,7 @@ int hpx_main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        for (long int l = 0; l < 10; ++l)
+        for (long int l = 0; l < 1; ++l)
         {
             C.noalias() = A * B.transpose();
         }
@@ -240,7 +277,7 @@ int hpx_main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 
         std::cout << duration.count() / 10.0 << " seconds" << std::endl;
-    }
+    }*/
 
     return hpx::finalize();
 }

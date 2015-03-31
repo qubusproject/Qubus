@@ -21,6 +21,7 @@
 
 #include <qbb/util/get_prefix.hpp>
 #include <qbb/util/make_unique.hpp>
+#include <qbb/util/unused.hpp>
 
 #include <hpx/include/lcos.hpp>
 
@@ -279,7 +280,7 @@ std::unique_ptr<runtime> kubus_runtime = {};
 std::once_flag kubus_runtime_init_flag;
 }
 
-void init()
+void init(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
 {
     std::call_once(kubus_runtime_init_flag, []
                    {
