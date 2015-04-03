@@ -1,8 +1,12 @@
 include(FindPackageHandleStandardArgs)
 
-find_path(ISL_INCLUDE_DIR isl/version.h)
+set(ISL_ROOT $ENV{ISL_ROOT} CACHE PATH "ISL's root directory")
 
-find_library(ISL_LIBRARY NAMES isl)
+find_path(ISL_INCLUDE_DIR isl/version.h
+          HINTS ${ISL_ROOT})
+
+find_library(ISL_LIBRARY NAMES isl
+             HINTS ${ISL_ROOT})
 
 if(NOT TARGET isl::isl)
     add_library(isl::isl UNKNOWN IMPORTED)
