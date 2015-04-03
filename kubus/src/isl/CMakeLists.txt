@@ -15,11 +15,13 @@ set(kubus_isl_source_files affine_expr.cpp ast.cpp ast_builder.cpp constraint.cp
                            id.cpp band.cpp schedule_node.cpp
                            multi_union_pw_affine_expr.cpp)
 
+find_package(ISL REQUIRED)               
+                           
 add_library(qbb_kubus_isl SHARED ${kubus_isl_header_files} ${kubus_isl_source_files})
 
 target_include_directories(qbb_kubus_isl PUBLIC ${CMAKE_SOURCE_DIR}/kubus/include)
 
 target_compile_options(qbb_kubus_isl PUBLIC -std=c++14)
-target_link_libraries(qbb_kubus_isl PUBLIC isl qbb_util)
+target_link_libraries(qbb_kubus_isl PUBLIC isl::isl qbb_util)
 
 install(TARGETS qbb_kubus_isl LIBRARY DESTINATION lib)
