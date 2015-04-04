@@ -1,4 +1,4 @@
-set(KUBUS_BUILD_TESTS OFF CACHE Bool "build the kubus test suite")
+option(KUBUS_BUILD_TESTS "build the kubus test suite" OFF)
 
 if(KUBUS_BUILD_TESTS)
   find_package(GTest REQUIRED)
