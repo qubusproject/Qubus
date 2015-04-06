@@ -34,11 +34,22 @@ foreach(file_name IN LISTS kubus_pattern_header_file_names)
     list(APPEND kubus_pattern_header_files ${kubus_pattern_include_dir}/${file_name})
 endforeach()
 
-add_library(qbb_kubus_ir SHARED ${kubus_pattern_header_files} ${kubus_ir_header_files} ${kubus_ir_source_files})
+add_library(kubus_ir SHARED ${kubus_pattern_header_files} ${kubus_ir_header_files} ${kubus_ir_source_files})
 
-target_include_directories(qbb_kubus_ir PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/../../include)
-target_compile_definitions(qbb_kubus_ir PUBLIC -DFUSION_MAX_VECTOR_SIZE=20)
-target_compile_options(qbb_kubus_ir PUBLIC -std=c++14)
-target_link_libraries(qbb_kubus_ir PUBLIC qbb_util)
+target_include_directories(kubus_ir PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/kubus/include>)
+target_compile_definitions(kubus_ir PUBLIC -DFUSION_MAX_VECTOR_SIZE=20)
+target_compile_options(kubus_ir PUBLIC -std=c++14)
+target_link_libraries(kubus_ir PUBLIC qbb_util)
 
-install(TARGETS qbb_kubus_ir PUBLIC_HEADER DESTINATION include LIBRARY DESTINATION lib)
+set_property(TARGET kubus_ir PROPERTY VERSION ${KUBUS_VERSION})
+set_property(TARGET kubus_ir PROPERTY SOVERSION 0)
+set_property(TARGET kubus_ir PROPERTY INTERFACE_kubus_MAJOR_VERSION 0)
+set_property(TARGET kubus_ir PROPERTY INTERFACE_kubus_MINOR_VERSION 1)
+set_property(TARGET kubus_ir APPEND PROPERTY COMPATIBLE_INTERFACE_STRING kubus_MAJOR_VERSION)
+set_property(TARGET kubus_ir APPEND PROPERTY COMPATIBLE_INTERFACE_STRING kubus_MINOR_VERSION)
+
+install(TARGETS kubus_ir EXPORT kubus-targets
+                         RUNTIME DESTINATION bin
+                         INCLUDES DESTINATION include
+                         LIBRARY DESTINATION lib
+                         ARCHIVE DESTINATION lib)

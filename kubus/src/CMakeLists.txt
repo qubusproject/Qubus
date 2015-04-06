@@ -1,3 +1,5 @@
+include(GenerateExportHeader)
+
 find_package(Boost 1.55.0 COMPONENTS log thread system REQUIRED)
 
 find_package(CUDA 5.5)
@@ -52,10 +54,23 @@ set(kubus_source_files allocator.cpp lower_abstract_indices.cpp
 
 add_library(kubus SHARED ${kubus_header_files} ${kubus_source_files})
 
-target_include_directories(kubus PUBLIC ${HPX_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/../include ${LLVM_INCLUDE_DIRS})
+target_include_directories(kubus PUBLIC ${HPX_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/kubus/include> ${LLVM_INCLUDE_DIRS})
 target_compile_options(kubus PUBLIC -std=c++14)
-target_link_libraries(kubus PUBLIC ${Boost_LIBRARIES} kubus_cpu_backend qbb_kubus_ir qbb_kubus_isl qbb_util
+target_link_libraries(kubus PUBLIC ${Boost_LIBRARIES} kubus_cpu_backend kubus_ir kubus_isl qbb_util
                                    hpx hpx_serialization dl wall)
 target_compile_definitions(kubus PUBLIC -DBOOST_LOG_DYN_LINK)
 
-install(TARGETS kubus PUBLIC_HEADER DESTINATION include LIBRARY DESTINATION lib)
+set_property(TARGET kubus PROPERTY VERSION ${KUBUS_VERSION})
+set_property(TARGET kubus PROPERTY SOVERSION 0)
+set_property(TARGET kubus PROPERTY INTERFACE_kubus_MAJOR_VERSION 0)
+set_property(TARGET kubus PROPERTY INTERFACE_kubus_MINOR_VERSION 1)
+set_property(TARGET kubus APPEND PROPERTY COMPATIBLE_INTERFACE_STRING kubus_MAJOR_VERSION)
+set_property(TARGET kubus APPEND PROPERTY COMPATIBLE_INTERFACE_STRING kubus_MINOR_VERSION)
+
+generate_export_header(kubus)
+        
+install(TARGETS kubus EXPORT kubus-targets
+                      RUNTIME DESTINATION bin
+                      INCLUDES DESTINATION include
+                      LIBRARY DESTINATION lib
+                      ARCHIVE DESTINATION lib)

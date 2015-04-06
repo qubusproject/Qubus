@@ -26,6 +26,8 @@ target_link_libraries(usan INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILE
 add_library(wall INTERFACE)
 target_compile_options(wall INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-Wall -Wextra>)
 
+install(TARGETS asan tsan usan wall EXPORT kubus-targets)
+
 include(FeatureSummary)
 
 add_subdirectory(src)
