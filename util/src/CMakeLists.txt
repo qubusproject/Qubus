@@ -19,8 +19,19 @@ find_package(Threads REQUIRED)
 
 add_library(qbb_util ${util_header_files} ${util_source_files})
 target_compile_options(qbb_util PUBLIC -std=c++14 -Wall -Wextra)
-target_include_directories(qbb_util PUBLIC ${Boost_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/../include/)
+target_include_directories(qbb_util PUBLIC ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/util/include/>)
 target_link_libraries(qbb_util PUBLIC Threads::Threads ${Boost_LIBRARIES})
 set_target_properties(qbb_util PROPERTIES POSITION_INDEPENDENT_CODE True)
 
-install(TARGETS qbb_util PUBLIC_HEADER DESTINATION include ARCHIVE DESTINATION lib)
+set_property(TARGET qbb_util PROPERTY VERSION ${KUBUS_VERSION})
+set_property(TARGET qbb_util PROPERTY SOVERSION 0)
+set_property(TARGET qbb_util PROPERTY INTERFACE_kubus_MAJOR_VERSION 0)
+set_property(TARGET qbb_util PROPERTY INTERFACE_kubus_MINOR_VERSION 1)
+set_property(TARGET qbb_util APPEND PROPERTY COMPATIBLE_INTERFACE_STRING kubus_MAJOR_VERSION)
+set_property(TARGET qbb_util APPEND PROPERTY COMPATIBLE_INTERFACE_STRING kubus_MINOR_VERSION)
+
+install(TARGETS qbb_util EXPORT kubus-targets
+                         RUNTIME DESTINATION bin
+                         INCLUDES DESTINATION include
+                         LIBRARY DESTINATION lib
+                         ARCHIVE DESTINATION lib)

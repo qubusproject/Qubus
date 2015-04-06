@@ -15,13 +15,24 @@ set(kubus_isl_source_files affine_expr.cpp ast.cpp ast_builder.cpp constraint.cp
                            id.cpp band.cpp schedule_node.cpp
                            multi_union_pw_affine_expr.cpp)
 
-find_package(ISL REQUIRED)               
-                           
-add_library(qbb_kubus_isl SHARED ${kubus_isl_header_files} ${kubus_isl_source_files})
+find_package(ISL MODULE REQUIRED)               
 
-target_include_directories(qbb_kubus_isl PUBLIC ${CMAKE_SOURCE_DIR}/kubus/include)
+add_library(kubus_isl SHARED ${kubus_isl_header_files} ${kubus_isl_source_files})
 
-target_compile_options(qbb_kubus_isl PUBLIC -std=c++14)
-target_link_libraries(qbb_kubus_isl PUBLIC isl::isl qbb_util)
+target_include_directories(kubus_isl PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/kubus/include>)
 
-install(TARGETS qbb_kubus_isl LIBRARY DESTINATION lib)
+target_compile_options(kubus_isl PUBLIC -std=c++14)
+target_link_libraries(kubus_isl PUBLIC isl::isl qbb_util)
+
+set_property(TARGET kubus_isl PROPERTY VERSION ${KUBUS_VERSION})
+set_property(TARGET kubus_isl PROPERTY SOVERSION 0)
+set_property(TARGET kubus_isl PROPERTY INTERFACE_kubus_MAJOR_VERSION 0)
+set_property(TARGET kubus_isl PROPERTY INTERFACE_kubus_MINOR_VERSION 1)
+set_property(TARGET kubus_isl APPEND PROPERTY COMPATIBLE_INTERFACE_STRING kubus_MAJOR_VERSION)
+set_property(TARGET kubus_isl APPEND PROPERTY COMPATIBLE_INTERFACE_STRING kubus_MINOR_VERSION)
+
+install(TARGETS kubus_isl EXPORT kubus-targets
+                          RUNTIME DESTINATION bin
+                          INCLUDES DESTINATION include
+                          LIBRARY DESTINATION lib
+                          ARCHIVE DESTINATION lib)
