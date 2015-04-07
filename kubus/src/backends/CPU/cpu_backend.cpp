@@ -958,19 +958,6 @@ reference compile(const expression& expr, llvm_environment& env,
                        llvm::Value* extent_ptr =
                            builder.CreateInBoundsGEP(shape, dim, "extent_ptr");
 
-                       llvm::Type* size_type = env.map_kubus_type(types::integer());
-
-                       llvm::Value* value = llvm::ConstantInt::get(size_type, 2000);
-
-                       auto& builder = env.builder();
-
-                       llvm::Value* var =
-                           create_entry_block_alloca(env.get_current_function(), size_type);
-
-                       auto lit_store = builder.CreateStore(value, var);
-                       lit_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
-
-                       // return reference(var, access_path());
                        return reference(extent_ptr, ref.origin() / "shape");
                    })
             .case_(
