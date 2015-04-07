@@ -906,6 +906,36 @@ reference compile(const expression& expr, llvm_environment& env,
 
                        return reference(var, access_path());
                    })
+            .case_(intrinsic_function_n(pattern::value("delta"), a, b),
+                   [&]
+                   {
+                       //TODO: Test if a and b are integers.
+                       
+                       auto int_type = env.map_kubus_type(types::integer());
+                       
+                       auto a_ref = compile(a.get(), env, symbol_table);
+                       auto b_ref = compile(b.get(), env, symbol_table);
+                       
+                       auto a_value = builder.CreateLoad(a_ref.addr());
+                       a_value->setMetadata("tbaa", env.get_tbaa_node(a_ref.origin()));
+                       
+                       auto b_value = builder.CreateLoad(b_ref.addr());
+                       b_value->setMetadata("tbaa", env.get_tbaa_node(b_ref.origin()));
+                       
+                       auto cond = builder.CreateICmpEQ(a_value, b_value);
+                       
+                       auto one = llvm::ConstantInt::get(int_type, 1);
+                       auto zero = llvm::ConstantInt::get(int_type, 0);
+                       
+                       auto result_value = builder.CreateSelect(cond, one, zero);
+                       
+                       auto result = create_entry_block_alloca(env.get_current_function(), int_type);
+                       
+                       auto result_store = builder.CreateStore(result_value, result);
+                       result_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+                       
+                       return reference(result, access_path());
+                   })
             .case_(intrinsic_function_n(pattern::value("extent"), variable_ref(idx), b),
                    [&]
                    {
