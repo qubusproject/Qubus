@@ -3,6 +3,9 @@
 
 #include <qbb/kubus/pattern/pattern.hpp>
 
+#include <qbb/util/function_traits.hpp>
+#include <qbb/util/unused.hpp>
+
 #include <boost/fusion/container/vector.hpp>
 #include <boost/fusion/container/vector/convert.hpp>
 #include <boost/fusion/algorithm/transformation/push_back.hpp>
@@ -13,6 +16,7 @@
 
 #include <tuple>
 #include <stdexcept>
+#include <type_traits>
 
 namespace qbb
 {
@@ -23,28 +27,49 @@ namespace pattern
 
 namespace detail
 {
-template<typename ResultType>
+template <typename ResultType, typename Action, typename BaseType>
+ResultType call_action(Action& action, const BaseType& QBB_UNUSED(value),
+                       std::false_type QBB_UNUSED(has_self_param))
+{
+    return ResultType(action());
+}
+
+template <typename ResultType, typename Action, typename BaseType>
+ResultType call_action(Action& action, const BaseType& value,
+                             std::true_type QBB_UNUSED(has_self_param))
+{
+    return ResultType(action(value));
+}
+
+template <typename ResultType, typename BaseType>
 struct case_executor
 {
     using result_type = boost::optional<ResultType>;
-    
-    template<typename F>
-    result_type operator()(F& f) const
+
+    template <typename F>
+    result_type operator()(F& f, const BaseType& value) const
     {
-        return boost::optional<ResultType>(ResultType(f()));
+        constexpr auto action_arity = util::function_traits<F>::arity;
+        constexpr bool action_has_self_param = action_arity > 0;
+
+        return boost::optional<ResultType>(call_action<ResultType>(
+            f, value, std::integral_constant<bool, action_has_self_param>()));
     }
 };
 
-template<>
-struct case_executor<void>
+template <typename BaseType>
+struct case_executor<void, BaseType>
 {
     using result_type = bool;
-    
-    template<typename F>
-    result_type operator()(F& f) const
+
+    template <typename F>
+    result_type operator()(F& f, const BaseType& value) const
     {
-        f();
+        constexpr auto action_arity = util::function_traits<F>::arity;
+        constexpr bool action_has_self_param = action_arity > 0;
         
+        call_action<void>(f, value, std::integral_constant<bool, action_has_self_param>());
+
         return true;
     }
 };
@@ -55,7 +80,7 @@ class matcher
 {
 public:
     using result_type = ResultType;
-    using try_match_result_type = typename detail::case_executor<ResultType>::result_type;
+    using try_match_result_type = typename detail::case_executor<ResultType, BaseType>::result_type;
 
     explicit matcher(Cases cases_ = Cases()) : cases_(cases_)
     {
@@ -73,11 +98,17 @@ public:
     {
         auto f = [](const auto& continuation, const auto& case_)
         {
+            constexpr auto action_arity = util::function_traits<
+                typename std::decay<decltype(std::get<1>(case_))>::type>::arity;
+
             return [continuation, &case_](const BaseType& value)
             {
                 if (std::get<0>(case_).match(value))
                 {
-                    return ResultType(std::get<1>(case_)());
+                    constexpr bool action_has_self_param = action_arity > 0;
+                    return detail::call_action<ResultType>(
+                        std::get<1>(case_), value,
+                        std::integral_constant<bool, action_has_self_param>());
                 }
                 else
                 {
@@ -107,7 +138,7 @@ public:
             {
                 if (std::get<0>(case_).match(value))
                 {
-                    return detail::case_executor<result_type>()(std::get<1>(case_));
+                    return detail::case_executor<result_type, BaseType>()(std::get<1>(case_), value);
                 }
                 else
                 {
@@ -118,13 +149,12 @@ public:
             };
         };
 
-        auto matcher =
-            boost::fusion::reverse_fold(cases_,
-                                        [](const BaseType&) -> try_match_result_type
-                                        {
-                                            return {};
-                                        },
-                                        f);
+        auto matcher = boost::fusion::reverse_fold(cases_,
+                                                   [](const BaseType&) -> try_match_result_type
+                                                   {
+                                                       return {};
+                                                   },
+                                                   f);
 
         return matcher(value);
     }
