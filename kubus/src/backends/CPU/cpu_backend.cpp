@@ -1454,7 +1454,10 @@ std::unique_ptr<cpu_backend> the_cpu_backend;
 
 extern "C" backend* init_cpu_backend(const abi_info* abi)
 {
-    the_cpu_backend = std::make_unique<cpu_backend>(*abi);
+    if (!the_cpu_backend)
+    {
+        the_cpu_backend = std::make_unique<cpu_backend>(*abi);
+    }
 
     return the_cpu_backend.get();
 }
