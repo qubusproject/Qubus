@@ -75,15 +75,8 @@ private:
 
 using namespace qbb::kubus;
 
-#define __STDC_LIMIT_MACROS
-#include <llvm/Support/CommandLine.h>
-
 int hpx_main(int argc, char** argv)
 {
-    const char* arg[] = {"test", "-debug"};
-
-    llvm::cl::ParseCommandLineOptions(1, arg);
-
     qbb::kubus::init(argc, argv);
 
     long int N = 2000;
