@@ -550,7 +550,7 @@ isl::schedule_node get_optimized_schedule_tree(isl::schedule_node root)
                 isl_options_set_tile_shift_point_loops(isl_ctx.native_handle(), 0);
                 // isl_options_set_tile_scale_tile_loops(isl_ctx.native_handle(), 0);
 
-                if (root.band_n_member() > 2)
+                if (root.band_n_member() > 1)
                 {
                     std::vector<util::index_t> tile_sizes = {300, 100, 25};
 
