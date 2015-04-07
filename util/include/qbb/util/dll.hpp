@@ -16,6 +16,7 @@ class dll
 {
 public:
     explicit dll(const std::string& filename);
+    explicit dll(const boost::filesystem::path& p);
     ~dll();
 
     template<typename SymbolType>
