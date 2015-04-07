@@ -2,8 +2,6 @@
 
 #include <qbb/kubus/runtime.hpp>
 
-#include <qbb/kubus/backends/cpu_backend.hpp>
-
 #include <qbb/kubus/plan.hpp>
 
 #include <qbb/kubus/lower_top_level_sums.hpp>
@@ -209,6 +207,7 @@ hpx::lcos::future<void> runtime_executor::execute_plan(const plan& executed_plan
 }
 
 runtime::runtime()
+: cpu_plugin_(util::get_prefix("kubus") / "kubus/backends/libkubus_cpu_backend.so")
 {
     init_logging();
 
@@ -222,6 +221,11 @@ runtime::runtime()
 
     BOOST_LOG_SEV(slg, normal) << "Bootstrapping virtual multiprocessor";
 
+    BOOST_LOG_SEV(slg, normal) << "Scanning for backends";
+    
+    BOOST_LOG_SEV(slg, normal) << "Loading backend 'cpu_backend'";
+    auto init_cpu_backend = cpu_plugin_.lookup_symbol<backend*(const abi_info*)>("init_cpu_backend");
+    
     cpu_backend_ = init_cpu_backend(&abi_info_);
 
     plan_repository_ =

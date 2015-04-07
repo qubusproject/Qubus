@@ -16,12 +16,13 @@ class dll
 {
 public:
     explicit dll(const std::string& filename);
+    explicit dll(const boost::filesystem::path& p);
     ~dll();
 
     template<typename SymbolType>
-    SymbolType lookup_symbol(const std::string& symbol) const
+    SymbolType* lookup_symbol(const std::string& symbol) const
     {
-        return reinterpret_cast<SymbolType>(lookup_symbol_raw(symbol));
+        return reinterpret_cast<SymbolType*>(lookup_symbol_raw(symbol));
     }
     
     boost::filesystem::path get_directory() const;

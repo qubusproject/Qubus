@@ -7,7 +7,7 @@ target_compile_options(kubus_cpu_backend PUBLIC -std=c++14)
 target_compile_definitions(kubus_cpu_backend PRIVATE ${LLVM_DEFINITIONS})
 target_link_libraries(kubus_cpu_backend PUBLIC ${Boost_LIBRARIES} kubus_ir qbb_util wall PRIVATE ${REQ_LLVM_LIBRARIES})
 
-set_target_properties(kubus_cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${KUBUS_BUILD_PREFIX}/qbb/kubus/backends")
+set_target_properties(kubus_cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${KUBUS_BUILD_PREFIX}/kubus/backends")
 
 set_property(TARGET kubus_cpu_backend PROPERTY VERSION ${KUBUS_VERSION})
 set_property(TARGET kubus_cpu_backend PROPERTY SOVERSION 0)

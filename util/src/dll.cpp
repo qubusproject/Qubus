@@ -30,6 +30,11 @@ dll::dll(const std::string& filename)
     }
 }
 
+dll::dll(const boost::filesystem::path& p)
+: dll(p.string())
+{
+}
+
 dll::~dll()
 {
     //TODO: Error handling ?
