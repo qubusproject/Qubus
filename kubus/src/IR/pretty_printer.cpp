@@ -115,14 +115,15 @@ const char* translate_unary_op_tag(unary_op_tag tag)
 void print_type(const type& t)
 {
     pattern::variable<type> subtype;
-    
+
     auto m = pattern::make_matcher<type, void>()
                  .case_(pattern::double_t,
                         [&]
                         {
                             std::cout << "double";
                         })
-                 .case_(pattern::integer_t, [&]
+                 .case_(pattern::integer_t,
+                        [&]
                         {
                             std::cout << "integer";
                         })
@@ -130,23 +131,23 @@ void print_type(const type& t)
                         [&]
                         {
                             std::cout << "complex<";
-                            
+
                             print_type(subtype.get());
-                            
+
                             std::cout << ">";
                         })
-                 .case_(tensor_t(subtype), [&]
+                 .case_(tensor_t(subtype),
+                        [&]
                         {
                             std::cout << "tensor<";
-                            
+
                             print_type(subtype.get());
-                            
+
                             std::cout << ">";
                         })
                  .case_(pattern::_, [&]
-                     {
-                     }
-                );
+                        {
+                        });
 
     pattern::match(t, m);
 }
@@ -232,11 +233,11 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        {
                            std::cout << ctx.get_name_for_handle(decl.get().id());
                        }
-                       
+
                        if (print_types)
                        {
                            std::cout << " :: ";
-                           
+
                            print_type(decl.get().var_type());
                        }
                    })
@@ -286,7 +287,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                    [&]
                    {
                        std::cout << dval.get();
-                       
+
                        if (print_types)
                        {
                            std::cout << " :: ";
@@ -297,7 +298,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                    [&]
                    {
                        std::cout << fval.get();
-                       
+
                        if (print_types)
                        {
                            std::cout << " :: ";
@@ -308,7 +309,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                    [&]
                    {
                        std::cout << ival.get();
-    
+
                        if (print_types)
                        {
                            std::cout << " :: ";
@@ -340,7 +341,8 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        print(d.get(), ctx, print_types);
                        std::cout << "\n}";
                    })
-            .case_(for_all(decl, b), [&]
+            .case_(for_all(decl, b),
+                   [&]
                    {
                        std::cout << "for all ";
 
@@ -356,6 +358,46 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << "\n{\n";
                        print(b.get(), ctx, print_types);
                        std::cout << "\n}";
+                   })
+            .case_(pattern::scoped_view(), [&] (const expression& s)
+                   {
+                        const auto& self = s.as<scoped_view_expr>();
+                        
+                        std::cout << "scoped_view ";
+                        std::cout << ctx.get_name_for_handle(self.view_var().id()) << " = ";
+                        std::cout << ctx.get_name_for_handle(self.referenced_var().id()) << " ";
+                        std::cout << "origin (";
+
+                        for (const auto& expr : self.origin())
+                        {
+                            print(expr, ctx, print_types);
+                            std::cout << ", ";
+                        }
+                        
+                        std::cout << ") with shape (";
+                        
+                        for (const auto& extent : self.shape())
+                        {
+                            std::cout << extent << ", ";
+                        }
+                        
+                        std::cout << ")";
+                        
+                        if (const auto& perm = self.permutation())
+                        {
+                            std::cout << " permutation [";
+                            
+                            for (auto value : *perm)
+                            {
+                                std::cout << value << ", ";
+                            }
+                            
+                            std::cout << "]";
+                        }
+                        
+                        std::cout << "\n";
+                        
+                        print(self.body(), ctx, print_types);
                    });
 
     pattern::match(expr, m);

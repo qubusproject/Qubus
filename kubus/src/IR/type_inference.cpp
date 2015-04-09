@@ -274,6 +274,11 @@ type infer_type_variable_ref_expr(const variable_ref_expr& expr)
     return expr.declaration().var_type();
 }
 
+type infer_type_scoped_view_expr(const scoped_view_expr&)
+{
+    return types::unknown{};
+}
+
 void init_infer_type()
 {
     infer_type.add_specialization(infer_type_binary_op_expr);
@@ -289,6 +294,7 @@ void init_infer_type()
     infer_type.add_specialization(infer_type_intrinsic_function_expr);
     infer_type.add_specialization(infer_type_compound_expr);
     infer_type.add_specialization(infer_type_variable_ref_expr);
+    infer_type.add_specialization(infer_type_scoped_view_expr);
 }
 
 std::once_flag infer_type_init_flag = {};
