@@ -1351,7 +1351,7 @@ reference compile(const expression& expr, llvm_environment& env,
                                     indices_.push_back(index);
                                 }
 
-                                auto ref1 = emit_array_slice_access(slice_ref, indices_, env);
+                                auto slice_value_ref = emit_array_slice_access(slice_ref, indices_, env);
 
                                 std::vector<llvm::Value*> transformed_indices;
                                 transformed_indices.reserve(indices_.size());
@@ -1375,14 +1375,14 @@ reference compile(const expression& expr, llvm_environment& env,
                                     transformed_indices = permute_indices(std::move(transformed_indices), *self.permutation());
                                 }
                                 
-                                auto ref2 =
+                                auto tensor_value_ref =
                                     emit_tensor_access(sliced_tensor_ref, transformed_indices, env);
 
-                                auto value = builder.CreateLoad(ref2.addr());
-                                value->setMetadata("tbaa", env.get_tbaa_node(ref2.origin()));
+                                auto value = builder.CreateLoad(tensor_value_ref.addr());
+                                value->setMetadata("tbaa", env.get_tbaa_node(tensor_value_ref.origin()));
 
-                                auto value_store = builder.CreateStore(ref1.addr(), value);
-                                value_store->setMetadata("tbaa", env.get_tbaa_node(ref1.origin()));
+                                auto value_store = builder.CreateStore(slice_value_ref.addr(), value);
+                                value_store->setMetadata("tbaa", env.get_tbaa_node(slice_value_ref.origin()));
                             }
                         };
 
