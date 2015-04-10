@@ -1392,6 +1392,84 @@ reference compile(const expression& expr, llvm_environment& env,
                     symbol_table[self.view_var().id()] = slice_ref;
 
                     compile(self.body(), env, symbol_table);
+                    
+                    if (self.is_mutable() && clone_slice)
+                    {
+                        std::size_t i = 0;
+
+                        std::vector<reference> indices;
+
+                        std::function<void()> emit_copy_code = [&, i]() mutable
+                        {
+                            if (i < self.shape().size())
+                            {
+                                auto ind_mem = create_entry_block_alloca(env.get_current_function(),
+                                                                         size_type);
+
+                                reference ind(ind_mem, access_path());
+                                indices.push_back(ind);
+
+                                llvm::Value* lower_bound = llvm::ConstantInt::get(size_type, 0);
+                                llvm::Value* upper_bound =
+                                    llvm::ConstantInt::get(size_type, self.shape()[i]);
+                                llvm::Value* increment = llvm::ConstantInt::get(size_type, 1);
+
+                                emit_loop(ind, lower_bound, upper_bound, increment, emit_copy_code,
+                                          env);
+
+                                ++i;
+                            }
+                            else
+                            {
+                                std::vector<llvm::Value*> indices_;
+                                indices_.reserve(indices.size());
+
+                                for (const auto& index_ref : indices)
+                                {
+                                    auto index = builder.CreateLoad(index_ref.addr());
+                                    index->setMetadata("tbaa",
+                                                       env.get_tbaa_node(index_ref.origin()));
+
+                                    indices_.push_back(index);
+                                }
+
+                                auto slice_value_ref = emit_array_slice_access(slice_ref, indices_, env);
+
+                                std::vector<llvm::Value*> transformed_indices;
+                                transformed_indices.reserve(indices_.size());
+
+                                for (std::size_t i = 0; i < indices_.size(); ++i)
+                                {
+                                    auto origin_component_ptr =
+                                        builder.CreateConstInBoundsGEP1_32(origin, i);
+
+                                    auto origin_component =
+                                        builder.CreateLoad(origin_component_ptr);
+                                    origin_component->setMetadata(
+                                        "tbaa", env.get_tbaa_node(slice_ref.origin() / "origin"));
+
+                                    transformed_indices.push_back(builder.CreateAdd(
+                                        origin_component, indices_[i], "", true, true));
+                                }
+
+                                if (self.permutation())
+                                {
+                                    transformed_indices = permute_indices(std::move(transformed_indices), *self.permutation());
+                                }
+                                
+                                auto tensor_value_ref =
+                                    emit_tensor_access(sliced_tensor_ref, transformed_indices, env);
+
+                                auto value = builder.CreateLoad(slice_value_ref.addr());
+                                value->setMetadata("tbaa", env.get_tbaa_node(slice_value_ref.origin()));
+
+                                auto value_store = builder.CreateStore(tensor_value_ref.addr(), value);
+                                value_store->setMetadata("tbaa", env.get_tbaa_node(tensor_value_ref.origin()));
+                            }
+                        };
+
+                        emit_copy_code();
+                    }
 
                     return reference();
                 });
