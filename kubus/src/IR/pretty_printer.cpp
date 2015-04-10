@@ -394,10 +394,17 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                             
                             std::cout << "]";
                         }
-                        
-                        std::cout << "\n";
+    
+                        if (self.is_mutable())
+                        {
+                            std::cout << " mutable";
+                        }
+    
+                        std::cout << "\n{";
                         
                         print(self.body(), ctx, print_types);
+                        
+                        std::cout << "\n}";
                    });
 
     pattern::match(expr, m);
