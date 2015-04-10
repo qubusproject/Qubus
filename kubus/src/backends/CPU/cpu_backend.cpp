@@ -51,12 +51,15 @@
 #include <llvm/Support/Host.h>
 
 #include <qbb/util/make_unique.hpp>
+#include <qbb/util/assert.hpp>
 
 #include <iostream>
 #include <memory>
 #include <map>
 #include <unordered_map>
 #include <mutex>
+#include <functional>
+#include <algorithm>
 
 namespace qbb
 {
@@ -737,6 +740,125 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
     return reference(result_var, access_path());
 }
 
+llvm::Value* emit_array_access(llvm::Value* data, const std::vector<llvm::Value*>& shape,
+                               const std::vector<llvm::Value*>& indices, llvm_environment& env)
+{
+    auto& builder = env.builder();
+
+    llvm::Type* size_type = env.map_kubus_type(types::integer());
+
+    llvm::Value* linearized_index = llvm::ConstantInt::get(size_type, 0);
+
+    // for (std::size_t i = indices.size(); i-- > 0;)
+    for (std::size_t i = 0; i < indices.size(); i++)
+    {
+        auto extent = shape[i];
+
+        linearized_index =
+            builder.CreateAdd(builder.CreateMul(extent, linearized_index), indices[i]);
+    }
+
+    return builder.CreateInBoundsGEP(data, linearized_index);
+}
+
+reference emit_array_access(const reference& data, const reference& shape,
+                            const std::vector<llvm::Value*>& indices, llvm_environment& env)
+{
+    auto& builder = env.builder();
+
+    std::vector<llvm::Value*> shape_;
+    shape_.reserve(indices.size());
+
+    for (std::size_t i = 0; i < indices.size(); ++i)
+    {
+        auto extent_ptr = builder.CreateConstInBoundsGEP1_32(shape.addr(), i);
+
+        auto extent = builder.CreateLoad(extent_ptr);
+        extent->setMetadata("tbaa", env.get_tbaa_node(shape.origin()));
+
+        shape_.push_back(extent);
+    }
+
+    auto accessed_element = emit_array_access(data.addr(), shape_, indices, env);
+
+    return reference(accessed_element, data.origin());
+}
+
+reference emit_tensor_access(const reference& tensor, const std::vector<llvm::Value*>& indices,
+                             llvm_environment& env)
+{
+    auto& builder = env.builder();
+
+    llvm::Value* data_ptr = builder.CreateConstInBoundsGEP2_32(tensor.addr(), 0, 0, "data_ptr");
+    llvm::Value* shape_ptr = builder.CreateConstInBoundsGEP2_32(tensor.addr(), 0, 1, "shape_ptr");
+
+    auto shape = builder.CreateLoad(shape_ptr, "shape");
+    shape->setMetadata("tbaa", env.get_tbaa_node(tensor.origin()));
+
+    auto data = builder.CreateLoad(data_ptr, "data");
+    data->setMetadata("tbaa", env.get_tbaa_node(tensor.origin()));
+
+    auto accessed_element =
+        emit_array_access(reference(data, tensor.origin() / "data"),
+                          reference(shape, tensor.origin() / "shape"), indices, env);
+
+    return accessed_element;
+}
+
+reference emit_array_slice_access(const reference& slice, const std::vector<llvm::Value*>& indices,
+                                  llvm_environment& env)
+{
+    auto& builder = env.builder();
+
+    llvm::Value* data_ptr = builder.CreateConstInBoundsGEP2_32(slice.addr(), 0, 0, "data_ptr");
+    llvm::Value* shape_ptr = builder.CreateConstInBoundsGEP2_32(slice.addr(), 0, 1, "shape_ptr");
+    llvm::Value* origin_ptr = builder.CreateConstInBoundsGEP2_32(slice.addr(), 0, 2, "origin_ptr");
+
+    auto shape = builder.CreateLoad(shape_ptr, "shape");
+    shape->setMetadata("tbaa", env.get_tbaa_node(slice.origin()));
+
+    auto data = builder.CreateLoad(data_ptr, "data");
+    data->setMetadata("tbaa", env.get_tbaa_node(slice.origin()));
+
+    auto origin = builder.CreateLoad(origin_ptr, "origin");
+    origin->setMetadata("tbaa", env.get_tbaa_node(slice.origin()));
+
+    std::vector<llvm::Value*> transformed_indices;
+    transformed_indices.reserve(indices.size());
+
+    for (std::size_t i = 0; i < indices.size(); ++i)
+    {
+        auto origin_component_ptr = builder.CreateConstInBoundsGEP1_32(origin, i);
+
+        auto origin_component = builder.CreateLoad(origin_component_ptr);
+        origin_component->setMetadata("tbaa", env.get_tbaa_node(slice.origin() / "origin"));
+
+        auto transformed_index = builder.CreateAdd(origin_component, indices[i], "", true, true);
+
+        transformed_indices.push_back(transformed_index);
+    }
+
+    auto accessed_element =
+        emit_array_access(reference(data, slice.origin() / "data"),
+                          reference(shape, slice.origin() / "shape"), transformed_indices, env);
+
+    return accessed_element;
+}
+
+std::vector<llvm::Value*> permute_indices(const std::vector<llvm::Value*>& indices,
+                                          const std::vector<util::index_t>& permutation)
+{
+    std::vector<llvm::Value*> permuted_indices;
+    permuted_indices.reserve(indices.size());
+    
+    for (std::size_t i = 0; i < indices.size(); ++i)
+    {
+        permuted_indices.push_back(indices[permutation[i]]);
+    }
+    
+    return permuted_indices;
+}
+
 reference compile(const expression& expr, llvm_environment& env,
                   std::map<qbb::util::handle, reference>& symbol_table)
 {
@@ -1030,100 +1152,249 @@ reference compile(const expression& expr, llvm_environment& env,
                    {
                        return symbol_table[idx.get().id()];
                    })
-            .case_(subscription(variable_ref(idx), expressions), [&]
+            .case_(subscription(variable_ref(idx), expressions),
+                   [&]
                    {
-                       llvm::Type* size_type = env.map_kubus_type(types::integer());
-
                        auto ref = symbol_table[idx.get().id()];
 
-                       auto tensor_base = builder.CreateLoad(ref.addr());
-                       tensor_base->setMetadata("tbaa", env.get_tbaa_node(access_path()));
-
-                       llvm::Value* data_ptr =
-                           builder.CreateConstInBoundsGEP2_32(tensor_base, 0, 0, "data_ptr");
-
-                       llvm::Value* shape_ptr =
-                           builder.CreateConstInBoundsGEP2_32(tensor_base, 0, 1, "shape_ptr");
-
-                       auto shape = builder.CreateLoad(shape_ptr, "shape");
-                       shape->setMetadata("tbaa", env.get_tbaa_node(ref.origin()));
+                       auto base = builder.CreateLoad(ref.addr());
+                       base->setMetadata("tbaa", env.get_tbaa_node(access_path()));
 
                        const auto& indices = expressions.get();
 
-                       reference index_ptr = compile(indices.back(), env, symbol_table);
-#define USE_SINGLE_GEP 1              
-#if USE_SINGLE_GEP
-                       llvm::Value* linearized_index = llvm::ConstantInt::get(size_type, 0);
+                       std::vector<llvm::Value*> indices_;
+                       indices_.reserve(indices.size());
 
-                       // for (std::size_t i = indices.size(); i-- > 0;)
-                       for (std::size_t i = 0; i < indices.size(); i++)
+                       for (const auto& index : indices)
                        {
-                           reference index_ptr = compile(indices[i], env, symbol_table);
+                           auto index_ref = compile(index, env, symbol_table);
 
-                           llvm::Instruction* index = builder.CreateLoad(index_ptr.addr());
-                           index->setMetadata("tbaa", env.get_tbaa_node(index_ptr.origin()));
+                           auto index_ = builder.CreateLoad(index_ref.addr());
+                           index_->setMetadata("tbaa", env.get_tbaa_node(index_ref.origin()));
 
-                           llvm::Value* dim = llvm::ConstantInt::get(size_type, i);
-
-                           llvm::Value* extent_ptr = builder.CreateInBoundsGEP(shape, dim);
-
-                           llvm::Instruction* extent = builder.CreateLoad(extent_ptr);
-                           extent->setMetadata("tbaa", env.get_tbaa_node(ref.origin() / "shape"));
-
-                           linearized_index = builder.CreateAdd(
-                               builder.CreateMul(extent, linearized_index), index);
+                           indices_.push_back(index_);
                        }
 
-                       auto data = builder.CreateLoad(data_ptr);
-                       data->setMetadata("tbaa", env.get_tbaa_node(ref.origin()));
+                       using pattern::_;
 
-                       return reference(builder.CreateInBoundsGEP(data, linearized_index),
-                                        ref.origin() / "data");
-#else
-                       std::vector<llvm::Value*> extents;
-                       
-                       for (std::size_t i = 0; i < indices.size() ; i++)
-                       {
-                            llvm::Value* dim = llvm::ConstantInt::get(size_type, i);
-                           
-                            llvm::Value* extent_ptr = builder.CreateInBoundsGEP(shape, dim);
+                       auto m = pattern::make_matcher<type, reference>()
+                                    .case_(pattern::tensor_t(_),
+                                           [&]
+                                           {
+                                               return emit_tensor_access(
+                                                   reference(base, ref.origin()), indices_, env);
+                                           })
+                                    .case_(pattern::array_slice_t(_), [&]
+                                           {
+                                               return emit_array_slice_access(
+                                                   reference(base, ref.origin()), indices_, env);
+                                           });
 
-                            llvm::Instruction* extent = builder.CreateLoad(extent_ptr);
-                            extent->setMetadata("tbaa", env.get_tbaa_node(ref.origin() / "shape"));
-                            
-                            extents.push_back(extent);
-                       }
-                       
-                       std::vector<llvm::Value*> strides(indices.size());
-                       
-                       llvm::Value* current_stride = llvm::ConstantInt::get(size_type, 1);
-                       
-                       for (std::size_t i = indices.size(); i-- > 0;)
-                       {
-                           strides[i] = current_stride;
-                           
-                           current_stride = builder.CreateMul(current_stride, extents[i]);
-                       }
-                       
-                       auto data = builder.CreateLoad(data_ptr);
-                       data->setMetadata("tbaa", env.get_tbaa_node(ref.origin()));
+                       return pattern::match(idx.get().var_type(), m);
+                   })
+            .case_(
+                pattern::scoped_view(), [&](const expression& s)
+                {
+                    const auto& self = s.as<scoped_view_expr>();
 
-                       llvm::Value* current_ptr = data;
-                       
-                       for (std::size_t i = 0; i < indices.size() ; i++)
-                       {
-                           reference index_ptr = compile(indices[i], env, symbol_table);
+                    auto value_type = env.map_kubus_type(types::double_());
 
-                           llvm::Instruction* index = builder.CreateLoad(index_ptr.addr());
-                           index->setMetadata("tbaa", env.get_tbaa_node(index_ptr.origin()));
+                    std::size_t value_type_size = 8;
 
-                           current_ptr = builder.CreateInBoundsGEP(current_ptr, builder.CreateMul(strides[i], index));
-                       }
+                    std::size_t num_of_elements =
+                        std::accumulate(self.shape().begin(), self.shape().end(), 1,
+                                        std::multiplies<std::size_t>());
 
-                       return reference(current_ptr,
-                                        ref.origin() / "data");       
-#endif
-                   });
+                    std::size_t total_used_mem = value_type_size * num_of_elements;
+
+                    auto sliced_tensor_ref = symbol_table.at(self.referenced_var().id());
+                    auto size_type = env.map_kubus_type(types::integer());
+
+                    llvm::Value* data;
+                    llvm::Value* shape;
+                    llvm::Value* origin;
+
+                    bool clone_slice = total_used_mem < 64 || self.permutation();
+
+                    if (clone_slice)
+                    {
+                        auto data_array_type = llvm::ArrayType::get(value_type, num_of_elements);
+
+                        auto data_array =
+                            create_entry_block_alloca(env.get_current_function(), data_array_type);
+
+                        auto shape_array_type =
+                            llvm::ArrayType::get(size_type, self.shape().size());
+
+                        auto shape_array =
+                            create_entry_block_alloca(env.get_current_function(), shape_array_type);
+
+                        std::vector<llvm::Constant*> shape_;
+
+                        for (auto extent : self.shape())
+                        {
+                            shape_.push_back(llvm::ConstantInt::get(size_type, extent));
+                        }
+
+                        builder.CreateStore(shape_array,
+                                            llvm::ConstantArray::get(shape_array_type, shape_));
+
+                        data = builder.CreateConstInBoundsGEP2_32(data_array, 0, 0);
+                        shape = builder.CreateConstInBoundsGEP2_32(shape_array, 0, 0);
+
+                        auto origin_type = llvm::ArrayType::get(size_type, self.origin().size());
+
+                        auto origin_ptr =
+                            create_entry_block_alloca(env.get_current_function(), origin_type);
+
+                        auto origin_value = llvm::ConstantAggregateZero::get(origin_type);
+
+                        auto origin_store = builder.CreateStore(origin_ptr, origin_value);
+                        origin_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+
+                        origin = builder.CreateConstInBoundsGEP2_32(origin_ptr, 0, 0);
+                    }
+                    else
+                    {
+                        auto sliced_tensor = builder.CreateLoad(sliced_tensor_ref.addr());
+                        sliced_tensor->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+
+                        auto data_ptr = builder.CreateConstInBoundsGEP2_32(sliced_tensor, 0, 0);
+                        auto shape_ptr = builder.CreateConstInBoundsGEP2_32(sliced_tensor, 0, 1);
+
+                        auto data_load = builder.CreateLoad(data_ptr);
+                        data_load->setMetadata("tbaa",
+                                               env.get_tbaa_node(sliced_tensor_ref.origin()));
+                        data = data_load;
+
+                        auto shape_load = builder.CreateLoad(shape_ptr);
+                        shape_load->setMetadata("tbaa",
+                                                env.get_tbaa_node(sliced_tensor_ref.origin()));
+                        shape = shape_load;
+
+                        auto origin_type = llvm::ArrayType::get(size_type, self.origin().size());
+
+                        auto origin_ptr =
+                            create_entry_block_alloca(env.get_current_function(), origin_type);
+
+                        for (std::size_t i = 0; i < self.origin().size(); ++i)
+                        {
+                            auto value_ref = compile(self.origin()[i], env, symbol_table);
+                            auto value = builder.CreateLoad(value_ref.addr());
+                            value->setMetadata("tbaa", env.get_tbaa_node(value_ref.origin()));
+
+                            auto origin = builder.CreateConstInBoundsGEP2_32(origin_ptr, 0, i);
+
+                            auto origin_store = builder.CreateStore(origin, value);
+                            origin_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+                        }
+
+                        origin = builder.CreateConstInBoundsGEP2_32(origin_ptr, 0, 0);
+                    }
+
+                    auto slice_type = env.map_kubus_type(self.view_var().var_type());
+
+                    auto slice = create_entry_block_alloca(env.get_current_function(), slice_type);
+
+                    auto slice_data_ptr = builder.CreateConstInBoundsGEP2_32(slice, 0, 0);
+                    auto slice_shape_ptr = builder.CreateConstInBoundsGEP2_32(slice, 0, 1);
+                    auto slice_origin_ptr = builder.CreateConstInBoundsGEP2_32(slice, 0, 2);
+
+                    auto data_store = builder.CreateStore(slice_data_ptr, data);
+                    data_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+
+                    auto shape_store = builder.CreateStore(slice_shape_ptr, shape);
+                    shape_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+
+                    auto origin_store = builder.CreateStore(slice_origin_ptr, origin);
+                    origin_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+
+                    auto slice_ref = reference(slice, access_path());
+
+                    if (clone_slice)
+                    {
+                        std::size_t i = 0;
+
+                        std::vector<reference> indices;
+
+                        std::function<void()> emit_copy_code = [&, i]() mutable
+                        {
+                            if (i < self.shape().size())
+                            {
+                                auto ind_mem = create_entry_block_alloca(env.get_current_function(),
+                                                                         size_type);
+
+                                reference ind(ind_mem, access_path());
+                                indices.push_back(ind);
+
+                                llvm::Value* lower_bound = llvm::ConstantInt::get(size_type, 0);
+                                llvm::Value* upper_bound =
+                                    llvm::ConstantInt::get(size_type, self.shape()[i]);
+                                llvm::Value* increment = llvm::ConstantInt::get(size_type, 1);
+
+                                emit_loop(ind, lower_bound, upper_bound, increment, emit_copy_code,
+                                          env);
+
+                                ++i;
+                            }
+                            else
+                            {
+                                std::vector<llvm::Value*> indices_;
+                                indices_.reserve(indices.size());
+
+                                for (const auto& index_ref : indices)
+                                {
+                                    auto index = builder.CreateLoad(index_ref.addr());
+                                    index->setMetadata("tbaa",
+                                                       env.get_tbaa_node(index_ref.origin()));
+
+                                    indices_.push_back(index);
+                                }
+
+                                auto ref1 = emit_array_slice_access(slice_ref, indices_, env);
+
+                                std::vector<llvm::Value*> transformed_indices;
+                                transformed_indices.reserve(indices_.size());
+
+                                for (std::size_t i = 0; i < indices_.size(); ++i)
+                                {
+                                    auto origin_component_ptr =
+                                        builder.CreateConstInBoundsGEP1_32(origin, i);
+
+                                    auto origin_component =
+                                        builder.CreateLoad(origin_component_ptr);
+                                    origin_component->setMetadata(
+                                        "tbaa", env.get_tbaa_node(slice_ref.origin() / "origin"));
+
+                                    transformed_indices.push_back(builder.CreateAdd(
+                                        origin_component, indices_[i], "", true, true));
+                                }
+
+                                if (self.permutation())
+                                {
+                                    transformed_indices = permute_indices(std::move(transformed_indices), *self.permutation());
+                                }
+                                
+                                auto ref2 =
+                                    emit_tensor_access(sliced_tensor_ref, transformed_indices, env);
+
+                                auto value = builder.CreateLoad(ref2.addr());
+                                value->setMetadata("tbaa", env.get_tbaa_node(ref2.origin()));
+
+                                auto value_store = builder.CreateStore(ref1.addr(), value);
+                                value_store->setMetadata("tbaa", env.get_tbaa_node(ref1.origin()));
+                            }
+                        };
+
+                        emit_copy_code();
+                    }
+
+                    symbol_table[self.view_var().id()] = slice_ref;
+
+                    compile(self.body(), env, symbol_table);
+
+                    return reference();
+                });
 
     return pattern::match(expr, m);
 }

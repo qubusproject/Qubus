@@ -108,6 +108,16 @@ type common_type_tensor_tensor(const types::tensor& lhs, const types::tensor& rh
     return types::tensor(common_type_(lhs.value_type(), rhs.value_type()));
 }
 
+type common_type_array_array(const types::array& lhs, const types::array& rhs)
+{
+    return types::array(common_type_(lhs.value_type(), rhs.value_type()));
+}
+
+type common_type_array_slice_array_slice(const types::array_slice& lhs, const types::array_slice& rhs)
+{
+    return types::array_slice(common_type_(lhs.value_type(), rhs.value_type()));
+}
+
 void init_common_type()
 {
     common_type_.add_specialization(common_type_double_double);
@@ -128,6 +138,8 @@ void init_common_type()
     common_type_.add_specialization(common_type_integer_complex);
     common_type_.add_specialization(common_type_complex_complex);
     common_type_.add_specialization(common_type_tensor_tensor);
+    common_type_.add_specialization(common_type_array_array);
+    common_type_.add_specialization(common_type_array_slice_array_slice);
 }
 
 std::once_flag common_type_init_flag = {};

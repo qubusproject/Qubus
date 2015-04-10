@@ -46,9 +46,14 @@ std::string mangle_type(const type& t)
                         {
                             return "complex_" + mangle_type(subtype.get());
                         })
-                 .case_(tensor_t(subtype), [&]
+                 .case_(tensor_t(subtype),
+                        [&]
                         {
                             return "tensor_" + mangle_type(subtype.get());
+                        })
+                 .case_(array_slice_t(subtype), [&]
+                        {
+                            return "array_slice_" + mangle_type(subtype.get());
                         });
 
     return pattern::match(t, m);
@@ -69,20 +74,19 @@ llvm_environment::llvm_environment()
     param_tbaa_node_ = md_builder_.createTBAANode("param", tbaa_root_);
 
     std::vector<llvm::Type*> assume_params = {llvm::Type::getInt1Ty(llvm::getGlobalContext())};
-    
-    llvm::FunctionType* assume_FT =
-        llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()),
-                                assume_params, false);
+
+    llvm::FunctionType* assume_FT = llvm::FunctionType::get(
+        llvm::Type::getVoidTy(llvm::getGlobalContext()), assume_params, false);
 
     auto assume = module().getOrInsertFunction("llvm.assume", assume_FT);
 
     auto int_type = llvm::Type::getInt64Ty(llvm::getGlobalContext());
 
-    std::vector<llvm::Type*> params = {llvm::Type::getDoublePtrTy(llvm::getGlobalContext()), int_type};
-    
+    std::vector<llvm::Type*> params = {llvm::Type::getDoublePtrTy(llvm::getGlobalContext()),
+                                       int_type};
+
     llvm::FunctionType* FT = llvm::FunctionType::get(
-        llvm::Type::getDoublePtrTy(llvm::getGlobalContext()),
-        params, false);
+        llvm::Type::getDoublePtrTy(llvm::getGlobalContext()), params, false);
 
     assume_align_ =
         llvm::Function::Create(FT, llvm::Function::PrivateLinkage, "assume_align", &module());
@@ -132,7 +136,6 @@ llvm::Type* llvm_environment::map_kubus_type(const type& t) const
     else
     {
         pattern::variable<type> subtype;
-        pattern::variable<type> total_type;
 
         auto m =
             pattern::make_matcher<type, llvm::Type*>()
@@ -152,23 +155,33 @@ llvm::Type* llvm_environment::map_kubus_type(const type& t) const
                        {
                            return llvm::Type::getFloatTy(llvm::getGlobalContext());
                        })
-                .case_(bind_to(complex_t(subtype), total_type),
-                       [&]
+                .case_(complex_t(subtype),
+                       [&](const type& total_type)
                        {
                            llvm::Type* real_type = map_kubus_type(types::double_());
 
                            llvm::Type* real_pair = llvm::ArrayType::get(real_type, 2);
 
                            return llvm::StructType::create({real_pair},
-                                                           mangle_type(total_type.get()));
+                                                           mangle_type(total_type));
                        })
-                .case_(bind_to(tensor_t(subtype), total_type), [&]
+                .case_(tensor_t(subtype),
+                       [&](const type& total_type)
                        {
                            llvm::Type* size_type = map_kubus_type(types::integer());
                            std::vector<llvm::Type*> types{
                                llvm::PointerType::get(map_kubus_type(subtype.get()), 0),
                                llvm::PointerType::get(size_type, 0)};
-                           return llvm::StructType::create(types, mangle_type(total_type.get()));
+                           return llvm::StructType::create(types, mangle_type(total_type));
+                       })
+                .case_(array_slice_t(subtype), [&](const type& total_type)
+                       {
+                           llvm::Type* size_type = map_kubus_type(types::integer());
+                           std::vector<llvm::Type*> types{
+                               llvm::PointerType::get(map_kubus_type(subtype.get()), 0),
+                               llvm::PointerType::get(size_type, 0),
+                               llvm::PointerType::get(size_type, 0)};
+                           return llvm::StructType::create(types, mangle_type(total_type));
                        });
 
         llvm_type = pattern::match(t, m);

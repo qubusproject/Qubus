@@ -131,6 +131,19 @@ tensor_type_pattern<types::sparse_tensor, ValueType> sparse_tensor_t(ValueType v
 {
     return tensor_type_pattern<types::sparse_tensor, ValueType>(std::move(value_type));
 }
+
+template <typename ValueType>
+tensor_type_pattern<types::array, ValueType> array_t(ValueType value_type)
+{
+    return tensor_type_pattern<types::array, ValueType>(std::move(value_type));
+}
+
+template <typename ValueType>
+tensor_type_pattern<types::array_slice, ValueType> array_slice_t(ValueType value_type)
+{
+    return tensor_type_pattern<types::array_slice, ValueType>(std::move(value_type));
+}
+
 }
 }
 }
