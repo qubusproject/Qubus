@@ -1,6 +1,7 @@
 #include <qbb/kubus/isl/set.hpp>
 
 #include <qbb/kubus/isl/context.hpp>
+#include <qbb/kubus/isl/pw_multi_aff.hpp>
 
 namespace qbb
 {
