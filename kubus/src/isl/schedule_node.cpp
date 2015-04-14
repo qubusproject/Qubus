@@ -79,6 +79,26 @@ void schedule_node::band_set_ast_build_options(union_set options)
     handle_ = isl_schedule_node_band_set_ast_build_options(handle_, options.release());
 }
 
+union_set schedule_node::get_domain() const
+{
+    return union_set(isl_schedule_node_get_domain(handle_));
+}
+
+union_map schedule_node::get_prefix_schedule_union_map() const
+{
+    return union_map(isl_schedule_node_get_prefix_schedule_union_map(handle_));
+}
+
+union_map schedule_node::get_prefix_schedule_relation() const
+{
+    return union_map(isl_schedule_node_get_prefix_schedule_relation(handle_));
+}
+
+union_map schedule_node::get_subtree_schedule_union_map() const
+{
+    return union_map(isl_schedule_node_get_subtree_schedule_union_map(handle_));
+}
+
 isl_schedule_node* schedule_node::native_handle() const
 {
     return handle_;
@@ -140,21 +160,20 @@ schedule_node insert_sequence(schedule_node parent, std::vector<union_set> filte
 schedule_node tile_band(schedule_node node, std::vector<long int> sizes)
 {
     isl_ctx* ctx = isl_schedule_node_get_ctx(node.native_handle());
-    
+
     isl_val_list* sizes_list = isl_val_list_alloc(ctx, sizes.size());
-    
+
     for (auto size : sizes)
     {
         sizes_list = isl_val_list_add(sizes_list, isl_val_int_from_si(ctx, size));
     }
-    
+
     isl_space* s = isl_space_set_alloc(ctx, 0, sizes.size());
-    
+
     isl_multi_val* sizes_ = isl_multi_val_from_val_list(s, sizes_list);
-    
+
     return schedule_node(isl_schedule_node_band_tile(node.release(), sizes_));
 }
-
 }
 }
 }

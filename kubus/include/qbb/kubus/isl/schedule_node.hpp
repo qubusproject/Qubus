@@ -39,6 +39,12 @@ public:
     void band_member_set_ast_loop_type(int pos, isl_ast_loop_type type);
     void band_set_ast_build_options(union_set options);
     
+    union_set get_domain() const;
+    
+    union_map get_prefix_schedule_union_map() const;
+    union_map get_prefix_schedule_relation() const;
+    union_map get_subtree_schedule_union_map() const;
+    
     isl_schedule_node* native_handle() const;
     isl_schedule_node* release() noexcept;
 private:
