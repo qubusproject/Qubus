@@ -20,7 +20,7 @@ set(kubus_ir_source_files annotations.cpp binary_operator_expr.cpp compound_expr
                           sum_expr.cpp type.cpp
                           type_conversion_expr.cpp type_inference.cpp unary_operator_expr.cpp
                           variable_ref_expr.cpp variable_declaration.cpp
-                          function_declaration.cpp macro_expr.cpp scoped_view_expr.cpp)
+                          function_declaration.cpp macro_expr.cpp)
         
 set(kubus_pattern_header_file_names any.hpp binary_operator.hpp bind_to.hpp compound.hpp core.hpp
                                     for.hpp for_all.hpp index.hpp intrinsic_function.hpp IR.hpp

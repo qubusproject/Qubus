@@ -12,7 +12,6 @@
 #include <qbb/kubus/IR/for_expr.hpp>
 #include <qbb/kubus/IR/compound_expr.hpp>
 #include <qbb/kubus/IR/macro_expr.hpp>
-#include <qbb/kubus/IR/scoped_view_expr.hpp>
 
 #include <qbb/kubus/IR/expression.hpp>
 #include <qbb/kubus/IR/type.hpp>

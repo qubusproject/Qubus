@@ -358,53 +358,6 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << "\n{\n";
                        print(b.get(), ctx, print_types);
                        std::cout << "\n}";
-                   })
-            .case_(pattern::scoped_view(), [&] (const expression& s)
-                   {
-                        const auto& self = s.as<scoped_view_expr>();
-                        
-                        std::cout << "scoped_view ";
-                        std::cout << ctx.get_name_for_handle(self.view_var().id()) << " = ";
-                        std::cout << ctx.get_name_for_handle(self.referenced_var().id()) << " ";
-                        std::cout << "origin (";
-
-                        for (const auto& expr : self.origin())
-                        {
-                            print(expr, ctx, print_types);
-                            std::cout << ", ";
-                        }
-                        
-                        std::cout << ") with shape (";
-                        
-                        for (const auto& extent : self.shape())
-                        {
-                            std::cout << extent << ", ";
-                        }
-                        
-                        std::cout << ")";
-                        
-                        if (const auto& perm = self.permutation())
-                        {
-                            std::cout << " permutation [";
-                            
-                            for (auto value : *perm)
-                            {
-                                std::cout << value << ", ";
-                            }
-                            
-                            std::cout << "]";
-                        }
-    
-                        if (self.is_mutable())
-                        {
-                            std::cout << " mutable";
-                        }
-    
-                        std::cout << "\n{";
-                        
-                        print(self.body(), ctx, print_types);
-                        
-                        std::cout << "\n}";
                    });
 
     pattern::match(expr, m);

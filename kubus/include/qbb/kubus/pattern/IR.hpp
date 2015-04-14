@@ -15,7 +15,6 @@
 #include <qbb/kubus/pattern/for_all.hpp>
 #include <qbb/kubus/pattern/variable_ref.hpp>
 #include <qbb/kubus/pattern/macro.hpp>
-#include <qbb/kubus/pattern/scoped_view.hpp>
 
 #include <qbb/kubus/pattern/type.hpp>
 
