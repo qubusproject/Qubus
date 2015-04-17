@@ -10,7 +10,7 @@ namespace kubus
 {
  
 expression lower_top_level_sums(const expression& expr);
-function_declaration lower_top_level_sums(const function_declaration& decl);
+function_declaration lower_top_level_sums(function_declaration decl);
     
 }
 }

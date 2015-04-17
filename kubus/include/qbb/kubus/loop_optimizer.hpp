@@ -8,7 +8,7 @@ namespace qbb
 namespace kubus
 {
  
-function_declaration optimize_loops(const function_declaration& expr);
+function_declaration optimize_loops(function_declaration expr);
     
 }   
 }

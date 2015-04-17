@@ -12,28 +12,39 @@ namespace kubus
 class function_declaration_info
 {
 public:
-    explicit function_declaration_info(std::vector<variable_declaration> params_,
+    explicit function_declaration_info(std::string name_, std::vector<variable_declaration> params_,
                                        variable_declaration result_, expression body_)
-    : params_(std::move(params_)), result_(std::move(result_)), body_(std::move(body_))
+    : name_(std::move(name_)), params_(std::move(params_)), result_(std::move(result_)),
+      body_(std::move(body_))
     {
     }
 
     function_declaration_info(const function_declaration_info&) = delete;
     function_declaration_info& operator=(const function_declaration_info&) = delete;
 
+    const std::string& name() const
+    {
+        return name_;
+    }
+
     const std::vector<variable_declaration>& params() const
     {
         return params_;
     }
-    
+
     const variable_declaration& result() const
     {
         return result_;
     }
-    
+
     const expression& body() const
     {
         return body_;
+    }
+    
+    void substitute_body(expression body)
+    {
+        body_ = std::move(body);
     }
 
     annotation_map& annotations() const
@@ -47,6 +58,7 @@ public:
     }
 
 private:
+    std::string name_;
     std::vector<variable_declaration> params_;
     variable_declaration result_;
     expression body_;
@@ -54,11 +66,17 @@ private:
     mutable annotation_map annotations_;
 };
 
-function_declaration::function_declaration(std::vector<variable_declaration> params_,
+function_declaration::function_declaration(std::string name_,
+                                           std::vector<variable_declaration> params_,
                                            variable_declaration result_, expression body_)
-: info_(std::make_shared<function_declaration_info>(std::move(params_), std::move(result_),
-                                                    std::move(body_)))
+: info_(std::make_shared<function_declaration_info>(std::move(name_), std::move(params_),
+                                                    std::move(result_), std::move(body_)))
 {
+}
+
+const std::string& function_declaration::name() const
+{
+    return info_->name();
 }
 
 const std::vector<variable_declaration>& function_declaration::params() const
@@ -74,6 +92,11 @@ const variable_declaration& function_declaration::result() const
 const expression& function_declaration::body() const
 {
     return info_->body();
+}
+
+void function_declaration::substitute_body(expression body)
+{
+    info_->substitute_body(std::move(body));
 }
 
 util::handle function_declaration::id() const

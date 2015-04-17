@@ -85,8 +85,9 @@ expression make_implicit_conversions_explicit(expression expr)
 
 function_declaration make_implicit_conversions_explicit(function_declaration decl)
 {
-    return function_declaration(decl.params(), decl.result(),
-                                make_implicit_conversions_explicit(decl.body()));
+    decl.substitute_body(make_implicit_conversions_explicit(decl.body()));
+    
+    return decl;
 }
 }
 }

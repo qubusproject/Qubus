@@ -13,9 +13,12 @@
 #include <qbb/util/unreachable.hpp>
 #include <qbb/util/assert.hpp>
 
+#include <boost/optional.hpp>
+
 #include <iostream>
 #include <mutex>
 #include <map>
+#include <vector>
 
 namespace qbb
 {
@@ -49,9 +52,26 @@ public:
         }
     }
 
+    void add_function_to_print(function_declaration fn)
+    {
+        functions_to_print_.push_back(fn);
+    }
+    
+    boost::optional<function_declaration> get_next_function_to_print()
+    {
+        if (functions_to_print_.empty())
+            return boost::none;
+        
+        auto next_function = functions_to_print_.back();
+        
+        functions_to_print_.pop_back();
+        
+        return next_function;
+    }
 private:
     mutable std::map<qbb::util::handle, std::string> symbol_table_;
     qbb::util::unique_name_generator name_generator;
+    std::vector<function_declaration> functions_to_print_;
 };
 
 const char* translate_binary_op_tag(binary_op_tag tag)
@@ -168,6 +188,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
     pattern::variable<qbb::util::index_t> ival;
 
     pattern::variable<variable_declaration> decl;
+    pattern::variable<function_declaration> plan;
     pattern::variable<type> t;
 
     auto m =
@@ -358,6 +379,36 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << "\n{\n";
                        print(b.get(), ctx, print_types);
                        std::cout << "\n}";
+                   })
+            .case_(local_variable_def(decl, a),
+                   [&]
+                   {
+                       if (auto debug_name = decl.get().annotations().lookup("kubus.debug.name"))
+                       {
+                           std::cout << debug_name.as<std::string>();
+                       }
+                       else
+                       {
+                           std::cout << ctx.get_name_for_handle(decl.get().id());
+                       }
+
+                       std::cout << " := ";
+
+                       print(a.get(), ctx, print_types);
+                   })
+            .case_(spawn(plan, args), [&]
+                   {
+                       ctx.add_function_to_print(plan.get());
+                       
+                       std::cout << "spawn " << plan.get().name() << "(";
+                       
+                       for (const auto& arg : args.get())
+                       {
+                           print(arg, ctx, print_types);
+                           std::cout << ", ";
+                       }
+
+                       std::cout << ")";
                    });
 
     pattern::match(expr, m);
@@ -394,7 +445,7 @@ void pretty_print(const function_declaration& decl, bool print_types)
 {
     pretty_printer_context ctx;
 
-    std::cout << "def entry(";
+    std::cout << "def " << decl.name() << "(";
 
     for (const auto& param : decl.params())
     {
@@ -414,6 +465,12 @@ void pretty_print(const function_declaration& decl, bool print_types)
     print(decl.body(), ctx, print_types);
 
     std::cout << "\n}" << std::endl;
+    
+    while (auto next_fn = ctx.get_next_function_to_print())
+    {
+        std::cout << "\n";
+        pretty_print(*next_fn, print_types);
+    }
 }
 }
 }

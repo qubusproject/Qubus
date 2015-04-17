@@ -874,11 +874,13 @@ expression detect_and_optimize_scops(expression expr)
 }
 }
 
-function_declaration optimize_loops(const function_declaration& expr)
+function_declaration optimize_loops(function_declaration decl)
 {
-    auto new_body = detect_and_optimize_scops(expr.body());
+    auto new_body = detect_and_optimize_scops(decl.body());
 
-    return function_declaration(expr.params(), expr.result(), new_body);
+    decl.substitute_body(std::move(new_body));
+    
+    return decl;
 }
 }
 }

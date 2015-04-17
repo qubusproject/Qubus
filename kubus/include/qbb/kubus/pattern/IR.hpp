@@ -15,6 +15,8 @@
 #include <qbb/kubus/pattern/for_all.hpp>
 #include <qbb/kubus/pattern/variable_ref.hpp>
 #include <qbb/kubus/pattern/macro.hpp>
+#include <qbb/kubus/pattern/spawn.hpp>
+#include <qbb/kubus/pattern/local_variable_def.hpp>
 
 #include <qbb/kubus/pattern/type.hpp>
 

@@ -97,11 +97,13 @@ expression lower_top_level_sums(const expression& expr)
     return pattern::match(expr, m);
 }
 
-function_declaration lower_top_level_sums(const function_declaration& decl)
+function_declaration lower_top_level_sums(function_declaration decl)
 {
     auto new_body = lower_top_level_sums(decl.body());
     
-    return function_declaration(decl.params(), decl.result(), new_body);
+    decl.substitute_body(std::move(new_body));
+    
+    return decl;
 }
 
 }

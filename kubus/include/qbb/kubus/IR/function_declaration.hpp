@@ -24,11 +24,14 @@ class function_declaration_info;
 class function_declaration
 {
 public:
-    function_declaration(std::vector<variable_declaration> params_, variable_declaration result_,
-                         expression body_);
+    function_declaration(std::string name_, std::vector<variable_declaration> params_,
+                         variable_declaration result_, expression body_);
 
+    const std::string& name() const;
     const std::vector<variable_declaration>& params() const;
     const variable_declaration& result() const;
+    
+    void substitute_body(expression body);
 
     const expression& body() const;
 
