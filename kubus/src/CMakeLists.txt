@@ -1,5 +1,3 @@
-include(GenerateExportHeader)
-
 find_package(Boost 1.55.0 COMPONENTS log thread system REQUIRED)
 
 find_package(CUDA 5.5)
@@ -66,8 +64,6 @@ set_property(TARGET kubus PROPERTY INTERFACE_kubus_MAJOR_VERSION 0)
 set_property(TARGET kubus PROPERTY INTERFACE_kubus_MINOR_VERSION 1)
 set_property(TARGET kubus APPEND PROPERTY COMPATIBLE_INTERFACE_STRING kubus_MAJOR_VERSION)
 set_property(TARGET kubus APPEND PROPERTY COMPATIBLE_INTERFACE_STRING kubus_MINOR_VERSION)
-
-generate_export_header(kubus)
         
 install(TARGETS kubus EXPORT kubus-targets
                       RUNTIME DESTINATION bin
