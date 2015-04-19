@@ -1367,7 +1367,7 @@ void compile_entry_point(const function_declaration& plan, llvm_environment& env
 
     auto add_param = [&](const variable_declaration& param) mutable
     {
-        llvm::Type* tensor_type = env.map_kubus_type(param.var_type());
+        llvm::Type* param_type = env.map_kubus_type(param.var_type());
 
         llvm::Value* ptr_to_arg =
             env.builder().CreateConstInBoundsGEP1_64(&kernel->getArgumentList().front(), counter);
@@ -1376,7 +1376,7 @@ void compile_entry_point(const function_declaration& plan, llvm_environment& env
         arg->setMetadata("tbaa", env.get_tbaa_node(access_path()));
 
         llvm::Value* typed_arg =
-            env.builder().CreateBitCast(arg, llvm::PointerType::get(tensor_type, 0));
+            env.builder().CreateBitCast(arg, llvm::PointerType::get(param_type, 0));
 
         llvm::Value* data_ptr =
             env.builder().CreateConstInBoundsGEP2_32(typed_arg, 0, 0, "data_ptr");
