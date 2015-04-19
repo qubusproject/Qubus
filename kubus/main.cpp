@@ -113,7 +113,7 @@ int hpx_main(int argc, char** argv)
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        for (long int i = 0; i < 1; ++i)
+        for (long int i = 0; i < 10; ++i)
         {
             C = Cdef;
         }

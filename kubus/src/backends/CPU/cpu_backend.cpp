@@ -50,6 +50,8 @@
 #include <llvm/Support/FormattedStream.h>
 #include <llvm/Support/Host.h>
 
+#include <boost/optional.hpp>
+
 #include <qbb/util/make_unique.hpp>
 #include <qbb/util/assert.hpp>
 
@@ -102,8 +104,42 @@ llvm::AllocaInst* create_entry_block_alloca(llvm::Function* current_function, ll
     return builder.CreateAlloca(type, array_size, name);
 }
 
+class compilation_context
+{
+public:
+    std::map<qbb::util::handle, reference>& symbol_table()
+    {
+        return symbol_table_;
+    }
+    
+    const std::map<qbb::util::handle, reference>& symbol_table() const
+    {
+        return symbol_table_;
+    }
+    
+    boost::optional<function_declaration> get_next_plan_to_compile()
+    {
+        if (plans_to_compile_.empty())
+            return boost::none;
+        
+        auto next_plan_to_compile = plans_to_compile_.back();
+        
+        plans_to_compile_.pop_back();
+        
+        return next_plan_to_compile;
+    }
+    
+    void add_plan_to_compile(function_declaration fn)
+    {
+        plans_to_compile_.push_back(std::move(fn));
+    }
+private:
+    std::map<qbb::util::handle, reference> symbol_table_;
+    std::vector<function_declaration> plans_to_compile_; 
+};
+
 reference compile(const expression& expr, llvm_environment& env,
-                  std::map<qbb::util::handle, reference>& symbol_table);
+                  compilation_context& ctx);
 
 template <typename BodyEmitter>
 void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Value* upper_bound,
@@ -157,12 +193,12 @@ void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Val
 
 reference emit_binary_operator(binary_op_tag tag, const expression& left, const expression& right,
                                llvm_environment& env,
-                               std::map<qbb::util::handle, reference>& symbol_table)
+                               compilation_context& ctx)
 {
     using pattern::_;
 
-    reference left_value_ptr = compile(left, env, symbol_table);
-    reference right_value_ptr = compile(right, env, symbol_table);
+    reference left_value_ptr = compile(left, env, ctx);
+    reference right_value_ptr = compile(right, env, ctx);
 
     auto& builder = env.builder();
 
@@ -481,11 +517,11 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
 }
 
 reference emit_unary_operator(unary_op_tag tag, const expression& arg, llvm_environment& env,
-                              std::map<qbb::util::handle, reference>& symbol_table)
+                              compilation_context& ctx)
 {
     using pattern::_;
 
-    reference arg_value_ptr = compile(arg, env, symbol_table);
+    reference arg_value_ptr = compile(arg, env, ctx);
 
     auto& builder = env.builder();
 
@@ -554,11 +590,11 @@ reference emit_unary_operator(unary_op_tag tag, const expression& arg, llvm_envi
 
 reference emit_type_conversion(const type& target_type, const expression& arg,
                                llvm_environment& env,
-                               std::map<qbb::util::handle, reference>& symbol_table)
+                               compilation_context& ctx)
 {
     using pattern::_;
 
-    reference arg_value_ptr = compile(arg, env, symbol_table);
+    reference arg_value_ptr = compile(arg, env, ctx);
 
     auto& builder = env.builder();
 
@@ -850,24 +886,28 @@ std::vector<llvm::Value*> permute_indices(const std::vector<llvm::Value*>& indic
 {
     std::vector<llvm::Value*> permuted_indices;
     permuted_indices.reserve(indices.size());
-    
+
     for (std::size_t i = 0; i < indices.size(); ++i)
     {
         permuted_indices.push_back(indices[permutation[i]]);
     }
-    
+
     return permuted_indices;
 }
 
 reference compile(const expression& expr, llvm_environment& env,
-                  std::map<qbb::util::handle, reference>& symbol_table)
+                  compilation_context& ctx)
 {
+    auto& symbol_table = ctx.symbol_table();
+    
     pattern::variable<binary_op_tag> btag;
     pattern::variable<unary_op_tag> utag;
     pattern::variable<expression> a, b, c, d;
     pattern::variable<std::vector<expression>> expressions;
 
     pattern::variable<variable_declaration> idx;
+    pattern::variable<variable_declaration> var;
+    pattern::variable<function_declaration> plan;
 
     pattern::variable<util::index_t> ival;
     pattern::variable<float> fval;
@@ -923,12 +963,12 @@ reference compile(const expression& expr, llvm_environment& env,
             .case_(binary_operator(btag, a, b),
                    [&]
                    {
-                       return emit_binary_operator(btag.get(), a.get(), b.get(), env, symbol_table);
+                       return emit_binary_operator(btag.get(), a.get(), b.get(), env, ctx);
                    })
             .case_(unary_operator(utag, a),
                    [&]
                    {
-                       return emit_unary_operator(utag.get(), a.get(), env, symbol_table);
+                       return emit_unary_operator(utag.get(), a.get(), env, ctx);
                    })
             .case_(
                  for_(idx, a, b, c, d),
@@ -936,7 +976,7 @@ reference compile(const expression& expr, llvm_environment& env,
                  {
                      llvm::Type* size_type = env.map_kubus_type(types::integer());
 
-                     auto increment_ptr = compile(c.get(), env, symbol_table);
+                     auto increment_ptr = compile(c.get(), env, ctx);
                      auto increment_value = builder.CreateLoad(increment_ptr.addr());
                      increment_value->setMetadata("tbaa",
                                                   env.get_tbaa_node(increment_ptr.origin()));
@@ -948,8 +988,8 @@ reference compile(const expression& expr, llvm_environment& env,
 
                      symbol_table[idx.get().id()] = induction_var_ref;
 
-                     reference lower_bound_ptr = compile(a.get(), env, symbol_table);
-                     reference upper_bound_ptr = compile(b.get(), env, symbol_table);
+                     reference lower_bound_ptr = compile(a.get(), env, ctx);
+                     reference upper_bound_ptr = compile(b.get(), env, ctx);
 
                      auto lower_bound = builder.CreateLoad(lower_bound_ptr.addr());
                      lower_bound->setMetadata("tbaa", env.get_tbaa_node(lower_bound_ptr.origin()));
@@ -959,7 +999,7 @@ reference compile(const expression& expr, llvm_environment& env,
                      emit_loop(induction_var_ref, lower_bound, upper_bound, increment_value,
                                [&]()
                                {
-                                   compile(d.get(), env, symbol_table);
+                                   compile(d.get(), env, ctx);
                                },
                                env);
 
@@ -970,7 +1010,7 @@ reference compile(const expression& expr, llvm_environment& env,
                    {
                        for (const auto& subexpr : expressions.get())
                        {
-                           compile(subexpr, env, symbol_table);
+                           compile(subexpr, env, ctx);
                        }
 
                        return reference();
@@ -1036,8 +1076,8 @@ reference compile(const expression& expr, llvm_environment& env,
 
                        auto int_type = env.map_kubus_type(types::integer());
 
-                       auto a_ref = compile(a.get(), env, symbol_table);
-                       auto b_ref = compile(b.get(), env, symbol_table);
+                       auto a_ref = compile(a.get(), env, ctx);
+                       auto b_ref = compile(b.get(), env, ctx);
 
                        auto a_value = builder.CreateLoad(a_ref.addr());
                        a_value->setMetadata("tbaa", env.get_tbaa_node(a_ref.origin()));
@@ -1063,18 +1103,15 @@ reference compile(const expression& expr, llvm_environment& env,
             .case_(intrinsic_function_n(pattern::value("extent"), variable_ref(idx), b),
                    [&]
                    {
-                       auto ref = symbol_table[idx.get().id()];
-
-                       auto tensor = builder.CreateLoad(ref.addr());
-                       tensor->setMetadata("tbaa", env.get_tbaa_node(ref.origin()));
+                       auto tensor = symbol_table[idx.get().id()];
 
                        llvm::Value* shape_ptr =
-                           builder.CreateConstInBoundsGEP2_32(tensor, 0, 1, "shape_ptr");
+                           builder.CreateConstInBoundsGEP2_32(tensor.addr(), 0, 1, "shape_ptr");
 
                        auto shape = builder.CreateLoad(shape_ptr, "shape");
-                       shape->setMetadata("tbaa", env.get_tbaa_node(ref.origin()));
+                       shape->setMetadata("tbaa", env.get_tbaa_node(tensor.origin()));
 
-                       reference dim_ref = compile(b.get(), env, symbol_table);
+                       reference dim_ref = compile(b.get(), env, ctx);
 
                        auto dim = builder.CreateLoad(dim_ref.addr());
                        dim->setMetadata("tbaa", env.get_tbaa_node(dim_ref.origin()));
@@ -1082,14 +1119,14 @@ reference compile(const expression& expr, llvm_environment& env,
                        llvm::Value* extent_ptr =
                            builder.CreateInBoundsGEP(shape, dim, "extent_ptr");
 
-                       return reference(extent_ptr, ref.origin() / "shape");
+                       return reference(extent_ptr, tensor.origin() / "shape");
                    })
             .case_(
                  intrinsic_function_n(pattern::value("min"), a, b),
                  [&]
                  {
-                     reference left_value_ptr = compile(a.get(), env, symbol_table);
-                     reference right_value_ptr = compile(b.get(), env, symbol_table);
+                     reference left_value_ptr = compile(a.get(), env, ctx);
+                     reference right_value_ptr = compile(b.get(), env, ctx);
 
                      llvm::Instruction* left_value =
                          builder.CreateAlignedLoad(left_value_ptr.addr(), get_prefered_alignment());
@@ -1117,8 +1154,8 @@ reference compile(const expression& expr, llvm_environment& env,
                  intrinsic_function_n(pattern::value("max"), a, b),
                  [&]
                  {
-                     reference left_value_ptr = compile(a.get(), env, symbol_table);
-                     reference right_value_ptr = compile(b.get(), env, symbol_table);
+                     reference left_value_ptr = compile(a.get(), env, ctx);
+                     reference right_value_ptr = compile(b.get(), env, ctx);
 
                      llvm::Instruction* left_value =
                          builder.CreateAlignedLoad(left_value_ptr.addr(), get_prefered_alignment());
@@ -1145,7 +1182,7 @@ reference compile(const expression& expr, llvm_environment& env,
             .case_(type_conversion(t, a),
                    [&]
                    {
-                       return emit_type_conversion(t.get(), a.get(), env, symbol_table);
+                       return emit_type_conversion(t.get(), a.get(), env, ctx);
                    })
             .case_(variable_ref(idx),
                    [&]
@@ -1157,9 +1194,6 @@ reference compile(const expression& expr, llvm_environment& env,
                    {
                        auto ref = symbol_table[idx.get().id()];
 
-                       auto base = builder.CreateLoad(ref.addr());
-                       base->setMetadata("tbaa", env.get_tbaa_node(access_path()));
-
                        const auto& indices = expressions.get();
 
                        std::vector<llvm::Value*> indices_;
@@ -1167,7 +1201,7 @@ reference compile(const expression& expr, llvm_environment& env,
 
                        for (const auto& index : indices)
                        {
-                           auto index_ref = compile(index, env, symbol_table);
+                           auto index_ref = compile(index, env, ctx);
 
                            auto index_ = builder.CreateLoad(index_ref.addr());
                            index_->setMetadata("tbaa", env.get_tbaa_node(index_ref.origin()));
@@ -1182,23 +1216,125 @@ reference compile(const expression& expr, llvm_environment& env,
                                            [&]
                                            {
                                                return emit_tensor_access(
-                                                   reference(base, ref.origin()), indices_, env);
+                                                   ref, indices_, env);
                                            })
                                     .case_(pattern::array_slice_t(_), [&]
                                            {
                                                return emit_array_slice_access(
-                                                   reference(base, ref.origin()), indices_, env);
+                                                   ref, indices_, env);
                                            });
 
                        return pattern::match(idx.get().var_type(), m);
+                   })
+            .case_(local_variable_def(var, a),
+                   [&]
+                   {
+                       auto var_type = env.map_kubus_type(var.get().var_type());
+
+                       auto var_ptr =
+                           create_entry_block_alloca(env.get_current_function(), var_type);
+
+                       auto init_value_ref = compile(a.get(), env, ctx);
+
+                       auto init_value = builder.CreateLoad(init_value_ref.addr());
+                       init_value->setMetadata("tbaa", env.get_tbaa_node(init_value_ref.origin()));
+
+                       auto var_store = builder.CreateStore(var_ptr, init_value);
+                       var_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+
+                       symbol_table[var.get().id()] = reference(var_ptr, access_path());
+
+                       return reference();
+                   })
+            .case_(spawn(plan, expressions), [&]
+                   {
+                       std::vector<llvm::Type*> param_types;
+
+                       for (const auto& param : plan.get().params())
+                       {
+                           param_types.push_back(env.map_kubus_type(param.var_type()));
+                       }
+
+                       llvm::FunctionType* fn_type = llvm::FunctionType::get(
+                           llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
+
+                       auto plan_ptr = env.module().getOrInsertFunction(plan.get().name(), fn_type);
+                       
+                       ctx.add_plan_to_compile(plan.get());
+
+                       std::vector<llvm::Value*> arguments;
+
+                       for (const auto& arg : expressions.get())
+                       {
+                           auto arg_ref = compile(arg, env, ctx);
+                           auto arg_value = builder.CreateLoad(arg_ref.addr());
+                           arg_value->setMetadata("tbaa", env.get_tbaa_node(arg_ref.origin()));
+
+                           arguments.push_back(arg_value);
+                       }
+
+                       builder.CreateCall(plan_ptr, arguments);
+
+                       return reference();
                    });
 
     return pattern::match(expr, m);
 }
 
-void compile(const function_declaration& entry_point, llvm_environment& env, std::size_t id)
+void compile(const function_declaration& plan, llvm_environment& env,
+             compilation_context& ctx)
 {
-    std::map<qbb::util::handle, reference> symbol_table;
+    auto& symbol_table = ctx.symbol_table();
+    
+    // Prolog
+    std::vector<llvm::Type*> param_types;
+
+    for (const auto& param : plan.params())
+    {
+        param_types.push_back(env.map_kubus_type(param.var_type())->getPointerTo());
+    }
+    
+    param_types.push_back(env.map_kubus_type(plan.result().var_type())->getPointerTo());
+
+    llvm::FunctionType* FT = llvm::FunctionType::get(
+        llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
+    
+    llvm::Function* compiled_plan =
+        llvm::Function::Create(FT, llvm::Function::PrivateLinkage, plan.name(), &env.module());
+        
+    for (std::size_t i = 0; i < compiled_plan->arg_size(); ++i)
+    {
+        compiled_plan->setDoesNotAlias(i + 1);
+    }
+        
+    env.set_current_function(compiled_plan);
+    
+    llvm::BasicBlock* BB = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", compiled_plan);
+    env.builder().SetInsertPoint(BB);
+    
+    // body
+
+    auto current_arg = compiled_plan->arg_begin();
+    
+    for (const auto& param : plan.params())
+    {
+        symbol_table[param.id()] = reference(&*current_arg, access_path(param.id()));
+        ++current_arg;
+    }
+    
+    symbol_table[plan.result().id()] = reference(&*current_arg, access_path(plan.result().id()));
+    
+    compile(plan.body(), env, ctx);
+    
+    // Epilog
+    env.builder().CreateRetVoid();
+}
+
+void compile_entry_point(const function_declaration& plan, llvm_environment& env, std::size_t id)
+{
+    compilation_context ctx;
+
+    compile(plan, env, ctx);
 
     // Prolog
     std::vector<llvm::Type*> param_types;
@@ -1209,8 +1345,10 @@ void compile(const function_declaration& entry_point, llvm_environment& env, std
     llvm::FunctionType* FT = llvm::FunctionType::get(
         llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
 
-    llvm::Function* kernel = llvm::Function::Create(
-        FT, llvm::Function::ExternalLinkage, "kubus_cpu_plan" + std::to_string(id), &env.module());
+    std::string entry_point_name = "kubus_cpu_plan" + std::to_string(id);
+    
+    llvm::Function* kernel =
+        llvm::Function::Create(FT, llvm::Function::ExternalLinkage, entry_point_name, &env.module());
 
     for (std::size_t i = 0; i < kernel->arg_size(); ++i)
     {
@@ -1218,17 +1356,17 @@ void compile(const function_declaration& entry_point, llvm_environment& env, std
     }
 
     env.set_current_function(kernel);
-
+    
     llvm::BasicBlock* BB = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", kernel);
     env.builder().SetInsertPoint(BB);
 
     // unpack args
     std::size_t counter = 0;
 
+    std::vector<llvm::Value*> arguments;
+
     auto add_param = [&](const variable_declaration& param) mutable
     {
-        auto handle = param.id();
-
         llvm::Type* tensor_type = env.map_kubus_type(param.var_type());
 
         llvm::Value* ptr_to_arg =
@@ -1251,28 +1389,29 @@ void compile(const function_declaration& entry_point, llvm_environment& env, std
             env.get_assume_align(), data,
             llvm::ConstantInt::get(llvm::Type::getInt64Ty(llvm::getGlobalContext()), 32));
 
-        llvm::Value* local_copy = create_entry_block_alloca(env.get_current_function(),
-                                                            llvm::PointerType::get(tensor_type, 0));
-        auto typed_arg_store = env.builder().CreateStore(typed_arg, local_copy);
-        typed_arg_store->setMetadata("tbaa", env.get_tbaa_node(access_path(param.id())));
-
-        symbol_table[handle] = reference(local_copy, access_path(param.id()));
+        arguments.push_back(typed_arg);
         ++counter;
     };
 
-    for (const auto& param : entry_point.params())
+    for (const auto& param : plan.params())
     {
         add_param(param);
     }
 
-    add_param(entry_point.result());
+    add_param(plan.result());
 
     // body
 
-    compile(entry_point.body(), env, symbol_table);
+    env.builder().CreateCall(env.module().getFunction(plan.name()), arguments);
 
     // Epilog
     env.builder().CreateRetVoid();
+    
+    // Emit all other plans.
+    while(auto plan = ctx.get_next_plan_to_compile())
+    {
+        compile(*plan, env, ctx);
+    }
 }
 
 class cpu_plan
@@ -1304,7 +1443,7 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, llvm::Execut
 
     llvm_environment env;
 
-    compile(entry_point, env, unique_id);
+    compile_entry_point(entry_point, env, unique_id);
 
     std::unique_ptr<llvm::Module> the_module = env.detach_module();
 
@@ -1312,8 +1451,8 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, llvm::Execut
 
     the_module->setDataLayout(engine.getDataLayout());
 
-    // the_module->dump();
-    // std::cout << std::endl;
+    //the_module->dump();
+    //std::cout << std::endl;
 
     llvm::PassManagerBuilder pass_builder;
     pass_builder.OptLevel = 3;
@@ -1345,8 +1484,8 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, llvm::Execut
 
     pass_man.run(*the_module);
 
-    // the_module->dump();
-    // std::cout << std::endl;
+    //the_module->dump();
+    //std::cout << std::endl;
 
     /*std::cout << "The assembler output:\n\n";
 
