@@ -5,6 +5,7 @@
 
 #include <qbb/kubus/grammar.hpp>
 #include <qbb/kubus/object.hpp>
+#include <qbb/kubus/tensor_expr_closure.hpp>
 
 #include <qbb/util/make_unique.hpp>
 #include <qbb/util/integer_sequence.hpp>
@@ -718,8 +719,8 @@ struct deduce_variables
 };
 
 template <typename Expr>
-std::tuple<function_declaration, std::vector<std::shared_ptr<object>>>
-emit_ast(const type& result_type, const Expr& expr)
+std::tuple<tensor_expr_closure, std::vector<std::shared_ptr<object>>>
+emit_ast(const Expr& expr)
 {
     using namespace boost::adaptors;
 
@@ -749,31 +750,9 @@ emit_ast(const type& result_type, const Expr& expr)
         params.push_back(decl);
     }
 
-    expression current_root = emit_AST()(proto::right(expr), std::ref(ctx));
+    expression rhs = emit_AST()(proto::right(expr), std::ref(ctx));
 
-    variable_declaration result(result_type);
-
-    expression lhs = variable_ref_expr(result);
-
-    std::vector<expression> lhs_indices;
-
-    for (const auto& decl : free_indices)
-    {
-        lhs_indices.push_back(variable_ref_expr(decl));
-    }
-
-    lhs = subscription_expr(lhs, lhs_indices);
-
-    current_root = binary_operator_expr(binary_op_tag::assign, lhs, current_root);
-
-    for (const auto& decl : ctx.index_table().current_scope() | map_values)
-    {
-        current_root = for_all_expr(decl, current_root);
-    }
-
-    function_declaration entry_point(params, result, current_root);
-
-    return std::make_tuple(entry_point, param_objs);
+    return std::make_tuple(tensor_expr_closure(free_indices, params, rhs), param_objs);
 }
 }
 }
