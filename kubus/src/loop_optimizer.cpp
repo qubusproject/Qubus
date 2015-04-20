@@ -21,6 +21,7 @@
 #include <qbb/util/integers.hpp>
 #include <qbb/util/numeric/bisection.hpp>
 #include <qbb/util/numeric/polynomial.hpp>
+#include <qbb/util/unused.hpp>
 
 #include <boost/variant.hpp>
 
@@ -73,7 +74,7 @@ isl::union_map pad_schedule_map(isl::union_map schedule_map)
 
 struct scop
 {
-    scop(isl::union_set domain, isl::set param_constraints, isl::union_map schedule,
+    scop(isl::union_set domain, isl::set QBB_UNUSED(param_constraints), isl::union_map schedule,
          isl::union_map write_accesses, isl::union_map read_accesses,
          std::map<std::string, expression> symbol_table)
     : schedule(isl::schedule::from_domain(domain)), write_accesses(write_accesses),
@@ -480,7 +481,7 @@ void analyze_scop_(const expression& expr, scop_info& info, scop_ctx ctx)
                     long int number_of_indices = domain.get_space().dim(isl_dim_set);
                     long int number_of_dimensions = 2 * number_of_indices + 1;
 
-                    assert(number_of_indices + 1 == ctx.scatter_index.size());
+                    assert(number_of_indices + 1 == util::to_uindex(ctx.scatter_index.size()));
 
                     isl::set scattering_domain =
                         isl::set::universe(drop_all_dims(domain.get_space(), isl_dim_param));
@@ -496,7 +497,7 @@ void analyze_scop_(const expression& expr, scop_info& info, scop_ctx ctx)
                     scattering.add_constraint(isl::constraint::equality(scattering.get_space())
                                                   .set_coefficient(isl_dim_out, 0, 1)
                                                   .set_constant(-ctx.scatter_index[0]));
-                    for (std::size_t i = 0; i < number_of_indices; ++i)
+                    for (long int i = 0; i < number_of_indices; ++i)
                     {
                         scattering.add_constraint(isl::constraint::equality(scattering.get_space())
                                                       .set_coefficient(isl_dim_out, 2 * i + 2, 1)
@@ -527,62 +528,6 @@ scop analyze_scop(const expression& expr)
     scop s = info.build_scop();
 
     return s;
-}
-
-isl::union_map construct_register_tiling_map(int dim_domain, int dim_range)
-{
-    isl::space s(isl_ctx, 0, dim_range, dim_range + dim_domain);
-
-    isl::space s2(isl_ctx, 0, dim_range, dim_range);
-    auto tiling_map = isl::map::empty(s2);
-
-    for (int i = 0; i < 2; ++i)
-    {
-        for (int j = 0; j < 2; ++j)
-        {
-            for (int k = 0; k < 2; ++k)
-            {
-                int offset[] = {i, j, k};
-
-                auto basic_tiling_map = isl::basic_map::universe(s);
-
-                for (int l = 0; l < dim_range - dim_domain; ++l)
-                {
-                    auto c = isl::constraint::equality(s)
-                                 .set_coefficient(isl_dim_in, l, 1)
-                                 .set_coefficient(isl_dim_out, l, -1);
-
-                    basic_tiling_map.add_constraint(c);
-                }
-
-                for (int l = 0; l < dim_domain; ++l)
-                {
-                    auto c = isl::constraint::equality(s)
-                                 .set_coefficient(isl_dim_in, l + dim_range - dim_domain, 1)
-                                 .set_coefficient(isl_dim_out, l + dim_range - dim_domain, -1)
-                                 .set_constant(-offset[l]);
-
-                    basic_tiling_map.add_constraint(c);
-                }
-
-                for (int l = 0; l < dim_domain; ++l)
-                {
-                    auto c = isl::constraint::equality(s)
-                                 .set_coefficient(isl_dim_out, dim_range - dim_domain + l, 1)
-                                 .set_coefficient(isl_dim_out, dim_range + l, -2);
-
-                    basic_tiling_map.add_constraint(c);
-                }
-
-                basic_tiling_map =
-                    project_out(basic_tiling_map, isl_dim_out, dim_range, dim_domain);
-
-                tiling_map = union_(tiling_map, basic_tiling_map);
-            }
-        }
-    }
-
-    return tiling_map;
 }
 
 isl::schedule_node get_optimized_schedule_tree(isl::schedule_node root)
@@ -899,7 +844,7 @@ expression generate_code_from_scop(const scop& s)
 
     isl_union_set_dump(aliases.native_handle());*/
 
-    builder.set_before_each_for([&](isl::ast_builder_ref builder)
+    builder.set_before_each_for([&](isl::ast_builder_ref QBB_UNUSED(builder))
                                 {
                                     return isl::id(isl_ctx, "test");
                                 });

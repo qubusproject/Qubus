@@ -26,10 +26,13 @@
 
 #include <qbb/util/make_unique.hpp>
 
+#include <kubus/qbb_kubus_export.h>
+
 #include <hpx/async.hpp>
 
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
+#include <llvm/ExecutionEngine/JITEventListener.h>
 #include <llvm/Support/TargetSelect.h>
 
 #include <llvm/IR/Module.h>
@@ -55,6 +58,7 @@
 #include <memory>
 #include <map>
 #include <unordered_map>
+#include <mutex>
 
 namespace qbb
 {
@@ -105,8 +109,6 @@ void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Val
                llvm::Value* increment, BodyEmitter body_emitter, llvm_environment& env)
 {
     auto& builder_ = env.builder();
-
-    llvm::Type* size_type = env.map_kubus_type(types::integer());
 
     auto initialize_induction_variable =
         builder_.CreateStore(lower_bound, induction_variable.addr());
@@ -179,14 +181,6 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
     {
     case binary_op_tag::assign:
     {
-        auto fn_t = llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()),
-                                            {llvm::Type::getInt1PtrTy(llvm::getGlobalContext())});
-
-        auto fn = env.module().getOrInsertFunction("print_ptr", fn_t);
-
-        // builder.CreateCall(fn, left_value_ptr.addr());
-        // builder.CreateCall(fn, right_value_ptr.addr());
-
         llvm::Instruction* store = builder.CreateAlignedStore(right_value, left_value_ptr.addr(),
                                                               get_prefered_alignment());
         store->setMetadata("tbaa", env.get_tbaa_node(left_value_ptr.origin()));
@@ -745,17 +739,6 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
     return reference(result_var, access_path());
 }
 
-extern "C" void print_index(long int idx)
-{
-    std::cout << idx << std::endl;
-}
-
-extern "C" void print_ptr(void* ptr)
-{
-    if (((std::size_t)ptr) % 32 != 0)
-        std::cout << ptr << std::endl;
-}
-
 reference compile(const expression& expr, llvm_environment& env,
                   std::map<qbb::util::handle, reference>& symbol_table)
 {
@@ -926,6 +909,37 @@ reference compile(const expression& expr, llvm_environment& env,
 
                        return reference(var, access_path());
                    })
+            .case_(intrinsic_function_n(pattern::value("delta"), a, b),
+                   [&]
+                   {
+                       // TODO: Test if a and b are integers.
+
+                       auto int_type = env.map_kubus_type(types::integer());
+
+                       auto a_ref = compile(a.get(), env, symbol_table);
+                       auto b_ref = compile(b.get(), env, symbol_table);
+
+                       auto a_value = builder.CreateLoad(a_ref.addr());
+                       a_value->setMetadata("tbaa", env.get_tbaa_node(a_ref.origin()));
+
+                       auto b_value = builder.CreateLoad(b_ref.addr());
+                       b_value->setMetadata("tbaa", env.get_tbaa_node(b_ref.origin()));
+
+                       auto cond = builder.CreateICmpEQ(a_value, b_value);
+
+                       auto one = llvm::ConstantInt::get(int_type, 1);
+                       auto zero = llvm::ConstantInt::get(int_type, 0);
+
+                       auto result_value = builder.CreateSelect(cond, one, zero);
+
+                       auto result =
+                           create_entry_block_alloca(env.get_current_function(), int_type);
+
+                       auto result_store = builder.CreateStore(result_value, result);
+                       result_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+
+                       return reference(result, access_path());
+                   })
             .case_(intrinsic_function_n(pattern::value("extent"), variable_ref(idx), b),
                    [&]
                    {
@@ -948,26 +962,6 @@ reference compile(const expression& expr, llvm_environment& env,
                        llvm::Value* extent_ptr =
                            builder.CreateInBoundsGEP(shape, dim, "extent_ptr");
 
-                       llvm::Type* size_type = env.map_kubus_type(types::integer());
-
-                       auto fn_t = llvm::FunctionType::get(
-                           llvm::Type::getVoidTy(llvm::getGlobalContext()), {size_type});
-
-                       auto fn = env.module().getOrInsertFunction("print_index", fn_t);
-
-                       // builder.CreateCall(fn, builder.CreateLoad(extent_ptr));
-
-                       llvm::Value* value = llvm::ConstantInt::get(size_type, 2000);
-
-                       auto& builder = env.builder();
-
-                       llvm::Value* var =
-                           create_entry_block_alloca(env.get_current_function(), size_type);
-
-                       auto lit_store = builder.CreateStore(value, var);
-                       lit_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
-
-                       // return reference(var, access_path());
                        return reference(extent_ptr, ref.origin() / "shape");
                    })
             .case_(
@@ -990,18 +984,6 @@ reference compile(const expression& expr, llvm_environment& env,
                      auto cond = builder.CreateICmpSLT(left_value, right_value);
 
                      auto result = builder.CreateSelect(cond, left_value, right_value);
-
-                     llvm::Type* size_type = env.map_kubus_type(types::integer());
-
-                     auto fn_t = llvm::FunctionType::get(
-                         llvm::Type::getVoidTy(llvm::getGlobalContext()), {size_type});
-
-                     auto fn = env.module().getOrInsertFunction("print_index", fn_t);
-
-                     // builder.CreateCall(fn, left_value);
-                     // builder.CreateCall(fn, right_value);
-                     // builder.CreateCall(fn, result);
-                     // builder.CreateCall(fn, llvm::ConstantInt::get(size_type, 10000000000));
 
                      auto result_var =
                          create_entry_block_alloca(env.get_current_function(), result->getType());
@@ -1211,12 +1193,12 @@ void compile(const function_declaration& entry_point, llvm_environment& env, std
         symbol_table[handle] = reference(local_copy, access_path(param.id()));
         ++counter;
     };
-    
+
     for (const auto& param : entry_point.params())
     {
         add_param(param);
     }
-    
+
     add_param(entry_point.result());
 
     // body
@@ -1264,8 +1246,8 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, llvm::Execut
 
     the_module->setDataLayout(engine.getDataLayout());
 
-    //the_module->dump();
-    //std::cout << std::endl;
+    // the_module->dump();
+    // std::cout << std::endl;
 
     llvm::PassManagerBuilder pass_builder;
     pass_builder.OptLevel = 3;
@@ -1297,8 +1279,8 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, llvm::Execut
 
     pass_man.run(*the_module);
 
-    //the_module->dump();
-    //std::cout << std::endl;
+    // the_module->dump();
+    // std::cout << std::endl;
 
     /*std::cout << "The assembler output:\n\n";
 
@@ -1360,6 +1342,12 @@ public:
         builder.setMAttrs(attrs);
 
         engine_ = std::unique_ptr<llvm::ExecutionEngine>(builder.create());
+
+#if LLVM_USE_INTEL_JITEVENTS
+        llvm::JITEventListener* vtuneProfiler =
+            llvm::JITEventListener::createIntelJITEventListener();
+        engine_->RegisterJITEventListener(vtuneProfiler);
+#endif
     }
 
     virtual ~cpu_compiler() = default;
@@ -1468,10 +1456,14 @@ private:
 };
 
 std::unique_ptr<cpu_backend> the_cpu_backend;
+std::once_flag cpu_backend_init_flag;
 
-extern "C" backend* init_cpu_backend(const abi_info* abi)
+extern "C" QBB_KUBUS_EXPORT backend* init_cpu_backend(const abi_info* abi)
 {
-    the_cpu_backend = std::make_unique<cpu_backend>(*abi);
+    std::call_once(cpu_backend_init_flag, [&]
+                   {
+                       the_cpu_backend = std::make_unique<cpu_backend>(*abi);
+                   });
 
     return the_cpu_backend.get();
 }

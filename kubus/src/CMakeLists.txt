@@ -6,7 +6,21 @@ find_package(LLVM 3.6 EXACT REQUIRED)
 
 message(STATUS "found LLVM version: ${LLVM_PACKAGE_VERSION}")
 
-llvm_map_components_to_libnames(REQ_LLVM_LIBRARIES mcjit ipa ipo vectorize native)
+list(FIND LLVM_AVAILABLE_LIBS LLVMIntelJITEvents LLVMIntelJITEvents_FIND_RESULT)
+
+if(${LLVMIntelJITEvents_FIND_RESULT} LESS 0)
+    set(LLVM_HAS_INTEL_JITEVENTS FALSE)
+else()
+    set(LLVM_HAS_INTEL_JITEVENTS TRUE)
+endif()
+
+if(LLVM_HAS_INTEL_JITEVENTS)
+    set(REQ_LLVM_TARGETS IntelJITEvents mcjit ipa ipo vectorize native)
+else()
+    set(REQ_LLVM_TARGETS mcjit ipa ipo vectorize native)
+endif()
+
+llvm_map_components_to_libnames(REQ_LLVM_LIBRARIES ${REQ_LLVM_TARGETS})
 
 message(STATUS "LLVM libraries: ${REQ_LLVM_LIBRARIES}")
 
@@ -38,10 +52,21 @@ set(kubus_source_files allocator.cpp lower_abstract_indices.cpp
 
 add_library(kubus SHARED ${kubus_header_files} ${kubus_source_files})
 
-target_include_directories(kubus PUBLIC ${HPX_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${CMAKE_CURRENT_SOURCE_DIR}/../include ${LLVM_INCLUDE_DIRS})
+target_include_directories(kubus PUBLIC ${HPX_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/kubus/include> ${LLVM_INCLUDE_DIRS})
 target_compile_options(kubus PUBLIC -std=c++14)
-target_link_libraries(kubus PUBLIC ${Boost_LIBRARIES} kubus_cpu_backend qbb_kubus_ir qbb_kubus_isl qbb_util
+target_link_libraries(kubus PUBLIC ${Boost_LIBRARIES} kubus_ir kubus_isl qbb_util
                                    hpx hpx_serialization dl wall)
 target_compile_definitions(kubus PUBLIC -DBOOST_LOG_DYN_LINK)
 
-install(TARGETS kubus PUBLIC_HEADER DESTINATION include LIBRARY DESTINATION lib)
+set_property(TARGET kubus PROPERTY VERSION ${KUBUS_VERSION})
+set_property(TARGET kubus PROPERTY SOVERSION 0)
+set_property(TARGET kubus PROPERTY INTERFACE_kubus_MAJOR_VERSION 0)
+set_property(TARGET kubus PROPERTY INTERFACE_kubus_MINOR_VERSION 1)
+set_property(TARGET kubus APPEND PROPERTY COMPATIBLE_INTERFACE_STRING kubus_MAJOR_VERSION)
+set_property(TARGET kubus APPEND PROPERTY COMPATIBLE_INTERFACE_STRING kubus_MINOR_VERSION)
+        
+install(TARGETS kubus EXPORT kubus-targets
+                      RUNTIME DESTINATION bin
+                      INCLUDES DESTINATION include
+                      LIBRARY DESTINATION lib
+                      ARCHIVE DESTINATION lib)

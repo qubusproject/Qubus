@@ -47,7 +47,7 @@ public:
 
         util::index_t linear_index = 0;
 
-        std::array<util::index_t, Rank> indices_{util::to_uindex(indices)...};
+        std::array<util::index_t, Rank> indices_{{util::to_uindex(indices)...}};
 
         for (util::index_t i = 0; i < Rank; ++i)
         {

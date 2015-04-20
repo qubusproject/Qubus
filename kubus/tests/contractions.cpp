@@ -5,8 +5,6 @@
 
 #include <qbb/kubus/runtime.hpp>
 
-#include <qbb/kubus/compilation_cache.hpp>
-
 #include <qbb/kubus/tensor_variable.hpp>
 
 #include <qbb/kubus/user_defined_plan.hpp>
@@ -24,8 +22,6 @@
 TEST(contractions, simple_contraction)
 {
     using namespace qbb::kubus;
-    
-    qbb::kubus::init();
     
     long int N = 100;
 
@@ -129,8 +125,6 @@ TEST(contractions, reduction_to_r1)
 {
     using namespace qbb::kubus;
     
-    qbb::kubus::init();
-    
     long int N = 100;
 
     std::vector<double> A2(N * N);
@@ -230,8 +224,6 @@ TEST(contractions, matrix_vector_product)
 {
     using namespace qbb::kubus;
     
-    qbb::kubus::init();
-    
     long int N = 100;
 
     std::vector<double> A2(N * N);
@@ -323,8 +315,6 @@ TEST(contractions, matrix_vector_product)
 TEST(contractions, basis_change_r2)
 {
     using namespace qbb::kubus;
-    
-    qbb::kubus::init();
     
     long int N = 100;
 
@@ -428,8 +418,10 @@ TEST(contractions, basis_change_r2)
     ASSERT_NEAR(error, 0.0, 1e-12);
 }
 
-int hpx_main(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
+int hpx_main(int argc, char** argv)
 {
+    qbb::kubus::init(argc, argv);
+    
     auto result = RUN_ALL_TESTS();
 
     hpx::finalize();

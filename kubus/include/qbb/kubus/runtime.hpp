@@ -16,6 +16,8 @@
 #include <qbb/kubus/backend_registry.hpp>
 #include <qbb/kubus/object_factory.hpp>
 
+#include <qbb/util/dll.hpp>
+
 #include <memory>
 #include <utility>
 
@@ -52,6 +54,7 @@ public:
     hpx::shared_future<void> when_ready(const object& obj);
 private:
     abi_info abi_info_;
+    util::dll cpu_plugin_;
     
     backend* cpu_backend_;
     
@@ -65,7 +68,7 @@ private:
     std::unique_ptr<scheduler> scheduler_;
 };
 
-void init();
+void init(int argc, char** argv);
 runtime& get_runtime();
 
 template<typename... Args>

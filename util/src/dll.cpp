@@ -6,11 +6,17 @@
 #include <dlfcn.h>
 #include <limits.h>
 
+#ifdef __unix__ 
+#include <unistd.h>
+#endif
+
 namespace qbb
 {
 namespace util
 {
 
+#if defined(_POSIX_VERSION) and _POSIX_VERSION >= 200112L
+    
 dll::dll(const std::string& filename)
 {
     //flush error state
@@ -22,6 +28,11 @@ dll::dll(const std::string& filename)
     {
         throw exception(dlerror());
     }
+}
+
+dll::dll(const boost::filesystem::path& p)
+: dll(p.string())
+{
 }
 
 dll::~dll()
@@ -58,6 +69,12 @@ boost::filesystem::path dll::get_directory() const
     
     return boost::filesystem::path(directory);
 }
+
+#else
+
+#error "dll is not implemented for this operating system."
+
+#endif
 
 }
 }
