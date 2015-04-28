@@ -6,6 +6,13 @@
 #include <boost/fusion/container/vector.hpp>
 #include <boost/fusion/container/vector/convert.hpp>
 #include <boost/fusion/algorithm/transformation/push_back.hpp>
+
+// Workaround for Boost Fusion 1.58
+#include <boost/version.hpp>
+#if BOOST_VERSION >= 105800
+#include <boost/fusion/support/detail/result_of.hpp>
+#endif
+
 #include <boost/fusion/algorithm/iteration/reverse_fold.hpp>
 #include <boost/fusion/algorithm/iteration/for_each.hpp>
 
