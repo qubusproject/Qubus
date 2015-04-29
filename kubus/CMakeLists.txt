@@ -28,10 +28,13 @@ target_compile_options(wall INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPIL
 
 install(TARGETS asan tsan usan wall EXPORT kubus-targets)
 
+include(GenerateExportHeader)
 include(FeatureSummary)
 
 add_subdirectory(src)
 add_subdirectory(tests)
+
+generate_export_header(kubus BASE_NAME QBB_KUBUS)
 
 add_executable(kubus_test main.cpp)
 target_link_libraries(kubus_test PUBLIC kubus hpx_init)

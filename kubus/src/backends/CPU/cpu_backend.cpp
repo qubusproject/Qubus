@@ -26,6 +26,8 @@
 
 #include <qbb/util/make_unique.hpp>
 
+#include <kubus/qbb_kubus_export.h>
+
 #include <hpx/async.hpp>
 
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
@@ -1663,7 +1665,7 @@ private:
 std::unique_ptr<cpu_backend> the_cpu_backend;
 std::once_flag cpu_backend_init_flag;
 
-extern "C" backend* init_cpu_backend(const abi_info* abi)
+extern "C" QBB_KUBUS_EXPORT backend* init_cpu_backend(const abi_info* abi)
 {
     std::call_once(cpu_backend_init_flag, [&]
                    {
