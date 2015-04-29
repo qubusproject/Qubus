@@ -23,9 +23,9 @@ ast_expr::~ast_expr()
 ast_expr& ast_expr::operator=(const ast_expr& other)
 {
     isl_ast_expr_free(handle_);
-    
+
     handle_ = isl_ast_expr_copy(other.native_handle());
-    
+
     return *this;
 }
 
@@ -82,8 +82,7 @@ ast_node::ast_node(isl_ast_node* root_) : root_{root_}
 {
 }
 
-ast_node::ast_node(const ast_node& other)
-: root_(isl_ast_node_copy(other.native_handle()))
+ast_node::ast_node(const ast_node& other) : root_(isl_ast_node_copy(other.native_handle()))
 {
 }
 
@@ -95,9 +94,9 @@ ast_node::~ast_node()
 ast_node& ast_node::operator=(const ast_node& other)
 {
     isl_ast_node_free(root_);
-    
-    root_ = isl_ast_node_copy(other.native_handle());    
-    
+
+    root_ = isl_ast_node_copy(other.native_handle());
+
     return *this;
 }
 
@@ -183,6 +182,16 @@ std::vector<ast_node> ast_node::block_get_children() const
     isl_ast_node_list_free(children);
 
     return result;
+}
+
+id ast_node::mark_get_id() const
+{
+    return id(isl_ast_node_mark_get_id(root_));
+}
+
+ast_node ast_node::mark_get_node() const
+{
+    return ast_node(isl_ast_node_mark_get_node(root_));
 }
 
 namespace

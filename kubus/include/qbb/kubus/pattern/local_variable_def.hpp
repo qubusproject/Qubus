@@ -15,12 +15,12 @@ namespace kubus
 namespace pattern
 {
 
-template <typename Decl, typename Initializer>
+template <typename Decl, typename Initializer, typename Scope>
 class local_variable_def_pattern
 {
 public:
-    local_variable_def_pattern(Decl decl_, Initializer initializer_)
-    : decl_(std::move(decl_)), initializer_(std::move(initializer_))
+    local_variable_def_pattern(Decl decl_, Initializer initializer_, Scope scope_)
+    : decl_(std::move(decl_)), initializer_(std::move(initializer_)), scope_(std::move(scope_))
     {
     }
 
@@ -33,12 +33,15 @@ public:
             {
                 if (initializer_.match(concret_value->initializer()))
                 {
-                    if (var)
+                    if (scope_.match(concret_value->scope()))
                     {
-                        var->set(*concret_value);
-                    }
+                        if (var)
+                        {
+                            var->set(*concret_value);
+                        }
 
-                    return true;
+                        return true;
+                    }
                 }
             }
         }
@@ -50,16 +53,18 @@ public:
     {
         decl_.reset();
         initializer_.reset();
+        scope_.reset();
     }
 private:
     Decl decl_;
     Initializer initializer_;
+    Scope scope_;
 };
 
-template <typename Decl, typename Initializer>
-local_variable_def_pattern<Decl, Initializer> local_variable_def(Decl decl, Initializer initializer)
+template <typename Decl, typename Initializer, typename Scope>
+local_variable_def_pattern<Decl, Initializer, Scope> local_variable_def(Decl decl, Initializer initializer, Scope scope)
 {
-    return local_variable_def_pattern<Decl, Initializer>(decl, initializer);
+    return local_variable_def_pattern<Decl, Initializer, Scope>(decl, initializer, scope);
 }
 
 }

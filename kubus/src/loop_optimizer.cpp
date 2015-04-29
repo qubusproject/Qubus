@@ -4,6 +4,8 @@
 
 #include <qbb/kubus/IR/pretty_printer.hpp>
 
+#include <qbb/kubus/IR/extract.hpp>
+
 #include <qbb/kubus/IR/kir.hpp>
 #include <qbb/kubus/pattern/core.hpp>
 #include <qbb/kubus/pattern/IR.hpp>
@@ -530,7 +532,66 @@ scop analyze_scop(const expression& expr)
     return s;
 }
 
-isl::schedule_node get_optimized_schedule_tree(isl::schedule_node root)
+isl::map turn_dims_into_params(isl::map m, isl_dim_type type, int pos, int n)
+{
+    //TODO: Index bounds
+
+    //TODO: Assert pos >= 0.
+
+    auto n_dim = m.dim(type);
+
+    //TODO: Assert pos + n < n_dim.
+
+    isl::space s(m.get_ctx(), n, n, n_dim - n);
+
+    for (int i = pos; i < pos + n; ++i)
+    {
+        s.set_dim_name(isl_dim_param, i, "o" + std::to_string(i));
+    }
+
+    auto dims_to_params = isl::basic_map::universe(s);
+
+    for (int i = 0; i < pos; ++i)
+    {
+        auto c = isl::constraint::equality(s)
+                .set_coefficient(isl_dim_in, i, 1)
+                .set_coefficient(isl_dim_out, i, -1);
+
+        dims_to_params.add_constraint(c);
+    }
+
+    for (int i = pos; i < pos + n; ++i)
+    {
+        auto c = isl::constraint::equality(s)
+                .set_coefficient(isl_dim_in, i, 1)
+                .set_coefficient(isl_dim_param, i, -1);
+
+        dims_to_params.add_constraint(c);
+    }
+
+    for (int i = pos + n; i < n_dim; ++i)
+    {
+        auto c = isl::constraint::equality(s)
+                .set_coefficient(isl_dim_in, i, 1)
+                .set_coefficient(isl_dim_out, i, -1);
+
+        dims_to_params.add_constraint(c);
+    }
+
+    dims_to_params = align_params(dims_to_params, m.get_space());
+
+    switch (type)
+    {
+        case isl_dim_in:
+            return apply_domain(m, dims_to_params);
+        case isl_dim_out:
+            return apply_range(m, dims_to_params);
+        default:
+            throw 0; //TODO: Throw exception.
+    }
+}
+
+isl::schedule_node get_optimized_schedule_tree(isl::schedule_node root, scop& s)
 {
     int n_children = root.n_children();
 
@@ -538,7 +599,7 @@ isl::schedule_node get_optimized_schedule_tree(isl::schedule_node root)
     {
         auto child = root[i];
 
-        root = get_optimized_schedule_tree(child).parent();
+        root = get_optimized_schedule_tree(child, s).parent();
     }
 
     if (root.get_type() == isl_schedule_node_band)
@@ -552,28 +613,39 @@ isl::schedule_node get_optimized_schedule_tree(isl::schedule_node root)
 
                 if (root.band_n_member() > 1)
                 {
-                    std::vector<util::index_t> tile_sizes = {300, 100, 25};
+                    std::vector<util::index_t> tile_sizes = {300/*, 100, 25*/};
 
                     isl::schedule_node band_to_tile = root;
 
                     for (auto tile_size : tile_sizes)
                     {
-                        band_to_tile =
-                            tile_band(band_to_tile, std::vector<util::index_t>(root.band_n_member(),
-                                                                               tile_size))[0];
+                        std::vector<util::index_t> tile_shape(root.band_n_member(), tile_size);
+
+                        auto the_tile_band = tile_band(band_to_tile, tile_shape);
+
+                        band_to_tile = the_tile_band[0];
+
+                        band_to_tile = insert_mark(band_to_tile, isl::id(isl_ctx, "task"))[0];
+
+                        auto prefix_schedule = band_to_tile.get_prefix_schedule_union_map();
+
+                        //auto extension = reverse(apply_domain(prefix_schedule, s.write_accesses));
+                        //isl_union_map_dump(extension.native_handle());
+
+                        //band_to_tile = graft_before(band_to_tile, isl::schedule_node::from_extension(extension));
                     }
 
                     root = band_to_tile;
 
                     for (std::size_t i = 0; i < tile_sizes.size(); ++i)
                     {
-                        root = root.parent();
+                        root = root.parent().parent();
                     }
                 }
             }
         }
     }
-
+    
     return root;
 }
 
@@ -613,7 +685,9 @@ scop optimize_scop(scop s)
 
     isl::schedule sched(sched_constraints);
 
-    s.schedule = get_schedule(get_optimized_schedule_tree(sched.get_root()));
+    s.schedule = get_schedule(get_optimized_schedule_tree(sched.get_root(), s));
+
+    //s.schedule.dump();
 
     return s;
 }
@@ -704,6 +778,8 @@ expression isl_ast_expr_to_kir(const isl::ast_expr& expr,
 expression isl_ast_to_kir(const isl::ast_node& root,
                           std::map<std::string, expression>& symbol_table)
 {
+    static long int current_extracted_fn_id = 0;
+
     switch (root.type())
     {
     case isl_ast_node_for:
@@ -773,6 +849,19 @@ expression isl_ast_to_kir(const isl::ast_node& root,
     }
     case isl_ast_node_if:
         throw 0; // TODO: currently not supported
+    case isl_ast_node_mark:
+    {
+        auto mark_id = root.mark_get_id();
+        
+        if (mark_id.name() == "task")
+        {
+            auto body = isl_ast_to_kir(root.mark_get_node(), symbol_table);
+
+            return extract_expr_as_function(body, "extracted_fn_" + std::to_string(current_extracted_fn_id++));
+        }
+        
+        return isl_ast_to_kir(root.mark_get_node(), symbol_table);
+    }
     default:
         throw 0; // TODO: Unknown node type
     }
@@ -844,12 +933,16 @@ expression generate_code_from_scop(const scop& s)
 
     isl_union_set_dump(aliases.native_handle());*/
 
-    builder.set_before_each_for([&](isl::ast_builder_ref QBB_UNUSED(builder))
+    /*builder.set_before_each_for([&](isl::ast_builder_ref QBB_UNUSED(builder))
                                 {
                                     return isl::id(isl_ctx, "test");
-                                });
+                                });*/
+
+    isl::printer printer(isl_ctx);
 
     auto ast = builder.build_node_from_schedule(s.schedule);
+
+    //printer.print(ast);
 
     auto symbol_table = s.symbol_table;
 
@@ -879,8 +972,9 @@ function_declaration optimize_loops(function_declaration decl)
     auto new_body = detect_and_optimize_scops(decl.body());
 
     decl.substitute_body(std::move(new_body));
-    
+
     return decl;
 }
 }
 }
+

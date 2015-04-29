@@ -79,7 +79,7 @@ int hpx_main(int argc, char** argv)
 {
     qbb::kubus::init(argc, argv);
 
-    long int N = 2000;
+    long int N = 200;
 
     auto my_plan =
         make_plan()
@@ -113,7 +113,7 @@ int hpx_main(int argc, char** argv)
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        for (long int i = 0; i < 10; ++i)
+        for (long int i = 0; i < 1; ++i)
         {
             C = Cdef;
         }
@@ -124,7 +124,7 @@ int hpx_main(int argc, char** argv)
 
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 
-        std::cout << duration.count() / 10.0 << " seconds" << std::endl;
+        std::cout << duration.count() / 1.0 << " seconds" << std::endl;
 
         execute(my_plan, C);
         C.when_ready().wait();

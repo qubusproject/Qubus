@@ -59,6 +59,11 @@ schedule_node schedule_node::parent() const
     return schedule_node(isl_schedule_node_parent(isl_schedule_node_copy(handle_)));
 }
 
+union_map schedule_node::band_get_partial_schedule_union_map() const
+{
+    return union_map(isl_schedule_node_band_get_partial_schedule_union_map(handle_));
+}
+
 int schedule_node::band_n_member() const
 {
     return isl_schedule_node_band_n_member(handle_);
@@ -113,6 +118,11 @@ isl_schedule_node* schedule_node::release() noexcept
     return tmp;
 }
 
+schedule_node schedule_node::from_extension(union_map extension)
+{
+    return schedule_node(isl_schedule_node_from_extension(extension.release()));
+}
+
 schedule_node insert_partial_schedule(schedule_node parent, multi_union_pw_affine_expr schedule)
 {
     return schedule_node(
@@ -157,6 +167,11 @@ schedule_node insert_sequence(schedule_node parent, std::vector<union_set> filte
     return schedule_node(isl_schedule_node_insert_sequence(parent.release(), filters_));
 }
 
+schedule_node insert_mark(schedule_node parent, id mark)
+{
+    return schedule_node(isl_schedule_node_insert_mark(parent.release(), mark.release()));
+}
+
 schedule_node tile_band(schedule_node node, std::vector<long int> sizes)
 {
     isl_ctx* ctx = isl_schedule_node_get_ctx(node.native_handle());
@@ -174,6 +189,17 @@ schedule_node tile_band(schedule_node node, std::vector<long int> sizes)
 
     return schedule_node(isl_schedule_node_band_tile(node.release(), sizes_));
 }
+
+schedule_node graft_before(schedule_node node, schedule_node graft)
+{
+    return schedule_node(isl_schedule_node_graft_before(node.release(), graft.release()));
+}
+
+schedule_node graft_after(schedule_node node, schedule_node graft)
+{
+    return schedule_node(isl_schedule_node_graft_after(node.release(), graft.release()));
+}
+
 }
 }
 }

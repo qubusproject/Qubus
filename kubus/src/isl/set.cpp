@@ -222,6 +222,20 @@ union_set& union_set::operator=(const union_set& other)
     return *this;
 }
 
+namespace
+{
+extern "C" int add_set(isl_set* s, void* user) noexcept;
+}
+
+std::vector<set> union_set::get_sets() const
+{
+    std::vector<set> result;
+
+    isl_union_set_foreach_set(handle_, add_set, &result);
+
+    return result;
+}
+
 isl_union_set* union_set::native_handle() const
 {
     return handle_;
@@ -269,6 +283,21 @@ bool is_empty(const union_set& s)
 union_set add_set(union_set uset, set s)
 {
     return union_set(isl_union_set_add_set(uset.release(), s.release()));
+}
+
+namespace
+{
+extern "C" {
+
+int add_set(isl_set* s, void* user) noexcept
+{
+    auto& sets = *static_cast<std::vector<set>*>(user);
+
+    sets.emplace_back(s);
+
+    return 1;
+}
+}
 }
 
 }

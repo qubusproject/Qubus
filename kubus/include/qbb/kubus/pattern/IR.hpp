@@ -17,8 +17,11 @@
 #include <qbb/kubus/pattern/macro.hpp>
 #include <qbb/kubus/pattern/spawn.hpp>
 #include <qbb/kubus/pattern/local_variable_def.hpp>
+#include <qbb/kubus/pattern/variable_scope.hpp>
 
 #include <qbb/kubus/pattern/type.hpp>
+
+#include <qbb/kubus/pattern/contains.hpp>
 
 #include <qbb/kubus/pattern/substitute.hpp>
 #include <qbb/kubus/pattern/search.hpp>

@@ -19,9 +19,8 @@ class variable_declaration_info;
 enum class variable_intent
 {
     generic,
-    in_param,
-    out_param,
-    inout_param
+    in,
+    out
 };
 
 class variable_declaration

@@ -7,6 +7,7 @@
 #include <isl/set.h>
 
 #include <string>
+#include <vector>
 
 namespace qbb
 {
@@ -69,12 +70,21 @@ public:
     void add_constraint(constraint c);
 
     space get_space() const;
+
+    set params() const
+    {
+        return set(isl_set_params(handle_));
+    }
     
     void set_tuple_name(const std::string& name);
     
     static set universe(space s);
     static set empty(space s);
 
+    static set from_params(set s)
+    {
+        return set(isl_set_from_params(s.native_handle()));
+    }
 private:
     isl_set* handle_;
 };
@@ -113,6 +123,8 @@ public:
     ~union_set();
     
     union_set& operator=(const union_set& other);
+
+    std::vector<set> get_sets() const;
 
     isl_union_set* native_handle() const;
 

@@ -4,6 +4,7 @@
 #include <qbb/kubus/isl/space.hpp>
 #include <qbb/kubus/isl/constraint.hpp>
 #include <qbb/kubus/isl/set.hpp>
+#include <qbb/kubus/isl/context.hpp>
 
 #include <isl/map.h>
 
@@ -52,6 +53,8 @@ basic_map project_out(basic_map map, isl_dim_type type, unsigned int first, unsi
 
 basic_map apply_range(basic_map lhs, basic_map rhs);
 
+basic_map align_params(basic_map map, space model);
+
 class map
 {
 public:
@@ -74,7 +77,8 @@ public:
     isl_map* release() noexcept;
 
     space get_space() const;
-    
+    context_ref get_ctx() const;
+
     int dim(isl_dim_type type) const;
 
     void add_constraint(constraint c);
@@ -99,6 +103,11 @@ map add_dims(map m, isl_dim_type type, int num);
 
 map fix_dimension(map m, isl_dim_type type, int pos, int value);
 
+inline set apply(set s, map m)
+{
+    return set(isl_set_apply(s.release(), m.release()));
+}
+
 class union_map
 {
 public:
@@ -121,6 +130,7 @@ public:
     ~union_map();
 
     space get_space() const;
+    context_ref get_ctx() const;
     
     std::vector<map> get_maps() const;
     
@@ -158,6 +168,11 @@ union_map project_out(union_map m, isl_dim_type type, unsigned int first, unsign
 inline union_set apply(union_set s, union_map m)
 {
     return union_set(isl_union_set_apply(s.release(), m.release()));
+}
+
+inline union_map reverse(union_map m)
+{
+    return union_map(isl_union_map_reverse(m.release()));
 }
 
 }

@@ -81,6 +81,11 @@ basic_map apply_range(basic_map lhs, basic_map rhs)
     return basic_map(temp);
 }
 
+basic_map align_params(basic_map map, space model)
+{
+    return basic_map(isl_basic_map_align_params(map.release(), model.release()));
+}
+
 map::map(isl_map* handle_) : handle_{handle_}
 {
 }
@@ -133,6 +138,11 @@ isl_map* map::release() noexcept
 space map::get_space() const
 {
     return space(isl_map_get_space(handle_));
+}
+
+context_ref map::get_ctx() const
+{
+    return context_ref(isl_map_get_ctx(handle_));
 }
 
 int map::dim(isl_dim_type type) const
@@ -245,17 +255,22 @@ space union_map::get_space() const
     return space(isl_union_map_get_space(handle_));
 }
 
+context_ref union_map::get_ctx() const
+{
+    return context_ref(isl_union_map_get_ctx(handle_));
+}
+
 namespace
 {
-extern "C" int add_map(isl_map* m, void* user) noexcept;   
+extern "C" int add_map(isl_map* m, void* user) noexcept;
 }
 
 std::vector<map> union_map::get_maps() const
 {
     std::vector<map> result;
-    
-    isl_union_map_foreach_map(handle_, add_map, & result);
-    
+
+    isl_union_map_foreach_map(handle_, add_map, &result);
+
     return result;
 }
 

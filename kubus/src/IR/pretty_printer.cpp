@@ -380,9 +380,11 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        print(b.get(), ctx, print_types);
                        std::cout << "\n}";
                    })
-            .case_(local_variable_def(decl, a),
+            .case_(local_variable_def(decl, a, b),
                    [&]
                    {
+                       std::cout << "let ";
+
                        if (auto debug_name = decl.get().annotations().lookup("kubus.debug.name"))
                        {
                            std::cout << debug_name.as<std::string>();
@@ -395,6 +397,12 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << " := ";
 
                        print(a.get(), ctx, print_types);
+
+                       std::cout << "{\n";
+
+                       print(b.get(), ctx, print_types);
+
+                       std::cout << "\n}";
                    })
             .case_(spawn(plan, args), [&]
                    {
@@ -431,12 +439,10 @@ const char* intent_to_string(variable_intent intent)
     {
     case variable_intent::generic:
         return "";
-    case variable_intent::in_param:
+    case variable_intent::in:
         return "in ";
-    case variable_intent::out_param:
+    case variable_intent::out:
         return "out ";
-    case variable_intent::inout_param:
-        return "inout ";
     }
 }
 }

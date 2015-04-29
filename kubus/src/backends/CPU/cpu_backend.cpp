@@ -1105,7 +1105,7 @@ reference compile(const expression& expr, llvm_environment& env,
             .case_(intrinsic_function_n(pattern::value("extent"), variable_ref(idx), b),
                    [&]
                    {
-                       auto tensor = symbol_table[idx.get().id()];
+                       auto tensor = symbol_table.at(idx.get().id());
 
                        llvm::Value* shape_ptr =
                            builder.CreateConstInBoundsGEP2_32(tensor.addr(), 0, 1, "shape_ptr");
@@ -1228,7 +1228,7 @@ reference compile(const expression& expr, llvm_environment& env,
 
                        return pattern::match(idx.get().var_type(), m);
                    })
-            .case_(local_variable_def(var, a),
+            .case_(local_variable_def(var, a, b),
                    [&]
                    {
                        auto var_type = env.map_kubus_type(var.get().var_type());
@@ -1246,6 +1246,8 @@ reference compile(const expression& expr, llvm_environment& env,
 
                        symbol_table[var.get().id()] = reference(var_ptr, access_path());
 
+                       compile(b.get(), env, ctx);
+
                        return reference();
                    })
             .case_(spawn(plan, expressions), [&]
@@ -1254,14 +1256,16 @@ reference compile(const expression& expr, llvm_environment& env,
 
                        for (const auto& param : plan.get().params())
                        {
-                           param_types.push_back(env.map_kubus_type(param.var_type()));
+                           param_types.push_back(env.map_kubus_type(param.var_type())->getPointerTo());
                        }
+
+                       param_types.push_back(env.map_kubus_type(plan.get().result().var_type())->getPointerTo());
 
                        llvm::FunctionType* fn_type = llvm::FunctionType::get(
                            llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
 
-                       auto plan_ptr = env.module().getOrInsertFunction(plan.get().name(), fn_type);
-                       
+                       auto plan_ptr = llvm::Function::Create(fn_type, llvm::Function::PrivateLinkage, plan.get().name(), &env.module());
+
                        ctx.add_plan_to_compile(plan.get());
 
                        std::vector<llvm::Value*> arguments;
@@ -1269,10 +1273,10 @@ reference compile(const expression& expr, llvm_environment& env,
                        for (const auto& arg : expressions.get())
                        {
                            auto arg_ref = compile(arg, env, ctx);
-                           auto arg_value = builder.CreateLoad(arg_ref.addr());
-                           arg_value->setMetadata("tbaa", env.get_tbaa_node(arg_ref.origin()));
+                           /*auto arg_value = builder.CreateLoad(arg_ref.addr());
+                           arg_value->setMetadata("tbaa", env.get_tbaa_node(arg_ref.origin()));*/
 
-                           arguments.push_back(arg_value);
+                           arguments.push_back(arg_ref.addr());
                        }
 
                        builder.CreateCall(plan_ptr, arguments);
@@ -1300,9 +1304,13 @@ void compile(const function_declaration& plan, llvm_environment& env,
 
     llvm::FunctionType* FT = llvm::FunctionType::get(
         llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
-    
-    llvm::Function* compiled_plan =
-        llvm::Function::Create(FT, llvm::Function::PrivateLinkage, plan.name(), &env.module());
+
+    llvm::Function* compiled_plan;
+
+    if (!(compiled_plan = env.module().getFunction(plan.name())))
+    {
+        compiled_plan =  llvm::Function::Create(FT, llvm::Function::PrivateLinkage, plan.name(), &env.module());
+    }
         
     for (std::size_t i = 0; i < compiled_plan->arg_size(); ++i)
     {
