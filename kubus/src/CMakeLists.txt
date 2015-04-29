@@ -54,8 +54,8 @@ add_library(kubus SHARED ${kubus_header_files} ${kubus_source_files})
 
 target_include_directories(kubus PUBLIC ${HPX_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/kubus/include> ${LLVM_INCLUDE_DIRS})
 target_compile_options(kubus PUBLIC -std=c++14)
-target_link_libraries(kubus PUBLIC ${Boost_LIBRARIES} kubus_ir kubus_isl qbb_util
-                                   hpx hpx_serialization dl wall)
+target_link_libraries(kubus PUBLIC kubus_ir kubus_isl qbb_util
+                                   hpx hpx_serialization ${Boost_LIBRARIES} dl wall)
 target_compile_definitions(kubus PUBLIC -DBOOST_LOG_DYN_LINK)
 
 set_property(TARGET kubus PROPERTY VERSION ${KUBUS_VERSION})
