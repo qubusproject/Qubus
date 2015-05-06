@@ -57,6 +57,7 @@ target_compile_options(kubus PUBLIC -std=c++14)
 target_link_libraries(kubus PUBLIC kubus_ir kubus_isl qbb_util
                                    hpx hpx_serialization ${Boost_LIBRARIES} dl wall)
 target_compile_definitions(kubus PUBLIC -DBOOST_LOG_DYN_LINK)
+add_dependencies(kubus kubus_cpu_backend)
 
 set_property(TARGET kubus PROPERTY VERSION ${KUBUS_VERSION})
 set_property(TARGET kubus PROPERTY SOVERSION 0)
