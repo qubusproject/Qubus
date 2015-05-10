@@ -55,6 +55,7 @@ public:
 
         return *this;
     }
+
 private:
     util::handle root_;
     std::vector<std::string> components_;
@@ -80,7 +81,8 @@ public:
 
     llvm::Type* map_kubus_type(const type& t) const;
 
-    llvm::MDNode* get_tbaa_node(const access_path& path) const;
+    llvm::MDNode* get_alias_scope(const access_path& path) const;
+    llvm::MDNode* get_noalias_set(const access_path& path) const;
 
     bool bind_symbol(const std::string& symbol, llvm::Value* value);
 
@@ -88,12 +90,9 @@ public:
 
     llvm::Value* lookup_symbol(const std::string& symbol) const;
 
-    llvm::MDNode* local_tbaa_node() const;
-    llvm::MDNode* param_tbaa_node() const;
-
     llvm::Function* get_current_function() const;
     void set_current_function(llvm::Function* func);
-    
+
     llvm::Function* get_assume_align() const;
 
     // llvm::Value* lookup_intrinsic_function(const std::string& name,
@@ -106,16 +105,15 @@ private:
     mutable llvm::MDBuilder md_builder_;
 
     std::unique_ptr<llvm::Module> the_module_;
-    llvm::MDNode* tbaa_root_;
-    llvm::MDNode* local_tbaa_node_;
-    llvm::MDNode* param_tbaa_node_;
+
+    llvm::MDNode* global_alias_domain_;
 
     llvm::Function* current_function_;
 
     mutable std::unordered_map<type, llvm::Type*> type_map_;
-    mutable std::map<std::string, llvm::MDNode*> tbaa_table_;
+    mutable std::map<std::string, llvm::MDNode*> alias_scope_table_;
     std::map<std::string, llvm::Value*> symbol_table_;
-    
+
     llvm::Function* assume_align_;
 
     // intrinsic_lookup_table instrinsic_lookup_table_;

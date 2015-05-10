@@ -13,6 +13,7 @@
 #include <boost/optional.hpp>
 
 #include <tuple>
+#include <array>
 
 namespace qbb
 {
@@ -62,16 +63,15 @@ std::string mangle_type(const type& t)
 
 llvm_environment::llvm_environment()
 : builder_(llvm::getGlobalContext()), md_builder_(llvm::getGlobalContext()),
-  the_module_(util::make_unique<llvm::Module>("kubus module", llvm::getGlobalContext())),
-  tbaa_root_(md_builder_.createTBAARoot("kubus TBAA root"))
+  the_module_(util::make_unique<llvm::Module>("kubus module", llvm::getGlobalContext()))
 {
     llvm::FastMathFlags fast_math_flags;
     fast_math_flags.setUnsafeAlgebra();
 
     builder_.SetFastMathFlags(fast_math_flags);
 
-    local_tbaa_node_ = md_builder_.createTBAANode("local", tbaa_root_);
-    param_tbaa_node_ = md_builder_.createTBAANode("param", tbaa_root_);
+    global_alias_domain_ = md_builder_.createAliasScopeDomain("kubus.alias_domain");
+    get_alias_scope(access_path());
 
     std::vector<llvm::Type*> assume_params = {llvm::Type::getInt1Ty(llvm::getGlobalContext())};
 
@@ -162,8 +162,7 @@ llvm::Type* llvm_environment::map_kubus_type(const type& t) const
 
                            llvm::Type* real_pair = llvm::ArrayType::get(real_type, 2);
 
-                           return llvm::StructType::create({real_pair},
-                                                           mangle_type(total_type));
+                           return llvm::StructType::create({real_pair}, mangle_type(total_type));
                        })
                 .case_(tensor_t(subtype),
                        [&](const type& total_type)
@@ -190,30 +189,37 @@ llvm::Type* llvm_environment::map_kubus_type(const type& t) const
     }
 }
 
-llvm::MDNode* llvm_environment::get_tbaa_node(const access_path& path) const
+llvm::MDNode* llvm_environment::get_alias_scope(const access_path& path) const
 {
     auto name = path.str();
 
-    auto& node = tbaa_table_[name];
+    auto& alias_scope = alias_scope_table_[name];
 
-    if (!node)
+    if (!alias_scope)
     {
-        llvm::MDNode* tbaa_metadata = md_builder_.createTBAANode(name, tbaa_root_);
+        llvm::MDNode* new_alias_scope = md_builder_.createAliasScope(name, global_alias_domain_);
 
-        node = tbaa_metadata;
+        alias_scope = new_alias_scope;
     }
 
-    return node;
+    std::vector<llvm::Metadata*> alias_scopes = {alias_scope};
+
+    return llvm::MDNode::get(llvm::getGlobalContext(), alias_scopes);
 }
 
-llvm::MDNode* llvm_environment::local_tbaa_node() const
+llvm::MDNode* llvm_environment::get_noalias_set(const access_path& path) const
 {
-    return local_tbaa_node_;
-}
+    std::vector<llvm::Metadata*> alias_scopes;
 
-llvm::MDNode* llvm_environment::param_tbaa_node() const
-{
-    return param_tbaa_node_;
+    for (const auto& entry : alias_scope_table_)
+    {
+        if (entry.first != path.str())
+        {
+            alias_scopes.push_back(entry.second);
+        }
+    }
+
+    return llvm::MDNode::get(llvm::getGlobalContext(), alias_scopes);
 }
 
 llvm::Function* llvm_environment::get_current_function() const

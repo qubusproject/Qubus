@@ -106,6 +106,28 @@ llvm::AllocaInst* create_entry_block_alloca(llvm::Function* current_function, ll
     return builder.CreateAlloca(type, array_size, name);
 }
 
+llvm::LoadInst* load_from_ref(const reference& ref, llvm_environment& env)
+{
+    auto& builder = env.builder();
+
+    auto value = builder.CreateLoad(ref.addr());
+    value->setMetadata("alias.scope", env.get_alias_scope(ref.origin()));
+    value->setMetadata("noalias", env.get_noalias_set(ref.origin()));
+
+    return value;
+}
+
+llvm::StoreInst* store_to_ref(const reference& ref, llvm::Value* value, llvm_environment& env)
+{
+    auto& builder = env.builder();
+
+    auto store = builder.CreateStore(value, ref.addr());
+    store->setMetadata("alias.scope", env.get_alias_scope(ref.origin()));
+    store->setMetadata("noalias", env.get_noalias_set(ref.origin()));
+
+    return store;
+}
+
 class compilation_context
 {
 public:
@@ -113,35 +135,35 @@ public:
     {
         return symbol_table_;
     }
-    
+
     const std::map<qbb::util::handle, reference>& symbol_table() const
     {
         return symbol_table_;
     }
-    
+
     boost::optional<function_declaration> get_next_plan_to_compile()
     {
         if (plans_to_compile_.empty())
             return boost::none;
-        
+
         auto next_plan_to_compile = plans_to_compile_.back();
-        
+
         plans_to_compile_.pop_back();
-        
+
         return next_plan_to_compile;
     }
-    
+
     void add_plan_to_compile(function_declaration fn)
     {
         plans_to_compile_.push_back(std::move(fn));
     }
+
 private:
     std::map<qbb::util::handle, reference> symbol_table_;
-    std::vector<function_declaration> plans_to_compile_; 
+    std::vector<function_declaration> plans_to_compile_;
 };
 
-reference compile(const expression& expr, llvm_environment& env,
-                  compilation_context& ctx);
+reference compile(const expression& expr, llvm_environment& env, compilation_context& ctx);
 
 template <typename BodyEmitter>
 void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Value* upper_bound,
@@ -149,10 +171,7 @@ void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Val
 {
     auto& builder_ = env.builder();
 
-    auto initialize_induction_variable =
-        builder_.CreateStore(lower_bound, induction_variable.addr());
-    initialize_induction_variable->setMetadata("tbaa",
-                                               env.get_tbaa_node(induction_variable.origin()));
+    store_to_ref(induction_variable, lower_bound, env);
 
     llvm::BasicBlock* header = llvm::BasicBlock::Create(llvm::getGlobalContext(), "header",
                                                         builder_.GetInsertBlock()->getParent());
@@ -165,8 +184,7 @@ void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Val
 
     builder_.SetInsertPoint(header);
 
-    auto induction_variable_value = builder_.CreateLoad(induction_variable.addr());
-    induction_variable_value->setMetadata("tbaa", env.get_tbaa_node(induction_variable.origin()));
+    auto induction_variable_value = load_from_ref(induction_variable, env);
 
     llvm::Value* exit_cond = builder_.CreateICmpSLT(induction_variable_value, upper_bound);
 
@@ -176,13 +194,10 @@ void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Val
 
     body_emitter();
 
-    auto induction_variable_value2 = builder_.CreateLoad(induction_variable.addr());
-    induction_variable_value2->setMetadata("tbaa", env.get_tbaa_node(induction_variable.origin()));
+    auto induction_variable_value2 = load_from_ref(induction_variable, env);
 
-    auto instr = builder_.CreateStore(
-        builder_.CreateAdd(induction_variable_value2, increment, "", false, true),
-        induction_variable.addr());
-    instr->setMetadata("tbaa", env.get_tbaa_node(induction_variable.origin()));
+    store_to_ref(induction_variable,
+                 builder_.CreateAdd(induction_variable_value2, increment, "", true, true), env);
 
     builder_.CreateBr(header);
 
@@ -194,8 +209,7 @@ void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Val
 }
 
 reference emit_binary_operator(binary_op_tag tag, const expression& left, const expression& right,
-                               llvm_environment& env,
-                               compilation_context& ctx)
+                               llvm_environment& env, compilation_context& ctx)
 {
     using pattern::_;
 
@@ -204,13 +218,9 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
 
     auto& builder = env.builder();
 
-    llvm::Instruction* left_value =
-        builder.CreateAlignedLoad(left_value_ptr.addr(), get_prefered_alignment());
-    left_value->setMetadata("tbaa", env.get_tbaa_node(left_value_ptr.origin()));
+    llvm::Instruction* left_value = load_from_ref(left_value_ptr, env);
 
-    llvm::Instruction* right_value =
-        builder.CreateAlignedLoad(right_value_ptr.addr(), get_prefered_alignment());
-    right_value->setMetadata("tbaa", env.get_tbaa_node(right_value_ptr.origin()));
+    llvm::Instruction* right_value = load_from_ref(right_value_ptr, env);
 
     type result_type = typeof_(left);
 
@@ -220,9 +230,7 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
     {
     case binary_op_tag::assign:
     {
-        llvm::Instruction* store = builder.CreateAlignedStore(right_value, left_value_ptr.addr(),
-                                                              get_prefered_alignment());
-        store->setMetadata("tbaa", env.get_tbaa_node(left_value_ptr.origin()));
+        store_to_ref(left_value_ptr, right_value, env);
 
         return reference();
     }
@@ -267,9 +275,7 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
 
         llvm::Value* sum = pattern::match(result_type, m);
 
-        llvm::Instruction* store =
-            builder.CreateAlignedStore(sum, left_value_ptr.addr(), get_prefered_alignment());
-        store->setMetadata("tbaa", env.get_tbaa_node(left_value_ptr.origin()));
+        store_to_ref(left_value_ptr, sum, env);
 
         return reference();
     }
@@ -513,9 +519,10 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
     auto result_var = create_entry_block_alloca(env.get_current_function(), result->getType());
     result_var->setAlignment(get_prefered_alignment());
 
-    builder.CreateAlignedStore(result, result_var, get_prefered_alignment());
+    reference result_var_ref(result_var, access_path());
+    store_to_ref(result_var_ref, result, env);
 
-    return reference(result_var, access_path());
+    return result_var_ref;
 }
 
 reference emit_unary_operator(unary_op_tag tag, const expression& arg, llvm_environment& env,
@@ -527,9 +534,7 @@ reference emit_unary_operator(unary_op_tag tag, const expression& arg, llvm_envi
 
     auto& builder = env.builder();
 
-    llvm::Instruction* arg_value =
-        builder.CreateAlignedLoad(arg_value_ptr.addr(), get_prefered_alignment());
-    arg_value->setMetadata("tbaa", env.get_tbaa_node(arg_value_ptr.origin()));
+    llvm::Instruction* arg_value = load_from_ref(arg_value_ptr, env);
 
     type result_type = typeof_(arg);
 
@@ -585,14 +590,15 @@ reference emit_unary_operator(unary_op_tag tag, const expression& arg, llvm_envi
     auto result_var = create_entry_block_alloca(env.get_current_function(), result->getType());
     result_var->setAlignment(get_prefered_alignment());
 
-    builder.CreateAlignedStore(result, result_var, get_prefered_alignment());
+    reference result_var_ref(result_var, access_path());
 
-    return reference(result_var, access_path());
+    store_to_ref(result_var_ref, result, env);
+
+    return result_var_ref;
 }
 
 reference emit_type_conversion(const type& target_type, const expression& arg,
-                               llvm_environment& env,
-                               compilation_context& ctx)
+                               llvm_environment& env, compilation_context& ctx)
 {
     using pattern::_;
 
@@ -600,9 +606,7 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
 
     auto& builder = env.builder();
 
-    llvm::Instruction* arg_value =
-        builder.CreateAlignedLoad(arg_value_ptr.addr(), get_prefered_alignment());
-    arg_value->setMetadata("tbaa", env.get_tbaa_node(arg_value_ptr.origin()));
+    llvm::Instruction* arg_value = load_from_ref(arg_value_ptr, env);
 
     type arg_type = typeof_(arg);
 
@@ -773,9 +777,11 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
     auto result_var = create_entry_block_alloca(env.get_current_function(), result->getType());
     result_var->setAlignment(get_prefered_alignment());
 
-    builder.CreateAlignedStore(result, result_var, get_prefered_alignment());
+    reference result_var_ref(result_var, access_path());
 
-    return reference(result_var, access_path());
+    store_to_ref(result_var_ref, result, env);
+
+    return result_var_ref;
 }
 
 llvm::Value* emit_array_access(llvm::Value* data, const std::vector<llvm::Value*>& shape,
@@ -811,8 +817,7 @@ reference emit_array_access(const reference& data, const reference& shape,
     {
         auto extent_ptr = builder.CreateConstInBoundsGEP1_32(shape.addr(), i);
 
-        auto extent = builder.CreateLoad(extent_ptr);
-        extent->setMetadata("tbaa", env.get_tbaa_node(shape.origin()));
+        auto extent = load_from_ref(reference(extent_ptr, shape.origin()), env);
 
         shape_.push_back(extent);
     }
@@ -830,11 +835,8 @@ reference emit_tensor_access(const reference& tensor, const std::vector<llvm::Va
     llvm::Value* data_ptr = builder.CreateConstInBoundsGEP2_32(tensor.addr(), 0, 0, "data_ptr");
     llvm::Value* shape_ptr = builder.CreateConstInBoundsGEP2_32(tensor.addr(), 0, 1, "shape_ptr");
 
-    auto shape = builder.CreateLoad(shape_ptr, "shape");
-    shape->setMetadata("tbaa", env.get_tbaa_node(tensor.origin()));
-
-    auto data = builder.CreateLoad(data_ptr, "data");
-    data->setMetadata("tbaa", env.get_tbaa_node(tensor.origin()));
+    auto shape = load_from_ref(reference(shape_ptr, tensor.origin()), env);
+    auto data = load_from_ref(reference(data_ptr, tensor.origin()), env);
 
     auto accessed_element =
         emit_array_access(reference(data, tensor.origin() / "data"),
@@ -852,14 +854,9 @@ reference emit_array_slice_access(const reference& slice, const std::vector<llvm
     llvm::Value* shape_ptr = builder.CreateConstInBoundsGEP2_32(slice.addr(), 0, 1, "shape_ptr");
     llvm::Value* origin_ptr = builder.CreateConstInBoundsGEP2_32(slice.addr(), 0, 2, "origin_ptr");
 
-    auto shape = builder.CreateLoad(shape_ptr, "shape");
-    shape->setMetadata("tbaa", env.get_tbaa_node(slice.origin()));
-
-    auto data = builder.CreateLoad(data_ptr, "data");
-    data->setMetadata("tbaa", env.get_tbaa_node(slice.origin()));
-
-    auto origin = builder.CreateLoad(origin_ptr, "origin");
-    origin->setMetadata("tbaa", env.get_tbaa_node(slice.origin()));
+    auto shape = load_from_ref(reference(shape_ptr, slice.origin()), env);
+    auto data = load_from_ref(reference(data_ptr, slice.origin()), env);
+    auto origin = load_from_ref(reference(origin_ptr, slice.origin()), env);
 
     std::vector<llvm::Value*> transformed_indices;
     transformed_indices.reserve(indices.size());
@@ -868,8 +865,8 @@ reference emit_array_slice_access(const reference& slice, const std::vector<llvm
     {
         auto origin_component_ptr = builder.CreateConstInBoundsGEP1_32(origin, i);
 
-        auto origin_component = builder.CreateLoad(origin_component_ptr);
-        origin_component->setMetadata("tbaa", env.get_tbaa_node(slice.origin() / "origin"));
+        auto origin_component =
+            load_from_ref(reference(origin_component_ptr, slice.origin() / "origin"), env);
 
         auto transformed_index = builder.CreateAdd(origin_component, indices[i], "", true, true);
 
@@ -897,11 +894,10 @@ std::vector<llvm::Value*> permute_indices(const std::vector<llvm::Value*>& indic
     return permuted_indices;
 }
 
-reference compile(const expression& expr, llvm_environment& env,
-                  compilation_context& ctx)
+reference compile(const expression& expr, llvm_environment& env, compilation_context& ctx)
 {
     auto& symbol_table = ctx.symbol_table();
-    
+
     pattern::variable<binary_op_tag> btag;
     pattern::variable<unary_op_tag> utag;
     pattern::variable<expression> a, b, c, d;
@@ -972,41 +968,36 @@ reference compile(const expression& expr, llvm_environment& env,
                    {
                        return emit_unary_operator(utag.get(), a.get(), env, ctx);
                    })
-            .case_(
-                 for_(idx, a, b, c, d),
-                 [&]
-                 {
-                     llvm::Type* size_type = env.map_kubus_type(types::integer());
+            .case_(for_(idx, a, b, c, d),
+                   [&]
+                   {
+                       llvm::Type* size_type = env.map_kubus_type(types::integer());
 
-                     auto increment_ptr = compile(c.get(), env, ctx);
-                     auto increment_value = builder.CreateLoad(increment_ptr.addr());
-                     increment_value->setMetadata("tbaa",
-                                                  env.get_tbaa_node(increment_ptr.origin()));
+                       auto increment_ptr = compile(c.get(), env, ctx);
+                       auto increment_value = load_from_ref(increment_ptr, env);
 
-                     llvm::Value* induction_var = create_entry_block_alloca(
-                         env.get_current_function(), size_type, nullptr, "ind");
+                       llvm::Value* induction_var = create_entry_block_alloca(
+                           env.get_current_function(), size_type, nullptr, "ind");
 
-                     auto induction_var_ref = reference(induction_var, access_path());
+                       auto induction_var_ref = reference(induction_var, access_path());
 
-                     symbol_table[idx.get().id()] = induction_var_ref;
+                       symbol_table[idx.get().id()] = induction_var_ref;
 
-                     reference lower_bound_ptr = compile(a.get(), env, ctx);
-                     reference upper_bound_ptr = compile(b.get(), env, ctx);
+                       reference lower_bound_ptr = compile(a.get(), env, ctx);
+                       reference upper_bound_ptr = compile(b.get(), env, ctx);
 
-                     auto lower_bound = builder.CreateLoad(lower_bound_ptr.addr());
-                     lower_bound->setMetadata("tbaa", env.get_tbaa_node(lower_bound_ptr.origin()));
-                     auto upper_bound = builder.CreateLoad(upper_bound_ptr.addr());
-                     upper_bound->setMetadata("tbaa", env.get_tbaa_node(upper_bound_ptr.origin()));
+                       auto lower_bound = load_from_ref(lower_bound_ptr, env);
+                       auto upper_bound = load_from_ref(upper_bound_ptr, env);
 
-                     emit_loop(induction_var_ref, lower_bound, upper_bound, increment_value,
-                               [&]()
-                               {
-                                   compile(d.get(), env, ctx);
-                               },
-                               env);
+                       emit_loop(induction_var_ref, lower_bound, upper_bound, increment_value,
+                                 [&]()
+                                 {
+                                     compile(d.get(), env, ctx);
+                                 },
+                                 env);
 
-                     return reference();
-                 })
+                       return reference();
+                   })
             .case_(compound(expressions),
                    [&]
                    {
@@ -1024,18 +1015,14 @@ reference compile(const expression& expr, llvm_environment& env,
 
                        llvm::Value* value = llvm::ConstantFP::get(double_type, dval.get());
 
-                       auto& builder = env.builder();
-
                        auto var =
                            create_entry_block_alloca(env.get_current_function(), double_type);
                        var->setAlignment(get_prefered_alignment());
 
-                       auto lit_store =
-                           builder.CreateAlignedStore(value, var, get_prefered_alignment());
+                       reference var_ref(var, access_path());
+                       store_to_ref(var_ref, value, env);
 
-                       lit_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
-
-                       return reference(var, access_path());
+                       return var_ref;
                    })
             .case_(float_literal(fval),
                    [&]
@@ -1044,15 +1031,13 @@ reference compile(const expression& expr, llvm_environment& env,
 
                        llvm::Value* value = llvm::ConstantFP::get(float_type, fval.get());
 
-                       auto& builder = env.builder();
-
                        llvm::Value* var =
                            create_entry_block_alloca(env.get_current_function(), float_type);
 
-                       auto lit_store = builder.CreateStore(value, var);
-                       lit_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+                       reference var_ref(var, access_path());
+                       store_to_ref(var_ref, value, env);
 
-                       return reference(var, access_path());
+                       return var_ref;
                    })
             .case_(integer_literal(ival),
                    [&]
@@ -1061,15 +1046,13 @@ reference compile(const expression& expr, llvm_environment& env,
 
                        llvm::Value* value = llvm::ConstantInt::get(size_type, ival.get());
 
-                       auto& builder = env.builder();
-
                        llvm::Value* var =
                            create_entry_block_alloca(env.get_current_function(), size_type);
 
-                       auto lit_store = builder.CreateStore(value, var);
-                       lit_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+                       reference var_ref(var, access_path());
+                       store_to_ref(var_ref, value, env);
 
-                       return reference(var, access_path());
+                       return var_ref;
                    })
             .case_(intrinsic_function_n(pattern::value("delta"), a, b),
                    [&]
@@ -1081,11 +1064,9 @@ reference compile(const expression& expr, llvm_environment& env,
                        auto a_ref = compile(a.get(), env, ctx);
                        auto b_ref = compile(b.get(), env, ctx);
 
-                       auto a_value = builder.CreateLoad(a_ref.addr());
-                       a_value->setMetadata("tbaa", env.get_tbaa_node(a_ref.origin()));
+                       auto a_value = load_from_ref(a_ref, env);
 
-                       auto b_value = builder.CreateLoad(b_ref.addr());
-                       b_value->setMetadata("tbaa", env.get_tbaa_node(b_ref.origin()));
+                       auto b_value = load_from_ref(b_ref, env);
 
                        auto cond = builder.CreateICmpEQ(a_value, b_value);
 
@@ -1097,10 +1078,10 @@ reference compile(const expression& expr, llvm_environment& env,
                        auto result =
                            create_entry_block_alloca(env.get_current_function(), int_type);
 
-                       auto result_store = builder.CreateStore(result_value, result);
-                       result_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+                       reference result_ref(result, access_path());
+                       store_to_ref(result_ref, result_value, env);
 
-                       return reference(result, access_path());
+                       return result_ref;
                    })
             .case_(intrinsic_function_n(pattern::value("extent"), variable_ref(idx), b),
                    [&]
@@ -1110,77 +1091,67 @@ reference compile(const expression& expr, llvm_environment& env,
                        llvm::Value* shape_ptr =
                            builder.CreateConstInBoundsGEP2_32(tensor.addr(), 0, 1, "shape_ptr");
 
-                       auto shape = builder.CreateLoad(shape_ptr, "shape");
-                       shape->setMetadata("tbaa", env.get_tbaa_node(tensor.origin()));
+                       auto shape = load_from_ref(reference(shape_ptr, tensor.origin()), env);
 
                        reference dim_ref = compile(b.get(), env, ctx);
 
-                       auto dim = builder.CreateLoad(dim_ref.addr());
-                       dim->setMetadata("tbaa", env.get_tbaa_node(dim_ref.origin()));
+                       auto dim = load_from_ref(dim_ref, env);
 
                        llvm::Value* extent_ptr =
                            builder.CreateInBoundsGEP(shape, dim, "extent_ptr");
 
                        return reference(extent_ptr, tensor.origin() / "shape");
                    })
-            .case_(
-                 intrinsic_function_n(pattern::value("min"), a, b),
-                 [&]
-                 {
-                     reference left_value_ptr = compile(a.get(), env, ctx);
-                     reference right_value_ptr = compile(b.get(), env, ctx);
+            .case_(intrinsic_function_n(pattern::value("min"), a, b),
+                   [&]
+                   {
+                       reference left_value_ptr = compile(a.get(), env, ctx);
+                       reference right_value_ptr = compile(b.get(), env, ctx);
 
-                     llvm::Instruction* left_value =
-                         builder.CreateAlignedLoad(left_value_ptr.addr(), get_prefered_alignment());
-                     left_value->setMetadata("tbaa", env.get_tbaa_node(left_value_ptr.origin()));
+                       llvm::Instruction* left_value = load_from_ref(left_value_ptr, env);
 
-                     llvm::Instruction* right_value = builder.CreateAlignedLoad(
-                         right_value_ptr.addr(), get_prefered_alignment());
-                     right_value->setMetadata("tbaa", env.get_tbaa_node(right_value_ptr.origin()));
+                       llvm::Instruction* right_value = load_from_ref(right_value_ptr, env);
 
-                     type result_type = typeof_(a.get());
+                       type result_type = typeof_(a.get());
 
-                     auto cond = builder.CreateICmpSLT(left_value, right_value);
+                       auto cond = builder.CreateICmpSLT(left_value, right_value);
 
-                     auto result = builder.CreateSelect(cond, left_value, right_value);
+                       auto result = builder.CreateSelect(cond, left_value, right_value);
 
-                     auto result_var =
-                         create_entry_block_alloca(env.get_current_function(), result->getType());
-                     result_var->setAlignment(get_prefered_alignment());
+                       auto result_var =
+                           create_entry_block_alloca(env.get_current_function(), result->getType());
+                       result_var->setAlignment(get_prefered_alignment());
 
-                     builder.CreateAlignedStore(result, result_var, get_prefered_alignment());
+                       reference result_ref(result_var, access_path());
+                       store_to_ref(result_ref, result, env);
 
-                     return reference(result_var, access_path());
-                 })
-            .case_(
-                 intrinsic_function_n(pattern::value("max"), a, b),
-                 [&]
-                 {
-                     reference left_value_ptr = compile(a.get(), env, ctx);
-                     reference right_value_ptr = compile(b.get(), env, ctx);
+                       return result_ref;
+                   })
+            .case_(intrinsic_function_n(pattern::value("max"), a, b),
+                   [&]
+                   {
+                       reference left_value_ptr = compile(a.get(), env, ctx);
+                       reference right_value_ptr = compile(b.get(), env, ctx);
 
-                     llvm::Instruction* left_value =
-                         builder.CreateAlignedLoad(left_value_ptr.addr(), get_prefered_alignment());
-                     left_value->setMetadata("tbaa", env.get_tbaa_node(left_value_ptr.origin()));
+                       llvm::Instruction* left_value = load_from_ref(left_value_ptr, env);
 
-                     llvm::Instruction* right_value = builder.CreateAlignedLoad(
-                         right_value_ptr.addr(), get_prefered_alignment());
-                     right_value->setMetadata("tbaa", env.get_tbaa_node(right_value_ptr.origin()));
+                       llvm::Instruction* right_value = load_from_ref(right_value_ptr, env);
 
-                     type result_type = typeof_(a.get());
+                       type result_type = typeof_(a.get());
 
-                     auto cond = builder.CreateICmpSLT(left_value, right_value);
+                       auto cond = builder.CreateICmpSLT(left_value, right_value);
 
-                     auto result = builder.CreateSelect(cond, right_value, left_value);
+                       auto result = builder.CreateSelect(cond, right_value, left_value);
 
-                     auto result_var =
-                         create_entry_block_alloca(env.get_current_function(), result->getType());
-                     result_var->setAlignment(get_prefered_alignment());
+                       auto result_var =
+                           create_entry_block_alloca(env.get_current_function(), result->getType());
+                       result_var->setAlignment(get_prefered_alignment());
 
-                     builder.CreateAlignedStore(result, result_var, get_prefered_alignment());
+                       reference result_ref(result_var, access_path());
+                       store_to_ref(result_ref, result, env);
 
-                     return reference(result_var, access_path());
-                 })
+                       return result_ref;
+                   })
             .case_(type_conversion(t, a),
                    [&]
                    {
@@ -1205,8 +1176,7 @@ reference compile(const expression& expr, llvm_environment& env,
                        {
                            auto index_ref = compile(index, env, ctx);
 
-                           auto index_ = builder.CreateLoad(index_ref.addr());
-                           index_->setMetadata("tbaa", env.get_tbaa_node(index_ref.origin()));
+                           auto index_ = load_from_ref(index_ref, env);
 
                            indices_.push_back(index_);
                        }
@@ -1217,13 +1187,11 @@ reference compile(const expression& expr, llvm_environment& env,
                                     .case_(pattern::tensor_t(_),
                                            [&]
                                            {
-                                               return emit_tensor_access(
-                                                   ref, indices_, env);
+                                               return emit_tensor_access(ref, indices_, env);
                                            })
                                     .case_(pattern::array_slice_t(_), [&]
                                            {
-                                               return emit_array_slice_access(
-                                                   ref, indices_, env);
+                                               return emit_array_slice_access(ref, indices_, env);
                                            });
 
                        return pattern::match(idx.get().var_type(), m);
@@ -1238,60 +1206,59 @@ reference compile(const expression& expr, llvm_environment& env,
 
                        auto init_value_ref = compile(a.get(), env, ctx);
 
-                       auto init_value = builder.CreateLoad(init_value_ref.addr());
-                       init_value->setMetadata("tbaa", env.get_tbaa_node(init_value_ref.origin()));
+                       auto init_value = load_from_ref(init_value_ref, env);
 
-                       auto var_store = builder.CreateStore(var_ptr, init_value);
-                       var_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+                       reference var_ref(var_ptr, access_path());
+                       store_to_ref(var_ref, init_value, env);
 
-                       symbol_table[var.get().id()] = reference(var_ptr, access_path());
+                       symbol_table[var.get().id()] = var_ref;
 
                        compile(b.get(), env, ctx);
 
                        return reference();
                    })
-            .case_(spawn(plan, expressions), [&]
-                   {
-                       std::vector<llvm::Type*> param_types;
+            .case_(
+                spawn(plan, expressions), [&]
+                {
+                    std::vector<llvm::Type*> param_types;
 
-                       for (const auto& param : plan.get().params())
-                       {
-                           param_types.push_back(env.map_kubus_type(param.var_type())->getPointerTo());
-                       }
+                    for (const auto& param : plan.get().params())
+                    {
+                        param_types.push_back(env.map_kubus_type(param.var_type())->getPointerTo());
+                    }
 
-                       param_types.push_back(env.map_kubus_type(plan.get().result().var_type())->getPointerTo());
+                    param_types.push_back(
+                        env.map_kubus_type(plan.get().result().var_type())->getPointerTo());
 
-                       llvm::FunctionType* fn_type = llvm::FunctionType::get(
-                           llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
+                    llvm::FunctionType* fn_type = llvm::FunctionType::get(
+                        llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
 
-                       auto plan_ptr = llvm::Function::Create(fn_type, llvm::Function::PrivateLinkage, plan.get().name(), &env.module());
+                    auto plan_ptr = llvm::Function::Create(fn_type, llvm::Function::PrivateLinkage,
+                                                           plan.get().name(), &env.module());
 
-                       ctx.add_plan_to_compile(plan.get());
+                    ctx.add_plan_to_compile(plan.get());
 
-                       std::vector<llvm::Value*> arguments;
+                    std::vector<llvm::Value*> arguments;
 
-                       for (const auto& arg : expressions.get())
-                       {
-                           auto arg_ref = compile(arg, env, ctx);
-                           /*auto arg_value = builder.CreateLoad(arg_ref.addr());
-                           arg_value->setMetadata("tbaa", env.get_tbaa_node(arg_ref.origin()));*/
+                    for (const auto& arg : expressions.get())
+                    {
+                        auto arg_ref = compile(arg, env, ctx);
 
-                           arguments.push_back(arg_ref.addr());
-                       }
+                        arguments.push_back(arg_ref.addr());
+                    }
 
-                       builder.CreateCall(plan_ptr, arguments);
+                    builder.CreateCall(plan_ptr, arguments);
 
-                       return reference();
-                   });
+                    return reference();
+                });
 
     return pattern::match(expr, m);
 }
 
-void compile(const function_declaration& plan, llvm_environment& env,
-             compilation_context& ctx)
+void compile(const function_declaration& plan, llvm_environment& env, compilation_context& ctx)
 {
     auto& symbol_table = ctx.symbol_table();
-    
+
     // Prolog
     std::vector<llvm::Type*> param_types;
 
@@ -1299,7 +1266,7 @@ void compile(const function_declaration& plan, llvm_environment& env,
     {
         param_types.push_back(env.map_kubus_type(param.var_type())->getPointerTo());
     }
-    
+
     param_types.push_back(env.map_kubus_type(plan.result().var_type())->getPointerTo());
 
     llvm::FunctionType* FT = llvm::FunctionType::get(
@@ -1309,33 +1276,37 @@ void compile(const function_declaration& plan, llvm_environment& env,
 
     if (!(compiled_plan = env.module().getFunction(plan.name())))
     {
-        compiled_plan =  llvm::Function::Create(FT, llvm::Function::PrivateLinkage, plan.name(), &env.module());
+        compiled_plan =
+            llvm::Function::Create(FT, llvm::Function::PrivateLinkage, plan.name(), &env.module());
     }
-        
+
     for (std::size_t i = 0; i < compiled_plan->arg_size(); ++i)
     {
         compiled_plan->setDoesNotAlias(i + 1);
     }
-        
+
     env.set_current_function(compiled_plan);
-    
-    llvm::BasicBlock* BB = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", compiled_plan);
+
+    llvm::BasicBlock* BB =
+        llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", compiled_plan);
     env.builder().SetInsertPoint(BB);
-    
+
     // body
 
     auto current_arg = compiled_plan->arg_begin();
-    
+
     for (const auto& param : plan.params())
     {
-        symbol_table[param.id()] = reference(&*current_arg, access_path(param.id()));
+        access_path apath(param.id());
+        symbol_table[param.id()] = reference(&*current_arg, apath);
+        env.get_alias_scope(apath);
         ++current_arg;
     }
-    
+
     symbol_table[plan.result().id()] = reference(&*current_arg, access_path(plan.result().id()));
-    
+
     compile(plan.body(), env, ctx);
-    
+
     // Epilog
     env.builder().CreateRetVoid();
 }
@@ -1356,9 +1327,9 @@ void compile_entry_point(const function_declaration& plan, llvm_environment& env
         llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
 
     std::string entry_point_name = "kubus_cpu_plan" + std::to_string(id);
-    
-    llvm::Function* kernel =
-        llvm::Function::Create(FT, llvm::Function::ExternalLinkage, entry_point_name, &env.module());
+
+    llvm::Function* kernel = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
+                                                    entry_point_name, &env.module());
 
     for (std::size_t i = 0; i < kernel->arg_size(); ++i)
     {
@@ -1366,7 +1337,7 @@ void compile_entry_point(const function_declaration& plan, llvm_environment& env
     }
 
     env.set_current_function(kernel);
-    
+
     llvm::BasicBlock* BB = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", kernel);
     env.builder().SetInsertPoint(BB);
 
@@ -1382,8 +1353,7 @@ void compile_entry_point(const function_declaration& plan, llvm_environment& env
         llvm::Value* ptr_to_arg =
             env.builder().CreateConstInBoundsGEP1_64(&kernel->getArgumentList().front(), counter);
 
-        auto arg = env.builder().CreateLoad(ptr_to_arg);
-        arg->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+        auto arg = load_from_ref(reference(ptr_to_arg, access_path()), env);
 
         llvm::Value* typed_arg =
             env.builder().CreateBitCast(arg, llvm::PointerType::get(param_type, 0));
@@ -1391,8 +1361,7 @@ void compile_entry_point(const function_declaration& plan, llvm_environment& env
         llvm::Value* data_ptr =
             env.builder().CreateConstInBoundsGEP2_32(typed_arg, 0, 0, "data_ptr");
 
-        auto data = env.builder().CreateLoad(data_ptr);
-        data->setMetadata("tbaa", env.get_tbaa_node(access_path(param.id())));
+        auto data = load_from_ref(reference(data_ptr, access_path(param.id())), env);
 
         // TODO: get alignement from the ABI
         env.builder().CreateCall2(
@@ -1416,9 +1385,9 @@ void compile_entry_point(const function_declaration& plan, llvm_environment& env
 
     // Epilog
     env.builder().CreateRetVoid();
-    
+
     // Emit all other plans.
-    while(auto plan = ctx.get_next_plan_to_compile())
+    while (auto plan = ctx.get_next_plan_to_compile())
     {
         compile(*plan, env, ctx);
     }
@@ -1461,8 +1430,8 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, llvm::Execut
 
     the_module->setDataLayout(engine.getDataLayout());
 
-    //the_module->dump();
-    //std::cout << std::endl;
+    // the_module->dump();
+    // std::cout << std::endl;
 
     llvm::PassManagerBuilder pass_builder;
     pass_builder.OptLevel = 3;
@@ -1494,8 +1463,8 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, llvm::Execut
 
     pass_man.run(*the_module);
 
-    //the_module->dump();
-    //std::cout << std::endl;
+    // the_module->dump();
+    // std::cout << std::endl;
 
     /*std::cout << "The assembler output:\n\n";
 
