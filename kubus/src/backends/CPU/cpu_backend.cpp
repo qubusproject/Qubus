@@ -1520,10 +1520,29 @@ public:
         llvm::EngineBuilder builder(
             util::make_unique<llvm::Module>("dummy", llvm::getGlobalContext()));
 
-        builder.setMCPU(llvm::sys::getHostCPUName());
+        std::vector<std::string> available_features;
+        llvm::StringMap<bool> features;
 
-        auto attrs = deduce_host_cpu_features();
-        builder.setMAttrs(attrs);
+        if (llvm::sys::getHostCPUFeatures(features))
+        {
+            for (const auto &feature : features)
+            {
+                std::cout << std::string(feature.getKey()) << std::endl;
+                if (feature.getValue())
+                {
+                    available_features.push_back(feature.getKey());
+                    std::cout << std::string(feature.getKey()) << std::endl;
+                }
+            }
+        }
+        else
+        {
+            builder.setMCPU(llvm::sys::getHostCPUName());
+
+            available_features = deduce_host_cpu_features();
+        }
+
+        builder.setMAttrs(available_features);
 
         engine_ = std::unique_ptr<llvm::ExecutionEngine>(builder.create());
 
