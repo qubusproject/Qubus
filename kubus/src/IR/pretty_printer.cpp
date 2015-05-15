@@ -56,18 +56,19 @@ public:
     {
         functions_to_print_.push_back(fn);
     }
-    
+
     boost::optional<function_declaration> get_next_function_to_print()
     {
         if (functions_to_print_.empty())
             return boost::none;
-        
+
         auto next_function = functions_to_print_.back();
-        
+
         functions_to_print_.pop_back();
-        
+
         return next_function;
     }
+
 private:
     mutable std::map<qbb::util::handle, std::string> symbol_table_;
     qbb::util::unique_name_generator name_generator;
@@ -404,12 +405,26 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
                        std::cout << "\n}";
                    })
-            .case_(spawn(plan, args), [&]
+            .case_(spawn(plan, args),
+                   [&]
                    {
                        ctx.add_function_to_print(plan.get());
-                       
+
                        std::cout << "spawn " << plan.get().name() << "(";
-                       
+
+                       for (const auto& arg : args.get())
+                       {
+                           print(arg, ctx, print_types);
+                           std::cout << ", ";
+                       }
+
+                       std::cout << ")";
+                   })
+            .case_(construct(t, args), [&]
+                   {
+                       print_type(t.get());
+                       std::cout << "(";
+
                        for (const auto& arg : args.get())
                        {
                            print(arg, ctx, print_types);
@@ -471,7 +486,7 @@ void pretty_print(const function_declaration& decl, bool print_types)
     print(decl.body(), ctx, print_types);
 
     std::cout << "\n}" << std::endl;
-    
+
     while (auto next_fn = ctx.get_next_function_to_print())
     {
         std::cout << "\n";

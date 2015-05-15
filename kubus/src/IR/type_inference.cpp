@@ -296,6 +296,11 @@ type infer_type_local_variable_def_expr(const local_variable_def_expr&)
     return types::unknown{};
 }
 
+type infer_type_construct_expr(const construct_expr& expr)
+{
+    return expr.result_type();
+}
+
 void init_infer_type()
 {
     infer_type.add_specialization(infer_type_binary_op_expr);
@@ -313,6 +318,7 @@ void init_infer_type()
     infer_type.add_specialization(infer_type_variable_ref_expr);
     infer_type.add_specialization(infer_type_spawn_expr);
     infer_type.add_specialization(infer_type_local_variable_def_expr);
+    infer_type.add_specialization(infer_type_construct_expr);
 }
 
 std::once_flag infer_type_init_flag = {};

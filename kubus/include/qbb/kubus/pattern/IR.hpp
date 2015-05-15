@@ -18,6 +18,7 @@
 #include <qbb/kubus/pattern/spawn.hpp>
 #include <qbb/kubus/pattern/local_variable_def.hpp>
 #include <qbb/kubus/pattern/variable_scope.hpp>
+#include <qbb/kubus/pattern/construct.hpp>
 
 #include <qbb/kubus/pattern/type.hpp>
 

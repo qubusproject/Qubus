@@ -1217,40 +1217,125 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
 
                        return reference();
                    })
-            .case_(
-                spawn(plan, expressions), [&]
-                {
-                    std::vector<llvm::Type*> param_types;
+            .case_(spawn(plan, expressions),
+                   [&]
+                   {
+                       std::vector<llvm::Type*> param_types;
 
-                    for (const auto& param : plan.get().params())
-                    {
-                        param_types.push_back(env.map_kubus_type(param.var_type())->getPointerTo());
-                    }
+                       for (const auto& param : plan.get().params())
+                       {
+                           param_types.push_back(
+                               env.map_kubus_type(param.var_type())->getPointerTo());
+                       }
 
-                    param_types.push_back(
-                        env.map_kubus_type(plan.get().result().var_type())->getPointerTo());
+                       param_types.push_back(
+                           env.map_kubus_type(plan.get().result().var_type())->getPointerTo());
 
-                    llvm::FunctionType* fn_type = llvm::FunctionType::get(
-                        llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
+                       llvm::FunctionType* fn_type = llvm::FunctionType::get(
+                           llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
 
-                    auto plan_ptr = llvm::Function::Create(fn_type, llvm::Function::PrivateLinkage,
-                                                           plan.get().name(), &env.module());
+                       auto plan_ptr =
+                           llvm::Function::Create(fn_type, llvm::Function::PrivateLinkage,
+                                                  plan.get().name(), &env.module());
 
-                    ctx.add_plan_to_compile(plan.get());
+                       ctx.add_plan_to_compile(plan.get());
 
-                    std::vector<llvm::Value*> arguments;
+                       std::vector<llvm::Value*> arguments;
 
-                    for (const auto& arg : expressions.get())
-                    {
-                        auto arg_ref = compile(arg, env, ctx);
+                       for (const auto& arg : expressions.get())
+                       {
+                           auto arg_ref = compile(arg, env, ctx);
 
-                        arguments.push_back(arg_ref.addr());
-                    }
+                           arguments.push_back(arg_ref.addr());
+                       }
 
-                    builder.CreateCall(plan_ptr, arguments);
+                       builder.CreateCall(plan_ptr, arguments);
 
-                    return reference();
-                });
+                       return reference();
+                   })
+            .case_(construct(t, expressions), [&]
+                   {
+                       pattern::variable<type> value_type;
+
+                       auto m =
+                           pattern::make_matcher<type, llvm::Value*>()
+                               .case_(tensor_t(value_type) || array_t(value_type),
+                                      [&](const type& self)
+                                      {
+                                          auto size_type = env.map_kubus_type(types::integer());
+
+                                          const auto& args = expressions.get();
+
+                                          std::vector<util::index_t> extents;
+
+                                          try
+                                          {
+                                              for (const auto& arg : args)
+                                              {
+                                                  extents.push_back(
+                                                      arg.as<integer_literal_expr>().value());
+                                              }
+                                          }
+                                          catch (const std::bad_cast&)
+                                          {
+                                              throw 0;
+                                          }
+
+                                          llvm::Type* multi_array_type =
+                                              env.map_kubus_type(value_type.get());
+
+                                          for (auto extent : extents)
+                                          {
+                                              multi_array_type =
+                                                  llvm::ArrayType::get(multi_array_type, extent);
+                                          }
+
+                                          auto data_ptr = builder.CreateConstInBoundsGEP1_64(
+                                              builder.CreateAlloca(multi_array_type), 0);
+
+                                          auto shape_ptr = builder.CreateConstInBoundsGEP1_64(
+                                              builder.CreateAlloca(
+                                                  llvm::ArrayType::get(size_type, extents.size())),
+                                              0);
+
+                                          for (std::size_t i = 0; i < extents.size(); ++i)
+                                          {
+                                              auto extent_ptr =
+                                                  builder.CreateConstInBoundsGEP1_64(shape_ptr, i);
+
+                                              store_to_ref(
+                                                  reference(extent_ptr, access_path()),
+                                                  llvm::ConstantInt::get(size_type, extents[i]),
+                                                  env);
+                                          }
+
+
+                                          auto array_ptr =
+                                              builder.CreateAlloca(env.map_kubus_type(self));
+
+                                          auto data_member_ptr =
+                                              builder.CreateConstInBoundsGEP2_64(array_ptr, 0, 0);
+                                          store_to_ref(reference(data_member_ptr, access_path()),
+                                                       data_ptr, env);
+
+                                          auto shape_member_ptr =
+                                              builder.CreateConstInBoundsGEP2_64(array_ptr, 0, 1);
+                                          store_to_ref(reference(shape_member_ptr, access_path()),
+                                                       shape_ptr, env);
+
+                                          return array_ptr;
+                                      })
+                               .case_(value_type, [&]
+                                      {
+                                          if (expressions.get().size() != 0)
+                                              throw 0;
+
+                                          return builder.CreateAlloca(
+                                              env.map_kubus_type(value_type.get()));
+                                      });
+
+                       return reference(pattern::match(t.get(), m), access_path());
+                   });
 
     return pattern::match(expr, m);
 }
@@ -1525,7 +1610,7 @@ public:
 
         if (llvm::sys::getHostCPUFeatures(features))
         {
-            for (const auto &feature : features)
+            for (const auto& feature : features)
             {
                 std::cout << std::string(feature.getKey()) << std::endl;
                 if (feature.getValue())
