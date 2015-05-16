@@ -191,6 +191,10 @@ public:
             {
                 return detail::unwrap_case_result(result);
             }
+            else
+            {
+                case_.reset();
+            }
         }
 
         throw std::logic_error("no case is applicable");
@@ -203,6 +207,10 @@ public:
             if (auto result = case_.try_match(value))
             {
                 return detail::unwrap_case_result(result);
+            }
+            else
+            {
+                case_.reset();
             }
         }
 
