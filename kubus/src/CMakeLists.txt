@@ -1,6 +1,6 @@
 find_package(Boost 1.55.0 COMPONENTS log thread system REQUIRED)
 
-find_package(CUDA 5.5)
+find_package(CUDA 7.0)
 
 find_package(LLVM 3.6 EXACT REQUIRED)
 

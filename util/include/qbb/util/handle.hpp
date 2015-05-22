@@ -1,6 +1,10 @@
 #ifndef QBB_UTIL_HANDLE_HPP
 #define QBB_UTIL_HANDLE_HPP
 
+#include <boost/serialization/is_bitwise_serializable.hpp>
+
+#include <qbb/util/unused.hpp>
+
 #include <cstdint>
 #include <atomic>
 #include <ostream>
@@ -26,12 +30,19 @@ public:
 
     friend std::ostream& operator<<(std::ostream& os, const handle& value);
 
+    template<typename Archive>
+    void serialize(Archive& ar, unsigned int QBB_UNUSED(version))
+    {
+        ar & id_;
+    }
 private:
     std::uintptr_t id_;
 };
 
 }
 }
+
+BOOST_IS_BITWISE_SERIALIZABLE(qbb::util::handle)
 
 namespace std
 {

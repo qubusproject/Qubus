@@ -67,3 +67,5 @@ install(
     cmake/FindISL.cmake
   DESTINATION
     ${ConfigPackageLocation})
+    
+add_custom_target(doc DEPENDS kubus_doc COMMENT "Generating the documentation.")
