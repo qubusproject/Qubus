@@ -7,6 +7,7 @@
 #include <qbb/kubus/isl/context.hpp>
 
 #include <isl/map.h>
+#include <isl/union_map.h>
 
 #include <string>
 #include <vector>

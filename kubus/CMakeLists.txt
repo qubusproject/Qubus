@@ -48,48 +48,65 @@ install(DIRECTORY include/ DESTINATION include
         FILES_MATCHING PATTERN "*.hpp")
 
 # Build documentation
+find_package(Doxygen)
 find_package(Sphinx)
 
-if(SPHINX_FOUND)
- 
-  if(NOT DEFINED SPHINX_THEME)
-    set(SPHINX_THEME default)
-  endif()
-  if(NOT DEFINED SPHINX_THEME_DIR)
-    set(SPHINX_THEME_DIR)
-  endif()
+if(DOXYGEN_FOUND)
 
-  set(BINARY_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/_build")
+    configure_file(${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile @ONLY)
 
-  set(SPHINX_CACHE_DIR "${CMAKE_CURRENT_BINARY_DIR}/_doctrees")
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/html)
+    file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc/latex)
+      
+    add_custom_target(kubus_api_doc
+        ${DOXYGEN_EXECUTABLE} ${CMAKE_CURRENT_BINARY_DIR}/doc/Doxyfile
+        COMMAND 
+        WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc
+        COMMENT "Generating API documentation with Doxygen." VERBATIM)
 
-  set(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/doc/html/user_guide")
-  set(SPHINX_LATEX_DIR "${CMAKE_CURRENT_BINARY_DIR}/doc/latex/user_guide")
-  configure_file(
-        "${CMAKE_CURRENT_SOURCE_DIR}/doc/user-guide/conf.py.in"
-        "${BINARY_BUILD_DIR}/conf.py"
-        @ONLY)
+    list(APPEND KUBUS_DOC_TARGETS kubus_api_doc)
 
-  add_custom_target(user_guide
-        ${SPHINX_EXECUTABLE}
-        -q -b html
-        -c "${BINARY_BUILD_DIR}"
-        -d "${SPHINX_CACHE_DIR}"
-        "${CMAKE_CURRENT_SOURCE_DIR}/doc/user-guide"
-        "${SPHINX_HTML_DIR}"
-        COMMENT "Building user guide with Sphinx.")
+    if(SPHINX_FOUND)
+    
+        if(NOT DEFINED SPHINX_THEME)
+            set(SPHINX_THEME default)
+        endif()
+        if(NOT DEFINED SPHINX_THEME_DIR)
+            set(SPHINX_THEME_DIR)
+        endif()
 
-  list(APPEND KUBUS_DOC_TARGETS user_guide)
-  
-  add_custom_target(user_guide_latex
-        ${SPHINX_EXECUTABLE}
-        -q -b latex
-        -c "${BINARY_BUILD_DIR}"
-        -d "${SPHINX_CACHE_DIR}"
-        "${CMAKE_CURRENT_SOURCE_DIR}/doc/user-guide"
-        "${SPHINX_LATEX_DIR}"
-        COMMENT "Building user guide (latex version) with Sphinx.")
+        set(BINARY_BUILD_DIR "${CMAKE_CURRENT_BINARY_DIR}/_build")
 
-endif(SPHINX_FOUND)
+        set(SPHINX_CACHE_DIR "${CMAKE_CURRENT_BINARY_DIR}/_doctrees")
 
-add_custom_target(doc DEPENDS ${KUBUS_DOC_TARGETS} COMMENT "Generating the documentation.")
+        set(SPHINX_HTML_DIR "${CMAKE_CURRENT_BINARY_DIR}/doc/html/user_guide")
+        set(SPHINX_LATEX_DIR "${CMAKE_CURRENT_BINARY_DIR}/doc/latex/user_guide")
+        configure_file(
+                "${CMAKE_CURRENT_SOURCE_DIR}/doc/user-guide/conf.py.in"
+                "${BINARY_BUILD_DIR}/conf.py"
+                @ONLY)
+
+        add_custom_target(kubus_user_guide
+                ${SPHINX_EXECUTABLE}
+                -q -b html
+                -c "${BINARY_BUILD_DIR}"
+                -d "${SPHINX_CACHE_DIR}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/doc/user-guide"
+                "${SPHINX_HTML_DIR}"
+                COMMENT "Building user guide with Sphinx.")
+
+        list(APPEND KUBUS_DOC_TARGETS kubus_user_guide)
+        
+        add_custom_target(kubus_user_guide_latex
+                ${SPHINX_EXECUTABLE}
+                -q -b latex
+                -c "${BINARY_BUILD_DIR}"
+                -d "${SPHINX_CACHE_DIR}"
+                "${CMAKE_CURRENT_SOURCE_DIR}/doc/user-guide"
+                "${SPHINX_LATEX_DIR}"
+                COMMENT "Building user guide (latex version) with Sphinx.")
+
+    endif(SPHINX_FOUND)
+endif(DOXYGEN_FOUND)
+
+add_custom_target(kubus_doc DEPENDS ${KUBUS_DOC_TARGETS} COMMENT "Generating the Kubus documentation.")

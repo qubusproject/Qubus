@@ -5,6 +5,7 @@
 #include <qbb/kubus/isl/constraint.hpp>
 
 #include <isl/set.h>
+#include <isl/union_set.h>
 
 #include <string>
 #include <vector>
