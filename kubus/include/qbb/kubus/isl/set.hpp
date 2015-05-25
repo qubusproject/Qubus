@@ -72,13 +72,18 @@ public:
 
     space get_space() const;
 
+    int dim(isl_dim_type type) const;
+
     set params() const
     {
         return set(isl_set_params(handle_));
     }
     
     void set_tuple_name(const std::string& name);
-    
+    std::string get_tuple_name() const;
+
+    bool bounded();
+
     static set universe(space s);
     static set empty(space s);
 
@@ -107,6 +112,9 @@ set flat_product(set lhs, set rhs);
 set align_params(set s, space model);
 
 set project_out(set s, isl_dim_type type, unsigned int first, unsigned int n);
+
+set lexmin(set s);
+set lexmax(set s);
 
 class union_set
 {

@@ -1,6 +1,9 @@
 #ifndef QBB_KUBUS_ISL_PW_AFF_HPP
 #define QBB_KUBUS_ISL_PW_AFF_HPP
 
+#include <qbb/kubus/isl/set.hpp>
+#include <qbb/kubus/isl/value.hpp>
+
 #include <isl/aff.h>
 
 namespace qbb
@@ -25,9 +28,19 @@ public:
 
     isl_pw_aff* release() noexcept;
 
+    set domain() const;
+
+    bool is_cst() const;
+
+    static pw_aff from_val(set domain, value v);
 private:
     isl_pw_aff* handle_;
 };
+
+pw_aff operator+(pw_aff lhs, pw_aff rhs);
+pw_aff operator-(pw_aff lhs, pw_aff rhs);
+
+set set_from_pw_aff(pw_aff fn);
 
 }
 }

@@ -15,11 +15,10 @@ namespace kubus
 class local_variable_def_expr
 {
 public:
-    local_variable_def_expr(variable_declaration decl_, expression initializer_, expression scope_);
+    local_variable_def_expr(variable_declaration decl_, expression initializer_);
 
     const variable_declaration& decl() const;
     const expression& initializer() const;
-    const expression& scope() const;
 
     std::vector<expression> sub_expressions() const;
     expression substitute_subexpressions(const std::vector<expression>& subexprs) const;
@@ -30,7 +29,6 @@ public:
 private:
     variable_declaration decl_;
     expression initializer_;
-    expression scope_;
 
     mutable annotation_map annotations_;
 };

@@ -6,7 +6,6 @@
 #include <qbb/kubus/pattern/for_all.hpp>
 #include <qbb/kubus/pattern/for.hpp>
 #include <qbb/kubus/pattern/sum.hpp>
-#include <qbb/kubus/pattern/local_variable_def.hpp>
 #include <qbb/kubus/pattern/core.hpp>
 
 #include <utility>
@@ -29,8 +28,7 @@ public:
 
     bool match(const expression& value, const variable<expression>* var = nullptr) const
     {
-        auto p = for_all(decl_, scope_) || for_(decl_, _, _, _, scope_) || sum(scope_, decl_) ||
-                 local_variable_def(decl_, _, scope_);
+        auto p = for_all(decl_, scope_) || for_(decl_, _, _, _, scope_) || sum(scope_, decl_);
 
         if (p.match(value))
         {

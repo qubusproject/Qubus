@@ -1196,7 +1196,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
 
                        return pattern::match(idx.get().var_type(), m);
                    })
-            .case_(local_variable_def(var, a, b),
+            .case_(local_variable_def(var, a),
                    [&]
                    {
                        auto var_type = env.map_kubus_type(var.get().var_type());
@@ -1212,8 +1212,6 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                        store_to_ref(var_ref, init_value, env);
 
                        symbol_table[var.get().id()] = var_ref;
-
-                       compile(b.get(), env, ctx);
 
                        return reference();
                    })

@@ -158,6 +158,26 @@ schedule get_schedule(const schedule_node& node)
     return schedule(isl_schedule_node_get_schedule(node.native_handle()));
 }
 
+namespace
+{
+extern "C"
+{
+
+isl_schedule_node* qbb_kubus_isl_map_schedule_node_thunk(isl_schedule_node* node, void* user)
+{
+    auto& callback = *static_cast<std::function<schedule_node(schedule_node)>*>(user);
+
+    return callback(schedule_node(node)).release();
+}
+
+}
+}
+
+schedule map_schedule_node(schedule s, std::function<schedule_node(schedule_node)> callback)
+{
+    return schedule(isl_schedule_map_schedule_node(s.release(), &qbb_kubus_isl_map_schedule_node_thunk, &callback));
+}
+
 }
 }
 }

@@ -40,10 +40,12 @@ public:
 
     isl_basic_map* release() noexcept;
 
+    void set_tuple_name(isl_dim_type type, const std::string& name);
+
     void add_constraint(constraint c);
 
     static basic_map universe(space s);
-
+    static basic_map identity(space s);
 private:
     isl_basic_map* handle_;
 };
@@ -79,6 +81,8 @@ public:
 
     space get_space() const;
     context_ref get_ctx() const;
+
+    std::string get_tuple_name(isl_dim_type type) const;
 
     int dim(isl_dim_type type) const;
 

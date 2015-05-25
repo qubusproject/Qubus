@@ -21,6 +21,11 @@ ast_node ast_builder_base::build_node_from_schedule(schedule sched)
     return ast_node(isl_ast_build_node_from_schedule(handle_, sched.release()));
 }
 
+ast_expr ast_builder_base::build_expr_from_pw_aff(pw_aff f)
+{
+    return ast_expr(isl_ast_build_expr_from_pw_aff(handle_, f.release()));
+}
+
 void ast_builder_base::set_options(union_map options)
 {
     handle_ = isl_ast_build_set_options(handle_, options.release());

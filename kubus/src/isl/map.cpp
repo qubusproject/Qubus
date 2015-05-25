@@ -40,6 +40,11 @@ basic_map::~basic_map()
     isl_basic_map_free(handle_);
 }
 
+void basic_map::set_tuple_name(isl_dim_type type, const std::string& name)
+{
+    handle_ = isl_basic_map_set_tuple_name(handle_, type, name.c_str());
+}
+
 isl_basic_map* basic_map::native_handle() const
 {
     return handle_;
@@ -62,6 +67,11 @@ void basic_map::add_constraint(constraint c)
 basic_map basic_map::universe(space s)
 {
     return basic_map(isl_basic_map_universe(s.release()));
+}
+
+basic_map basic_map::identity(space s)
+{
+    return basic_map(isl_basic_map_identity(s.release()));
 }
 
 basic_set wrap(basic_map map)
@@ -143,6 +153,11 @@ space map::get_space() const
 context_ref map::get_ctx() const
 {
     return context_ref(isl_map_get_ctx(handle_));
+}
+
+std::string map::get_tuple_name(isl_dim_type type) const
+{
+    return std::string(isl_map_get_tuple_name(handle_, type));
 }
 
 int map::dim(isl_dim_type type) const

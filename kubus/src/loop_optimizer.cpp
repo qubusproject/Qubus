@@ -13,6 +13,7 @@
 #include <qbb/kubus/isl/context.hpp>
 #include <qbb/kubus/isl/set.hpp>
 #include <qbb/kubus/isl/map.hpp>
+#include <qbb/kubus/isl/pw_multi_aff.hpp>
 #include <qbb/kubus/isl/constraint.hpp>
 #include <qbb/kubus/isl/multi_union_pw_affine_expr.hpp>
 #include <qbb/kubus/isl/flow.hpp>
@@ -47,6 +48,12 @@ namespace
 
 isl::context isl_ctx;
 
+expression isl_ast_expr_to_kir(const isl::ast_expr& expr,
+                               const std::map<std::string, expression>& symbol_table);
+
+expression isl_ast_to_kir(const isl::ast_node& root,
+                          std::map<std::string, expression>& symbol_table);
+
 isl::union_map pad_schedule_map(isl::union_map schedule_map)
 {
     auto result = isl::union_map::empty(schedule_map.get_space());
@@ -78,9 +85,9 @@ struct scop
 {
     scop(isl::union_set domain, isl::set QBB_UNUSED(param_constraints), isl::union_map schedule,
          isl::union_map write_accesses, isl::union_map read_accesses,
-         std::map<std::string, expression> symbol_table)
+         std::map<std::string, expression> symbol_table, std::map<std::string, variable_declaration> tensor_table)
     : schedule(isl::schedule::from_domain(domain)), write_accesses(write_accesses),
-      read_accesses(read_accesses), symbol_table(symbol_table)
+      read_accesses(read_accesses), symbol_table(symbol_table), tensor_table(tensor_table)
     {
         auto part_sched =
             isl::multi_union_pw_affine_expr::from_union_map(pad_schedule_map(schedule));
@@ -92,12 +99,31 @@ struct scop
         this->schedule = get_schedule(new_);
     }
 
+    std::string add_symbol(std::string id, expression expr)
+    {
+        auto iter = symbol_table.find(id);
+
+        long int i = 1;
+        while (iter != symbol_table.end())
+        {
+            id = id + std::to_string(i);
+
+            ++i;
+            iter = symbol_table.find(id);
+        }
+
+        symbol_table.emplace(id, expr);
+
+        return id;
+    }
+
     isl::schedule schedule;
 
     isl::union_map write_accesses;
     isl::union_map read_accesses;
 
     std::map<std::string, expression> symbol_table;
+    std::map<std::string, variable_declaration> tensor_table;
 };
 
 struct scop_ctx
@@ -133,7 +159,7 @@ public:
         this->read_accesses = union_(this->read_accesses, read_accesses);
     }
 
-    const std::string& map_tensor_to_name(util::handle id) const
+    const std::string& map_tensor_to_name(variable_declaration id) const
     {
         auto iter = tensor_table.find(id);
 
@@ -183,8 +209,15 @@ public:
 
     scop build_scop() const
     {
+        std::map<std::string, variable_declaration> reverse_tensor_table;
+
+        for (const auto& entry : tensor_table)
+        {
+            reverse_tensor_table.emplace(entry.second, entry.first);
+        }
+
         return scop(domain, param_constraints, schedule, write_accesses, read_accesses,
-                    symbol_table);
+                    symbol_table, reverse_tensor_table);
     }
 
 private:
@@ -203,7 +236,7 @@ private:
 
     std::map<std::string, expression> symbol_table;
 
-    mutable std::map<util::handle, std::string> tensor_table;
+    mutable std::map<variable_declaration, std::string> tensor_table;
     mutable std::map<util::handle, std::string> index_table;
 
     util::unique_name_generator name_gen;
@@ -368,7 +401,7 @@ isl::union_map analyze_accesses(const expression& expr, const isl::set& domain, 
     auto m = pattern::make_matcher<expression, void>().case_(
         subscription(tensor(decl), indices), [&]
         {
-            auto tensor_name = ctx.map_tensor_to_name(decl.get().id());
+            auto tensor_name = ctx.map_tensor_to_name(decl.get());
 
             auto number_of_indices = indices.get().size();
 
@@ -534,15 +567,15 @@ scop analyze_scop(const expression& expr)
 
 isl::map turn_dims_into_params(isl::map m, isl_dim_type type, int pos, int n)
 {
-    //TODO: Index bounds
+    // TODO: Index bounds
 
-    //TODO: Assert pos >= 0.
+    // TODO: Assert pos >= 0.
 
     auto n_dim = m.dim(type);
 
-    //TODO: Assert pos + n < n_dim.
+    // TODO: Assert pos + n < n_dim.
 
-    isl::space s(m.get_ctx(), n, n, n_dim - n);
+    isl::space s(m.get_ctx(), n, n_dim, n_dim - n);
 
     for (int i = pos; i < pos + n; ++i)
     {
@@ -554,8 +587,8 @@ isl::map turn_dims_into_params(isl::map m, isl_dim_type type, int pos, int n)
     for (int i = 0; i < pos; ++i)
     {
         auto c = isl::constraint::equality(s)
-                .set_coefficient(isl_dim_in, i, 1)
-                .set_coefficient(isl_dim_out, i, -1);
+                     .set_coefficient(isl_dim_in, i, 1)
+                     .set_coefficient(isl_dim_out, i, -1);
 
         dims_to_params.add_constraint(c);
     }
@@ -563,8 +596,8 @@ isl::map turn_dims_into_params(isl::map m, isl_dim_type type, int pos, int n)
     for (int i = pos; i < pos + n; ++i)
     {
         auto c = isl::constraint::equality(s)
-                .set_coefficient(isl_dim_in, i, 1)
-                .set_coefficient(isl_dim_param, i, -1);
+                     .set_coefficient(isl_dim_in, i, 1)
+                     .set_coefficient(isl_dim_param, i, -1);
 
         dims_to_params.add_constraint(c);
     }
@@ -572,8 +605,8 @@ isl::map turn_dims_into_params(isl::map m, isl_dim_type type, int pos, int n)
     for (int i = pos + n; i < n_dim; ++i)
     {
         auto c = isl::constraint::equality(s)
-                .set_coefficient(isl_dim_in, i, 1)
-                .set_coefficient(isl_dim_out, i, -1);
+                     .set_coefficient(isl_dim_in, i, 1)
+                     .set_coefficient(isl_dim_out, i - (pos + n), -1);
 
         dims_to_params.add_constraint(c);
     }
@@ -582,26 +615,248 @@ isl::map turn_dims_into_params(isl::map m, isl_dim_type type, int pos, int n)
 
     switch (type)
     {
-        case isl_dim_in:
-            return apply_domain(m, dims_to_params);
-        case isl_dim_out:
-            return apply_range(m, dims_to_params);
-        default:
-            throw 0; //TODO: Throw exception.
+    case isl_dim_in:
+        return apply_domain(m, dims_to_params);
+    case isl_dim_out:
+        return apply_range(m, dims_to_params);
+    default:
+        throw 0; // TODO: Throw exception.
     }
 }
 
-isl::schedule_node get_optimized_schedule_tree(isl::schedule_node root, scop& s)
+class array_tile
 {
-    int n_children = root.n_children();
-
-    for (int i = 0; i < n_children; ++i)
+public:
+    array_tile(variable_declaration parent, std::vector<isl::pw_aff> origin, std::vector<isl::pw_aff> shape)
+    : parent(std::move(parent)), origin(std::move(origin)), shape(std::move(shape))
     {
-        auto child = root[i];
-
-        root = get_optimized_schedule_tree(child, s).parent();
     }
 
+    variable_declaration parent;
+    std::vector<isl::pw_aff> origin;
+    std::vector<isl::pw_aff> shape;
+};
+
+boost::optional<array_tile> deduce_tile(isl::set written_elements2, const scop& s)
+{
+    auto dim = written_elements2.get_space().dim(isl_dim_set);
+
+    std::vector<isl::pw_aff> origin;
+    std::vector<isl::pw_aff> shape;
+
+    for (int i = 0; i < dim; ++i)
+    {
+        auto red_set = project_out(project_out(written_elements2, isl_dim_set, 0, i), isl_dim_set,
+                                   i + 1, dim - (i + 1));
+
+        if (red_set.bounded())
+        {
+            auto max = lexmax_pw_multi_aff(red_set)[0];
+            auto min = lexmin_pw_multi_aff(red_set)[0];
+
+            auto diff = max - min;
+
+            auto one = isl::pw_aff::from_val(diff.domain(), isl::value(isl_ctx, 1));
+
+            auto temp = set_from_pw_aff(diff + one);
+
+            auto temp2 = project_out(temp, isl_dim_param, 0, temp.dim(isl_dim_param));
+
+            if (temp2.bounded())
+            {
+                auto size = lexmax_pw_multi_aff(temp2)[0];
+
+                if (size.is_cst())
+                {
+                    origin.push_back(min);
+                    shape.push_back(size);
+                }
+                else
+                {
+                    return boost::none;
+                }
+            }
+            else
+            {
+                return boost::none;
+            }
+        }
+        else
+        {
+            return boost::none;
+        }
+    }
+
+    const auto& array_id = s.tensor_table.at(written_elements2.get_tuple_name());
+
+    return array_tile(array_id, origin, shape);
+}
+
+std::vector<array_tile> deduce_tiles(isl::schedule_node node, const scop& s)
+{
+    auto prefix_schedule = node.get_prefix_schedule_union_map();
+
+    auto subtree_schedule = node.get_subtree_schedule_union_map();
+
+    auto mapp = flat_range_product(prefix_schedule, subtree_schedule);
+
+    // TODO: iterate over all spaces
+    auto parametrized_subtree_schedule =
+        turn_dims_into_params(mapp.get_maps()[0], isl_dim_out, 0, node.band_n_member());
+
+    auto write_schedule = apply_domain(s.write_accesses, parametrized_subtree_schedule);
+
+    auto written_elements =
+        apply(apply(node.get_domain(), parametrized_subtree_schedule), write_schedule);
+
+    std::vector<array_tile> tiles;
+
+    for (const auto& written_elements2 : written_elements.get_sets())
+    {
+        if (auto tile = deduce_tile(written_elements2, s))
+        {
+            tiles.push_back(*tile);
+        }
+    }
+
+    auto read_schedule = apply_domain(s.read_accesses, parametrized_subtree_schedule);
+
+    auto read_elements =
+            apply(apply(node.get_domain(), parametrized_subtree_schedule), write_schedule);
+
+    for (const auto& read_elements2 : read_elements.get_sets())
+    {
+        if (auto tile = deduce_tile(read_elements2, s))
+        {
+            tiles.push_back(*tile);
+        }
+    }
+
+    return tiles;
+}
+
+isl::schedule_node create_caches(isl::schedule_node band_to_tile, scop& s)
+{
+    isl::ast_builder builder(isl_ctx);
+
+    auto tiles = deduce_tiles(band_to_tile, s);
+
+    auto prefix_schedule = band_to_tile.get_prefix_schedule_union_map();
+
+    auto prefix_range = prefix_schedule.range().get_sets();
+
+    if (prefix_range.size() != 1)
+        throw 0;
+
+    auto outer_dims = prefix_range[0];
+
+    auto outer_dim = outer_dims.dim(isl_dim_set);
+
+    for (const auto& tile : tiles)
+    {
+        std::vector<variable_declaration> constr_params;
+
+        for (int i = 0; i < outer_dim; ++i)
+        {
+            constr_params.emplace_back(types::integer());
+        }
+
+        variable_declaration cache_decl(tile.parent.var_type());
+
+        std::vector<expression> constr_args;
+
+        for (const auto& extent : tile.shape)
+        {
+            auto expr = builder.build_expr_from_pw_aff(extent);
+
+            constr_args.push_back(isl_ast_expr_to_kir(expr, {}));
+        }
+
+        expression cache_constr_code = local_variable_def_expr(cache_decl,
+                                                               construct_expr(tile.parent.var_type(), constr_args));
+
+        auto cache_constr_id =
+                s.add_symbol("constr", macro_expr(constr_params, cache_constr_code));
+
+        isl::basic_map cache_constr_map =
+                isl::basic_map::identity(isl::space(isl_ctx, 0, outer_dim, outer_dim));
+        cache_constr_map.set_tuple_name(isl_dim_out, cache_constr_id);
+
+        auto construct_extension = intersect_domain(cache_constr_map, outer_dims);
+
+        band_to_tile = graft_before(
+                band_to_tile, isl::schedule_node::from_extension(construct_extension));
+    }
+
+    /*
+
+    boost::optional<isl::union_map> extension;
+
+    auto write_schedule = apply_domain(s.write_accesses, prefix_schedule);
+
+    for (const auto& map : write_schedule.get_maps())
+    {
+        isl::space ms(isl_ctx, 0, map.dim(isl_dim_out),
+                      map.dim(isl_dim_in) + map.dim(isl_dim_out));
+        auto m = isl::basic_map::universe(ms);
+
+        auto dim = map.dim(isl_dim_in) + map.dim(isl_dim_out);
+
+        for (int i = map.dim(isl_dim_in); i < dim; ++i)
+        {
+            auto c =
+                    isl::constraint::equality(ms)
+                            .set_coefficient(isl_dim_in, i - map.dim(isl_dim_in), -1)
+                            .set_coefficient(isl_dim_out, i, 1);
+
+            m.add_constraint(c);
+        }
+
+        std::vector<variable_declaration> params;
+
+        for (int i = 0; i < dim; ++i)
+        {
+            params.emplace_back(types::integer());
+        }
+
+        auto copy_id =
+                s.add_symbol("copy", macro_expr(params, compound_expr({})));
+
+        m.set_tuple_name(isl_dim_out, copy_id);
+        m.set_tuple_name(isl_dim_in, map.get_tuple_name(isl_dim_out));
+
+        auto new_map = apply_range(map, m);
+
+        for (int i = 0; i < map.dim(isl_dim_in); ++i)
+        {
+            auto c = isl::constraint::equality(new_map.get_space())
+                    .set_coefficient(isl_dim_in, i, -1)
+                    .set_coefficient(isl_dim_out, i, 1);
+
+            new_map.add_constraint(c);
+        }
+
+        if (extension)
+        {
+            extension = add_map(*extension, new_map);
+        }
+        else
+        {
+            extension = new_map;
+        }
+    }
+
+    isl_union_map_dump(s.read_accesses.native_handle());
+    isl_union_map_dump(s.write_accesses.native_handle());
+
+    return graft_before(band_to_tile,
+                                isl::schedule_node::from_extension(*extension));*/
+
+    return band_to_tile;
+}
+
+isl::schedule_node optimize_schedule_node(isl::schedule_node root, scop& s)
+{
     if (root.get_type() == isl_schedule_node_band)
     {
         if (root.band_is_permutable())
@@ -613,7 +868,7 @@ isl::schedule_node get_optimized_schedule_tree(isl::schedule_node root, scop& s)
 
                 if (root.band_n_member() > 1)
                 {
-                    std::vector<util::index_t> tile_sizes = {300/*, 100, 25*/};
+                    std::vector<util::index_t> tile_sizes = {300 /*, 100, 25*/};
 
                     isl::schedule_node band_to_tile = root;
 
@@ -627,25 +882,15 @@ isl::schedule_node get_optimized_schedule_tree(isl::schedule_node root, scop& s)
 
                         band_to_tile = insert_mark(band_to_tile, isl::id(isl_ctx, "task"))[0];
 
-                        auto prefix_schedule = band_to_tile.get_prefix_schedule_union_map();
-
-                        //auto extension = reverse(apply_domain(prefix_schedule, s.write_accesses));
-                        //isl_union_map_dump(extension.native_handle());
-
-                        //band_to_tile = graft_before(band_to_tile, isl::schedule_node::from_extension(extension));
+                        band_to_tile = create_caches(band_to_tile, s);
                     }
 
-                    root = band_to_tile;
-
-                    for (std::size_t i = 0; i < tile_sizes.size(); ++i)
-                    {
-                        root = root.parent().parent();
-                    }
+                    return band_to_tile;
                 }
             }
         }
     }
-    
+
     return root;
 }
 
@@ -685,9 +930,12 @@ scop optimize_scop(scop s)
 
     isl::schedule sched(sched_constraints);
 
-    s.schedule = get_schedule(get_optimized_schedule_tree(sched.get_root(), s));
+    s.schedule = map_schedule_node(sched, [&](isl::schedule_node node)
+                                   {
+                                       return optimize_schedule_node(node, s);
+                                   });
 
-    //s.schedule.dump();
+    s.schedule.dump();
 
     return s;
 }
@@ -852,14 +1100,15 @@ expression isl_ast_to_kir(const isl::ast_node& root,
     case isl_ast_node_mark:
     {
         auto mark_id = root.mark_get_id();
-        
+
         if (mark_id.name() == "task")
         {
             auto body = isl_ast_to_kir(root.mark_get_node(), symbol_table);
 
-            return extract_expr_as_function(body, "extracted_fn_" + std::to_string(current_extracted_fn_id++));
+            return extract_expr_as_function(body, "extracted_fn_" +
+                                                      std::to_string(current_extracted_fn_id++));
         }
-        
+
         return isl_ast_to_kir(root.mark_get_node(), symbol_table);
     }
     default:
@@ -942,7 +1191,7 @@ expression generate_code_from_scop(const scop& s)
 
     auto ast = builder.build_node_from_schedule(s.schedule);
 
-    //printer.print(ast);
+    printer.print(ast);
 
     auto symbol_table = s.symbol_table;
 
@@ -977,4 +1226,3 @@ function_declaration optimize_loops(function_declaration decl)
 }
 }
 }
-

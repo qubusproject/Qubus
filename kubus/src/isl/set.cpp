@@ -127,9 +127,24 @@ space set::get_space() const
     return space(isl_set_get_space(handle_));
 }
 
+int set::dim(isl_dim_type type) const
+{
+    return isl_set_dim(handle_, type);
+}
+
 void set::set_tuple_name(const std::string& name)
 {
     handle_ = isl_set_set_tuple_name(handle_, name.c_str());
+}
+
+std::string set::get_tuple_name() const
+{
+    return std::string(isl_set_get_tuple_name(handle_));
+}
+
+bool set::bounded()
+{
+    return isl_set_is_bounded(handle_);
 }
 
 set set::universe(space s)
@@ -185,6 +200,16 @@ set align_params(set s, space model)
 set project_out(set s, isl_dim_type type, unsigned int first, unsigned int n)
 {
     return set(isl_set_project_out(s.release(), type, first, n));
+}
+
+set lexmin(set s)
+{
+    return set(isl_set_lexmin(s.release()));
+}
+
+set lexmax(set s)
+{
+    return set(isl_set_lexmax(s.release()));
 }
 
 union_set::union_set(isl_union_set* handle_) : handle_(handle_)

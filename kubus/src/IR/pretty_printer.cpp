@@ -381,7 +381,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        print(b.get(), ctx, print_types);
                        std::cout << "\n}";
                    })
-            .case_(local_variable_def(decl, a, b),
+            .case_(local_variable_def(decl, a),
                    [&]
                    {
                        std::cout << "let ";
@@ -398,12 +398,6 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << " := ";
 
                        print(a.get(), ctx, print_types);
-
-                       std::cout << "{\n";
-
-                       print(b.get(), ctx, print_types);
-
-                       std::cout << "\n}";
                    })
             .case_(spawn(plan, args),
                    [&]

@@ -7,6 +7,7 @@
 #include <qbb/kubus/isl/map.hpp>
 #include <qbb/kubus/isl/ast.hpp>
 #include <qbb/kubus/isl/id.hpp>
+#include <qbb/kubus/isl/pw_aff.hpp>
 
 #include <isl/ast_build.h>
 
@@ -28,6 +29,8 @@ public:
     
     ast_node build_ast_from_schedule(union_map schedule);
     ast_node build_node_from_schedule(schedule sched);
+
+    ast_expr build_expr_from_pw_aff(pw_aff f);
 
     void set_options(union_map options);
     
