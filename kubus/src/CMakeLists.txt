@@ -2,7 +2,7 @@ find_package(Boost 1.55.0 COMPONENTS log thread system REQUIRED)
 
 find_package(CUDA 7.0)
 
-find_package(LLVM 3.6 EXACT REQUIRED)
+find_package(LLVM 3.6.1 EXACT REQUIRED)
 
 message(STATUS "found LLVM version: ${LLVM_PACKAGE_VERSION}")
 
