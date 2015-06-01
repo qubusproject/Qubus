@@ -32,7 +32,7 @@ bool band::has_children() const
 
 namespace
 {
-extern "C" int add_band_child(isl_band* child, void* user) noexcept;
+extern "C" isl_stat add_band_child(isl_band* child, void* user) noexcept;
 }
 
 std::vector<band> band::get_children() const
@@ -100,13 +100,13 @@ namespace
 {
 extern "C" {
 
-int add_band_child(isl_band* child, void* user) noexcept
+isl_stat add_band_child(isl_band* child, void* user) noexcept
 {
     auto& children = *static_cast<std::vector<band>*>(user);
 
     children.emplace_back(child);
 
-    return 1;
+    return isl_stat_ok;
 }
 }
 }
