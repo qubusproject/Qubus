@@ -247,7 +247,7 @@ space union_map::get_space() const
 
 namespace
 {
-extern "C" int add_map(isl_map* m, void* user) noexcept;   
+extern "C" isl_stat add_map(isl_map* m, void* user) noexcept;
 }
 
 std::vector<map> union_map::get_maps() const
@@ -347,13 +347,13 @@ namespace
 {
 extern "C" {
 
-int add_map(isl_map* m, void* user) noexcept
+isl_stat add_map(isl_map* m, void* user) noexcept
 {
     auto& maps = *static_cast<std::vector<map>*>(user);
 
     maps.emplace_back(m);
 
-    return 1;
+    return isl_stat_ok;
 }
 }
 }

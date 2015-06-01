@@ -75,7 +75,7 @@ isl_ast_expr* ast_expr::release() noexcept
 
 namespace
 {
-extern "C" int add_child(isl_ast_node* child, void* user) noexcept;
+extern "C" isl_stat add_child(isl_ast_node* child, void* user) noexcept;
 }
 
 ast_node::ast_node(isl_ast_node* root_) : root_{root_}
@@ -190,13 +190,13 @@ namespace
 
 extern "C" {
 
-int add_child(isl_ast_node* child, void* user) noexcept
+isl_stat add_child(isl_ast_node* child, void* user) noexcept
 {
     auto& children = *static_cast<std::vector<ast_node>*>(user);
 
     children.emplace_back(child);
 
-    return 1;
+    return isl_stat_ok;
 }
 }
 }
