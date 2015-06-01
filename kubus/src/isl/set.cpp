@@ -249,7 +249,7 @@ union_set& union_set::operator=(const union_set& other)
 
 namespace
 {
-extern "C" int add_set(isl_set* s, void* user) noexcept;
+extern "C" isl_stat add_set(isl_set* s, void* user) noexcept;
 }
 
 std::vector<set> union_set::get_sets() const
@@ -314,13 +314,13 @@ namespace
 {
 extern "C" {
 
-int add_set(isl_set* s, void* user) noexcept
+isl_stat add_set(isl_set* s, void* user) noexcept
 {
     auto& sets = *static_cast<std::vector<set>*>(user);
 
     sets.emplace_back(s);
 
-    return 1;
+    return isl_stat_ok;
 }
 }
 }
