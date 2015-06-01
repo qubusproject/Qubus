@@ -923,7 +923,6 @@ scop optimize_scop(scop s)
     sched_constraints.set_proximity_constraints(proximity);
     sched_constraints.set_coincidence_constraints(validity);
 
-    isl_options_set_schedule_fuse(isl_ctx.native_handle(), ISL_SCHEDULE_FUSE_MIN);
     isl_options_set_schedule_maximize_band_depth(isl_ctx.native_handle(), 1);
     isl_options_set_schedule_max_coefficient(isl_ctx.native_handle(), 20);
     isl_options_set_schedule_max_constant_term(isl_ctx.native_handle(), 20);
