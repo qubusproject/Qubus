@@ -105,7 +105,7 @@ union_set schedule::get_domain() const
 
 namespace
 {
-extern "C" int add_band_to_forest(isl_band* child, void* user) noexcept;
+extern "C" isl_stat add_band_to_forest(isl_band* child, void* user) noexcept;
 }
 
 std::vector<band> schedule::get_band_forest() const
@@ -142,13 +142,13 @@ namespace
 {
 extern "C" {
 
-int add_band_to_forest(isl_band* child, void* user) noexcept
+isl_stat add_band_to_forest(isl_band* child, void* user) noexcept
 {
     auto& children = *static_cast<std::vector<band>*>(user);
 
     children.emplace_back(child);
 
-    return 1;
+    return isl_stat_ok;
 }
 }
 }
