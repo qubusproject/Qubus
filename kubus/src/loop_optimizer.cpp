@@ -27,7 +27,7 @@
 #include <qbb/util/unused.hpp>
 
 #include <boost/variant.hpp>
-#include <boost/range/combine.hpp>
+#include <boost/range/algorithm.hpp>
 #include <boost/algorithm/string/predicate.hpp>
 
 #include <vector>
@@ -826,12 +826,16 @@ std::vector<array_tile> deduce_tiles(isl::schedule_node node, const scop& s)
 
     std::vector<array_tile> tiles;
 
-    auto m1 = write_schedule.get_maps();
-    auto m2 = local_write_schedule.get_maps();
-
-    for (const auto& element : boost::range::combine(m1, m2))
+    for (const auto& schedule : write_schedule.get_maps())
     {
-        if (auto tile = deduce_tile(boost::get<0>(element), boost::get<1>(element), true, s))
+        auto local_writes_schedules = local_write_schedule.get_maps();
+
+        auto iter = boost::find_if(local_writes_schedules, [&](const isl::map& value) { return value.get_tuple_name(isl_dim_out) == schedule.get_tuple_name(isl_dim_out); });
+
+        if (iter == local_writes_schedules.end())
+            throw 0;
+
+        if (auto tile = deduce_tile(schedule, *iter, true, s))
         {
             tiles.push_back(*tile);
         }
@@ -840,12 +844,16 @@ std::vector<array_tile> deduce_tiles(isl::schedule_node node, const scop& s)
     auto read_schedule = apply_domain(read_only_accesses, prefix_schedule);
     auto local_read_schedule = apply_domain(read_only_accesses, subtree_schedule);
 
-    auto m3 = read_schedule.get_maps();
-    auto m4 = local_read_schedule.get_maps();
-
-    for (const auto& element : boost::range::combine(m3, m4))
+    for (const auto& schedule : read_schedule.get_maps())
     {
-        if (auto tile = deduce_tile(boost::get<0>(element), boost::get<1>(element), false, s))
+        auto local_read_schedules = local_read_schedule.get_maps();
+
+        auto iter = boost::find_if(local_read_schedules, [&](const isl::map& value) { return value.get_tuple_name(isl_dim_out) == schedule.get_tuple_name(isl_dim_out); });
+
+        if (iter == local_read_schedules.end())
+            throw 0;
+
+        if (auto tile = deduce_tile(schedule, *iter, false, s))
         {
             tiles.push_back(*tile);
         }
