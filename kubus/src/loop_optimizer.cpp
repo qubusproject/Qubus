@@ -1163,14 +1163,22 @@ isl::schedule_node optimize_schedule_node(isl::schedule_node root, scop& s)
 
                             auto the_tile_band = tile_band(band_to_tile, tile_shape);
 
+                            bool unroll_loops = i == num_tile_levels - 1;
+
                             band_to_tile = the_tile_band[0];
+
+                            if (unroll_loops)
+                            {
+                                for (int i = 0; i < root.band_n_member(); ++i)
+                                {
+                                    band_to_tile.band_member_set_ast_loop_type(i, isl_ast_loop_unroll);
+                                }
+                            }
 
                             band_to_tile = insert_mark(band_to_tile, isl::id(isl_ctx, "task"))[0];
 
                             if (i == num_tile_levels - 1)
                             {
-                                bool unroll_loops = false; // i == num_tile_levels - 1;
-
                                 band_to_tile = create_caches(band_to_tile, unroll_loops, s);
                             }
                         }
@@ -1225,6 +1233,8 @@ scop optimize_scop(scop s)
                                    {
                                        return optimize_schedule_node(node, s);
                                    });
+
+    s.schedule.dump();
 
     return s;
 }
@@ -1468,7 +1478,24 @@ expression isl_ast_to_kir(const isl::ast_node& root,
         return isl_ast_expr_to_kir(root.user_get_expr(), ctx);
     }
     case isl_ast_node_if:
-        throw 0; // TODO: currently not supported
+    {
+        auto condition = isl_ast_expr_to_kir(root.if_get_cond(), ctx);
+
+        auto then_branch = isl_ast_to_kir(root.if_get_then(), ctx);
+
+        auto else_block = root.if_get_else();
+
+        if (else_block)
+        {
+            auto else_branch = isl_ast_to_kir(*else_block, ctx);
+
+            return if_expr(condition, then_branch, else_branch);
+        }
+        else
+        {
+            return if_expr(condition, then_branch);
+        }
+    };
     case isl_ast_node_mark:
     {
         auto mark_id = root.mark_get_id();
@@ -1555,7 +1582,7 @@ expression generate_code_from_scop(const scop& s)
 
     auto ast = builder.build_node_from_schedule(s.schedule);
 
-    //printer.print(ast);
+    printer.print(ast);
 
     ast_converter_context ctx(s.symbol_table);
 
