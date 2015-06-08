@@ -310,6 +310,38 @@ void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Val
     builder_.SetInsertPoint(exit);
 }
 
+template <typename ThenEmitter, typename ElseEmitter>
+void emit_if_else(reference condition, ThenEmitter then_emitter, ElseEmitter else_emitter,
+                  llvm_environment& env)
+{
+    auto& builder_ = env.builder();
+
+    auto condition_value = load_from_ref(condition, env);
+
+    llvm::BasicBlock* then_block = llvm::BasicBlock::Create(llvm::getGlobalContext(), "then",
+                                                            builder_.GetInsertBlock()->getParent());
+    llvm::BasicBlock* else_block = llvm::BasicBlock::Create(llvm::getGlobalContext(), "else",
+                                                            builder_.GetInsertBlock()->getParent());
+    llvm::BasicBlock* merge = llvm::BasicBlock::Create(llvm::getGlobalContext(), "merge",
+                                                       builder_.GetInsertBlock()->getParent());
+
+    builder_.CreateCondBr(condition_value, then_block, else_block);
+
+    builder_.SetInsertPoint(then_block);
+
+    then_emitter();
+
+    builder_.CreateBr(merge);
+
+    builder_.SetInsertPoint(else_block);
+
+    else_emitter();
+
+    builder_.CreateBr(merge);
+
+    builder_.SetInsertPoint(merge);
+}
+
 reference emit_binary_operator(binary_op_tag tag, const expression& left, const expression& right,
                                llvm_environment& env, compilation_context& ctx)
 {
@@ -1086,6 +1118,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
     pattern::variable<binary_op_tag> btag;
     pattern::variable<unary_op_tag> utag;
     pattern::variable<expression> a, b, c, d;
+    pattern::variable<boost::optional<expression>> opt_expr;
     pattern::variable<std::vector<expression>> expressions;
 
     pattern::variable<variable_declaration> idx;
@@ -1182,6 +1215,27 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                                      compile(d.get(), env, ctx);
                                  },
                                  env);
+
+                       return reference();
+                   })
+            .case_(if_(a, b, opt_expr),
+                   [&]
+                   {
+                       auto condition = compile(a.get(), env, ctx);
+
+                       emit_if_else(condition,
+                                    [&]
+                                    {
+                                        compile(b.get(), env, ctx);
+                                    },
+                                    [&]
+                                    {
+                                        if (opt_expr.get())
+                                        {
+                                            compile(*opt_expr.get(), env, ctx);
+                                        }
+                                    },
+                                    env);
 
                        return reference();
                    })
@@ -1542,8 +1596,8 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
 
                                      for (std::size_t i = 0; i < extents.size(); ++i)
                                      {
-                                         auto extent_ptr =
-                                             builder.CreateConstInBoundsGEP1_64(shape_ptr, i, "extend_ptr");
+                                         auto extent_ptr = builder.CreateConstInBoundsGEP1_64(
+                                             shape_ptr, i, "extend_ptr");
 
                                          store_to_ref(reference(extent_ptr, access_path()),
                                                       llvm::ConstantInt::get(size_type, extents[i]),
@@ -1811,8 +1865,8 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, llvm::Execut
 
     pass_man.run(*the_module);
 
-    //the_module->dump();
-    //std::cout << std::endl;
+    // the_module->dump();
+    // std::cout << std::endl;
 
     /*std::cout << "The assembler output:\n\n";
 

@@ -233,6 +233,11 @@ type infer_type_for_expr(const for_expr&)
     return types::unknown{};
 }
 
+type infer_type_if_expr(const if_expr&)
+{
+    return types::unknown{};
+}
+
 type infer_type_subscription_expr(const subscription_expr& expr)
 {
     type tensor_type = typeof_(expr.indexed_expr());
@@ -324,6 +329,7 @@ void init_infer_type()
     infer_type.add_specialization(infer_type_sum_expr);
     infer_type.add_specialization(infer_type_for_all_expr);
     infer_type.add_specialization(infer_type_for_expr);
+    infer_type.add_specialization(infer_type_if_expr);
     infer_type.add_specialization(infer_type_subscription_expr);
     infer_type.add_specialization(infer_type_type_conversion_expr);
     infer_type.add_specialization(infer_type_double_literal_expr);

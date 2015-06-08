@@ -148,11 +148,11 @@ void print_type(const type& t)
                         {
                             std::cout << "integer";
                         })
-            .case_(pattern::bool_t,
-                   [&]
-                   {
-                       std::cout << "bool";
-                   })
+                 .case_(pattern::bool_t,
+                        [&]
+                        {
+                            std::cout << "bool";
+                        })
                  .case_(complex_t(subtype),
                         [&]
                         {
@@ -181,6 +181,7 @@ void print_type(const type& t)
 void print(const expression& expr, pretty_printer_context& ctx, bool print_types)
 {
     pattern::variable<expression> a, b, c, d;
+    pattern::variable<boost::optional<expression>> opt_expr;
     pattern::variable<binary_op_tag> btag;
     pattern::variable<unary_op_tag> utag;
 
@@ -385,6 +386,29 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << "\n{\n";
                        print(b.get(), ctx, print_types);
                        std::cout << "\n}";
+                   })
+            .case_(if_(a, b, opt_expr),
+                   [&]
+                   {
+                       std::cout << "if (";
+
+                       print(a.get(), ctx, print_types);
+
+                       std::cout << ")";
+                       std::cout << "\n{\n";
+
+                       print(b.get(), ctx, print_types);
+
+                       std::cout << "\n}";
+
+                       if (opt_expr.get())
+                       {
+                           std::cout << "\nelse\n{\n";
+
+                           print(*opt_expr.get(), ctx, print_types);
+
+                           std::cout << "\n}";
+                       }
                    })
             .case_(local_variable_def(decl, a),
                    [&]
