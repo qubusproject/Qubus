@@ -112,6 +112,7 @@ private:
 constexpr primitive_type_pattern<types::double_> double_t = {};
 constexpr primitive_type_pattern<types::float_> float_t = {};
 constexpr primitive_type_pattern<types::integer> integer_t = {};
+constexpr primitive_type_pattern<types::bool_> bool_t = {};
 constexpr primitive_type_pattern<types::index> index_t = {};
 
 template <typename RealType>

@@ -62,6 +62,8 @@ schedule_node insert_set(schedule_node parent, std::vector<union_set> filters);
 schedule_node insert_sequence(schedule_node parent, std::vector<union_set> filters);
 schedule_node insert_mark(schedule_node parent, id mark);
 
+schedule_node group(schedule_node node, id group_id);
+
 schedule_node tile_band(schedule_node node, std::vector<long int> sizes);
 
 schedule_node graft_before(schedule_node node, schedule_node graft);

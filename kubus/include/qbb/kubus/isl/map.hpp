@@ -5,6 +5,7 @@
 #include <qbb/kubus/isl/constraint.hpp>
 #include <qbb/kubus/isl/set.hpp>
 #include <qbb/kubus/isl/context.hpp>
+#include <qbb/kubus/isl/id.hpp>
 
 #include <isl/map.h>
 #include <isl/union_map.h>
@@ -40,7 +41,10 @@ public:
 
     isl_basic_map* release() noexcept;
 
+    std::string get_tuple_name(isl_dim_type type) const;
     void set_tuple_name(isl_dim_type type, const std::string& name);
+
+    void set_tuple_id(isl_dim_type type, id val);
 
     void add_constraint(constraint c);
 
@@ -82,7 +86,20 @@ public:
     space get_space() const;
     context_ref get_ctx() const;
 
+    set domain() const;
+    set range() const;
+
+    bool is_injective() const;
+
     std::string get_tuple_name(isl_dim_type type) const;
+    void set_tuple_name(isl_dim_type type, const std::string& name);
+
+    id get_tuple_id(isl_dim_type type) const;
+    void set_tuple_id(isl_dim_type type, id val);
+
+    id get_dim_id(isl_dim_type type, unsigned pos) const;
+    std::string get_dim_name(isl_dim_type type, unsigned pos) const;
+    void set_dim_id(isl_dim_type type, unsigned pos, id value);
 
     int dim(isl_dim_type type) const;
 
@@ -90,6 +107,7 @@ public:
     
     static map universe(space s);
     static map empty(space s);
+    static map identity(space s);
 private:
     isl_map* handle_;
 };
@@ -104,9 +122,26 @@ map apply_range(map lhs, map rhs);
 
 map union_(map lhs, map rhs);
 
+map intersect(map lhs, map rhs);
+
+map intersect_domain(map lhs, set rhs);
+map intersect_range(map lhs, set rhs);
+
 map add_dims(map m, isl_dim_type type, int num);
 
 map fix_dimension(map m, isl_dim_type type, int pos, int value);
+
+map flat_product(map lhs, map rhs);
+
+map flat_range_product(map lhs, map rhs);
+
+map align_params(map m, space s);
+
+map reverse(map m);
+
+map coalesce(map m);
+map detect_equalities(map m);
+map remove_redundancies(map m);
 
 inline set apply(set s, map m)
 {
@@ -141,6 +176,8 @@ public:
     
     union_set domain() const;
     union_set range() const;
+
+    bool is_injective() const;
     
     isl_union_map* native_handle() const;
 
@@ -161,6 +198,8 @@ union_map intersect(union_map lhs, union_map rhs);
 union_map intersect_domain(union_map lhs, union_set rhs);
 
 union_map union_(union_map lhs, union_map rhs);
+
+union_map substract(union_map lhs, union_map rhs);
 
 union_map add_map(union_map umap, map m);
 

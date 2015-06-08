@@ -79,7 +79,7 @@ int hpx_main(int argc, char** argv)
 {
     qbb::kubus::init(argc, argv);
 
-    long int N = 200;
+    long int N = 4;
 
     auto my_plan =
         make_plan()
@@ -103,7 +103,7 @@ int hpx_main(int argc, char** argv)
 
         tensor_expr<double, 2> zeros = def_tensor(i, j)[0];
 
-        tensor_expr<double, 2> Cdef = def_tensor(i, j)[sum(A(i, k)*B(j,k), k)];
+        tensor_expr<double, 2> Cdef = def_tensor(i, j)[sum(A(i, k)*B(k, j), k)];
 
         A = zeros;
         B = zeros;
@@ -113,10 +113,10 @@ int hpx_main(int argc, char** argv)
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        for (long int i = 0; i < 1; ++i)
-        {
-            C = Cdef;
-        }
+        //for (long int i = 0; i < 1; ++i)
+        //{
+        //    C = Cdef;
+        //}
 
         C.when_ready().wait();
 

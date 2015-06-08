@@ -172,6 +172,11 @@ schedule_node insert_mark(schedule_node parent, id mark)
     return schedule_node(isl_schedule_node_insert_mark(parent.release(), mark.release()));
 }
 
+schedule_node group(schedule_node node, id group_id)
+{
+    return schedule_node(isl_schedule_node_group(node.release(), group_id.release()));
+}
+
 schedule_node tile_band(schedule_node node, std::vector<long int> sizes)
 {
     isl_ctx* ctx = isl_schedule_node_get_ctx(node.native_handle());

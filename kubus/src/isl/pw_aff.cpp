@@ -73,6 +73,11 @@ set set_from_pw_aff(pw_aff fn)
     return set(isl_set_from_pw_aff(fn.release()));
 }
 
+map map_from_pw_aff(pw_aff fn)
+{
+    return map(isl_map_from_pw_aff(fn.release()));
+}
+
 }
 }
 }

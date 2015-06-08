@@ -2,6 +2,7 @@
 #define QBB_KUBUS_ISL_PW_AFF_HPP
 
 #include <qbb/kubus/isl/set.hpp>
+#include <qbb/kubus/isl/map.hpp>
 #include <qbb/kubus/isl/value.hpp>
 
 #include <isl/aff.h>
@@ -41,6 +42,7 @@ pw_aff operator+(pw_aff lhs, pw_aff rhs);
 pw_aff operator-(pw_aff lhs, pw_aff rhs);
 
 set set_from_pw_aff(pw_aff fn);
+map map_from_pw_aff(pw_aff fn);
 
 }
 }

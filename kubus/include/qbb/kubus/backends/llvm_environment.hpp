@@ -94,6 +94,8 @@ public:
     void set_current_function(llvm::Function* func);
 
     llvm::Function* get_assume_align() const;
+    llvm::Function* get_alloc_scratch_mem() const;
+    llvm::Function* get_dealloc_scratch_mem() const;
 
     // llvm::Value* lookup_intrinsic_function(const std::string& name,
     //                                       const std::vector<type>& arg_types)const;
@@ -115,6 +117,12 @@ private:
     std::map<std::string, llvm::Value*> symbol_table_;
 
     llvm::Function* assume_align_;
+    llvm::Function* alloc_scratch_mem_;
+    llvm::Function* dealloc_scratch_mem_;
+
+    void init_assume_align();
+    void init_alloc_scratch_mem();
+    void init_dealloc_scratch_mem();
 
     // intrinsic_lookup_table instrinsic_lookup_table_;
 };

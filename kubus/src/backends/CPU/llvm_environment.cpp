@@ -32,6 +32,11 @@ std::string mangle_type(const type& t)
                         {
                             return "integer";
                         })
+                 .case_(pattern::bool_t,
+                        [&]
+                        {
+                            return "bool";
+                        })
                  .case_(pattern::double_t,
                         [&]
                         {
@@ -73,6 +78,13 @@ llvm_environment::llvm_environment()
     global_alias_domain_ = md_builder_.createAliasScopeDomain("kubus.alias_domain");
     get_alias_scope(access_path());
 
+    init_assume_align();
+    init_alloc_scratch_mem();
+    init_dealloc_scratch_mem();
+}
+
+void llvm_environment::init_assume_align()
+{
     std::vector<llvm::Type*> assume_params = {llvm::Type::getInt1Ty(llvm::getGlobalContext())};
 
     llvm::FunctionType* assume_FT = llvm::FunctionType::get(
@@ -110,6 +122,40 @@ llvm_environment::llvm_environment()
     builder().CreateRet(&assume_align_->getArgumentList().front());
 }
 
+void llvm_environment::init_alloc_scratch_mem()
+{
+    auto void_ptr = llvm::Type::getVoidTy(llvm::getGlobalContext())->getPointerTo(0);
+    auto size_type = map_kubus_type(types::integer());
+
+    std::vector<llvm::Type*> param_types = {void_ptr, size_type};
+
+    llvm::FunctionType* FT = llvm::FunctionType::get(void_ptr, param_types, false);
+
+    alloc_scratch_mem_ = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
+                                                "qbb_kubus_cpurt_alloc_scatch_mem", &module());
+
+    alloc_scratch_mem_->setDoesNotCapture(1);
+    alloc_scratch_mem_->setDoesNotAlias(1);
+    alloc_scratch_mem_->setDoesNotThrow();
+}
+
+void llvm_environment::init_dealloc_scratch_mem()
+{
+    auto void_type = llvm::Type::getVoidTy(llvm::getGlobalContext());
+    auto size_type = map_kubus_type(types::integer());
+
+    std::vector<llvm::Type*> param_types = {void_type, size_type};
+
+    llvm::FunctionType* FT = llvm::FunctionType::get(void_type, param_types, false);
+
+    dealloc_scratch_mem_ = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
+                                                  "qbb_kubus_cpurt_dealloc_scratch_mem", &module());
+
+    dealloc_scratch_mem_->setDoesNotCapture(1);
+    dealloc_scratch_mem_->setDoesNotAlias(1);
+    dealloc_scratch_mem_->setDoesNotThrow();
+}
+
 llvm::IRBuilder<>& llvm_environment::builder()
 {
     return builder_;
@@ -144,6 +190,11 @@ llvm::Type* llvm_environment::map_kubus_type(const type& t) const
                        {
                            return llvm::IntegerType::get(llvm::getGlobalContext(),
                                                          8 * sizeof(std::size_t));
+                       })
+                .case_(pattern::bool_t,
+                       [&]
+                       {
+                           return llvm::Type::getInt1Ty(llvm::getGlobalContext());
                        })
                 .case_(pattern::double_t,
                        [&]
@@ -235,6 +286,16 @@ void llvm_environment::set_current_function(llvm::Function* func)
 llvm::Function* llvm_environment::get_assume_align() const
 {
     return assume_align_;
+}
+
+llvm::Function* llvm_environment::get_alloc_scratch_mem() const
+{
+    return alloc_scratch_mem_;
+}
+
+llvm::Function* llvm_environment::get_dealloc_scratch_mem() const
+{
+    return dealloc_scratch_mem_;
 }
 
 bool llvm_environment::bind_symbol(const std::string& symbol, llvm::Value* value)

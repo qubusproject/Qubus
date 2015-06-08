@@ -3,6 +3,7 @@
 
 #include <qbb/kubus/isl/pw_aff.hpp>
 #include <qbb/kubus/isl/set.hpp>
+#include <qbb/kubus/isl/map.hpp>
 
 #include <isl/aff.h>
 
@@ -30,9 +31,12 @@ public:
 
     isl_pw_multi_aff* release() noexcept;
 
+    static pw_multi_aff from_map(map m);
 private:
     isl_pw_multi_aff* handle_;
 };
+
+pw_aff pullback(pw_aff lhs, pw_multi_aff rhs);
 
 pw_multi_aff lexmin_pw_multi_aff(set s);
 pw_multi_aff lexmax_pw_multi_aff(set s);

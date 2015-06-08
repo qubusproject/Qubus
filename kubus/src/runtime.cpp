@@ -254,8 +254,6 @@ plan runtime::compile(function_declaration decl)
 
     decl = optimize_loops(decl);
 
-    pretty_print(decl);
-
     decl = lower_abstract_indices(decl);
 
     decl = make_implicit_conversions_explicit(decl);

@@ -48,6 +48,16 @@ isl_pw_multi_aff* pw_multi_aff::release() noexcept
     return temp;
 }
 
+pw_multi_aff pw_multi_aff::from_map(map m)
+{
+    return pw_multi_aff(isl_pw_multi_aff_from_map(m.release()));
+}
+
+pw_aff pullback(pw_aff lhs, pw_multi_aff rhs)
+{
+    return pw_aff(isl_pw_aff_pullback_pw_multi_aff(lhs.release(), rhs.release()));
+}
+
 pw_multi_aff lexmin_pw_multi_aff(set s)
 {
     return pw_multi_aff(isl_set_lexmin_pw_multi_aff(s.release()));

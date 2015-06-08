@@ -12,6 +12,7 @@
 #include <utility>
 #include <map>
 #include <vector>
+#include <stack>
 
 namespace qbb
 {
@@ -22,7 +23,9 @@ namespace
 {
 
 void extract_expression_parameter(const expression& expr,
-                                  std::map<util::handle, util::box<parameter>>& parameter_table, bool is_modifing)
+                                  std::map<util::handle, util::box<parameter>>& parameter_table,
+                                  std::stack<std::vector<util::handle>>& scope_stack,
+                                  bool is_modifing)
 {
     using pattern::_;
     using pattern::value;
@@ -38,29 +41,43 @@ void extract_expression_parameter(const expression& expr,
             .case_(variable_scope(var, scope),
                    [&](const expression& self)
                    {
+                       std::vector<util::handle> new_scope = {var.get().id()};
+
+                       scope_stack.push(new_scope);
+
                        for (const auto& expr : self.sub_expressions())
                        {
-                           extract_expression_parameter(expr, parameter_table, false);
+                           extract_expression_parameter(expr, parameter_table, scope_stack, false);
                        }
 
-                       parameter_table.erase(var.get().id());
+                       for (const auto& entry : scope_stack.top())
+                       {
+                           parameter_table.erase(entry);
+                       }
+
+                       scope_stack.pop();
                    })
-            .case_(
-                 binary_operator(value(binary_op_tag::assign) || value(binary_op_tag::plus_assign),
-                                 a, b),
-                 [&]
-                 {
-                     extract_expression_parameter(a.get(), parameter_table, true);
-                     extract_expression_parameter(b.get(), parameter_table, false);
-                 })
+            .case_(local_variable_def(var, _),
+                   [&]
+                   {
+                       scope_stack.top().push_back(var.get().id());
+                   })
+            .case_(binary_operator(
+                       value(binary_op_tag::assign) || value(binary_op_tag::plus_assign), a, b),
+                   [&]
+                   {
+                       extract_expression_parameter(a.get(), parameter_table, scope_stack, true);
+                       extract_expression_parameter(b.get(), parameter_table, scope_stack, false);
+                   })
             .case_(subscription(a, exprs),
                    [&]
                    {
-                       extract_expression_parameter(a.get(), parameter_table, is_modifing);
+                       extract_expression_parameter(a.get(), parameter_table, scope_stack,
+                                                    is_modifing);
 
                        for (const auto& expr : exprs.get())
                        {
-                           extract_expression_parameter(expr, parameter_table, false);
+                           extract_expression_parameter(expr, parameter_table, scope_stack, false);
                        }
                    })
             .case_(variable_ref(var),
@@ -87,11 +104,32 @@ void extract_expression_parameter(const expression& expr,
                            }
                        }
                    })
+            .case_(spawn(_, exprs),
+                   [&]
+                   {
+                       //TODO: Generalize this.
+                       auto& exprs_ = exprs.get();
+
+                       for (std::size_t i = 0; i < exprs_.size(); ++i)
+                       {
+                           if (i < exprs_.size() - 1)
+                           {
+                               extract_expression_parameter(exprs_[i], parameter_table, scope_stack,
+                                                            false);
+                           }
+                           else
+                           {
+                               extract_expression_parameter(exprs_[i], parameter_table, scope_stack,
+                                                            true);
+                           }
+                       }
+                   })
             .case_(_, [&](const expression& self)
                    {
                        for (const expression& expr : self.sub_expressions())
                        {
-                           extract_expression_parameter(expr, parameter_table, is_modifing);
+                           extract_expression_parameter(expr, parameter_table, scope_stack,
+                                                        is_modifing);
                        }
                    });
 
@@ -114,8 +152,16 @@ expression_environment deduce_expression_environment(const expression& expr)
     expression_environment env;
 
     std::map<util::handle, util::box<parameter>> parameter_table;
+    std::stack<std::vector<util::handle>> scope_stack;
 
-    extract_expression_parameter(expr, parameter_table, false);
+    scope_stack.push(std::vector<util::handle>());
+
+    extract_expression_parameter(expr, parameter_table, scope_stack, false);
+
+    for (const auto& entry : scope_stack.top())
+    {
+        parameter_table.erase(entry);
+    }
 
     for (const auto& param : parameter_table | boost::adaptors::map_values)
     {

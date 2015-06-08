@@ -1,5 +1,7 @@
 #include <qbb/kubus/isl/context.hpp>
 
+#include <isl/options.h>
+
 namespace qbb
 {
 namespace kubus
@@ -9,6 +11,7 @@ namespace isl
 
 context::context() : handle_{isl_ctx_alloc()}
 {
+    isl_options_set_on_error(handle_, ISL_ON_ERROR_ABORT);
 }
 
 context::~context()

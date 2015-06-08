@@ -40,6 +40,11 @@ std::size_t abi_info::get_size_of(const type& primitive_type) const
                         {
                             return sizeof(util::index_t);
                         })
+                 .case_(pattern::bool_t,
+                   [&]
+                   {
+                       return sizeof(bool);
+                   })
                  .case_(complex_t(real_type), [&]
                         {
                             return 2 * get_size_of(real_type.get());

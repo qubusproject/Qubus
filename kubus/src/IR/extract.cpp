@@ -80,7 +80,10 @@ expression extract_expr_as_function(expression expr, const std::string& extracte
     }
 
     if (out_params.size() != 1)
+    {
+        pretty_print(expr);
         throw 0; // Invalid number of out parameters.
+    }
 
     function_declaration extracted_function(extracted_func_name, in_params, out_params[0], expr);
 

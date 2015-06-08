@@ -195,6 +195,15 @@ public:
     }
 };
 
+class bool_
+{
+public:
+    bool is_primitive() const
+    {
+        return true;
+    }
+};
+
 class index
 {
 public:
@@ -322,6 +331,11 @@ struct is_type<types::float_> : std::true_type
 
 template<>
 struct is_type<types::integer> : std::true_type
+{
+};
+
+template<>
+struct is_type<types::bool_> : std::true_type
 {
 };
 

@@ -148,6 +148,11 @@ void print_type(const type& t)
                         {
                             std::cout << "integer";
                         })
+            .case_(pattern::bool_t,
+                   [&]
+                   {
+                       std::cout << "bool";
+                   })
                  .case_(complex_t(subtype),
                         [&]
                         {

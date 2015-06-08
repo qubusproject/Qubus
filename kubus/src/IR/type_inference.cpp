@@ -33,6 +33,11 @@ type common_type_integer_integer(const types::integer&, const types::integer&)
     return types::integer{};
 }
 
+type common_type_bool_bool(const types::bool_&, const types::bool_&)
+{
+    return types::bool_{};
+}
+
 type common_type_index_index(const types::index&, const types::index&)
 {
     return types::index{};
@@ -123,6 +128,7 @@ void init_common_type()
     common_type_.add_specialization(common_type_double_double);
     common_type_.add_specialization(common_type_float_float);
     common_type_.add_specialization(common_type_integer_integer);
+    common_type_.add_specialization(common_type_bool_bool);
     common_type_.add_specialization(common_type_index_index);
     common_type_.add_specialization(common_type_double_integer);
     common_type_.add_specialization(common_type_integer_double);
@@ -185,12 +191,22 @@ qbb::util::multi_method<type(const qbb::util::virtual_<expression>&)> infer_type
 
 type infer_type_binary_op_expr(const binary_operator_expr& expr)
 {
-    type left_type = typeof_(expr.left());
-    type right_type = typeof_(expr.right());
+    switch (expr.tag())
+    {
+    case binary_op_tag::equal_to:
+    case binary_op_tag::less_equal:
+    case binary_op_tag::less:
+    case binary_op_tag::greater_equal:
+    case binary_op_tag::greater:
+        return types::bool_();
+    default:
+    {
+        type left_type = typeof_(expr.left());
+        type right_type = typeof_(expr.right());
 
-    type result_type = common_type(left_type, right_type);
-
-    return result_type;
+        return common_type(left_type, right_type);
+    }
+    }
 }
 
 type infer_type_unary_op_expr(const unary_operator_expr& expr)
