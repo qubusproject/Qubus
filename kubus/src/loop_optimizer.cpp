@@ -1151,7 +1151,7 @@ isl::schedule_node optimize_schedule_node(isl::schedule_node root, scop& s)
 
                     if (!no_reuse)
                     {
-                        std::vector<util::index_t> tile_sizes = {300, /*30, 2*/};
+                        std::vector<util::index_t> tile_sizes = {300, 30, 2};
                         std::size_t num_tile_levels = tile_sizes.size();
 
                         isl::schedule_node band_to_tile = root;
@@ -1167,7 +1167,7 @@ isl::schedule_node optimize_schedule_node(isl::schedule_node root, scop& s)
 
                             band_to_tile = insert_mark(band_to_tile, isl::id(isl_ctx, "task"))[0];
 
-                            if (i == num_tile_levels - 1 || i == 0)
+                            if (i == num_tile_levels - 1)
                             {
                                 bool unroll_loops = false; // i == num_tile_levels - 1;
 
