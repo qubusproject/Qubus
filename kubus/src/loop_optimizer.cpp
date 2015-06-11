@@ -64,19 +64,18 @@ struct array_substitution
 struct ast_converter_context
 {
     explicit ast_converter_context(std::map<std::string, expression> symbol_table)
-    : symbol_table(std::move(symbol_table))
+    : symbol_table(std::move(symbol_table)), array_subs_scopes(1)
     {
     }
 
     std::map<std::string, expression> symbol_table;
     std::vector<array_substitution> array_substitutions;
+    std::vector<std::vector<variable_declaration>> array_subs_scopes;
 };
 
-expression isl_ast_expr_to_kir(const isl::ast_expr& expr,
-                               ast_converter_context& ctx);
+expression isl_ast_expr_to_kir(const isl::ast_expr& expr, ast_converter_context& ctx);
 
-expression isl_ast_to_kir(const isl::ast_node& root,
-                          ast_converter_context& ctx);
+expression isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx);
 
 isl::union_map pad_schedule_map(isl::union_map schedule_map)
 {
@@ -688,14 +687,15 @@ boost::optional<array_tile> deduce_tile(isl::map write_schedule, isl::map local_
 
     auto iter_space_dim = local_access_schedule.dim(isl_dim_in);
 
-    auto current_to_next_iter = isl::map::universe(isl::space(isl_ctx, 0, iter_space_dim, iter_space_dim));
+    auto current_to_next_iter =
+        isl::map::universe(isl::space(isl_ctx, 0, iter_space_dim, iter_space_dim));
 
     for (int i = 0; i < iter_space_dim; ++i)
     {
         auto c = isl::constraint::equality(current_to_next_iter.get_space())
-        .set_coefficient(isl_dim_in, i, -1)
-        .set_coefficient(isl_dim_out, i, 1)
-        .set_constant(i == iter_space_dim - 1 ? 1 : 0);
+                     .set_coefficient(isl_dim_in, i, -1)
+                     .set_coefficient(isl_dim_out, i, 1)
+                     .set_constant(i == iter_space_dim - 1 ? 1 : 0);
 
         current_to_next_iter.add_constraint(c);
     }
@@ -830,7 +830,11 @@ std::vector<array_tile> deduce_tiles(isl::schedule_node node, const scop& s)
     {
         auto local_writes_schedules = local_write_schedule.get_maps();
 
-        auto iter = boost::find_if(local_writes_schedules, [&](const isl::map& value) { return value.get_tuple_name(isl_dim_out) == schedule.get_tuple_name(isl_dim_out); });
+        auto iter = boost::find_if(local_writes_schedules, [&](const isl::map& value)
+                                   {
+                                       return value.get_tuple_name(isl_dim_out) ==
+                                              schedule.get_tuple_name(isl_dim_out);
+                                   });
 
         if (iter == local_writes_schedules.end())
             throw 0;
@@ -848,7 +852,11 @@ std::vector<array_tile> deduce_tiles(isl::schedule_node node, const scop& s)
     {
         auto local_read_schedules = local_read_schedule.get_maps();
 
-        auto iter = boost::find_if(local_read_schedules, [&](const isl::map& value) { return value.get_tuple_name(isl_dim_out) == schedule.get_tuple_name(isl_dim_out); });
+        auto iter = boost::find_if(local_read_schedules, [&](const isl::map& value)
+                                   {
+                                       return value.get_tuple_name(isl_dim_out) ==
+                                              schedule.get_tuple_name(isl_dim_out);
+                                   });
 
         if (iter == local_read_schedules.end())
             throw 0;
@@ -1072,7 +1080,8 @@ isl::schedule_node create_caches(isl::schedule_node band_to_tile, bool unroll_lo
 
         isl::ast_builder transform_builder(tile.layout_transform.domain());
 
-        auto transform_ast = transform_builder.build_access_from_pw_multi_aff(isl::pw_multi_aff::from_map(tile.layout_transform));
+        auto transform_ast = transform_builder.build_access_from_pw_multi_aff(
+            isl::pw_multi_aff::from_map(tile.layout_transform));
 
         auto num_inner_indices = tile.layout_transform.dim(isl_dim_in);
 
@@ -1087,7 +1096,8 @@ isl::schedule_node create_caches(isl::schedule_node band_to_tile, bool unroll_lo
             local_symbol_table.emplace("c" + std::to_string(i), variable_ref_expr(inner_index));
         }
 
-        local_symbol_table.emplace(tile.layout_transform.get_tuple_name(isl_dim_out), variable_ref_expr(cache_decl));
+        local_symbol_table.emplace(tile.layout_transform.get_tuple_name(isl_dim_out),
+                                   variable_ref_expr(cache_decl));
 
         ast_converter_context ctx(local_symbol_table);
 
@@ -1151,7 +1161,7 @@ isl::schedule_node optimize_schedule_node(isl::schedule_node root, scop& s)
 
                     if (!no_reuse)
                     {
-                        std::vector<util::index_t> tile_sizes = {300, 30, 2};
+                        std::vector<util::index_t> tile_sizes = {200, 20, 2};
                         std::size_t num_tile_levels = tile_sizes.size();
 
                         isl::schedule_node band_to_tile = root;
@@ -1171,7 +1181,8 @@ isl::schedule_node optimize_schedule_node(isl::schedule_node root, scop& s)
                             {
                                 for (int i = 0; i < root.band_n_member(); ++i)
                                 {
-                                    band_to_tile.band_member_set_ast_loop_type(i, isl_ast_loop_unroll);
+                                    band_to_tile.band_member_set_ast_loop_type(i,
+                                                                               isl_ast_loop_unroll);
                                 }
                             }
 
@@ -1179,7 +1190,8 @@ isl::schedule_node optimize_schedule_node(isl::schedule_node root, scop& s)
 
                             if (i == num_tile_levels - 1)
                             {
-                                band_to_tile = create_caches(band_to_tile, unroll_loops, s);
+                                band_to_tile =
+                                    create_caches(band_to_tile, unroll_loops, s);
                             }
                         }
 
@@ -1234,13 +1246,12 @@ scop optimize_scop(scop s)
                                        return optimize_schedule_node(node, s);
                                    });
 
-    s.schedule.dump();
+    //s.schedule.dump();
 
     return s;
 }
 
-expression isl_ast_expr_to_kir(const isl::ast_expr& expr,
-                               ast_converter_context& ctx)
+expression isl_ast_expr_to_kir(const isl::ast_expr& expr, ast_converter_context& ctx)
 {
     using pattern::_;
 
@@ -1278,6 +1289,7 @@ expression isl_ast_expr_to_kir(const isl::ast_expr& expr,
                     auto substitution = expand_macro(cinfo.substitution, indices).as<macro_expr>();
 
                     ctx.array_substitutions.emplace_back(cinfo.parent, substitution);
+                    ctx.array_subs_scopes.back().push_back(cinfo.parent);
                 }
 
                 if (boost::starts_with(id, "copy"))
@@ -1292,11 +1304,13 @@ expression isl_ast_expr_to_kir(const isl::ast_expr& expr,
 
                     for (const auto& substitution : ctx.array_substitutions)
                     {
-                        auto m = pattern::make_matcher<expression, expression>()
-                                .case_(subscription(variable_ref(pattern::value(substitution.parent)), indices), [&]
-                                {
-                                    return expand_macro(substitution.substitution, indices.get());
-                                });
+                        auto m = pattern::make_matcher<expression, expression>().case_(
+                            subscription(variable_ref(pattern::value(substitution.parent)),
+                                         indices),
+                            [&]
+                            {
+                                return expand_macro(substitution.substitution, indices.get());
+                            });
 
                         code = pattern::substitute(code, m);
                     }
@@ -1341,19 +1355,16 @@ expression isl_ast_expr_to_kir(const isl::ast_expr& expr,
             return unary_operator_expr(unary_op_tag::negate,
                                        isl_ast_expr_to_kir(expr.get_arg(0), ctx));
         case isl_ast_op_min:
-            return intrinsic_function_expr("min",
-                                           {isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                            isl_ast_expr_to_kir(expr.get_arg(1), ctx)});
+            return intrinsic_function_expr("min", {isl_ast_expr_to_kir(expr.get_arg(0), ctx),
+                                                   isl_ast_expr_to_kir(expr.get_arg(1), ctx)});
         case isl_ast_op_max:
-            return intrinsic_function_expr("max",
-                                           {isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                            isl_ast_expr_to_kir(expr.get_arg(1), ctx)});
+            return intrinsic_function_expr("max", {isl_ast_expr_to_kir(expr.get_arg(0), ctx),
+                                                   isl_ast_expr_to_kir(expr.get_arg(1), ctx)});
         case isl_ast_op_cond:
         case isl_ast_op_select:
-            return intrinsic_function_expr("select",
-                                           {isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                            isl_ast_expr_to_kir(expr.get_arg(1), ctx),
-                                            isl_ast_expr_to_kir(expr.get_arg(2), ctx)});
+            return intrinsic_function_expr("select", {isl_ast_expr_to_kir(expr.get_arg(0), ctx),
+                                                      isl_ast_expr_to_kir(expr.get_arg(1), ctx),
+                                                      isl_ast_expr_to_kir(expr.get_arg(2), ctx)});
         case isl_ast_op_eq:
             return binary_operator_expr(binary_op_tag::equal_to,
                                         isl_ast_expr_to_kir(expr.get_arg(0), ctx),
@@ -1403,8 +1414,7 @@ expression isl_ast_expr_to_kir(const isl::ast_expr& expr,
     }
 }
 
-expression isl_ast_to_kir(const isl::ast_node& root,
-                          ast_converter_context& ctx)
+expression isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx)
 {
     static long int current_extracted_fn_id = 0;
 
@@ -1416,6 +1426,8 @@ expression isl_ast_to_kir(const isl::ast_node& root,
     {
         // Assume that a for loop is of the form
         // for (int i = init; i </<= upper_bound; i += inc)
+
+        ctx.array_subs_scopes.emplace_back();
 
         auto iterator = root.for_get_iterator();
 
@@ -1457,6 +1469,21 @@ expression isl_ast_to_kir(const isl::ast_node& root,
         }();
 
         auto body = isl_ast_to_kir(root.for_get_body(), ctx);
+
+        auto iter = std::remove_if(ctx.array_substitutions.begin(), ctx.array_substitutions.end(),
+                                   [&](const array_substitution& value)
+                                   {
+                                       return std::any_of(ctx.array_subs_scopes.back().begin(),
+                                                          ctx.array_subs_scopes.back().end(),
+                                                          [&](const variable_declaration& decl)
+                                                          {
+                                                              return value.parent == decl;
+                                                          });
+                                   });
+
+        ctx.array_substitutions.erase(iter, ctx.array_substitutions.end());
+
+        ctx.array_subs_scopes.pop_back();
 
         symbol_table.erase(iterator.get_id().name());
 
@@ -1500,13 +1527,14 @@ expression isl_ast_to_kir(const isl::ast_node& root,
     {
         auto mark_id = root.mark_get_id();
 
-        if (mark_id.name() == "task")
+        // TODO: Reenable this after fixing the resulting performance problems.
+        /*if (mark_id.name() == "task")
         {
             auto body = isl_ast_to_kir(root.mark_get_node(), ctx);
 
             return extract_expr_as_function(body, "extracted_fn_" +
                                                       std::to_string(current_extracted_fn_id++));
-        }
+        }*/
 
         return isl_ast_to_kir(root.mark_get_node(), ctx);
     }
@@ -1582,7 +1610,7 @@ expression generate_code_from_scop(const scop& s)
 
     auto ast = builder.build_node_from_schedule(s.schedule);
 
-    printer.print(ast);
+    //printer.print(ast);
 
     ast_converter_context ctx(s.symbol_table);
 

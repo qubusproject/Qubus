@@ -124,12 +124,12 @@ void llvm_environment::init_assume_align()
 
 void llvm_environment::init_alloc_scratch_mem()
 {
-    auto void_ptr = llvm::Type::getVoidTy(llvm::getGlobalContext())->getPointerTo(0);
+    auto generic_ptr = llvm::Type::getInt8PtrTy(llvm::getGlobalContext(), 0);
     auto size_type = map_kubus_type(types::integer());
 
-    std::vector<llvm::Type*> param_types = {void_ptr, size_type};
+    std::vector<llvm::Type*> param_types = {generic_ptr, size_type};
 
-    llvm::FunctionType* FT = llvm::FunctionType::get(void_ptr, param_types, false);
+    llvm::FunctionType* FT = llvm::FunctionType::get(generic_ptr, param_types, false);
 
     alloc_scratch_mem_ = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
                                                 "qbb_kubus_cpurt_alloc_scatch_mem", &module());
@@ -141,10 +141,11 @@ void llvm_environment::init_alloc_scratch_mem()
 
 void llvm_environment::init_dealloc_scratch_mem()
 {
+    auto generic_ptr = llvm::Type::getInt8PtrTy(llvm::getGlobalContext(), 0);
     auto void_type = llvm::Type::getVoidTy(llvm::getGlobalContext());
     auto size_type = map_kubus_type(types::integer());
 
-    std::vector<llvm::Type*> param_types = {void_type, size_type};
+    std::vector<llvm::Type*> param_types = {generic_ptr, size_type};
 
     llvm::FunctionType* FT = llvm::FunctionType::get(void_type, param_types, false);
 

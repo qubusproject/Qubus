@@ -29,35 +29,47 @@ expression make_implicit_conversions_explicit(expression expr)
                  .case_(bind_to(binary_operator(btag, a, b), current_expr),
                         [&]
                         {
-                            auto result_type = typeof_(current_expr.get());
-                            auto lhs_type = typeof_(a.get());
-                            auto rhs_type = typeof_(b.get());
-
-                            auto new_lhs = [&]
+                            switch (btag.get())
                             {
-                                if (lhs_type != result_type)
+                                case binary_op_tag::equal_to:
+                                case binary_op_tag::less_equal:
+                                case binary_op_tag::less:
+                                case binary_op_tag::greater_equal:
+                                case binary_op_tag::greater:
+                                    return current_expr.get();
+                                default:
                                 {
-                                    return expression(type_conversion_expr(result_type, a.get()));
-                                }
-                                else
-                                {
-                                    return a.get();
-                                }
-                            }();
+                                    auto result_type = typeof_(current_expr.get());
+                                    auto lhs_type = typeof_(a.get());
+                                    auto rhs_type = typeof_(b.get());
 
-                            auto new_rhs = [&]
-                            {
-                                if (rhs_type != result_type)
-                                {
-                                    return expression(type_conversion_expr(result_type, b.get()));
-                                }
-                                else
-                                {
-                                    return b.get();
-                                }
-                            }();
+                                    auto new_lhs = [&]
+                                    {
+                                        if (lhs_type != result_type)
+                                        {
+                                            return expression(type_conversion_expr(result_type, a.get()));
+                                        }
+                                        else
+                                        {
+                                            return a.get();
+                                        }
+                                    }();
 
-                            return binary_operator_expr(btag.get(), new_lhs, new_rhs);
+                                    auto new_rhs = [&]
+                                    {
+                                        if (rhs_type != result_type)
+                                        {
+                                            return expression(type_conversion_expr(result_type, b.get()));
+                                        }
+                                        else
+                                        {
+                                            return b.get();
+                                        }
+                                    }();
+
+                                    return expression(binary_operator_expr(btag.get(), new_lhs, new_rhs));
+                                }
+                            }
                         })
                  .case_(bind_to(unary_operator(utag, a), current_expr), [&]
                         {

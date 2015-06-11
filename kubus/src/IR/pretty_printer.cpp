@@ -198,6 +198,8 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
     pattern::variable<function_declaration> plan;
     pattern::variable<type> t;
 
+    pattern::variable<std::vector<variable_declaration>> params;
+
     auto m =
         pattern::make_matcher<expression, void>()
             .case_(binary_operator(btag, a, b),
@@ -443,7 +445,8 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
                        std::cout << ")";
                    })
-            .case_(construct(t, args), [&]
+            .case_(construct(t, args),
+                   [&]
                    {
                        print_type(t.get());
                        std::cout << "(";
@@ -455,6 +458,24 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        }
 
                        std::cout << ")";
+                   })
+            .case_(macro(params, a), [&]
+                   {
+                       std::cout << "macro(";
+
+                       for (const auto& param : params.get())
+                       {
+                           std::cout << ctx.get_name_for_handle(param.id());
+
+                           std::cout << ", ";
+                       }
+
+                       std::cout << ")\n{\n";
+
+                       print(a.get(), ctx, print_types);
+
+                       std::cout << "\n}\n" << std::flush;
+
                    });
 
     pattern::match(expr, m);

@@ -79,7 +79,7 @@ int hpx_main(int argc, char** argv)
 {
     qbb::kubus::init(argc, argv);
 
-    long int N = 4;
+    long int N = 2000;
 
     auto my_plan =
         make_plan()
@@ -242,17 +242,15 @@ int hpx_main(int argc, char** argv)
                 }
             }
 
-            auto end = std::chrono::high_resolution_clock::now();
+        auto end = std::chrono::high_resolution_clock::now();
 
-            auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 
-            std::cout << duration.count() / 10.0 << " seconds" << std::endl;
-        }
+        std::cout << duration.count() / 10.0 << " seconds" << std::endl;
     }*/
 
     /*{
-        using MatrixType = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic,
-    Eigen::RowMajor>;
+        using MatrixType = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
         MatrixType A = MatrixType::Zero(N, N);
         MatrixType B = MatrixType::Zero(N, N);

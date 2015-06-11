@@ -425,7 +425,7 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
                 .case_(pattern::integer_t,
                        [&]
                        {
-                           return builder.CreateAdd(left_value, right_value);
+                           return builder.CreateAdd(left_value, right_value, "", true, true);
                        })
                 .case_(pattern::complex_t(_), [&]
                        {
@@ -468,7 +468,7 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
                 .case_(pattern::integer_t,
                        [&]
                        {
-                           return builder.CreateSub(left_value, right_value);
+                           return builder.CreateSub(left_value, right_value, "", true, true);
                        })
                 .case_(pattern::complex_t(_), [&]
                        {
@@ -511,7 +511,7 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
                 .case_(pattern::integer_t,
                        [&]
                        {
-                           return builder.CreateMul(left_value, right_value);
+                           return builder.CreateMul(left_value, right_value, "", true, true);
                        })
                 .case_(pattern::complex_t(_), [&]
                        {
@@ -1014,7 +1014,8 @@ llvm::Value* emit_array_access(llvm::Value* data, const std::vector<llvm::Value*
         auto extent = shape[i];
 
         linearized_index =
-            builder.CreateAdd(builder.CreateMul(extent, linearized_index), indices[i]);
+            builder.CreateAdd(builder.CreateMul(extent, linearized_index, "idx_mul", true, true),
+                              indices[i], "idx_add", true, true);
     }
 
     return builder.CreateInBoundsGEP(data, linearized_index);
@@ -1042,24 +1043,95 @@ reference emit_array_access(const reference& data, const reference& shape,
     return reference(accessed_element, data.origin());
 }
 
-reference emit_tensor_access(const reference& tensor, const std::vector<llvm::Value*>& indices,
-                             llvm_environment& env)
+expression reassociate_index_expression(expression expr)
 {
-    auto& builder = env.builder();
+    using pattern::_;
 
-    llvm::Value* data_ptr = builder.CreateConstInBoundsGEP2_32(tensor.addr(), 0, 0, "data_ptr");
-    llvm::Value* shape_ptr = builder.CreateConstInBoundsGEP2_32(tensor.addr(), 0, 1, "shape_ptr");
+    util::index_t constant_term = 0;
 
-    auto shape = load_from_ref(reference(shape_ptr, tensor.origin()), env);
-    auto data = load_from_ref(reference(data_ptr, tensor.origin()), env);
+    std::function<expression(expression)> collect_constant_terms = [&](expression expr)
+    {
+        pattern::variable<expression> lhs, rhs;
+        pattern::variable<util::index_t> value;
 
-    auto accessed_element =
-        emit_array_access(reference(data, tensor.origin() / "data"),
-                          reference(shape, tensor.origin() / "shape"), indices, env);
+        auto m = pattern::matcher<expression, expression>()
+                     .case_(binary_operator(pattern::value(binary_op_tag::plus),
+                                            integer_literal(value), rhs),
+                            [&]
+                            {
+                                constant_term += value.get();
 
-    return accessed_element;
+                                return collect_constant_terms(rhs.get());
+                            })
+                     .case_(binary_operator(pattern::value(binary_op_tag::plus), lhs,
+                                            integer_literal(value)),
+                            [&]
+                            {
+                                constant_term += value.get();
+
+                                return collect_constant_terms(lhs.get());
+                            })
+                     .case_(binary_operator(pattern::value(binary_op_tag::plus), lhs, rhs),
+                            [&]
+                            {
+                                return binary_operator_expr(binary_op_tag::plus,
+                                                            collect_constant_terms(lhs.get()),
+                                                            collect_constant_terms(rhs.get()));
+                            })
+                     .case_(_, [&](const expression& self)
+                            {
+                                return self;
+                            });
+
+        return pattern::match(expr, m);
+    };
+
+    auto simplified_expr = collect_constant_terms(expr);
+
+    if (constant_term != 0)
+    {
+        return binary_operator_expr(binary_op_tag::plus, simplified_expr,
+                                    integer_literal_expr(constant_term));
+    }
+    else
+    {
+        return simplified_expr;
+    }
 }
 
+reference emit_tensor_access(const variable_declaration& tensor,
+                             const std::vector<expression>& indices, llvm_environment& env,
+                             compilation_context& ctx)
+{
+    expression linearized_index = integer_literal_expr(0);
+
+    for (std::size_t i = 0; i < indices.size(); ++i)
+    {
+        auto extent =
+            intrinsic_function_expr("extent", {variable_ref_expr(tensor), integer_literal_expr(i)});
+
+        linearized_index = binary_operator_expr(
+            binary_op_tag::plus,
+            binary_operator_expr(binary_op_tag::multiplies, extent, linearized_index), indices[i]);
+    }
+
+    linearized_index = reassociate_index_expression(std::move(linearized_index));
+
+    auto linearized_index_ = compile(linearized_index, env, ctx);
+
+    auto tensor_ = ctx.symbol_table().at(tensor.id());
+
+    auto& builder = env.builder();
+
+    llvm::Value* data_ptr = builder.CreateConstInBoundsGEP2_32(tensor_.addr(), 0, 0, "data_ptr");
+
+    auto data = load_from_ref(reference(data_ptr, tensor_.origin()), env);
+
+    return reference(builder.CreateInBoundsGEP(data, load_from_ref(linearized_index_, env)),
+                     tensor_.origin() / "data");
+}
+
+//TODO: Implement the index expression reassociation optimization for slices.
 reference emit_array_slice_access(const reference& slice, const std::vector<llvm::Value*>& indices,
                                   llvm_environment& env)
 {
@@ -1417,7 +1489,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
             .case_(variable_ref(idx),
                    [&]
                    {
-                       return symbol_table[idx.get().id()];
+                       return symbol_table.at(idx.get().id());
                    })
             .case_(subscription(variable_ref(idx), expressions),
                    [&]
@@ -1440,16 +1512,17 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
 
                        using pattern::_;
 
-                       auto m = pattern::make_matcher<type, reference>()
-                                    .case_(pattern::tensor_t(_),
-                                           [&]
-                                           {
-                                               return emit_tensor_access(ref, indices_, env);
-                                           })
-                                    .case_(pattern::array_slice_t(_), [&]
-                                           {
-                                               return emit_array_slice_access(ref, indices_, env);
-                                           });
+                       auto m =
+                           pattern::make_matcher<type, reference>()
+                               .case_(pattern::tensor_t(_),
+                                      [&]
+                                      {
+                                          return emit_tensor_access(idx.get(), indices, env, ctx);
+                                      })
+                               .case_(pattern::array_slice_t(_), [&]
+                                      {
+                                          return emit_array_slice_access(ref, indices_, env);
+                                      });
 
                        return pattern::match(idx.get().var_type(), m);
                    })
@@ -1495,6 +1568,11 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                        auto plan_ptr =
                            llvm::Function::Create(fn_type, llvm::Function::PrivateLinkage,
                                                   plan.get().name(), &env.module());
+
+                       for (std::size_t i = 0; i < plan_ptr->arg_size(); ++i)
+                       {
+                           plan_ptr->setDoesNotAlias(i + 1);
+                       }
 
                        ctx.add_plan_to_compile(plan.get());
 
@@ -1557,11 +1635,15 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                                          llvm::Type* multi_array_type =
                                              env.map_kubus_type(value_type.get());
 
+                                         std::size_t size = 1;
+
                                          for (auto extent : extents)
                                          {
-                                             multi_array_type =
-                                                 llvm::ArrayType::get(multi_array_type, extent);
+                                             size *= extent;
                                          }
+
+                                         multi_array_type =
+                                             llvm::ArrayType::get(multi_array_type, size);
 
                                          data_ptr = builder.CreateConstInBoundsGEP2_64(
                                              create_entry_block_alloca(env.get_current_function(),
@@ -1577,8 +1659,9 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                                          args.push_back(
                                              llvm::ConstantInt::get(size_type, mem_size));
 
-                                         data_ptr =
-                                             builder.CreateCall(env.get_alloc_scratch_mem(), args);
+                                         data_ptr = builder.CreateBitCast(
+                                             builder.CreateCall(env.get_alloc_scratch_mem(), args),
+                                             env.map_kubus_type(value_type.get())->getPointerTo(0));
 
                                          ctx.get_current_scope().on_exit(
                                              [args, &env, &builder]
@@ -1837,8 +1920,9 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, llvm::Execut
 
     llvm::PassManagerBuilder pass_builder;
     pass_builder.OptLevel = 3;
-    pass_builder.SLPVectorize = false;
-    pass_builder.LoopVectorize = false;
+    pass_builder.SLPVectorize = true;
+    pass_builder.BBVectorize = false;
+    pass_builder.LoopVectorize = true;
     pass_builder.DisableUnrollLoops = true;
     pass_builder.Inliner = llvm::createFunctionInliningPass();
 
@@ -1945,6 +2029,15 @@ public:
         }
 
         builder.setMAttrs(available_features);
+        builder.setOptLevel(llvm::CodeGenOpt::Aggressive);
+
+        llvm::TargetOptions options;
+        options.AllowFPOpFusion = llvm::FPOpFusion::Fast;
+        options.UnsafeFPMath = 1;
+        options.NoInfsFPMath = 1;
+        options.NoNaNsFPMath = 1;
+
+        builder.setTargetOptions(options);
 
         engine_ = std::unique_ptr<llvm::ExecutionEngine>(builder.create());
 
