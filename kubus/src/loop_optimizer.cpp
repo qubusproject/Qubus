@@ -1416,7 +1416,7 @@ expression isl_ast_expr_to_kir(const isl::ast_expr& expr, ast_converter_context&
 
 expression isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx)
 {
-    static long int current_extracted_fn_id = 0;
+    //static long int current_extracted_fn_id = 0;
 
     auto& symbol_table = ctx.symbol_table;
 
