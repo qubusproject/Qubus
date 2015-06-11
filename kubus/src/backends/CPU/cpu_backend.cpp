@@ -1209,45 +1209,6 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
 
     auto m =
         pattern::make_matcher<expression, reference>()
-            /*.case_(
-                 binary_operator(pattern::value(binary_op_tag::plus),
-                                 binary_operator(pattern::value(binary_op_tag::multiplies), a, b),
-                                 c),
-                 [&]
-                 {
-                     reference a_value_ptr = compile(a.get(), env, symbol_table);
-                     reference b_value_ptr = compile(b.get(), env, symbol_table);
-                     reference c_value_ptr = compile(c.get(), env, symbol_table);
-
-                     auto& builder = env.builder();
-
-                     llvm::Instruction* a_value = builder.CreateAlignedLoad(a_value_ptr.addr(), 32);
-                     a_value->setMetadata("tbaa", env.get_tbaa_node(a_value_ptr.origin()));
-
-                     llvm::Instruction* b_value = builder.CreateAlignedLoad(b_value_ptr.addr(), 32);
-                     b_value->setMetadata("tbaa", env.get_tbaa_node(b_value_ptr.origin()));
-
-                     llvm::Instruction* c_value = builder.CreateAlignedLoad(c_value_ptr.addr(), 32);
-                     c_value->setMetadata("tbaa", env.get_tbaa_node(c_value_ptr.origin()));
-
-                     auto double_type = env.map_kubus_type(types::double_());
-
-                     std::vector<llvm::Type*> arg_types(3, double_type);
-
-                     auto fma_type = llvm::FunctionType::get(double_type, arg_types, false);
-
-                     auto fma = env.module().getOrInsertFunction("llvm.fmuladd.f64", fma_type);
-
-                     llvm::Value* result = builder.CreateCall3(fma, a_value, b_value, c_value);
-
-                     auto result_var = create_entry_block_alloca(env.get_current_function(),
-               result->getType());
-                     result_var->setAlignment(32);
-
-                     builder.CreateAlignedStore(result, result_var, 32);
-
-                     return reference(result_var, access_path());
-                 })*/
             .case_(binary_operator(btag, a, b),
                    [&]
                    {
