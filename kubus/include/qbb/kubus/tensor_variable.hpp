@@ -36,7 +36,7 @@ public:
     template <typename Expr>
     tensor_expr(const Expr& expr)
     : tensor_expr::proto_derived_expr(tensor_expr::proto_base_expr::make(
-          tensor_expr_info(emit_ast(types::tensor(associated_kubus_type<T>::get()), expr))))
+          tensor_expr_info(types::tensor(associated_kubus_type<T>::get()), emit_ast(expr))))
     {
     }
     

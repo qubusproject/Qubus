@@ -195,6 +195,15 @@ public:
     }
 };
 
+class bool_
+{
+public:
+    bool is_primitive() const
+    {
+        return true;
+    }
+};
+
 class index
 {
 public:
@@ -290,6 +299,27 @@ private:
     type value_type_;
 };
 
+class array_slice
+{
+public:
+    explicit array_slice(type value_type_) : value_type_{std::move(value_type_)}
+    {
+    }
+
+    const type& value_type() const
+    {
+        return value_type_;
+    }
+
+    bool is_primitive() const
+    {
+        return false;
+    }
+
+private:
+    type value_type_;
+};
+
 class sparse_tensor
 {
 public:
@@ -329,6 +359,11 @@ struct is_type<types::integer> : std::true_type
 };
 
 template<>
+struct is_type<types::bool_> : std::true_type
+{
+};
+
+template<>
 struct is_type<types::index> : std::true_type
 {
 };
@@ -345,6 +380,11 @@ struct is_type<types::complex> : std::true_type
 
 template<>
 struct is_type<types::array> : std::true_type
+{
+};
+
+template<>
+struct is_type<types::array_slice> : std::true_type
 {
 };
 

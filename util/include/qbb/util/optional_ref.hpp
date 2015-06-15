@@ -30,10 +30,10 @@ public:
     {
     }
     
-    optional_ref(typename std::enable_if<std::is_const<T>::value ,const boost::optional<value_type>&>::type ref_)
+    /*optional_ref(typename std::enable_if<std::is_const<T>::value ,const boost::optional<value_type>&>::type ref_)
     : ref_(ref_ ? &ref_.get() : nullptr)
     {
-    }
+    }*/
     
     optional_ref<T>& operator=(T& ref_)
     {

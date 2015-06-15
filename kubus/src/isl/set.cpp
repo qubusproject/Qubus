@@ -1,6 +1,7 @@
 #include <qbb/kubus/isl/set.hpp>
 
 #include <qbb/kubus/isl/context.hpp>
+#include <qbb/kubus/isl/pw_multi_aff.hpp>
 
 namespace qbb
 {
@@ -126,9 +127,24 @@ space set::get_space() const
     return space(isl_set_get_space(handle_));
 }
 
+int set::dim(isl_dim_type type) const
+{
+    return isl_set_dim(handle_, type);
+}
+
 void set::set_tuple_name(const std::string& name)
 {
     handle_ = isl_set_set_tuple_name(handle_, name.c_str());
+}
+
+std::string set::get_tuple_name() const
+{
+    return std::string(isl_set_get_tuple_name(handle_));
+}
+
+bool set::bounded()
+{
+    return isl_set_is_bounded(handle_);
 }
 
 set set::universe(space s)
@@ -139,6 +155,11 @@ set set::universe(space s)
 set set::empty(space s)
 {
     return set(isl_set_empty(s.release()));
+}
+
+set union_(set lhs, set rhs)
+{
+    return set(isl_set_union(lhs.release(), rhs.release()));
 }
 
 set intersect(set lhs, set rhs)
@@ -186,6 +207,16 @@ set project_out(set s, isl_dim_type type, unsigned int first, unsigned int n)
     return set(isl_set_project_out(s.release(), type, first, n));
 }
 
+set lexmin(set s)
+{
+    return set(isl_set_lexmin(s.release()));
+}
+
+set lexmax(set s)
+{
+    return set(isl_set_lexmax(s.release()));
+}
+
 union_set::union_set(isl_union_set* handle_) : handle_(handle_)
 {
 }
@@ -219,6 +250,20 @@ union_set& union_set::operator=(const union_set& other)
     handle_ = isl_union_set_copy(other.handle_);
     
     return *this;
+}
+
+namespace
+{
+extern "C" isl_stat add_set(isl_set* s, void* user) noexcept;
+}
+
+std::vector<set> union_set::get_sets() const
+{
+    std::vector<set> result;
+
+    isl_union_set_foreach_set(handle_, add_set, &result);
+
+    return result;
 }
 
 isl_union_set* union_set::native_handle() const
@@ -268,6 +313,26 @@ bool is_empty(const union_set& s)
 union_set add_set(union_set uset, set s)
 {
     return union_set(isl_union_set_add_set(uset.release(), s.release()));
+}
+
+set extract_set(const union_set& uset, space s)
+{
+    return set(isl_union_set_extract_set(uset.native_handle(), s.release()));
+}
+
+namespace
+{
+extern "C" {
+
+isl_stat add_set(isl_set* s, void* user) noexcept
+{
+    auto& sets = *static_cast<std::vector<set>*>(user);
+
+    sets.emplace_back(s);
+
+    return isl_stat_ok;
+}
+}
 }
 
 }

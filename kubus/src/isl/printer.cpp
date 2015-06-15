@@ -93,6 +93,23 @@ void printer::print(const ast_node& ast)
     std::cout << result;
 }
 
+void printer::print(const ast_expr& expr)
+{
+    handle_ = isl_printer_set_output_format(handle_, ISL_FORMAT_C);
+
+    handle_ = isl_printer_print_ast_expr(handle_, expr.native_handle());
+
+    char* buffer = isl_printer_get_str(handle_);
+
+    std::string result = buffer;
+
+    handle_ = isl_printer_flush(handle_);
+
+    free(buffer);
+
+    std::cout << result;
+}
+
 void printer::print_macro(isl_ast_op_type op_type)
 {
     handle_ = isl_printer_set_output_format(handle_, ISL_FORMAT_C);

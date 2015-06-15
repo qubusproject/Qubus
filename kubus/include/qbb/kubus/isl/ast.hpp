@@ -78,7 +78,9 @@ public:
     ast_expr user_get_expr() const;
 
     std::vector<ast_node> block_get_children() const;
-
+    
+    id mark_get_id() const;
+    ast_node mark_get_node() const;
 private:
     isl_ast_node* root_;
 };

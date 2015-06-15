@@ -8,6 +8,7 @@
 #include <qbb/util/handle.hpp>
 
 #include <memory>
+#include <functional>
 
 namespace qbb
 {
@@ -19,9 +20,8 @@ class variable_declaration_info;
 enum class variable_intent
 {
     generic,
-    in_param,
-    out_param,
-    inout_param
+    in,
+    out
 };
 
 class variable_declaration
@@ -41,8 +41,26 @@ private:
 
 bool operator==(const variable_declaration& lhs, const variable_declaration& rhs);
 bool operator!=(const variable_declaration& lhs, const variable_declaration& rhs);
- 
+
 }
+}
+
+namespace std
+{
+
+template<>
+struct less<qbb::kubus::variable_declaration>
+{
+    using result_type = bool;
+    using first_argument_type = qbb::kubus::variable_declaration;
+    using second_argument_type = first_argument_type;
+
+    bool operator()(const qbb::kubus::variable_declaration& lhs, const qbb::kubus::variable_declaration& rhs) const
+    {
+        return lhs.id() < rhs.id();
+    }
+};
+
 }
 
 #endif

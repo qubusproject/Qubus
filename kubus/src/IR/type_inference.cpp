@@ -33,6 +33,11 @@ type common_type_integer_integer(const types::integer&, const types::integer&)
     return types::integer{};
 }
 
+type common_type_bool_bool(const types::bool_&, const types::bool_&)
+{
+    return types::bool_{};
+}
+
 type common_type_index_index(const types::index&, const types::index&)
 {
     return types::index{};
@@ -108,11 +113,22 @@ type common_type_tensor_tensor(const types::tensor& lhs, const types::tensor& rh
     return types::tensor(common_type_(lhs.value_type(), rhs.value_type()));
 }
 
+type common_type_array_array(const types::array& lhs, const types::array& rhs)
+{
+    return types::array(common_type_(lhs.value_type(), rhs.value_type()));
+}
+
+type common_type_array_slice_array_slice(const types::array_slice& lhs, const types::array_slice& rhs)
+{
+    return types::array_slice(common_type_(lhs.value_type(), rhs.value_type()));
+}
+
 void init_common_type()
 {
     common_type_.add_specialization(common_type_double_double);
     common_type_.add_specialization(common_type_float_float);
     common_type_.add_specialization(common_type_integer_integer);
+    common_type_.add_specialization(common_type_bool_bool);
     common_type_.add_specialization(common_type_index_index);
     common_type_.add_specialization(common_type_double_integer);
     common_type_.add_specialization(common_type_integer_double);
@@ -128,6 +144,8 @@ void init_common_type()
     common_type_.add_specialization(common_type_integer_complex);
     common_type_.add_specialization(common_type_complex_complex);
     common_type_.add_specialization(common_type_tensor_tensor);
+    common_type_.add_specialization(common_type_array_array);
+    common_type_.add_specialization(common_type_array_slice_array_slice);
 }
 
 std::once_flag common_type_init_flag = {};
@@ -173,12 +191,22 @@ qbb::util::multi_method<type(const qbb::util::virtual_<expression>&)> infer_type
 
 type infer_type_binary_op_expr(const binary_operator_expr& expr)
 {
-    type left_type = typeof_(expr.left());
-    type right_type = typeof_(expr.right());
+    switch (expr.tag())
+    {
+    case binary_op_tag::equal_to:
+    case binary_op_tag::less_equal:
+    case binary_op_tag::less:
+    case binary_op_tag::greater_equal:
+    case binary_op_tag::greater:
+        return types::bool_();
+    default:
+    {
+        type left_type = typeof_(expr.left());
+        type right_type = typeof_(expr.right());
 
-    type result_type = common_type(left_type, right_type);
-
-    return result_type;
+        return common_type(left_type, right_type);
+    }
+    }
 }
 
 type infer_type_unary_op_expr(const unary_operator_expr& expr)
@@ -201,6 +229,11 @@ type infer_type_for_all_expr(const for_all_expr&)
 }
 
 type infer_type_for_expr(const for_expr&)
+{
+    return types::unknown{};
+}
+
+type infer_type_if_expr(const if_expr&)
 {
     return types::unknown{};
 }
@@ -274,6 +307,21 @@ type infer_type_variable_ref_expr(const variable_ref_expr& expr)
     return expr.declaration().var_type();
 }
 
+type infer_type_spawn_expr(const spawn_expr&)
+{
+    return types::unknown{};
+}
+
+type infer_type_local_variable_def_expr(const local_variable_def_expr&)
+{
+    return types::unknown{};
+}
+
+type infer_type_construct_expr(const construct_expr& expr)
+{
+    return expr.result_type();
+}
+
 void init_infer_type()
 {
     infer_type.add_specialization(infer_type_binary_op_expr);
@@ -281,6 +329,7 @@ void init_infer_type()
     infer_type.add_specialization(infer_type_sum_expr);
     infer_type.add_specialization(infer_type_for_all_expr);
     infer_type.add_specialization(infer_type_for_expr);
+    infer_type.add_specialization(infer_type_if_expr);
     infer_type.add_specialization(infer_type_subscription_expr);
     infer_type.add_specialization(infer_type_type_conversion_expr);
     infer_type.add_specialization(infer_type_double_literal_expr);
@@ -289,6 +338,9 @@ void init_infer_type()
     infer_type.add_specialization(infer_type_intrinsic_function_expr);
     infer_type.add_specialization(infer_type_compound_expr);
     infer_type.add_specialization(infer_type_variable_ref_expr);
+    infer_type.add_specialization(infer_type_spawn_expr);
+    infer_type.add_specialization(infer_type_local_variable_def_expr);
+    infer_type.add_specialization(infer_type_construct_expr);
 }
 
 std::once_flag infer_type_init_flag = {};

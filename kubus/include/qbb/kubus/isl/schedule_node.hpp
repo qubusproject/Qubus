@@ -2,6 +2,7 @@
 #define QBB_KUBUS_ISL_SCHEDULE_NODE_HPP
 
 #include <qbb/kubus/isl/set.hpp>
+#include <qbb/kubus/isl/id.hpp>
 #include <qbb/kubus/isl/multi_union_pw_affine_expr.hpp>
 
 #include <isl/schedule_node.h>
@@ -33,14 +34,24 @@ public:
     bool has_children() const;
     
     schedule_node parent() const;
-    
+
+    union_map band_get_partial_schedule_union_map() const;
     int band_n_member() const;
     bool band_is_permutable() const;
     void band_member_set_ast_loop_type(int pos, isl_ast_loop_type type);
+    void band_member_set_isolate_ast_loop_type(int pos, isl_ast_loop_type type);
     void band_set_ast_build_options(union_set options);
+    
+    union_set get_domain() const;
+    
+    union_map get_prefix_schedule_union_map() const;
+    union_map get_prefix_schedule_relation() const;
+    union_map get_subtree_schedule_union_map() const;
     
     isl_schedule_node* native_handle() const;
     isl_schedule_node* release() noexcept;
+
+    static schedule_node from_extension(union_map extension);
 private:
     isl_schedule_node* handle_;
 };
@@ -50,8 +61,14 @@ schedule_node insert_context(schedule_node parent, set context);
 schedule_node insert_filter(schedule_node parent, union_set filter);
 schedule_node insert_set(schedule_node parent, std::vector<union_set> filters);
 schedule_node insert_sequence(schedule_node parent, std::vector<union_set> filters);
+schedule_node insert_mark(schedule_node parent, id mark);
+
+schedule_node group(schedule_node node, id group_id);
 
 schedule_node tile_band(schedule_node node, std::vector<long int> sizes);
+
+schedule_node graft_before(schedule_node node, schedule_node graft);
+schedule_node graft_after(schedule_node node, schedule_node graft);
 
 }
 }

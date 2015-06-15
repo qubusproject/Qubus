@@ -48,7 +48,7 @@ set(kubus_source_files allocator.cpp lower_abstract_indices.cpp
                        loop_optimizer.cpp lower_top_level_sums.cpp deduce_iteration_space.cpp
                        runtime.cpp backend_registry.cpp local_address_space.cpp evicting_allocator.cpp
                        plan.cpp abi_info.cpp logging.cpp object_factory.cpp metadata_builder.cpp
-                       make_implicit_conversions_explicit.cpp scheduler.cpp user_defined_plan.cpp object.cpp)
+                       make_implicit_conversions_explicit.cpp scheduler.cpp user_defined_plan.cpp object.cpp tensor_expr_info.cpp)
 
 add_library(kubus SHARED ${kubus_header_files} ${kubus_source_files})
 
@@ -57,6 +57,7 @@ target_compile_options(kubus PUBLIC -std=c++14)
 target_link_libraries(kubus PUBLIC kubus_ir kubus_isl qbb_util
                                    hpx hpx_serialization ${Boost_LIBRARIES} dl wall)
 target_compile_definitions(kubus PUBLIC -DBOOST_LOG_DYN_LINK)
+add_dependencies(kubus kubus_cpu_backend)
 
 set_property(TARGET kubus PROPERTY VERSION ${KUBUS_VERSION})
 set_property(TARGET kubus PROPERTY SOVERSION 0)

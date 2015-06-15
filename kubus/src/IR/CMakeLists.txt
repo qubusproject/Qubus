@@ -20,7 +20,9 @@ set(kubus_ir_source_files annotations.cpp binary_operator_expr.cpp compound_expr
                           sum_expr.cpp type.cpp
                           type_conversion_expr.cpp type_inference.cpp unary_operator_expr.cpp
                           variable_ref_expr.cpp variable_declaration.cpp
-                          function_declaration.cpp macro_expr.cpp)
+                          function_declaration.cpp macro_expr.cpp spawn_expr.cpp
+                          local_variable_def_expr.cpp deduce_expression_environment.cpp construct_expr.cpp
+                          if_expr.cpp)
         
 set(kubus_pattern_header_file_names any.hpp binary_operator.hpp bind_to.hpp compound.hpp core.hpp
                                     for.hpp for_all.hpp index.hpp intrinsic_function.hpp IR.hpp
@@ -34,7 +36,7 @@ foreach(file_name IN LISTS kubus_pattern_header_file_names)
     list(APPEND kubus_pattern_header_files ${kubus_pattern_include_dir}/${file_name})
 endforeach()
 
-add_library(kubus_ir SHARED ${kubus_pattern_header_files} ${kubus_ir_header_files} ${kubus_ir_source_files})
+add_library(kubus_ir SHARED ${kubus_pattern_header_files} ${kubus_ir_header_files} ${kubus_ir_source_files} ../../include/qbb/kubus/IR/extract.hpp extract.cpp ../../include/qbb/kubus/pattern/contains.hpp ../../include/qbb/kubus/pattern/variable_scope.hpp)
 
 target_include_directories(kubus_ir PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/kubus/include>)
 target_compile_definitions(kubus_ir PUBLIC -DFUSION_MAX_VECTOR_SIZE=20)

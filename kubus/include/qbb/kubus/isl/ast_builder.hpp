@@ -7,6 +7,8 @@
 #include <qbb/kubus/isl/map.hpp>
 #include <qbb/kubus/isl/ast.hpp>
 #include <qbb/kubus/isl/id.hpp>
+#include <qbb/kubus/isl/pw_aff.hpp>
+#include <qbb/kubus/isl/pw_multi_aff.hpp>
 
 #include <isl/ast_build.h>
 
@@ -29,6 +31,9 @@ public:
     ast_node build_ast_from_schedule(union_map schedule);
     ast_node build_node_from_schedule(schedule sched);
 
+    ast_expr build_expr_from_pw_aff(pw_aff f);
+    ast_expr build_access_from_pw_multi_aff(pw_multi_aff pma);
+
     void set_options(union_map options);
     
     void set_create_leaf(std::function<ast_node(ast_builder_ref)> callback);
@@ -37,7 +42,7 @@ public:
     
     void set_before_each_for(std::function<id(ast_builder_ref)> callback);
     void set_after_each_for(std::function<ast_node(ast_node, ast_builder_ref)> callback);
-    
+
     union_map get_schedule() const;
 
     isl_ast_build* native_handle() const;

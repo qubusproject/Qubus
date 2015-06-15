@@ -12,6 +12,7 @@ namespace isl
 {
 
 class ast_node;
+class ast_expr;
 class union_map;
 class basic_set;
 class set;
@@ -35,6 +36,8 @@ public:
     void print(const union_map& map);
 
     void print(const ast_node& ast);
+
+    void print(const ast_expr& expr);
     
     void print_macro(isl_ast_op_type op_type);
 
