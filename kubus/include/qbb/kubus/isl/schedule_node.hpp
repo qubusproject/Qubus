@@ -39,6 +39,7 @@ public:
     int band_n_member() const;
     bool band_is_permutable() const;
     void band_member_set_ast_loop_type(int pos, isl_ast_loop_type type);
+    void band_member_set_isolate_ast_loop_type(int pos, isl_ast_loop_type type);
     void band_set_ast_build_options(union_set options);
     
     union_set get_domain() const;

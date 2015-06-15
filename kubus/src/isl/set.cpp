@@ -157,6 +157,11 @@ set set::empty(space s)
     return set(isl_set_empty(s.release()));
 }
 
+set union_(set lhs, set rhs)
+{
+    return set(isl_set_union(lhs.release(), rhs.release()));
+}
+
 set intersect(set lhs, set rhs)
 {
     return set(isl_set_intersect(lhs.release(), rhs.release()));
@@ -308,6 +313,11 @@ bool is_empty(const union_set& s)
 union_set add_set(union_set uset, set s)
 {
     return union_set(isl_union_set_add_set(uset.release(), s.release()));
+}
+
+set extract_set(const union_set& uset, space s)
+{
+    return set(isl_union_set_extract_set(uset.native_handle(), s.release()));
 }
 
 namespace

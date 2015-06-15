@@ -329,6 +329,11 @@ map remove_redundancies(map m)
     return map(isl_map_remove_redundancies(m.release()));
 }
 
+set wrap(map m)
+{
+    return set(isl_map_wrap(m.release()));
+}
+
 union_map::union_map(isl_union_map* handle_) noexcept : handle_{handle_}
 {
 }

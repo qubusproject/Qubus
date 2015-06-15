@@ -143,6 +143,8 @@ map coalesce(map m);
 map detect_equalities(map m);
 map remove_redundancies(map m);
 
+set wrap(map m);
+
 inline set apply(set s, map m)
 {
     return set(isl_set_apply(s.release(), m.release()));

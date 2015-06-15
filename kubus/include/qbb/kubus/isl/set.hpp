@@ -95,6 +95,8 @@ private:
     isl_set* handle_;
 };
 
+set union_(set lhs, set rhs);
+
 set intersect(set lhs, set rhs);
 
 set intersect_params(set lhs, set rhs);
@@ -154,6 +156,7 @@ bool is_strict_subset(const union_set& lhs, const union_set& rhs);
 bool is_empty(const union_set& s);
 
 union_set add_set(union_set uset, set s);
+set extract_set(const union_set& uset, space s);
 
 }
 }

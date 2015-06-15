@@ -1137,6 +1137,56 @@ isl::schedule_node create_caches(isl::schedule_node band_to_tile, bool unroll_lo
     return band_to_tile;
 }
 
+void separate_full_from_partial_tiles(isl::schedule_node& band, util::index_t top_level_tile_size)
+{
+    auto prefix_schedule = band.get_prefix_schedule_union_map();
+
+    auto n_outer_dim = prefix_schedule.range().get_sets()[0].dim(isl_dim_set);
+
+    auto subtree_schedule = band.get_subtree_schedule_union_map();
+
+    auto n_member = band.band_n_member();
+
+    isl::space s(isl_ctx, 0, n_member, n_member);
+    auto m = isl::map::universe(s);
+
+    for (int j = 0; j < n_member; ++j)
+    {
+        auto c = isl::constraint::equality(s)
+                .set_coefficient(isl_dim_in, j, -1)
+                .set_coefficient(isl_dim_out, j, 1)
+                .set_constant(top_level_tile_size-1);
+
+        m.add_constraint(c);
+    }
+
+    auto isolate_cond = isl::set::empty(isl::space(isl_ctx, 0, n_member));
+
+    for (const auto& map : subtree_schedule.get_maps())
+    {
+        auto dom = extract_set(band.get_domain(),
+                               map.domain().get_space());
+
+        auto time_dom = apply(dom, map);
+
+        auto reduced_time_dom = project_out(time_dom, isl_dim_set, 0,
+                                            time_dom.dim(isl_dim_set) - n_member);
+
+        auto isolate_cond_ = apply(reduced_time_dom, m);
+
+        isolate_cond = union_(isolate_cond, isolate_cond_);
+    }
+
+    auto outer_dims = flat_product(isolate_cond, isl::set::universe(isl::space(isl_ctx, 0, n_outer_dim - n_member)));
+
+    auto inner_dims = isl::set::universe(isl::space(isl_ctx, 0, n_member));
+
+    auto option = wrap(make_map_from_domain_and_range(outer_dims, inner_dims));
+    option.set_tuple_name("isolate");
+
+    band.band_set_ast_build_options(option);
+}
+
 isl::schedule_node optimize_schedule_node(isl::schedule_node root, scop& s)
 {
     if (root.get_type() == isl_schedule_node_band)
@@ -1146,7 +1196,7 @@ isl::schedule_node optimize_schedule_node(isl::schedule_node root, scop& s)
             if (root[0].get_type() == isl_schedule_node_leaf)
             {
                 isl_options_set_tile_shift_point_loops(isl_ctx.native_handle(), 0);
-                // isl_options_set_tile_scale_tile_loops(isl_ctx.native_handle(), 0);
+                isl_options_set_tile_scale_tile_loops(isl_ctx.native_handle(), 1);
 
                 if (root.band_n_member() > 1)
                 {
@@ -1172,6 +1222,11 @@ isl::schedule_node optimize_schedule_node(isl::schedule_node root, scop& s)
                                                                   tile_sizes[i]);
 
                             auto the_tile_band = tile_band(band_to_tile, tile_shape);
+
+                            if (i == 1)
+                            {
+                                separate_full_from_partial_tiles(the_tile_band, tile_sizes[0]);
+                            }
 
                             bool unroll_loops = i == num_tile_levels - 1;
 

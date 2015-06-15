@@ -79,6 +79,11 @@ void schedule_node::band_member_set_ast_loop_type(int pos, isl_ast_loop_type typ
     handle_ = isl_schedule_node_band_member_set_ast_loop_type(handle_, pos, type);
 }
 
+void schedule_node::band_member_set_isolate_ast_loop_type(int pos, isl_ast_loop_type type)
+{
+    handle_ = isl_schedule_node_band_member_set_isolate_ast_loop_type(handle_, pos, type);
+}
+
 void schedule_node::band_set_ast_build_options(union_set options)
 {
     handle_ = isl_schedule_node_band_set_ast_build_options(handle_, options.release());
