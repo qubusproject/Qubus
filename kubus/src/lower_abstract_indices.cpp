@@ -62,11 +62,13 @@ expression lower_abstract_indices(const expression& expr)
     return lower_abstract_indices_impl(expr);
 }
 
-function_declaration lower_abstract_indices(const function_declaration& decl)
+function_declaration lower_abstract_indices(function_declaration decl)
 {
     auto new_body = lower_abstract_indices(decl.body());
 
-    return function_declaration(decl.params(), decl.result(), new_body);
+    decl.substitute_body(std::move(new_body));
+    
+    return decl;
 }
 }
 }

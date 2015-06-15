@@ -31,6 +31,7 @@ class context_ref
 {
 public:
     explicit context_ref(isl_ctx* handle_);
+    context_ref(context& ctx);
 
     isl_ctx* native_handle() const;
 private:

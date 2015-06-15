@@ -771,7 +771,7 @@ emit_ast(const type& result_type, const Expr& expr)
         current_root = for_all_expr(decl, current_root);
     }
 
-    function_declaration entry_point(params, result, current_root);
+    function_declaration entry_point("entry", params, result, current_root);
 
     return std::make_tuple(entry_point, param_objs);
 }

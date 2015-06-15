@@ -52,18 +52,63 @@
 #include <llvm/Support/FormattedStream.h>
 #include <llvm/Support/Host.h>
 
+#include <boost/optional.hpp>
+#include <boost/signals2.hpp>
+
 #include <qbb/util/make_unique.hpp>
+#include <qbb/util/assert.hpp>
 
 #include <iostream>
 #include <memory>
 #include <map>
 #include <unordered_map>
 #include <mutex>
+#include <functional>
+#include <algorithm>
+#include <vector>
 
 namespace qbb
 {
 namespace kubus
 {
+
+class cpu_runtime
+{
+public:
+    cpu_runtime() : scratch_mem_(8 * 1024 * 1024), current_stack_ptr_(scratch_mem_.data())
+    {
+    }
+
+    void* alloc_scratch_mem(util::index_t size)
+    {
+        void* addr = current_stack_ptr_;
+
+        current_stack_ptr_ += size;
+
+        return addr;
+    }
+
+    void dealloc_scratch_mem(util::index_t size)
+    {
+        current_stack_ptr_ -= size;
+    }
+
+private:
+    std::vector<char> scratch_mem_;
+    char* current_stack_ptr_;
+};
+
+extern "C" QBB_KUBUS_EXPORT void* qbb_kubus_cpurt_alloc_scatch_mem(cpu_runtime* runtime,
+                                                                   util::index_t size)
+{
+    return runtime->alloc_scratch_mem(size);
+}
+
+extern "C" QBB_KUBUS_EXPORT void qbb_kubus_cpurt_dealloc_scratch_mem(cpu_runtime* runtime,
+                                                                     util::index_t size)
+{
+    runtime->dealloc_scratch_mem(size);
+}
 
 namespace
 {
@@ -101,8 +146,126 @@ llvm::AllocaInst* create_entry_block_alloca(llvm::Function* current_function, ll
     return builder.CreateAlloca(type, array_size, name);
 }
 
-reference compile(const expression& expr, llvm_environment& env,
-                  std::map<qbb::util::handle, reference>& symbol_table);
+llvm::LoadInst* load_from_ref(const reference& ref, llvm_environment& env)
+{
+    auto& builder = env.builder();
+
+    auto value = builder.CreateLoad(ref.addr());
+    value->setMetadata("alias.scope", env.get_alias_scope(ref.origin()));
+    value->setMetadata("noalias", env.get_noalias_set(ref.origin()));
+
+    return value;
+}
+
+llvm::StoreInst* store_to_ref(const reference& ref, llvm::Value* value, llvm_environment& env)
+{
+    auto& builder = env.builder();
+
+    auto store = builder.CreateStore(value, ref.addr());
+    store->setMetadata("alias.scope", env.get_alias_scope(ref.origin()));
+    store->setMetadata("noalias", env.get_noalias_set(ref.origin()));
+
+    return store;
+}
+
+class scope
+{
+public:
+    using on_scope_exit_signal = boost::signals2::signal<void()>;
+
+    scope() : on_scope_exit_(util::make_unique<on_scope_exit_signal>())
+    {
+    }
+
+    scope(const scope&) = delete;
+    scope& operator=(const scope&) = delete;
+
+    scope(scope&&) = default;
+    scope& operator=(scope&&) = default;
+
+    ~scope()
+    {
+        if (on_scope_exit_)
+        {
+            (*on_scope_exit_)();
+        }
+    }
+
+    void on_exit(const on_scope_exit_signal::slot_type& subscriber)
+    {
+        on_scope_exit_->connect(subscriber);
+    }
+
+private:
+    std::unique_ptr<on_scope_exit_signal> on_scope_exit_;
+};
+
+class compilation_context
+{
+public:
+    compilation_context() : scopes_(1)
+    {
+    }
+
+    compilation_context(const compilation_context&) = delete;
+    compilation_context& operator=(const compilation_context&) = delete;
+
+    std::map<qbb::util::handle, reference>& symbol_table()
+    {
+        return symbol_table_;
+    }
+
+    const std::map<qbb::util::handle, reference>& symbol_table() const
+    {
+        return symbol_table_;
+    }
+
+    boost::optional<function_declaration> get_next_plan_to_compile()
+    {
+        if (plans_to_compile_.empty())
+            return boost::none;
+
+        auto next_plan_to_compile = plans_to_compile_.back();
+
+        plans_to_compile_.pop_back();
+
+        return next_plan_to_compile;
+    }
+
+    void add_plan_to_compile(function_declaration fn)
+    {
+        plans_to_compile_.push_back(std::move(fn));
+    }
+
+    scope& enter_new_scope()
+    {
+        scopes_.emplace_back();
+
+        return scopes_.back();
+    }
+
+    scope& get_current_scope()
+    {
+        return scopes_.back();
+    }
+
+    const scope& get_current_scope() const
+    {
+        return scopes_.back();
+    }
+
+    void exit_current_scope()
+    {
+        scopes_.pop_back();
+    }
+
+private:
+    std::map<qbb::util::handle, reference> symbol_table_;
+    std::vector<function_declaration> plans_to_compile_;
+    std::vector<scope> scopes_;
+};
+
+reference compile(const expression& expr, llvm_environment& env, compilation_context& ctx);
 
 template <typename BodyEmitter>
 void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Value* upper_bound,
@@ -110,10 +273,7 @@ void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Val
 {
     auto& builder_ = env.builder();
 
-    auto initialize_induction_variable =
-        builder_.CreateStore(lower_bound, induction_variable.addr());
-    initialize_induction_variable->setMetadata("tbaa",
-                                               env.get_tbaa_node(induction_variable.origin()));
+    store_to_ref(induction_variable, lower_bound, env);
 
     llvm::BasicBlock* header = llvm::BasicBlock::Create(llvm::getGlobalContext(), "header",
                                                         builder_.GetInsertBlock()->getParent());
@@ -126,8 +286,7 @@ void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Val
 
     builder_.SetInsertPoint(header);
 
-    auto induction_variable_value = builder_.CreateLoad(induction_variable.addr());
-    induction_variable_value->setMetadata("tbaa", env.get_tbaa_node(induction_variable.origin()));
+    auto induction_variable_value = load_from_ref(induction_variable, env);
 
     llvm::Value* exit_cond = builder_.CreateICmpSLT(induction_variable_value, upper_bound);
 
@@ -137,13 +296,10 @@ void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Val
 
     body_emitter();
 
-    auto induction_variable_value2 = builder_.CreateLoad(induction_variable.addr());
-    induction_variable_value2->setMetadata("tbaa", env.get_tbaa_node(induction_variable.origin()));
+    auto induction_variable_value2 = load_from_ref(induction_variable, env);
 
-    auto instr = builder_.CreateStore(
-        builder_.CreateAdd(induction_variable_value2, increment, "", false, true),
-        induction_variable.addr());
-    instr->setMetadata("tbaa", env.get_tbaa_node(induction_variable.origin()));
+    store_to_ref(induction_variable,
+                 builder_.CreateAdd(induction_variable_value2, increment, "", true, true), env);
 
     builder_.CreateBr(header);
 
@@ -154,24 +310,51 @@ void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Val
     builder_.SetInsertPoint(exit);
 }
 
+template <typename ThenEmitter, typename ElseEmitter>
+void emit_if_else(reference condition, ThenEmitter then_emitter, ElseEmitter else_emitter,
+                  llvm_environment& env)
+{
+    auto& builder_ = env.builder();
+
+    auto condition_value = load_from_ref(condition, env);
+
+    llvm::BasicBlock* then_block = llvm::BasicBlock::Create(llvm::getGlobalContext(), "then",
+                                                            builder_.GetInsertBlock()->getParent());
+    llvm::BasicBlock* else_block = llvm::BasicBlock::Create(llvm::getGlobalContext(), "else",
+                                                            builder_.GetInsertBlock()->getParent());
+    llvm::BasicBlock* merge = llvm::BasicBlock::Create(llvm::getGlobalContext(), "merge",
+                                                       builder_.GetInsertBlock()->getParent());
+
+    builder_.CreateCondBr(condition_value, then_block, else_block);
+
+    builder_.SetInsertPoint(then_block);
+
+    then_emitter();
+
+    builder_.CreateBr(merge);
+
+    builder_.SetInsertPoint(else_block);
+
+    else_emitter();
+
+    builder_.CreateBr(merge);
+
+    builder_.SetInsertPoint(merge);
+}
+
 reference emit_binary_operator(binary_op_tag tag, const expression& left, const expression& right,
-                               llvm_environment& env,
-                               std::map<qbb::util::handle, reference>& symbol_table)
+                               llvm_environment& env, compilation_context& ctx)
 {
     using pattern::_;
 
-    reference left_value_ptr = compile(left, env, symbol_table);
-    reference right_value_ptr = compile(right, env, symbol_table);
+    reference left_value_ptr = compile(left, env, ctx);
+    reference right_value_ptr = compile(right, env, ctx);
 
     auto& builder = env.builder();
 
-    llvm::Instruction* left_value =
-        builder.CreateAlignedLoad(left_value_ptr.addr(), get_prefered_alignment());
-    left_value->setMetadata("tbaa", env.get_tbaa_node(left_value_ptr.origin()));
+    llvm::Instruction* left_value = load_from_ref(left_value_ptr, env);
 
-    llvm::Instruction* right_value =
-        builder.CreateAlignedLoad(right_value_ptr.addr(), get_prefered_alignment());
-    right_value->setMetadata("tbaa", env.get_tbaa_node(right_value_ptr.origin()));
+    llvm::Instruction* right_value = load_from_ref(right_value_ptr, env);
 
     type result_type = typeof_(left);
 
@@ -181,9 +364,7 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
     {
     case binary_op_tag::assign:
     {
-        llvm::Instruction* store = builder.CreateAlignedStore(right_value, left_value_ptr.addr(),
-                                                              get_prefered_alignment());
-        store->setMetadata("tbaa", env.get_tbaa_node(left_value_ptr.origin()));
+        store_to_ref(left_value_ptr, right_value, env);
 
         return reference();
     }
@@ -228,9 +409,7 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
 
         llvm::Value* sum = pattern::match(result_type, m);
 
-        llvm::Instruction* store =
-            builder.CreateAlignedStore(sum, left_value_ptr.addr(), get_prefered_alignment());
-        store->setMetadata("tbaa", env.get_tbaa_node(left_value_ptr.origin()));
+        store_to_ref(left_value_ptr, sum, env);
 
         return reference();
     }
@@ -246,7 +425,7 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
                 .case_(pattern::integer_t,
                        [&]
                        {
-                           return builder.CreateAdd(left_value, right_value);
+                           return builder.CreateAdd(left_value, right_value, "", true, true);
                        })
                 .case_(pattern::complex_t(_), [&]
                        {
@@ -289,7 +468,7 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
                 .case_(pattern::integer_t,
                        [&]
                        {
-                           return builder.CreateSub(left_value, right_value);
+                           return builder.CreateSub(left_value, right_value, "", true, true);
                        })
                 .case_(pattern::complex_t(_), [&]
                        {
@@ -332,7 +511,7 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
                 .case_(pattern::integer_t,
                        [&]
                        {
-                           return builder.CreateMul(left_value, right_value);
+                           return builder.CreateMul(left_value, right_value, "", true, true);
                        })
                 .case_(pattern::complex_t(_), [&]
                        {
@@ -467,30 +646,112 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
 
         break;
     }
+    case binary_op_tag::equal_to:
+    {
+        auto m = pattern::make_matcher<type, llvm::Value*>().case_(
+            pattern::integer_t || pattern::bool_t, [&]
+            {
+                return builder.CreateICmpEQ(left_value, right_value);
+            });
+
+        result = pattern::match(result_type, m);
+
+        break;
+    }
+    case binary_op_tag::less:
+    {
+        auto m = pattern::make_matcher<type, llvm::Value*>().case_(
+            pattern::integer_t || pattern::bool_t, [&]
+            {
+                return builder.CreateICmpSLT(left_value, right_value);
+            });
+
+        result = pattern::match(result_type, m);
+
+        break;
+    }
+    case binary_op_tag::less_equal:
+    {
+        auto m = pattern::make_matcher<type, llvm::Value*>().case_(
+            pattern::integer_t || pattern::bool_t, [&]
+            {
+                return builder.CreateICmpSLE(left_value, right_value);
+            });
+
+        result = pattern::match(result_type, m);
+
+        break;
+    }
+    case binary_op_tag::greater:
+    {
+        auto m = pattern::make_matcher<type, llvm::Value*>().case_(
+            pattern::integer_t || pattern::bool_t, [&]
+            {
+                return builder.CreateICmpSGT(left_value, right_value);
+            });
+
+        result = pattern::match(result_type, m);
+
+        break;
+    }
+    case binary_op_tag::greater_equal:
+    {
+        auto m = pattern::make_matcher<type, llvm::Value*>().case_(
+            pattern::integer_t || pattern::bool_t, [&]
+            {
+                return builder.CreateICmpSGE(left_value, right_value);
+            });
+
+        result = pattern::match(result_type, m);
+
+        break;
+    }
+    case binary_op_tag::logical_and:
+    {
+        auto m = pattern::make_matcher<type, llvm::Value*>().case_(pattern::bool_t, [&]
+                                                                   {
+                                                                       return builder.CreateAnd(
+                                                                           left_value, right_value);
+                                                                   });
+
+        result = pattern::match(result_type, m);
+
+        break;
+    }
+    case binary_op_tag::logical_or:
+    {
+        auto m = pattern::make_matcher<type, llvm::Value*>().case_(pattern::bool_t, [&]
+                                                                   {
+                                                                       return builder.CreateOr(
+                                                                           left_value, right_value);
+                                                                   });
+
+        result = pattern::match(result_type, m);
+
+        break;
+    }
     default:
         throw 0;
     }
 
     auto result_var = create_entry_block_alloca(env.get_current_function(), result->getType());
-    result_var->setAlignment(get_prefered_alignment());
 
-    builder.CreateAlignedStore(result, result_var, get_prefered_alignment());
+    reference result_var_ref(result_var, access_path());
+    store_to_ref(result_var_ref, result, env);
 
-    return reference(result_var, access_path());
+    return result_var_ref;
 }
 
 reference emit_unary_operator(unary_op_tag tag, const expression& arg, llvm_environment& env,
-                              std::map<qbb::util::handle, reference>& symbol_table)
+                              compilation_context& ctx)
 {
     using pattern::_;
 
-    reference arg_value_ptr = compile(arg, env, symbol_table);
+    reference arg_value_ptr = compile(arg, env, ctx);
 
     auto& builder = env.builder();
 
-    llvm::Instruction* arg_value =
-        builder.CreateAlignedLoad(arg_value_ptr.addr(), get_prefered_alignment());
-    arg_value->setMetadata("tbaa", env.get_tbaa_node(arg_value_ptr.origin()));
+    llvm::Instruction* arg_value = load_from_ref(arg_value_ptr, env);
 
     type result_type = typeof_(arg);
 
@@ -544,26 +805,24 @@ reference emit_unary_operator(unary_op_tag tag, const expression& arg, llvm_envi
     }
 
     auto result_var = create_entry_block_alloca(env.get_current_function(), result->getType());
-    result_var->setAlignment(get_prefered_alignment());
 
-    builder.CreateAlignedStore(result, result_var, get_prefered_alignment());
+    reference result_var_ref(result_var, access_path());
 
-    return reference(result_var, access_path());
+    store_to_ref(result_var_ref, result, env);
+
+    return result_var_ref;
 }
 
 reference emit_type_conversion(const type& target_type, const expression& arg,
-                               llvm_environment& env,
-                               std::map<qbb::util::handle, reference>& symbol_table)
+                               llvm_environment& env, compilation_context& ctx)
 {
     using pattern::_;
 
-    reference arg_value_ptr = compile(arg, env, symbol_table);
+    reference arg_value_ptr = compile(arg, env, ctx);
 
     auto& builder = env.builder();
 
-    llvm::Instruction* arg_value =
-        builder.CreateAlignedLoad(arg_value_ptr.addr(), get_prefered_alignment());
-    arg_value->setMetadata("tbaa", env.get_tbaa_node(arg_value_ptr.origin()));
+    llvm::Instruction* arg_value = load_from_ref(arg_value_ptr, env);
 
     type arg_type = typeof_(arg);
 
@@ -732,22 +991,211 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
     llvm::Value* result = pattern::match(arg_type, m);
 
     auto result_var = create_entry_block_alloca(env.get_current_function(), result->getType());
-    result_var->setAlignment(get_prefered_alignment());
 
-    builder.CreateAlignedStore(result, result_var, get_prefered_alignment());
+    reference result_var_ref(result_var, access_path());
 
-    return reference(result_var, access_path());
+    store_to_ref(result_var_ref, result, env);
+
+    return result_var_ref;
 }
 
-reference compile(const expression& expr, llvm_environment& env,
-                  std::map<qbb::util::handle, reference>& symbol_table)
+llvm::Value* emit_array_access(llvm::Value* data, const std::vector<llvm::Value*>& shape,
+                               const std::vector<llvm::Value*>& indices, llvm_environment& env)
 {
+    auto& builder = env.builder();
+
+    llvm::Type* size_type = env.map_kubus_type(types::integer());
+
+    llvm::Value* linearized_index = llvm::ConstantInt::get(size_type, 0);
+
+    // for (std::size_t i = indices.size(); i-- > 0;)
+    for (std::size_t i = 0; i < indices.size(); i++)
+    {
+        auto extent = shape[i];
+
+        linearized_index =
+            builder.CreateAdd(builder.CreateMul(extent, linearized_index, "idx_mul", true, true),
+                              indices[i], "idx_add", true, true);
+    }
+
+    return builder.CreateInBoundsGEP(data, linearized_index);
+}
+
+reference emit_array_access(const reference& data, const reference& shape,
+                            const std::vector<llvm::Value*>& indices, llvm_environment& env)
+{
+    auto& builder = env.builder();
+
+    std::vector<llvm::Value*> shape_;
+    shape_.reserve(indices.size());
+
+    for (std::size_t i = 0; i < indices.size(); ++i)
+    {
+        auto extent_ptr = builder.CreateConstInBoundsGEP1_32(shape.addr(), i);
+
+        auto extent = load_from_ref(reference(extent_ptr, shape.origin()), env);
+
+        shape_.push_back(extent);
+    }
+
+    auto accessed_element = emit_array_access(data.addr(), shape_, indices, env);
+
+    return reference(accessed_element, data.origin());
+}
+
+expression reassociate_index_expression(expression expr)
+{
+    using pattern::_;
+
+    util::index_t constant_term = 0;
+
+    std::function<expression(expression)> collect_constant_terms = [&](expression expr)
+    {
+        pattern::variable<expression> lhs, rhs;
+        pattern::variable<util::index_t> value;
+
+        auto m = pattern::matcher<expression, expression>()
+                     .case_(binary_operator(pattern::value(binary_op_tag::plus),
+                                            integer_literal(value), rhs),
+                            [&]
+                            {
+                                constant_term += value.get();
+
+                                return collect_constant_terms(rhs.get());
+                            })
+                     .case_(binary_operator(pattern::value(binary_op_tag::plus), lhs,
+                                            integer_literal(value)),
+                            [&]
+                            {
+                                constant_term += value.get();
+
+                                return collect_constant_terms(lhs.get());
+                            })
+                     .case_(binary_operator(pattern::value(binary_op_tag::plus), lhs, rhs),
+                            [&]
+                            {
+                                return binary_operator_expr(binary_op_tag::plus,
+                                                            collect_constant_terms(lhs.get()),
+                                                            collect_constant_terms(rhs.get()));
+                            })
+                     .case_(_, [&](const expression& self)
+                            {
+                                return self;
+                            });
+
+        return pattern::match(expr, m);
+    };
+
+    auto simplified_expr = collect_constant_terms(expr);
+
+    if (constant_term != 0)
+    {
+        return binary_operator_expr(binary_op_tag::plus, simplified_expr,
+                                    integer_literal_expr(constant_term));
+    }
+    else
+    {
+        return simplified_expr;
+    }
+}
+
+reference emit_tensor_access(const variable_declaration& tensor,
+                             const std::vector<expression>& indices, llvm_environment& env,
+                             compilation_context& ctx)
+{
+    expression linearized_index = integer_literal_expr(0);
+
+    for (std::size_t i = 0; i < indices.size(); ++i)
+    {
+        auto extent =
+            intrinsic_function_expr("extent", {variable_ref_expr(tensor), integer_literal_expr(i)});
+
+        linearized_index = binary_operator_expr(
+            binary_op_tag::plus,
+            binary_operator_expr(binary_op_tag::multiplies, extent, linearized_index), indices[i]);
+    }
+
+    linearized_index = reassociate_index_expression(std::move(linearized_index));
+
+    auto linearized_index_ = compile(linearized_index, env, ctx);
+
+    auto tensor_ = ctx.symbol_table().at(tensor.id());
+
+    auto& builder = env.builder();
+
+    llvm::Value* data_ptr = builder.CreateConstInBoundsGEP2_32(tensor_.addr(), 0, 0, "data_ptr");
+
+    auto data = load_from_ref(reference(data_ptr, tensor_.origin()), env);
+
+    return reference(builder.CreateInBoundsGEP(data, load_from_ref(linearized_index_, env)),
+                     tensor_.origin() / "data");
+}
+
+//TODO: Implement the index expression reassociation optimization for slices.
+reference emit_array_slice_access(const reference& slice, const std::vector<llvm::Value*>& indices,
+                                  llvm_environment& env)
+{
+    auto& builder = env.builder();
+
+    llvm::Value* data_ptr = builder.CreateConstInBoundsGEP2_32(slice.addr(), 0, 0, "data_ptr");
+    llvm::Value* shape_ptr = builder.CreateConstInBoundsGEP2_32(slice.addr(), 0, 1, "shape_ptr");
+    llvm::Value* origin_ptr = builder.CreateConstInBoundsGEP2_32(slice.addr(), 0, 2, "origin_ptr");
+
+    auto shape = load_from_ref(reference(shape_ptr, slice.origin()), env);
+    auto data = load_from_ref(reference(data_ptr, slice.origin()), env);
+    auto origin = load_from_ref(reference(origin_ptr, slice.origin()), env);
+
+    std::vector<llvm::Value*> transformed_indices;
+    transformed_indices.reserve(indices.size());
+
+    for (std::size_t i = 0; i < indices.size(); ++i)
+    {
+        auto origin_component_ptr = builder.CreateConstInBoundsGEP1_32(origin, i);
+
+        auto origin_component =
+            load_from_ref(reference(origin_component_ptr, slice.origin() / "origin"), env);
+
+        auto transformed_index = builder.CreateAdd(origin_component, indices[i], "", true, true);
+
+        transformed_indices.push_back(transformed_index);
+    }
+
+    auto accessed_element =
+        emit_array_access(reference(data, slice.origin() / "data"),
+                          reference(shape, slice.origin() / "shape"), transformed_indices, env);
+
+    return accessed_element;
+}
+
+std::vector<llvm::Value*> permute_indices(const std::vector<llvm::Value*>& indices,
+                                          const std::vector<util::index_t>& permutation)
+{
+    std::vector<llvm::Value*> permuted_indices;
+    permuted_indices.reserve(indices.size());
+
+    for (std::size_t i = 0; i < indices.size(); ++i)
+    {
+        permuted_indices.push_back(indices[permutation[i]]);
+    }
+
+    return permuted_indices;
+}
+
+reference compile(const expression& expr, llvm_environment& env, compilation_context& ctx)
+{
+    using pattern::_;
+
+    auto& symbol_table = ctx.symbol_table();
+
     pattern::variable<binary_op_tag> btag;
     pattern::variable<unary_op_tag> utag;
     pattern::variable<expression> a, b, c, d;
+    pattern::variable<boost::optional<expression>> opt_expr;
     pattern::variable<std::vector<expression>> expressions;
 
     pattern::variable<variable_declaration> idx;
+    pattern::variable<variable_declaration> var;
+    pattern::variable<function_declaration> plan;
 
     pattern::variable<util::index_t> ival;
     pattern::variable<float> fval;
@@ -761,96 +1209,75 @@ reference compile(const expression& expr, llvm_environment& env,
 
     auto m =
         pattern::make_matcher<expression, reference>()
-            /*.case_(
-                 binary_operator(pattern::value(binary_op_tag::plus),
-                                 binary_operator(pattern::value(binary_op_tag::multiplies), a, b),
-                                 c),
-                 [&]
-                 {
-                     reference a_value_ptr = compile(a.get(), env, symbol_table);
-                     reference b_value_ptr = compile(b.get(), env, symbol_table);
-                     reference c_value_ptr = compile(c.get(), env, symbol_table);
-
-                     auto& builder = env.builder();
-
-                     llvm::Instruction* a_value = builder.CreateAlignedLoad(a_value_ptr.addr(), 32);
-                     a_value->setMetadata("tbaa", env.get_tbaa_node(a_value_ptr.origin()));
-
-                     llvm::Instruction* b_value = builder.CreateAlignedLoad(b_value_ptr.addr(), 32);
-                     b_value->setMetadata("tbaa", env.get_tbaa_node(b_value_ptr.origin()));
-
-                     llvm::Instruction* c_value = builder.CreateAlignedLoad(c_value_ptr.addr(), 32);
-                     c_value->setMetadata("tbaa", env.get_tbaa_node(c_value_ptr.origin()));
-
-                     auto double_type = env.map_kubus_type(types::double_());
-
-                     std::vector<llvm::Type*> arg_types(3, double_type);
-
-                     auto fma_type = llvm::FunctionType::get(double_type, arg_types, false);
-
-                     auto fma = env.module().getOrInsertFunction("llvm.fmuladd.f64", fma_type);
-
-                     llvm::Value* result = builder.CreateCall3(fma, a_value, b_value, c_value);
-
-                     auto result_var = create_entry_block_alloca(env.get_current_function(),
-               result->getType());
-                     result_var->setAlignment(32);
-
-                     builder.CreateAlignedStore(result, result_var, 32);
-
-                     return reference(result_var, access_path());
-                 })*/
             .case_(binary_operator(btag, a, b),
                    [&]
                    {
-                       return emit_binary_operator(btag.get(), a.get(), b.get(), env, symbol_table);
+                       return emit_binary_operator(btag.get(), a.get(), b.get(), env, ctx);
                    })
             .case_(unary_operator(utag, a),
                    [&]
                    {
-                       return emit_unary_operator(utag.get(), a.get(), env, symbol_table);
+                       return emit_unary_operator(utag.get(), a.get(), env, ctx);
                    })
-            .case_(
-                 for_(idx, a, b, c, d),
-                 [&]
-                 {
-                     llvm::Type* size_type = env.map_kubus_type(types::integer());
+            .case_(for_(idx, a, b, c, d),
+                   [&]
+                   {
+                       ctx.enter_new_scope();
 
-                     auto increment_ptr = compile(c.get(), env, symbol_table);
-                     auto increment_value = builder.CreateLoad(increment_ptr.addr());
-                     increment_value->setMetadata("tbaa",
-                                                  env.get_tbaa_node(increment_ptr.origin()));
+                       llvm::Type* size_type = env.map_kubus_type(types::integer());
 
-                     llvm::Value* induction_var = create_entry_block_alloca(
-                         env.get_current_function(), size_type, nullptr, "ind");
+                       auto increment_ptr = compile(c.get(), env, ctx);
+                       auto increment_value = load_from_ref(increment_ptr, env);
 
-                     auto induction_var_ref = reference(induction_var, access_path());
+                       llvm::Value* induction_var = create_entry_block_alloca(
+                           env.get_current_function(), size_type, nullptr, "ind");
 
-                     symbol_table[idx.get().id()] = induction_var_ref;
+                       auto induction_var_ref = reference(induction_var, access_path());
 
-                     reference lower_bound_ptr = compile(a.get(), env, symbol_table);
-                     reference upper_bound_ptr = compile(b.get(), env, symbol_table);
+                       symbol_table[idx.get().id()] = induction_var_ref;
 
-                     auto lower_bound = builder.CreateLoad(lower_bound_ptr.addr());
-                     lower_bound->setMetadata("tbaa", env.get_tbaa_node(lower_bound_ptr.origin()));
-                     auto upper_bound = builder.CreateLoad(upper_bound_ptr.addr());
-                     upper_bound->setMetadata("tbaa", env.get_tbaa_node(upper_bound_ptr.origin()));
+                       reference lower_bound_ptr = compile(a.get(), env, ctx);
+                       reference upper_bound_ptr = compile(b.get(), env, ctx);
 
-                     emit_loop(induction_var_ref, lower_bound, upper_bound, increment_value,
-                               [&]()
-                               {
-                                   compile(d.get(), env, symbol_table);
-                               },
-                               env);
+                       auto lower_bound = load_from_ref(lower_bound_ptr, env);
+                       auto upper_bound = load_from_ref(upper_bound_ptr, env);
 
-                     return reference();
-                 })
+                       emit_loop(induction_var_ref, lower_bound, upper_bound, increment_value,
+                                 [&]()
+                                 {
+                                     compile(d.get(), env, ctx);
+                                 },
+                                 env);
+
+                       return reference();
+                   })
+            .case_(if_(a, b, opt_expr),
+                   [&]
+                   {
+                       auto condition = compile(a.get(), env, ctx);
+
+                       emit_if_else(condition,
+                                    [&]
+                                    {
+                                        compile(b.get(), env, ctx);
+                                    },
+                                    [&]
+                                    {
+                                        if (opt_expr.get())
+                                        {
+                                            compile(*opt_expr.get(), env, ctx);
+                                        }
+                                    },
+                                    env);
+
+                       return reference();
+                   })
             .case_(compound(expressions),
                    [&]
                    {
                        for (const auto& subexpr : expressions.get())
                        {
-                           compile(subexpr, env, symbol_table);
+                           compile(subexpr, env, ctx);
                        }
 
                        return reference();
@@ -862,18 +1289,13 @@ reference compile(const expression& expr, llvm_environment& env,
 
                        llvm::Value* value = llvm::ConstantFP::get(double_type, dval.get());
 
-                       auto& builder = env.builder();
-
                        auto var =
                            create_entry_block_alloca(env.get_current_function(), double_type);
-                       var->setAlignment(get_prefered_alignment());
 
-                       auto lit_store =
-                           builder.CreateAlignedStore(value, var, get_prefered_alignment());
+                       reference var_ref(var, access_path());
+                       store_to_ref(var_ref, value, env);
 
-                       lit_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
-
-                       return reference(var, access_path());
+                       return var_ref;
                    })
             .case_(float_literal(fval),
                    [&]
@@ -882,15 +1304,13 @@ reference compile(const expression& expr, llvm_environment& env,
 
                        llvm::Value* value = llvm::ConstantFP::get(float_type, fval.get());
 
-                       auto& builder = env.builder();
-
                        llvm::Value* var =
                            create_entry_block_alloca(env.get_current_function(), float_type);
 
-                       auto lit_store = builder.CreateStore(value, var);
-                       lit_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+                       reference var_ref(var, access_path());
+                       store_to_ref(var_ref, value, env);
 
-                       return reference(var, access_path());
+                       return var_ref;
                    })
             .case_(integer_literal(ival),
                    [&]
@@ -899,15 +1319,13 @@ reference compile(const expression& expr, llvm_environment& env,
 
                        llvm::Value* value = llvm::ConstantInt::get(size_type, ival.get());
 
-                       auto& builder = env.builder();
-
                        llvm::Value* var =
                            create_entry_block_alloca(env.get_current_function(), size_type);
 
-                       auto lit_store = builder.CreateStore(value, var);
-                       lit_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+                       reference var_ref(var, access_path());
+                       store_to_ref(var_ref, value, env);
 
-                       return reference(var, access_path());
+                       return var_ref;
                    })
             .case_(intrinsic_function_n(pattern::value("delta"), a, b),
                    [&]
@@ -916,14 +1334,12 @@ reference compile(const expression& expr, llvm_environment& env,
 
                        auto int_type = env.map_kubus_type(types::integer());
 
-                       auto a_ref = compile(a.get(), env, symbol_table);
-                       auto b_ref = compile(b.get(), env, symbol_table);
+                       auto a_ref = compile(a.get(), env, ctx);
+                       auto b_ref = compile(b.get(), env, ctx);
 
-                       auto a_value = builder.CreateLoad(a_ref.addr());
-                       a_value->setMetadata("tbaa", env.get_tbaa_node(a_ref.origin()));
+                       auto a_value = load_from_ref(a_ref, env);
 
-                       auto b_value = builder.CreateLoad(b_ref.addr());
-                       b_value->setMetadata("tbaa", env.get_tbaa_node(b_ref.origin()));
+                       auto b_value = load_from_ref(b_ref, env);
 
                        auto cond = builder.CreateICmpEQ(a_value, b_value);
 
@@ -935,216 +1351,427 @@ reference compile(const expression& expr, llvm_environment& env,
                        auto result =
                            create_entry_block_alloca(env.get_current_function(), int_type);
 
-                       auto result_store = builder.CreateStore(result_value, result);
-                       result_store->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+                       reference result_ref(result, access_path());
+                       store_to_ref(result_ref, result_value, env);
 
-                       return reference(result, access_path());
+                       return result_ref;
                    })
             .case_(intrinsic_function_n(pattern::value("extent"), variable_ref(idx), b),
                    [&]
                    {
-                       auto ref = symbol_table[idx.get().id()];
-
-                       auto tensor = builder.CreateLoad(ref.addr());
-                       tensor->setMetadata("tbaa", env.get_tbaa_node(ref.origin()));
+                       auto tensor = symbol_table.at(idx.get().id());
 
                        llvm::Value* shape_ptr =
-                           builder.CreateConstInBoundsGEP2_32(tensor, 0, 1, "shape_ptr");
+                           builder.CreateConstInBoundsGEP2_32(tensor.addr(), 0, 1, "shape_ptr");
 
-                       auto shape = builder.CreateLoad(shape_ptr, "shape");
-                       shape->setMetadata("tbaa", env.get_tbaa_node(ref.origin()));
+                       auto shape = load_from_ref(reference(shape_ptr, tensor.origin()), env);
 
-                       reference dim_ref = compile(b.get(), env, symbol_table);
+                       reference dim_ref = compile(b.get(), env, ctx);
 
-                       auto dim = builder.CreateLoad(dim_ref.addr());
-                       dim->setMetadata("tbaa", env.get_tbaa_node(dim_ref.origin()));
+                       auto dim = load_from_ref(dim_ref, env);
 
                        llvm::Value* extent_ptr =
                            builder.CreateInBoundsGEP(shape, dim, "extent_ptr");
 
-                       return reference(extent_ptr, ref.origin() / "shape");
+                       return reference(extent_ptr, tensor.origin() / "shape");
                    })
-            .case_(
-                 intrinsic_function_n(pattern::value("min"), a, b),
-                 [&]
-                 {
-                     reference left_value_ptr = compile(a.get(), env, symbol_table);
-                     reference right_value_ptr = compile(b.get(), env, symbol_table);
+            .case_(intrinsic_function_n(pattern::value("min"), a, b),
+                   [&]
+                   {
+                       reference left_value_ptr = compile(a.get(), env, ctx);
+                       reference right_value_ptr = compile(b.get(), env, ctx);
 
-                     llvm::Instruction* left_value =
-                         builder.CreateAlignedLoad(left_value_ptr.addr(), get_prefered_alignment());
-                     left_value->setMetadata("tbaa", env.get_tbaa_node(left_value_ptr.origin()));
+                       llvm::Instruction* left_value = load_from_ref(left_value_ptr, env);
 
-                     llvm::Instruction* right_value = builder.CreateAlignedLoad(
-                         right_value_ptr.addr(), get_prefered_alignment());
-                     right_value->setMetadata("tbaa", env.get_tbaa_node(right_value_ptr.origin()));
+                       llvm::Instruction* right_value = load_from_ref(right_value_ptr, env);
 
-                     type result_type = typeof_(a.get());
+                       type result_type = typeof_(a.get());
 
-                     auto cond = builder.CreateICmpSLT(left_value, right_value);
+                       auto cond = builder.CreateICmpSLT(left_value, right_value);
 
-                     auto result = builder.CreateSelect(cond, left_value, right_value);
+                       auto result = builder.CreateSelect(cond, left_value, right_value);
 
-                     auto result_var =
-                         create_entry_block_alloca(env.get_current_function(), result->getType());
-                     result_var->setAlignment(get_prefered_alignment());
+                       auto result_var =
+                           create_entry_block_alloca(env.get_current_function(), result->getType());
 
-                     builder.CreateAlignedStore(result, result_var, get_prefered_alignment());
+                       reference result_ref(result_var, access_path());
+                       store_to_ref(result_ref, result, env);
 
-                     return reference(result_var, access_path());
-                 })
-            .case_(
-                 intrinsic_function_n(pattern::value("max"), a, b),
-                 [&]
-                 {
-                     reference left_value_ptr = compile(a.get(), env, symbol_table);
-                     reference right_value_ptr = compile(b.get(), env, symbol_table);
+                       return result_ref;
+                   })
+            .case_(intrinsic_function_n(pattern::value("max"), a, b),
+                   [&]
+                   {
+                       reference left_value_ptr = compile(a.get(), env, ctx);
+                       reference right_value_ptr = compile(b.get(), env, ctx);
 
-                     llvm::Instruction* left_value =
-                         builder.CreateAlignedLoad(left_value_ptr.addr(), get_prefered_alignment());
-                     left_value->setMetadata("tbaa", env.get_tbaa_node(left_value_ptr.origin()));
+                       llvm::Instruction* left_value = load_from_ref(left_value_ptr, env);
 
-                     llvm::Instruction* right_value = builder.CreateAlignedLoad(
-                         right_value_ptr.addr(), get_prefered_alignment());
-                     right_value->setMetadata("tbaa", env.get_tbaa_node(right_value_ptr.origin()));
+                       llvm::Instruction* right_value = load_from_ref(right_value_ptr, env);
 
-                     type result_type = typeof_(a.get());
+                       auto cond = builder.CreateICmpSLT(left_value, right_value);
 
-                     auto cond = builder.CreateICmpSLT(left_value, right_value);
+                       auto result = builder.CreateSelect(cond, right_value, left_value);
 
-                     auto result = builder.CreateSelect(cond, right_value, left_value);
+                       auto result_var =
+                           create_entry_block_alloca(env.get_current_function(), result->getType());
 
-                     auto result_var =
-                         create_entry_block_alloca(env.get_current_function(), result->getType());
-                     result_var->setAlignment(get_prefered_alignment());
+                       reference result_ref(result_var, access_path());
+                       store_to_ref(result_ref, result, env);
 
-                     builder.CreateAlignedStore(result, result_var, get_prefered_alignment());
+                       return result_ref;
+                   })
+            .case_(intrinsic_function_n(pattern::value("select"), a, b, c),
+                   [&]
+                   {
+                       reference cond_value_ptr = compile(a.get(), env, ctx);
+                       reference then_value_ptr = compile(b.get(), env, ctx);
+                       reference else_value_ptr = compile(c.get(), env, ctx);
 
-                     return reference(result_var, access_path());
-                 })
+                       llvm::Instruction* cond_value = load_from_ref(cond_value_ptr, env);
+                       llvm::Instruction* then_value = load_from_ref(then_value_ptr, env);
+                       llvm::Instruction* else_value = load_from_ref(else_value_ptr, env);
+
+                       auto result = builder.CreateSelect(cond_value, then_value, else_value);
+
+                       auto result_var =
+                           create_entry_block_alloca(env.get_current_function(), result->getType());
+
+                       reference result_ref(result_var, access_path());
+                       store_to_ref(result_ref, result, env);
+
+                       return result_ref;
+                   })
             .case_(type_conversion(t, a),
                    [&]
                    {
-                       return emit_type_conversion(t.get(), a.get(), env, symbol_table);
+                       return emit_type_conversion(t.get(), a.get(), env, ctx);
                    })
             .case_(variable_ref(idx),
                    [&]
                    {
-                       return symbol_table[idx.get().id()];
+                       return symbol_table.at(idx.get().id());
                    })
-            .case_(subscription(variable_ref(idx), expressions), [&]
+            .case_(subscription(variable_ref(idx), expressions),
+                   [&]
                    {
-                       llvm::Type* size_type = env.map_kubus_type(types::integer());
-
                        auto ref = symbol_table[idx.get().id()];
-
-                       auto tensor_base = builder.CreateLoad(ref.addr());
-                       tensor_base->setMetadata("tbaa", env.get_tbaa_node(access_path()));
-
-                       llvm::Value* data_ptr =
-                           builder.CreateConstInBoundsGEP2_32(tensor_base, 0, 0, "data_ptr");
-
-                       llvm::Value* shape_ptr =
-                           builder.CreateConstInBoundsGEP2_32(tensor_base, 0, 1, "shape_ptr");
-
-                       auto shape = builder.CreateLoad(shape_ptr, "shape");
-                       shape->setMetadata("tbaa", env.get_tbaa_node(ref.origin()));
 
                        const auto& indices = expressions.get();
 
-                       reference index_ptr = compile(indices.back(), env, symbol_table);
-#define USE_SINGLE_GEP 1              
-#if USE_SINGLE_GEP
-                       llvm::Value* linearized_index = llvm::ConstantInt::get(size_type, 0);
+                       std::vector<llvm::Value*> indices_;
+                       indices_.reserve(indices.size());
 
-                       // for (std::size_t i = indices.size(); i-- > 0;)
-                       for (std::size_t i = 0; i < indices.size(); i++)
+                       for (const auto& index : indices)
                        {
-                           reference index_ptr = compile(indices[i], env, symbol_table);
+                           auto index_ref = compile(index, env, ctx);
 
-                           llvm::Instruction* index = builder.CreateLoad(index_ptr.addr());
-                           index->setMetadata("tbaa", env.get_tbaa_node(index_ptr.origin()));
+                           auto index_ = load_from_ref(index_ref, env);
 
-                           llvm::Value* dim = llvm::ConstantInt::get(size_type, i);
-
-                           llvm::Value* extent_ptr = builder.CreateInBoundsGEP(shape, dim);
-
-                           llvm::Instruction* extent = builder.CreateLoad(extent_ptr);
-                           extent->setMetadata("tbaa", env.get_tbaa_node(ref.origin() / "shape"));
-
-                           linearized_index = builder.CreateAdd(
-                               builder.CreateMul(extent, linearized_index), index);
+                           indices_.push_back(index_);
                        }
 
-                       auto data = builder.CreateLoad(data_ptr);
-                       data->setMetadata("tbaa", env.get_tbaa_node(ref.origin()));
+                       using pattern::_;
 
-                       return reference(builder.CreateInBoundsGEP(data, linearized_index),
-                                        ref.origin() / "data");
-#else
-                       std::vector<llvm::Value*> extents;
-                       
-                       for (std::size_t i = 0; i < indices.size() ; i++)
+                       auto m =
+                           pattern::make_matcher<type, reference>()
+                               .case_(pattern::tensor_t(_),
+                                      [&]
+                                      {
+                                          return emit_tensor_access(idx.get(), indices, env, ctx);
+                                      })
+                               .case_(pattern::array_slice_t(_), [&]
+                                      {
+                                          return emit_array_slice_access(ref, indices_, env);
+                                      });
+
+                       return pattern::match(idx.get().var_type(), m);
+                   })
+            .case_(local_variable_def(var, a),
+                   [&]
+                   {
+                       auto var_type = env.map_kubus_type(var.get().var_type());
+
+                       auto var_ptr =
+                           create_entry_block_alloca(env.get_current_function(), var_type);
+
+                       auto init_value_ref = compile(a.get(), env, ctx);
+
+                       auto init_value = load_from_ref(init_value_ref, env);
+
+                       reference var_ref(var_ptr, access_path());
+                       store_to_ref(var_ref, init_value, env);
+
+                       symbol_table[var.get().id()] = var_ref;
+
+                       return reference();
+                   })
+            .case_(spawn(plan, expressions),
+                   [&]
+                   {
+                       std::vector<llvm::Type*> param_types;
+
+                       for (const auto& param : plan.get().params())
                        {
-                            llvm::Value* dim = llvm::ConstantInt::get(size_type, i);
-                           
-                            llvm::Value* extent_ptr = builder.CreateInBoundsGEP(shape, dim);
-
-                            llvm::Instruction* extent = builder.CreateLoad(extent_ptr);
-                            extent->setMetadata("tbaa", env.get_tbaa_node(ref.origin() / "shape"));
-                            
-                            extents.push_back(extent);
+                           param_types.push_back(
+                               env.map_kubus_type(param.var_type())->getPointerTo());
                        }
-                       
-                       std::vector<llvm::Value*> strides(indices.size());
-                       
-                       llvm::Value* current_stride = llvm::ConstantInt::get(size_type, 1);
-                       
-                       for (std::size_t i = indices.size(); i-- > 0;)
+
+                       param_types.push_back(
+                           env.map_kubus_type(plan.get().result().var_type())->getPointerTo());
+
+                       param_types.push_back(llvm::PointerType::get(
+                           llvm::Type::getInt8Ty(llvm::getGlobalContext()), 0));
+
+                       llvm::FunctionType* fn_type = llvm::FunctionType::get(
+                           llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
+
+                       auto plan_ptr =
+                           llvm::Function::Create(fn_type, llvm::Function::PrivateLinkage,
+                                                  plan.get().name(), &env.module());
+
+                       for (std::size_t i = 0; i < plan_ptr->arg_size(); ++i)
                        {
-                           strides[i] = current_stride;
-                           
-                           current_stride = builder.CreateMul(current_stride, extents[i]);
+                           plan_ptr->setDoesNotAlias(i + 1);
                        }
-                       
-                       auto data = builder.CreateLoad(data_ptr);
-                       data->setMetadata("tbaa", env.get_tbaa_node(ref.origin()));
 
-                       llvm::Value* current_ptr = data;
-                       
-                       for (std::size_t i = 0; i < indices.size() ; i++)
+                       ctx.add_plan_to_compile(plan.get());
+
+                       std::vector<llvm::Value*> arguments;
+
+                       for (const auto& arg : expressions.get())
                        {
-                           reference index_ptr = compile(indices[i], env, symbol_table);
+                           auto arg_ref = compile(arg, env, ctx);
 
-                           llvm::Instruction* index = builder.CreateLoad(index_ptr.addr());
-                           index->setMetadata("tbaa", env.get_tbaa_node(index_ptr.origin()));
-
-                           current_ptr = builder.CreateInBoundsGEP(current_ptr, builder.CreateMul(strides[i], index));
+                           arguments.push_back(arg_ref.addr());
                        }
 
-                       return reference(current_ptr,
-                                        ref.origin() / "data");       
-#endif
-                   });
+                       arguments.push_back(&env.get_current_function()->getArgumentList().back());
 
-    return pattern::match(expr, m);
+                       builder.CreateCall(plan_ptr, arguments);
+
+                       return reference();
+                   })
+            .case_(
+                construct(t, expressions), [&]
+                {
+                    pattern::variable<type> value_type;
+
+                    auto m =
+                        pattern::make_matcher<type, llvm::Value*>()
+                            .case_(
+                                 tensor_t(value_type) || array_t(value_type),
+                                 [&](const type& self)
+                                 {
+                                     auto size_type = env.map_kubus_type(types::integer());
+
+                                     const auto& args = expressions.get();
+
+                                     std::vector<util::index_t> extents;
+
+                                     try
+                                     {
+                                         for (const auto& arg : args)
+                                         {
+                                             extents.push_back(
+                                                 arg.as<integer_literal_expr>().value());
+                                         }
+                                     }
+                                     catch (const std::bad_cast&)
+                                     {
+                                         throw 0;
+                                     }
+
+                                     std::size_t mem_size = 8;
+
+                                     for (auto extent : extents)
+                                     {
+                                         mem_size *= extent;
+                                     }
+
+                                     llvm::Value* data_ptr;
+
+                                     if (mem_size < 256)
+                                     {
+                                         llvm::Type* multi_array_type =
+                                             env.map_kubus_type(value_type.get());
+
+                                         std::size_t size = 1;
+
+                                         for (auto extent : extents)
+                                         {
+                                             size *= extent;
+                                         }
+
+                                         multi_array_type =
+                                             llvm::ArrayType::get(multi_array_type, size);
+
+                                         data_ptr = builder.CreateConstInBoundsGEP2_64(
+                                             create_entry_block_alloca(env.get_current_function(),
+                                                                       multi_array_type),
+                                             0, 0);
+                                     }
+                                     else
+                                     {
+                                         std::vector<llvm::Value*> args;
+
+                                         args.push_back(
+                                             &env.get_current_function()->getArgumentList().back());
+                                         args.push_back(
+                                             llvm::ConstantInt::get(size_type, mem_size));
+
+                                         data_ptr = builder.CreateBitCast(
+                                             builder.CreateCall(env.get_alloc_scratch_mem(), args),
+                                             env.map_kubus_type(value_type.get())->getPointerTo(0));
+
+                                         ctx.get_current_scope().on_exit(
+                                             [args, &env, &builder]
+                                             {
+                                                 builder.CreateCall(env.get_dealloc_scratch_mem(),
+                                                                    args);
+                                             });
+                                     }
+
+                                     auto shape_ptr = builder.CreateConstInBoundsGEP2_64(
+                                         create_entry_block_alloca(
+                                             env.get_current_function(),
+                                             llvm::ArrayType::get(size_type, extents.size())),
+                                         0, 0, "shape_ptr");
+
+                                     for (std::size_t i = 0; i < extents.size(); ++i)
+                                     {
+                                         auto extent_ptr = builder.CreateConstInBoundsGEP1_64(
+                                             shape_ptr, i, "extend_ptr");
+
+                                         store_to_ref(reference(extent_ptr, access_path()),
+                                                      llvm::ConstantInt::get(size_type, extents[i]),
+                                                      env);
+                                     }
+
+                                     auto array_ptr = create_entry_block_alloca(
+                                         env.get_current_function(), env.map_kubus_type(self));
+
+                                     auto data_member_ptr =
+                                         builder.CreateConstInBoundsGEP2_32(array_ptr, 0, 0);
+                                     store_to_ref(reference(data_member_ptr, access_path()),
+                                                  data_ptr, env);
+
+                                     auto shape_member_ptr =
+                                         builder.CreateConstInBoundsGEP2_32(array_ptr, 0, 1);
+                                     store_to_ref(reference(shape_member_ptr, access_path()),
+                                                  shape_ptr, env);
+
+                                     return array_ptr;
+                                 })
+                            .case_(value_type, [&]
+                                   {
+                                       if (expressions.get().size() != 0)
+                                           throw 0;
+
+                                       return create_entry_block_alloca(
+                                           env.get_current_function(),
+                                           env.map_kubus_type(value_type.get()));
+                                   });
+
+                    return reference(pattern::match(t.get(), m), access_path());
+                });
+
+    auto result = pattern::match(expr, m);
+
+    auto m2 = pattern::make_matcher<expression, void>().case_(variable_scope(_, _), [&]
+                                                              {
+                                                                  ctx.exit_current_scope();
+                                                              });
+
+    pattern::try_match(expr, m2);
+
+    return result;
 }
 
-void compile(const function_declaration& entry_point, llvm_environment& env, std::size_t id)
+void compile(const function_declaration& plan, llvm_environment& env, compilation_context& ctx)
 {
-    std::map<qbb::util::handle, reference> symbol_table;
+    ctx.enter_new_scope();
+
+    auto& symbol_table = ctx.symbol_table();
+
+    // Prolog
+    std::vector<llvm::Type*> param_types;
+
+    for (const auto& param : plan.params())
+    {
+        param_types.push_back(env.map_kubus_type(param.var_type())->getPointerTo());
+    }
+
+    param_types.push_back(env.map_kubus_type(plan.result().var_type())->getPointerTo());
+
+    param_types.push_back(
+        llvm::PointerType::get(llvm::Type::getInt8Ty(llvm::getGlobalContext()), 0));
+
+    llvm::FunctionType* FT = llvm::FunctionType::get(
+        llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
+
+    llvm::Function* compiled_plan;
+
+    if (!(compiled_plan = env.module().getFunction(plan.name())))
+    {
+        compiled_plan =
+            llvm::Function::Create(FT, llvm::Function::PrivateLinkage, plan.name(), &env.module());
+    }
+
+    for (std::size_t i = 0; i < compiled_plan->arg_size(); ++i)
+    {
+        compiled_plan->setDoesNotAlias(i + 1);
+    }
+
+    env.set_current_function(compiled_plan);
+
+    llvm::BasicBlock* BB =
+        llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", compiled_plan);
+    env.builder().SetInsertPoint(BB);
+
+    // body
+
+    auto current_arg = compiled_plan->arg_begin();
+
+    for (const auto& param : plan.params())
+    {
+        access_path apath(param.id());
+        symbol_table[param.id()] = reference(&*current_arg, apath);
+        env.get_alias_scope(apath);
+        ++current_arg;
+    }
+
+    symbol_table[plan.result().id()] = reference(&*current_arg, access_path(plan.result().id()));
+
+    compile(plan.body(), env, ctx);
+
+    ctx.exit_current_scope();
+
+    // Epilog
+    env.builder().CreateRetVoid();
+}
+
+void compile_entry_point(const function_declaration& plan, llvm_environment& env, std::size_t id)
+{
+    compilation_context ctx;
+
+    compile(plan, env, ctx);
 
     // Prolog
     std::vector<llvm::Type*> param_types;
 
     param_types.push_back(llvm::PointerType::get(
         llvm::PointerType::get(llvm::Type::getInt8Ty(llvm::getGlobalContext()), 0), 0));
+    param_types.push_back(
+        llvm::PointerType::get(llvm::Type::getInt8Ty(llvm::getGlobalContext()), 0));
 
     llvm::FunctionType* FT = llvm::FunctionType::get(
         llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
 
-    llvm::Function* kernel = llvm::Function::Create(
-        FT, llvm::Function::ExternalLinkage, "kubus_cpu_plan" + std::to_string(id), &env.module());
+    std::string entry_point_name = "kubus_cpu_plan" + std::to_string(id);
+
+    llvm::Function* kernel = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
+                                                    entry_point_name, &env.module());
 
     for (std::size_t i = 0; i < kernel->arg_size(); ++i)
     {
@@ -1159,54 +1786,57 @@ void compile(const function_declaration& entry_point, llvm_environment& env, std
     // unpack args
     std::size_t counter = 0;
 
+    std::vector<llvm::Value*> arguments;
+
     auto add_param = [&](const variable_declaration& param) mutable
     {
-        auto handle = param.id();
-
-        llvm::Type* tensor_type = env.map_kubus_type(param.var_type());
+        llvm::Type* param_type = env.map_kubus_type(param.var_type());
 
         llvm::Value* ptr_to_arg =
             env.builder().CreateConstInBoundsGEP1_64(&kernel->getArgumentList().front(), counter);
 
-        auto arg = env.builder().CreateLoad(ptr_to_arg);
-        arg->setMetadata("tbaa", env.get_tbaa_node(access_path()));
+        auto arg = load_from_ref(reference(ptr_to_arg, access_path()), env);
 
         llvm::Value* typed_arg =
-            env.builder().CreateBitCast(arg, llvm::PointerType::get(tensor_type, 0));
+            env.builder().CreateBitCast(arg, llvm::PointerType::get(param_type, 0));
 
         llvm::Value* data_ptr =
             env.builder().CreateConstInBoundsGEP2_32(typed_arg, 0, 0, "data_ptr");
 
-        auto data = env.builder().CreateLoad(data_ptr);
-        data->setMetadata("tbaa", env.get_tbaa_node(access_path(param.id())));
+        auto data = load_from_ref(reference(data_ptr, access_path(param.id())), env);
 
         // TODO: get alignement from the ABI
         env.builder().CreateCall2(
             env.get_assume_align(), data,
             llvm::ConstantInt::get(llvm::Type::getInt64Ty(llvm::getGlobalContext()), 32));
 
-        llvm::Value* local_copy = create_entry_block_alloca(env.get_current_function(),
-                                                            llvm::PointerType::get(tensor_type, 0));
-        auto typed_arg_store = env.builder().CreateStore(typed_arg, local_copy);
-        typed_arg_store->setMetadata("tbaa", env.get_tbaa_node(access_path(param.id())));
-
-        symbol_table[handle] = reference(local_copy, access_path(param.id()));
+        arguments.push_back(typed_arg);
         ++counter;
     };
 
-    for (const auto& param : entry_point.params())
+    for (const auto& param : plan.params())
     {
         add_param(param);
     }
 
-    add_param(entry_point.result());
+    add_param(plan.result());
+
+    arguments.push_back(&kernel->getArgumentList().back());
 
     // body
 
-    compile(entry_point.body(), env, symbol_table);
+    env.builder().CreateCall(env.module().getFunction(plan.name()), arguments);
+
+    ctx.exit_current_scope();
 
     // Epilog
     env.builder().CreateRetVoid();
+
+    // Emit all other plans.
+    while (auto plan = ctx.get_next_plan_to_compile())
+    {
+        compile(*plan, env, ctx);
+    }
 }
 
 class cpu_plan
@@ -1219,13 +1849,13 @@ public:
     cpu_plan(const cpu_plan&) = delete;
     cpu_plan& operator=(const cpu_plan&) = delete;
 
-    void execute(const std::vector<void*>& args) const
+    void execute(const std::vector<void*>& args, cpu_runtime& runtime) const
     {
-        using entry_t = void (*)(void* const*);
+        using entry_t = void (*)(void* const*, void*);
 
         auto entry = reinterpret_cast<entry_t>(entry_);
 
-        entry(args.data());
+        entry(args.data(), &runtime);
     }
 
 private:
@@ -1238,21 +1868,22 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, llvm::Execut
 
     llvm_environment env;
 
-    compile(entry_point, env, unique_id);
+    compile_entry_point(entry_point, env, unique_id);
 
     std::unique_ptr<llvm::Module> the_module = env.detach_module();
 
-    llvm::verifyModule(*the_module);
-
     the_module->setDataLayout(engine.getDataLayout());
+
+    llvm::verifyModule(*the_module);
 
     // the_module->dump();
     // std::cout << std::endl;
 
     llvm::PassManagerBuilder pass_builder;
     pass_builder.OptLevel = 3;
-    pass_builder.SLPVectorize = false;
-    pass_builder.LoopVectorize = false;
+    pass_builder.SLPVectorize = true;
+    pass_builder.BBVectorize = false;
+    pass_builder.LoopVectorize = true;
     pass_builder.DisableUnrollLoops = true;
     pass_builder.Inliner = llvm::createFunctionInliningPass();
 
@@ -1336,10 +1967,38 @@ public:
         llvm::EngineBuilder builder(
             util::make_unique<llvm::Module>("dummy", llvm::getGlobalContext()));
 
-        builder.setMCPU(llvm::sys::getHostCPUName());
+        std::vector<std::string> available_features;
+        llvm::StringMap<bool> features;
 
-        auto attrs = deduce_host_cpu_features();
-        builder.setMAttrs(attrs);
+        if (llvm::sys::getHostCPUFeatures(features))
+        {
+            for (const auto& feature : features)
+            {
+                std::cout << std::string(feature.getKey()) << std::endl;
+                if (feature.getValue())
+                {
+                    available_features.push_back(feature.getKey());
+                    std::cout << std::string(feature.getKey()) << std::endl;
+                }
+            }
+        }
+        else
+        {
+            builder.setMCPU(llvm::sys::getHostCPUName());
+
+            available_features = deduce_host_cpu_features();
+        }
+
+        builder.setMAttrs(available_features);
+        builder.setOptLevel(llvm::CodeGenOpt::Aggressive);
+
+        llvm::TargetOptions options;
+        options.AllowFPOpFusion = llvm::FPOpFusion::Fast;
+        options.UnsafeFPMath = 1;
+        options.NoInfsFPMath = 1;
+        options.NoNaNsFPMath = 1;
+
+        builder.setTargetOptions(options);
 
         engine_ = std::unique_ptr<llvm::ExecutionEngine>(builder.create());
 
@@ -1396,7 +2055,9 @@ public:
 
         return hpx::async([&executed_cpu_plan, plan_args, used_mem_blocks, this]
                           {
-                              executed_cpu_plan.execute(plan_args);
+                              cpu_runtime runtime;
+
+                              executed_cpu_plan.execute(plan_args, runtime);
                               exec_stack_.clear();
                           });
     }

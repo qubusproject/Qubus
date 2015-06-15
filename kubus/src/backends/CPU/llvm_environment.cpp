@@ -13,6 +13,7 @@
 #include <boost/optional.hpp>
 
 #include <tuple>
+#include <array>
 
 namespace qbb
 {
@@ -31,6 +32,11 @@ std::string mangle_type(const type& t)
                         {
                             return "integer";
                         })
+                 .case_(pattern::bool_t,
+                        [&]
+                        {
+                            return "bool";
+                        })
                  .case_(pattern::double_t,
                         [&]
                         {
@@ -46,9 +52,14 @@ std::string mangle_type(const type& t)
                         {
                             return "complex_" + mangle_type(subtype.get());
                         })
-                 .case_(tensor_t(subtype), [&]
+                 .case_(tensor_t(subtype),
+                        [&]
                         {
                             return "tensor_" + mangle_type(subtype.get());
+                        })
+                 .case_(array_slice_t(subtype), [&]
+                        {
+                            return "array_slice_" + mangle_type(subtype.get());
                         });
 
     return pattern::match(t, m);
@@ -57,32 +68,37 @@ std::string mangle_type(const type& t)
 
 llvm_environment::llvm_environment()
 : builder_(llvm::getGlobalContext()), md_builder_(llvm::getGlobalContext()),
-  the_module_(util::make_unique<llvm::Module>("kubus module", llvm::getGlobalContext())),
-  tbaa_root_(md_builder_.createTBAARoot("kubus TBAA root"))
+  the_module_(util::make_unique<llvm::Module>("kubus module", llvm::getGlobalContext()))
 {
     llvm::FastMathFlags fast_math_flags;
     fast_math_flags.setUnsafeAlgebra();
 
     builder_.SetFastMathFlags(fast_math_flags);
 
-    local_tbaa_node_ = md_builder_.createTBAANode("local", tbaa_root_);
-    param_tbaa_node_ = md_builder_.createTBAANode("param", tbaa_root_);
+    global_alias_domain_ = md_builder_.createAliasScopeDomain("kubus.alias_domain");
+    get_alias_scope(access_path());
 
+    init_assume_align();
+    init_alloc_scratch_mem();
+    init_dealloc_scratch_mem();
+}
+
+void llvm_environment::init_assume_align()
+{
     std::vector<llvm::Type*> assume_params = {llvm::Type::getInt1Ty(llvm::getGlobalContext())};
-    
-    llvm::FunctionType* assume_FT =
-        llvm::FunctionType::get(llvm::Type::getVoidTy(llvm::getGlobalContext()),
-                                assume_params, false);
+
+    llvm::FunctionType* assume_FT = llvm::FunctionType::get(
+        llvm::Type::getVoidTy(llvm::getGlobalContext()), assume_params, false);
 
     auto assume = module().getOrInsertFunction("llvm.assume", assume_FT);
 
     auto int_type = llvm::Type::getInt64Ty(llvm::getGlobalContext());
 
-    std::vector<llvm::Type*> params = {llvm::Type::getDoublePtrTy(llvm::getGlobalContext()), int_type};
-    
+    std::vector<llvm::Type*> params = {llvm::Type::getDoublePtrTy(llvm::getGlobalContext()),
+                                       int_type};
+
     llvm::FunctionType* FT = llvm::FunctionType::get(
-        llvm::Type::getDoublePtrTy(llvm::getGlobalContext()),
-        params, false);
+        llvm::Type::getDoublePtrTy(llvm::getGlobalContext()), params, false);
 
     assume_align_ =
         llvm::Function::Create(FT, llvm::Function::PrivateLinkage, "assume_align", &module());
@@ -104,6 +120,41 @@ llvm_environment::llvm_environment()
     builder().CreateCall(assume, cond);
 
     builder().CreateRet(&assume_align_->getArgumentList().front());
+}
+
+void llvm_environment::init_alloc_scratch_mem()
+{
+    auto generic_ptr = llvm::Type::getInt8PtrTy(llvm::getGlobalContext(), 0);
+    auto size_type = map_kubus_type(types::integer());
+
+    std::vector<llvm::Type*> param_types = {generic_ptr, size_type};
+
+    llvm::FunctionType* FT = llvm::FunctionType::get(generic_ptr, param_types, false);
+
+    alloc_scratch_mem_ = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
+                                                "qbb_kubus_cpurt_alloc_scatch_mem", &module());
+
+    alloc_scratch_mem_->setDoesNotCapture(1);
+    alloc_scratch_mem_->setDoesNotAlias(1);
+    alloc_scratch_mem_->setDoesNotThrow();
+}
+
+void llvm_environment::init_dealloc_scratch_mem()
+{
+    auto generic_ptr = llvm::Type::getInt8PtrTy(llvm::getGlobalContext(), 0);
+    auto void_type = llvm::Type::getVoidTy(llvm::getGlobalContext());
+    auto size_type = map_kubus_type(types::integer());
+
+    std::vector<llvm::Type*> param_types = {generic_ptr, size_type};
+
+    llvm::FunctionType* FT = llvm::FunctionType::get(void_type, param_types, false);
+
+    dealloc_scratch_mem_ = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
+                                                  "qbb_kubus_cpurt_dealloc_scratch_mem", &module());
+
+    dealloc_scratch_mem_->setDoesNotCapture(1);
+    dealloc_scratch_mem_->setDoesNotAlias(1);
+    dealloc_scratch_mem_->setDoesNotThrow();
 }
 
 llvm::IRBuilder<>& llvm_environment::builder()
@@ -132,7 +183,6 @@ llvm::Type* llvm_environment::map_kubus_type(const type& t) const
     else
     {
         pattern::variable<type> subtype;
-        pattern::variable<type> total_type;
 
         auto m =
             pattern::make_matcher<type, llvm::Type*>()
@@ -141,6 +191,11 @@ llvm::Type* llvm_environment::map_kubus_type(const type& t) const
                        {
                            return llvm::IntegerType::get(llvm::getGlobalContext(),
                                                          8 * sizeof(std::size_t));
+                       })
+                .case_(pattern::bool_t,
+                       [&]
+                       {
+                           return llvm::Type::getInt1Ty(llvm::getGlobalContext());
                        })
                 .case_(pattern::double_t,
                        [&]
@@ -152,23 +207,32 @@ llvm::Type* llvm_environment::map_kubus_type(const type& t) const
                        {
                            return llvm::Type::getFloatTy(llvm::getGlobalContext());
                        })
-                .case_(bind_to(complex_t(subtype), total_type),
-                       [&]
+                .case_(complex_t(subtype),
+                       [&](const type& total_type)
                        {
                            llvm::Type* real_type = map_kubus_type(types::double_());
 
                            llvm::Type* real_pair = llvm::ArrayType::get(real_type, 2);
 
-                           return llvm::StructType::create({real_pair},
-                                                           mangle_type(total_type.get()));
+                           return llvm::StructType::create({real_pair}, mangle_type(total_type));
                        })
-                .case_(bind_to(tensor_t(subtype), total_type), [&]
+                .case_(tensor_t(subtype),
+                       [&](const type& total_type)
                        {
                            llvm::Type* size_type = map_kubus_type(types::integer());
                            std::vector<llvm::Type*> types{
                                llvm::PointerType::get(map_kubus_type(subtype.get()), 0),
                                llvm::PointerType::get(size_type, 0)};
-                           return llvm::StructType::create(types, mangle_type(total_type.get()));
+                           return llvm::StructType::create(types, mangle_type(total_type));
+                       })
+                .case_(array_slice_t(subtype), [&](const type& total_type)
+                       {
+                           llvm::Type* size_type = map_kubus_type(types::integer());
+                           std::vector<llvm::Type*> types{
+                               llvm::PointerType::get(map_kubus_type(subtype.get()), 0),
+                               llvm::PointerType::get(size_type, 0),
+                               llvm::PointerType::get(size_type, 0)};
+                           return llvm::StructType::create(types, mangle_type(total_type));
                        });
 
         llvm_type = pattern::match(t, m);
@@ -177,30 +241,37 @@ llvm::Type* llvm_environment::map_kubus_type(const type& t) const
     }
 }
 
-llvm::MDNode* llvm_environment::get_tbaa_node(const access_path& path) const
+llvm::MDNode* llvm_environment::get_alias_scope(const access_path& path) const
 {
     auto name = path.str();
 
-    auto& node = tbaa_table_[name];
+    auto& alias_scope = alias_scope_table_[name];
 
-    if (!node)
+    if (!alias_scope)
     {
-        llvm::MDNode* tbaa_metadata = md_builder_.createTBAANode(name, tbaa_root_);
+        llvm::MDNode* new_alias_scope = md_builder_.createAliasScope(name, global_alias_domain_);
 
-        node = tbaa_metadata;
+        alias_scope = new_alias_scope;
     }
 
-    return node;
+    std::vector<llvm::Metadata*> alias_scopes = {alias_scope};
+
+    return llvm::MDNode::get(llvm::getGlobalContext(), alias_scopes);
 }
 
-llvm::MDNode* llvm_environment::local_tbaa_node() const
+llvm::MDNode* llvm_environment::get_noalias_set(const access_path& path) const
 {
-    return local_tbaa_node_;
-}
+    std::vector<llvm::Metadata*> alias_scopes;
 
-llvm::MDNode* llvm_environment::param_tbaa_node() const
-{
-    return param_tbaa_node_;
+    for (const auto& entry : alias_scope_table_)
+    {
+        if (entry.first != path.str())
+        {
+            alias_scopes.push_back(entry.second);
+        }
+    }
+
+    return llvm::MDNode::get(llvm::getGlobalContext(), alias_scopes);
 }
 
 llvm::Function* llvm_environment::get_current_function() const
@@ -216,6 +287,16 @@ void llvm_environment::set_current_function(llvm::Function* func)
 llvm::Function* llvm_environment::get_assume_align() const
 {
     return assume_align_;
+}
+
+llvm::Function* llvm_environment::get_alloc_scratch_mem() const
+{
+    return alloc_scratch_mem_;
+}
+
+llvm::Function* llvm_environment::get_dealloc_scratch_mem() const
+{
+    return dealloc_scratch_mem_;
 }
 
 bool llvm_environment::bind_symbol(const std::string& symbol, llvm::Value* value)

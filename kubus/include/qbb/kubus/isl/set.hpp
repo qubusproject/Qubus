@@ -8,6 +8,7 @@
 #include <isl/union_set.h>
 
 #include <string>
+#include <vector>
 
 namespace qbb
 {
@@ -70,15 +71,31 @@ public:
     void add_constraint(constraint c);
 
     space get_space() const;
+
+    int dim(isl_dim_type type) const;
+
+    set params() const
+    {
+        return set(isl_set_params(handle_));
+    }
     
     void set_tuple_name(const std::string& name);
-    
+    std::string get_tuple_name() const;
+
+    bool bounded();
+
     static set universe(space s);
     static set empty(space s);
 
+    static set from_params(set s)
+    {
+        return set(isl_set_from_params(s.native_handle()));
+    }
 private:
     isl_set* handle_;
 };
+
+set union_(set lhs, set rhs);
 
 set intersect(set lhs, set rhs);
 
@@ -98,6 +115,9 @@ set align_params(set s, space model);
 
 set project_out(set s, isl_dim_type type, unsigned int first, unsigned int n);
 
+set lexmin(set s);
+set lexmax(set s);
+
 class union_set
 {
 public:
@@ -114,6 +134,8 @@ public:
     ~union_set();
     
     union_set& operator=(const union_set& other);
+
+    std::vector<set> get_sets() const;
 
     isl_union_set* native_handle() const;
 
@@ -134,6 +156,7 @@ bool is_strict_subset(const union_set& lhs, const union_set& rhs);
 bool is_empty(const union_set& s);
 
 union_set add_set(union_set uset, set s);
+set extract_set(const union_set& uset, space s);
 
 }
 }

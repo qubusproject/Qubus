@@ -92,6 +92,8 @@ public:
 
         add_intrinsic_function("min", {types::integer{}, types::integer{}}, types::integer{});
         add_intrinsic_function("max", {types::integer{}, types::integer{}}, types::integer{});
+
+        add_intrinsic_function("select", {types::bool_{}, types::integer{}, types::integer{}}, types::integer{});
     }
 
     const type& lookup_result_type(const std::string& name,
