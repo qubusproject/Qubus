@@ -112,6 +112,7 @@ private:
 constexpr primitive_type_pattern<types::double_> double_t = {};
 constexpr primitive_type_pattern<types::float_> float_t = {};
 constexpr primitive_type_pattern<types::integer> integer_t = {};
+constexpr primitive_type_pattern<types::bool_> bool_t = {};
 constexpr primitive_type_pattern<types::index> index_t = {};
 
 template <typename RealType>
@@ -131,6 +132,19 @@ tensor_type_pattern<types::sparse_tensor, ValueType> sparse_tensor_t(ValueType v
 {
     return tensor_type_pattern<types::sparse_tensor, ValueType>(std::move(value_type));
 }
+
+template <typename ValueType>
+tensor_type_pattern<types::array, ValueType> array_t(ValueType value_type)
+{
+    return tensor_type_pattern<types::array, ValueType>(std::move(value_type));
+}
+
+template <typename ValueType>
+tensor_type_pattern<types::array_slice, ValueType> array_slice_t(ValueType value_type)
+{
+    return tensor_type_pattern<types::array_slice, ValueType>(std::move(value_type));
+}
+
 }
 }
 }

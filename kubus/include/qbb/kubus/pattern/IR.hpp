@@ -15,8 +15,15 @@
 #include <qbb/kubus/pattern/for_all.hpp>
 #include <qbb/kubus/pattern/variable_ref.hpp>
 #include <qbb/kubus/pattern/macro.hpp>
+#include <qbb/kubus/pattern/spawn.hpp>
+#include <qbb/kubus/pattern/local_variable_def.hpp>
+#include <qbb/kubus/pattern/variable_scope.hpp>
+#include <qbb/kubus/pattern/construct.hpp>
+#include <qbb/kubus/pattern/if.hpp>
 
 #include <qbb/kubus/pattern/type.hpp>
+
+#include <qbb/kubus/pattern/contains.hpp>
 
 #include <qbb/kubus/pattern/substitute.hpp>
 #include <qbb/kubus/pattern/search.hpp>

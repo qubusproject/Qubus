@@ -13,17 +13,17 @@ space::space(isl_space* handle_) : handle_{handle_}
 {
 }
 
-space::space(const context& ctx, unsigned int nparam)
+space::space(context_ref ctx, unsigned int nparam)
 : handle_{isl_space_params_alloc(ctx.native_handle(), nparam)}
 {   
 }
 
-space::space(const context& ctx, unsigned int nparam, unsigned int n)
+space::space(context_ref ctx, unsigned int nparam, unsigned int n)
 : handle_{isl_space_set_alloc(ctx.native_handle(), nparam, n)}
 {
 }
 
-space::space(const context& ctx, unsigned int nparam, unsigned int n_in, unsigned int n_out)
+space::space(context_ref ctx, unsigned int nparam, unsigned int n_in, unsigned int n_out)
 : handle_{isl_space_alloc(ctx.native_handle(), nparam, n_in, n_out)}
 {
 }
@@ -64,6 +64,11 @@ void space::set_tuple_name(isl_dim_type type, const std::string& name)
 void space::set_dim_name(isl_dim_type type, int pos, const std::string& name)
 {
     handle_ = isl_space_set_dim_name(handle_, type, pos, name.c_str());
+}
+
+boost::string_ref space::get_dim_name(isl_dim_type type, int pos) const
+{
+    return boost::string_ref(isl_space_get_dim_name(handle_, type, pos));
 }
 
 int space::find_dim_by_name(isl_dim_type type, const std::string& name) const

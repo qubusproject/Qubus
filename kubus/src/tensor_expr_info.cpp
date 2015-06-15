@@ -47,7 +47,7 @@ const plan& tensor_expr_info::compiled_plan() const
             current_root = for_all_expr(decl, current_root);
         }
 
-        function_declaration entry_point(closure_.params, result, current_root);
+        function_declaration entry_point("entry", closure_.params, result, current_root);
 
         plan_ = get_runtime().compile(entry_point);
     }

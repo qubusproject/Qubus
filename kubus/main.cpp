@@ -103,7 +103,7 @@ int hpx_main(int argc, char** argv)
 
         tensor_expr<double, 2> zeros = def_tensor(i, j)[0];
 
-        tensor_expr<double, 2> Cdef = def_tensor(i, j)[sum(A(i, k)*B(j,k), k)];
+        tensor_expr<double, 2> Cdef = def_tensor(i, j)[sum(A(i, k)*B(k, j), k)];
 
         A = zeros;
         B = zeros;
@@ -113,10 +113,10 @@ int hpx_main(int argc, char** argv)
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        for (long int i = 0; i < 1; ++i)
-        {
-            C = Cdef;
-        }
+        //for (long int i = 0; i < 1; ++i)
+        //{
+        //    C = Cdef;
+        //}
 
         C.when_ready().wait();
 
@@ -124,7 +124,7 @@ int hpx_main(int argc, char** argv)
 
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 
-        std::cout << duration.count() / 10.0 << " seconds" << std::endl;
+        std::cout << duration.count() / 1.0 << " seconds" << std::endl;
 
         execute(my_plan, C);
         C.when_ready().wait();
@@ -242,17 +242,15 @@ int hpx_main(int argc, char** argv)
                 }
             }
 
-            auto end = std::chrono::high_resolution_clock::now();
+        auto end = std::chrono::high_resolution_clock::now();
 
-            auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+        auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 
-            std::cout << duration.count() / 10.0 << " seconds" << std::endl;
-        }
+        std::cout << duration.count() / 10.0 << " seconds" << std::endl;
     }*/
 
     /*{
-        using MatrixType = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic,
-    Eigen::RowMajor>;
+        using MatrixType = Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic, Eigen::RowMajor>;
 
         MatrixType A = MatrixType::Zero(N, N);
         MatrixType B = MatrixType::Zero(N, N);

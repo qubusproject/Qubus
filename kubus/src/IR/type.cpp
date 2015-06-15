@@ -34,6 +34,11 @@ bool type_eq_integer(const types::integer&, const types::integer&)
     return true;
 }
 
+bool type_eq_bool(const types::bool_&, const types::bool_&)
+{
+    return true;
+}
+
 bool type_eq_index(const types::index&, const types::index&)
 {
     return true;
@@ -45,6 +50,16 @@ bool type_eq_complex(const types::complex& lhs, const types::complex& rhs)
 }
 
 bool type_eq_tensor(const types::tensor& lhs, const types::tensor& rhs)
+{
+    return lhs.value_type() == rhs.value_type();
+}
+
+bool type_eq_array(const types::array& lhs, const types::array& rhs)
+{
+    return lhs.value_type() == rhs.value_type();
+}
+
+bool type_eq_array_slice(const types::array_slice& lhs, const types::array_slice& rhs)
 {
     return lhs.value_type() == rhs.value_type();
 }
@@ -64,9 +79,12 @@ void init_type_eq()
     type_eq.add_specialization(type_eq_double);
     type_eq.add_specialization(type_eq_float);
     type_eq.add_specialization(type_eq_integer);
+    type_eq.add_specialization(type_eq_bool);
     type_eq.add_specialization(type_eq_index);
     type_eq.add_specialization(type_eq_complex);
     type_eq.add_specialization(type_eq_tensor);
+    type_eq.add_specialization(type_eq_array);
+    type_eq.add_specialization(type_eq_array_slice);
     type_eq.add_specialization(type_eq_sparse_tensor);
 
     type_eq.set_fallback(type_eq_default);

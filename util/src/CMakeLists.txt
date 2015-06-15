@@ -17,7 +17,7 @@ set(util_source_files handle.cpp unique_name_generator.cpp dll.cpp get_prefix.cp
 find_package(Boost COMPONENTS filesystem REQUIRED)
 find_package(Threads REQUIRED)
 
-add_library(qbb_util ${util_header_files} ${util_source_files})
+add_library(qbb_util ${util_header_files} ${util_source_files} ../include/qbb/util/box.hpp)
 target_compile_options(qbb_util PUBLIC -std=c++14 -Wall -Wextra)
 target_include_directories(qbb_util PUBLIC ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/util/include/>)
 target_link_libraries(qbb_util PUBLIC Threads::Threads ${Boost_LIBRARIES})

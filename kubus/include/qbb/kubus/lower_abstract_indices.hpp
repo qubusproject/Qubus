@@ -10,7 +10,7 @@ namespace kubus
 {
 
 expression lower_abstract_indices(const expression& expr);
-function_declaration lower_abstract_indices(const function_declaration& decl);
+function_declaration lower_abstract_indices(function_declaration decl);
 
 }   
 }
