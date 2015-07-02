@@ -75,6 +75,8 @@ public:
 
     llvm::IRBuilder<>& builder();
 
+    llvm::MDBuilder& md_builder();
+
     llvm::Module& module();
 
     const llvm::Module& module() const;
@@ -101,7 +103,6 @@ public:
     //                                       const std::vector<type>& arg_types)const;
 
     std::unique_ptr<llvm::Module> detach_module();
-
 private:
     mutable llvm::IRBuilder<> builder_;
     mutable llvm::MDBuilder md_builder_;

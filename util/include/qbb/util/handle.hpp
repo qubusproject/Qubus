@@ -39,6 +39,8 @@ private:
     std::uintptr_t id_;
 };
 
+bool operator!=(const handle& lhs, const handle& rhs);
+
 }
 }
 
