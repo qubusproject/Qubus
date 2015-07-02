@@ -33,14 +33,15 @@ include(FeatureSummary)
 
 add_subdirectory(src)
 add_subdirectory(tests)
+add_subdirectory(benchmarks)
 
 generate_export_header(kubus BASE_NAME QBB_KUBUS)
 
 add_executable(kubus_test main.cpp)
 target_link_libraries(kubus_test PUBLIC kubus hpx_init)
-target_compile_options(kubus_test PRIVATE)
-target_link_libraries(kubus_test PRIVATE)
-target_compile_definitions(kubus_test PRIVATE -DEIGEN_DONT_VECTORIZE)
+target_compile_options(kubus_test PRIVATE -mavx2 -mfma -fopenmp)
+target_link_libraries(kubus_test PRIVATE -fopenmp)
+target_compile_definitions(kubus_test PRIVATE -DEIGEN_DONT_VECTORIZE -DEIGEN_DONT_PARALLELIZE)
 
 feature_summary(WHAT ALL)
 

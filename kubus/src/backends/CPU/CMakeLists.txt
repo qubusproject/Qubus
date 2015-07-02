@@ -1,6 +1,6 @@
 
 add_library(kubus_cpu_backend SHARED cpu_backend.cpp llvm_environment.cpp cpuinfo.cpp cpu_object_factory.cpp
-                                     cpu_memory_block.cpp cpu_allocator.cpp)
+                                     cpu_memory_block.cpp cpu_allocator.cpp local_array_alias_analysis.cpp)
 
 target_include_directories(kubus_cpu_backend PUBLIC ${Boost_LIBRARY_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/kubus/include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}> PRIVATE ${LLVM_INCLUDE_DIRS})
 target_compile_options(kubus_cpu_backend PUBLIC -std=c++14)

@@ -42,6 +42,8 @@ affine_expr operator*(affine_expr lhs, affine_expr rhs);
 
 affine_expr operator/(affine_expr lhs, affine_expr rhs);
 
+affine_expr operator-(affine_expr arg);
+
 affine_expr floor(affine_expr arg);
 
 }

@@ -51,6 +51,11 @@ public:
     {
         return get();
     }
+
+    T* operator->() const
+    {
+        return ref_;
+    }
     
     explicit operator bool() const
     {

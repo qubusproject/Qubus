@@ -33,6 +33,11 @@ bool operator==(const handle& lhs, const handle& rhs)
     return lhs.id_ == rhs.id_;
 }
 
+bool operator!=(const handle& lhs, const handle& rhs)
+{
+    return !(lhs == rhs);
+}
+
 bool operator<(const handle& lhs, const handle& rhs)
 {
     return lhs.id_ < rhs.id_;

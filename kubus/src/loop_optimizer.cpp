@@ -1211,7 +1211,7 @@ isl::schedule_node optimize_schedule_node(isl::schedule_node root, scop& s)
 
                     if (!no_reuse)
                     {
-                        std::vector<util::index_t> tile_sizes = {200, 20, 2};
+                        std::vector<util::index_t> tile_sizes = {100, 20, 4};
                         std::size_t num_tile_levels = tile_sizes.size();
 
                         isl::schedule_node band_to_tile = root;

@@ -64,6 +64,11 @@ affine_expr operator/(affine_expr lhs, affine_expr rhs)
     return affine_expr(isl_aff_div(lhs.release(), rhs.release()));
 }
 
+affine_expr operator-(affine_expr arg)
+{
+    return affine_expr(isl_aff_neg(arg.release()));
+}
+
 affine_expr floor(affine_expr arg)
 {
     return affine_expr(isl_aff_floor(arg.release()));

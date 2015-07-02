@@ -79,7 +79,9 @@ int hpx_main(int argc, char** argv)
 {
     qbb::kubus::init(argc, argv);
 
-    long int N = 2000;
+    long int N = 1000;
+
+    long int samples = 10;
 
     auto my_plan =
         make_plan()
@@ -113,10 +115,10 @@ int hpx_main(int argc, char** argv)
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        //for (long int i = 0; i < 1; ++i)
-        //{
-        //    C = Cdef;
-        //}
+        for (long int i = 0; i < samples; ++i)
+        {
+            C = Cdef;
+        }
 
         C.when_ready().wait();
 
@@ -124,7 +126,7 @@ int hpx_main(int argc, char** argv)
 
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 
-        std::cout << duration.count() / 1.0 << " seconds" << std::endl;
+        std::cout << duration.count() / static_cast<double>(samples) << " seconds" << std::endl;
 
         execute(my_plan, C);
         C.when_ready().wait();
@@ -137,7 +139,7 @@ int hpx_main(int argc, char** argv)
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        for (long int l = 0; l < 10; ++l)
+        for (long int l = 0; l < samples; ++l)
         {
             for (long int i = 0; i < N; ++i)
             {
@@ -211,7 +213,7 @@ int hpx_main(int argc, char** argv)
 
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 
-        std::cout << duration.count() / 10.0 << " seconds" << std::endl;
+        std::cout << duration.count() / static_cast<double>(samples) << " seconds" << std::endl;
     }*/
 
     /*{
@@ -221,7 +223,7 @@ int hpx_main(int argc, char** argv)
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        for (long int l = 0; l < 1; ++l)
+        for (long int l = 0; l < samples; ++l)
         {
             for (long int i = 0; i < N; ++i)
             {
@@ -241,12 +243,13 @@ int hpx_main(int argc, char** argv)
                     }
                 }
             }
+        }
 
         auto end = std::chrono::high_resolution_clock::now();
 
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 
-        std::cout << duration.count() / 10.0 << " seconds" << std::endl;
+        std::cout << duration.count() / static_cast<double>(samples) << " seconds" << std::endl;
     }*/
 
     /*{
@@ -258,16 +261,16 @@ int hpx_main(int argc, char** argv)
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        for (long int l = 0; l < 1; ++l)
+        for (long int l = 0; l < samples; ++l)
         {
-            C.noalias() = A * B.transpose();
+            C.noalias() = A * B;
         }
 
         auto end = std::chrono::high_resolution_clock::now();
 
         auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
 
-        std::cout << duration.count() / 10.0 << " seconds" << std::endl;
+        std::cout << duration.count() / static_cast<double>(samples) << " seconds" << std::endl;
     }*/
 
     return hpx::finalize();

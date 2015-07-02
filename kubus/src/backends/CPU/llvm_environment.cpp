@@ -162,6 +162,11 @@ llvm::IRBuilder<>& llvm_environment::builder()
     return builder_;
 }
 
+llvm::MDBuilder& llvm_environment::md_builder()
+{
+    return md_builder_;
+}
+
 llvm::Module& llvm_environment::module()
 {
     return *the_module_;
