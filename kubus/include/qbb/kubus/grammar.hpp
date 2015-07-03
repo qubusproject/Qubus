@@ -38,6 +38,21 @@ struct index_terminal
 {
 };
 
+template <typename T>
+struct is_multi_index : boost::mpl::false_
+{
+};
+
+template <long int N>
+struct is_multi_index<multi_index<N>> : boost::mpl::true_
+{
+};
+
+struct multi_index_terminal
+    : proto::and_<proto::terminal<proto::_>, proto::if_<is_multi_index<proto::_value>()>>
+{
+};
+
 template <typename T, std::size_t Rank>
 class tensor_holder;
 
@@ -61,7 +76,7 @@ struct tensor_terminal
 {
 };
 
-struct index_grammar : proto::or_<index_terminal, proto::terminal<int>>
+struct index_grammar : proto::or_<index_terminal, multi_index_terminal, proto::terminal<int>>
 {
 };
 

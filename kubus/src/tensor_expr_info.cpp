@@ -8,6 +8,8 @@
 
 #include <boost/range/adaptor/reversed.hpp>
 
+#include <qbb/util/assert.hpp>
+
 #include <utility>
 
 namespace qbb
@@ -33,18 +35,37 @@ const plan& tensor_expr_info::compiled_plan() const
 
         std::vector<expression> lhs_indices;
 
-        for (const auto& decl : closure_.free_indices)
+        for (const auto& idx : closure_.free_indices)
         {
-            lhs_indices.push_back(variable_ref_expr(decl));
+            if (idx.alias)
+            {
+                lhs_indices.push_back(variable_ref_expr(*idx.alias));
+            }
+            else
+            {
+                QBB_ASSERT(idx.indices.size() == 1, "Unnamed multi-indices are currently not supported.");
+
+                lhs_indices.push_back(variable_ref_expr(idx.indices[0]));
+            }
         }
 
         lhs = subscription_expr(lhs, lhs_indices);
 
         expression current_root = binary_operator_expr(binary_op_tag::assign, lhs, closure_.rhs);
 
-        for (const auto& decl : closure_.free_indices | boost::adaptors::reversed)
+        for (const auto& idx : closure_.free_indices | boost::adaptors::reversed)
         {
-            current_root = for_all_expr(decl, current_root);
+            if (idx.alias)
+            {
+                current_root = for_all_expr(idx.indices, *idx.alias, current_root);
+            }
+            else
+            {
+                QBB_ASSERT(idx.indices.size() == 1, "Unnamed multi-indices are currently not supported.");
+
+                current_root = for_all_expr(idx.indices[0], current_root);
+            }
+
         }
 
         function_declaration entry_point("entry", closure_.params, result, current_root);

@@ -9,6 +9,7 @@
 #include <qbb/kubus/loop_optimizer.hpp>
 #include <qbb/kubus/make_implicit_conversions_explicit.hpp>
 #include <qbb/kubus/IR/pretty_printer.hpp>
+#include <qbb/kubus/multi_index_handling.hpp>
 
 #include <qbb/kubus/metadata_builder.hpp>
 #include <qbb/kubus/backends/execution_stack.hpp>
@@ -250,6 +251,8 @@ object_factory& runtime::get_object_factory()
 
 plan runtime::compile(function_declaration decl)
 {
+    decl = expand_multi_indices(decl);
+
     decl = lower_top_level_sums(decl);
 
     decl = optimize_loops(decl);

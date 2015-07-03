@@ -199,6 +199,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
     pattern::variable<type> t;
 
     pattern::variable<std::vector<variable_declaration>> params;
+    pattern::variable<std::vector<variable_declaration>> index_decls;
 
     auto m =
         pattern::make_matcher<expression, void>()
@@ -217,7 +218,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << " " << translate_unary_op_tag(utag.get());
                        print(a.get(), ctx, print_types);
                    })
-            .case_(sum(a, decl),
+            .case_(sum_multi(a, index_decls, decl),
                    [&]
                    {
                        std::cout << "sum(";
@@ -226,13 +227,92 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
                        std::cout << ", ";
 
-                       if (auto debug_name = decl.get().annotations().lookup("kubus.debug.name"))
+                               if (auto debug_name = decl.get().annotations().lookup("kubus.debug.name"))
+                               {
+                                   std::cout << debug_name.as<std::string>();
+                               }
+                               else
+                               {
+                                   std::cout << ctx.get_name_for_handle(decl.get().id());
+                               }
+
+                       std::cout << " = ";
+
+                       if (index_decls.get().size() > 1)
                        {
-                           std::cout << debug_name.as<std::string>();
+                           std::cout << "(";
+
+                           for (const auto& idx : index_decls.get())
+                           {
+                               if (auto debug_name = idx.annotations().lookup("kubus.debug.name"))
+                               {
+                                   std::cout << debug_name.as<std::string>();
+                               }
+                               else
+                               {
+                                   std::cout << ctx.get_name_for_handle(idx.id());
+                               }
+
+                               std::cout << ",";
+                           }
+
+                           std::cout << ")";
                        }
                        else
                        {
-                           std::cout << ctx.get_name_for_handle(decl.get().id());
+                           if (auto debug_name =
+                                   index_decls.get()[0].annotations().lookup("kubus.debug.name"))
+                           {
+                               std::cout << debug_name.as<std::string>();
+                           }
+                           else
+                           {
+                               std::cout << ctx.get_name_for_handle(index_decls.get()[0].id());
+                           }
+                       }
+
+                       std::cout << ")";
+                   })
+            .case_(sum_multi(a, index_decls),
+                   [&]
+                   {
+                       std::cout << "sum(";
+
+                       print(a.get(), ctx, print_types);
+
+                       std::cout << ", ";
+
+                       if (index_decls.get().size() > 1)
+                       {
+                           std::cout << "(";
+
+                           for (const auto& idx : index_decls.get())
+                           {
+                               if (auto debug_name = idx.annotations().lookup("kubus.debug.name"))
+                               {
+                                   std::cout << debug_name.as<std::string>();
+                               }
+                               else
+                               {
+                                   std::cout << ctx.get_name_for_handle(idx.id());
+                               }
+
+                               std::cout << ",";
+                           }
+
+                           std::cout << ")";
+                       }
+                       else
+                       {
+                           if (auto debug_name =
+                                   index_decls.get()[0].annotations().lookup("kubus.debug.name"))
+                           {
+                               std::cout << debug_name.as<std::string>();
+                           }
+                           else
+                           {
+                               std::cout << ctx.get_name_for_handle(index_decls.get()[0].id());
+                           }
                        }
 
                        std::cout << ")";
@@ -371,18 +451,95 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        print(d.get(), ctx, print_types);
                        std::cout << "\n}";
                    })
-            .case_(for_all(decl, b),
+            .case_(for_all_multi(index_decls, decl, b),
                    [&]
                    {
                        std::cout << "for all ";
 
-                       if (auto debug_name = decl.get().annotations().lookup("kubus.debug.name"))
+                               if (auto debug_name = decl.get().annotations().lookup("kubus.debug.name"))
+                               {
+                                   std::cout << debug_name.as<std::string>();
+                               }
+                               else
+                               {
+                                   std::cout << ctx.get_name_for_handle(decl.get().id());
+                               }
+
+                       std::cout << " = ";
+
+                       if (index_decls.get().size() > 1)
                        {
-                           std::cout << debug_name.as<std::string>();
+                           std::cout << "(";
+
+                           for (const auto& idx : index_decls.get())
+                           {
+                               if (auto debug_name = idx.annotations().lookup("kubus.debug.name"))
+                               {
+                                   std::cout << debug_name.as<std::string>();
+                               }
+                               else
+                               {
+                                   std::cout << ctx.get_name_for_handle(idx.id());
+                               }
+
+                               std::cout << ",";
+                           }
+
+                           std::cout << ")";
                        }
                        else
                        {
-                           std::cout << ctx.get_name_for_handle(decl.get().id());
+                           if (auto debug_name =
+                                   index_decls.get()[0].annotations().lookup("kubus.debug.name"))
+                           {
+                               std::cout << debug_name.as<std::string>();
+                           }
+                           else
+                           {
+                               std::cout << ctx.get_name_for_handle(index_decls.get()[0].id());
+                           }
+                       }
+
+                       std::cout << "\n{\n";
+                       print(b.get(), ctx, print_types);
+                       std::cout << "\n}";
+                   })
+            .case_(for_all_multi(index_decls, b),
+                   [&]
+                   {
+                       std::cout << "for all ";
+
+                       if (index_decls.get().size() > 1)
+                       {
+                           std::cout << "(";
+
+                           for (const auto& idx : index_decls.get())
+                           {
+                               if (auto debug_name = idx.annotations().lookup("kubus.debug.name"))
+                               {
+                                   std::cout << debug_name.as<std::string>();
+                               }
+                               else
+                               {
+                                   std::cout << ctx.get_name_for_handle(idx.id());
+                               }
+
+                               std::cout << ",";
+                           }
+
+                           std::cout << ")";
+                       }
+                       else
+                       {
+                           if (auto debug_name =
+                                   index_decls.get()[0].annotations().lookup("kubus.debug.name"))
+                           {
+                               std::cout << debug_name.as<std::string>();
+                           }
+                           else
+                           {
+                               std::cout << ctx.get_name_for_handle(index_decls.get()[0].id());
+                           }
                        }
 
                        std::cout << "\n{\n";

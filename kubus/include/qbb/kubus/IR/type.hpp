@@ -213,6 +213,29 @@ public:
     }
 };
 
+constexpr long int dynamic_rank = -1;
+
+class multi_index
+{
+public:
+    multi_index(long int rank_)
+    : rank_(rank_)
+    {
+    }
+    
+    bool is_primitive() const
+    {
+        return true;
+    }
+    
+    long int rank() const
+    {
+        return rank_;
+    }
+private:
+    long int rank_;
+};
+
 class complex
 {
 public:
@@ -317,6 +340,7 @@ public:
 private:
     type value_type_;
 };
+
 }
 
 template<>
@@ -341,6 +365,11 @@ struct is_type<types::bool_> : std::true_type
 
 template<>
 struct is_type<types::index> : std::true_type
+{
+};
+
+template<>
+struct is_type<types::multi_index> : std::true_type
 {
 };
 
