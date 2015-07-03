@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_ALIGN_HPP
-#define QBB_KUBUS_ALIGN_HPP
+#ifndef QBB_UTIL_ALIGN_HPP
+#define QBB_UTIL_ALIGN_HPP
 
 #include <cstddef>
 

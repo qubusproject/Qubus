@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_DENSE_HASH_MAP_HPP
-#define QBB_KUBUS_DENSE_HASH_MAP_HPP
+#ifndef QBB_UTIL_DENSE_HASH_MAP_HPP
+#define QBB_UTIL_DENSE_HASH_MAP_HPP
 
 #include <functional>
 #include <utility>

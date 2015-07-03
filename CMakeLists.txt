@@ -3,7 +3,7 @@ enable_testing()
 
 project(QBB)
 
-set(KUBUS_VERSION 0.1.0)
+set(QUBUS_VERSION 0.1.0)
 
 if(POLICY CMP0053)
   cmake_policy(SET CMP0053 NEW)
@@ -19,7 +19,7 @@ endif()
  
 message(STATUS "The install prefix is: ${CMAKE_INSTALL_PREFIX}")
 
-set(KUBUS_CMAKE_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/lib/cmake/kubus)
+set(QUBUS_CMAKE_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/lib/cmake/qubus)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -34,38 +34,38 @@ CheckSIMD()
 CheckFMA()
 
 add_subdirectory(util)
-add_subdirectory(kubus)
+add_subdirectory(qubus)
 
 include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/kubus/kubus-config-version.cmake"
-  VERSION ${KUBUS_VERSION}
+  "${CMAKE_CURRENT_BINARY_DIR}/qubus/qubus-config-version.cmake"
+  VERSION ${QUBUS_VERSION}
   COMPATIBILITY AnyNewerVersion
 )
 
-set(ConfigPackageLocation lib/cmake/kubus)
+set(ConfigPackageLocation lib/cmake/qubus)
 
-install(EXPORT kubus-targets
+install(EXPORT qubus-targets
   FILE
-    kubus-targets.cmake
+    qubus-targets.cmake
   NAMESPACE
-    kubus::
+    qubus::
   DESTINATION
     ${ConfigPackageLocation}
 )
 
-configure_file(cmake/kubus-macros.cmake.in
-               ${CMAKE_CURRENT_BINARY_DIR}/kubus-macros.cmake
+configure_file(cmake/qubus-macros.cmake.in
+               ${CMAKE_CURRENT_BINARY_DIR}/qubus-macros.cmake
                ESCAPE_QUOTES @ONLY)
 
 install(
   FILES
-    cmake/kubus-config.cmake
-    "${CMAKE_CURRENT_BINARY_DIR}/kubus-macros.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/kubus/kubus-config-version.cmake"
+    cmake/qubus-config.cmake
+    "${CMAKE_CURRENT_BINARY_DIR}/qubus-macros.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/qubus/qubus-config-version.cmake"
     cmake/FindISL.cmake
   DESTINATION
     ${ConfigPackageLocation})
     
-add_custom_target(doc DEPENDS kubus_doc COMMENT "Generating the documentation.")
+add_custom_target(doc DEPENDS qubus_doc COMMENT "Generating the documentation.")
