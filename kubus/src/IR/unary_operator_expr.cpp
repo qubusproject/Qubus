@@ -6,7 +6,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 unary_operator_expr::unary_operator_expr(unary_op_tag tag_, expression arg_)

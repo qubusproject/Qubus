@@ -4,7 +4,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 construct_expr::construct_expr(type result_type_, std::vector<expression> parameters_)

@@ -59,11 +59,11 @@ double run_benchmark(F f, OnStop on_stop)
     return avg_time;
 }
 
-using namespace qbb::kubus;
+using namespace qbb::qubus;
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::kubus::init(argc, argv);
+    qbb::qubus::init(argc, argv);
 
     std::ofstream bench_data("bench_data.dat");
 
@@ -74,9 +74,9 @@ int hpx_main(int argc, char** argv)
         bench_data << N << "   ";
 
         {
-            qbb::kubus::index i("i");
-            qbb::kubus::index j("j");
-            qbb::kubus::index k("k");
+            qbb::qubus::index i("i");
+            qbb::qubus::index j("j");
+            qbb::qubus::index k("k");
 
             tensor<double, 2> A(N, N);
             tensor<double, 2> B(N, N);

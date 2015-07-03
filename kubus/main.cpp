@@ -29,7 +29,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 class mock_allocator : public allocator
@@ -73,11 +73,11 @@ private:
 }
 }
 
-using namespace qbb::kubus;
+using namespace qbb::qubus;
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::kubus::init(argc, argv);
+    qbb::qubus::init(argc, argv);
 
     long int N = 1000;
 
@@ -95,9 +95,9 @@ int hpx_main(int argc, char** argv)
             .finalize();
 
     {
-        qbb::kubus::index i("i");
-        qbb::kubus::index j("j");
-        qbb::kubus::index k("k");
+        qbb::qubus::index i("i");
+        qbb::qubus::index j("j");
+        qbb::qubus::index k("k");
 
         tensor<double, 2> A(N, N);
         tensor<double, 2> B(N, N);

@@ -8,7 +8,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 class parameter

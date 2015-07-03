@@ -8,7 +8,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 #if defined(__x86_64__) && defined(__linux__)

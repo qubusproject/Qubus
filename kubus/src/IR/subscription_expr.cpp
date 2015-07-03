@@ -4,7 +4,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 subscription_expr::subscription_expr(expression indexed_expr_, std::vector<expression> indices_)

@@ -5,7 +5,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 variable_ref_expr::variable_ref_expr(variable_declaration declaration_) : declaration_(declaration_)

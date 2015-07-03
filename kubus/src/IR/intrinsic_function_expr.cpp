@@ -4,7 +4,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 intrinsic_function_expr::intrinsic_function_expr(std::string name_, std::vector<expression> args_)

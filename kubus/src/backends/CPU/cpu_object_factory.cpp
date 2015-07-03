@@ -7,7 +7,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
     
 cpu_object_factory::cpu_object_factory(allocator& allocator_, const abi_info& abi_info_)

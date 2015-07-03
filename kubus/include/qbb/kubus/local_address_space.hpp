@@ -15,7 +15,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
     
 // TODO: remove memory blocks of dead objects

@@ -6,7 +6,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 binary_operator_expr::binary_operator_expr(binary_op_tag tag_, expression left_, expression right_)

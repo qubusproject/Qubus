@@ -21,7 +21,7 @@
 
 TEST(contractions, simple_contraction)
 {
-    using namespace qbb::kubus;
+    using namespace qbb::qubus;
     
     long int N = 100;
 
@@ -44,9 +44,9 @@ TEST(contractions, simple_contraction)
         }
     }
 
-    qbb::kubus::index i("i");
-    qbb::kubus::index j("j");
-    qbb::kubus::index k("k");
+    qbb::qubus::index i("i");
+    qbb::qubus::index j("j");
+    qbb::qubus::index k("k");
 
     tensor<double, 2> A(N, N);
     tensor<double, 2> B(N, N);
@@ -123,7 +123,7 @@ TEST(contractions, simple_contraction)
 
 TEST(contractions, reduction_to_r1)
 {
-    using namespace qbb::kubus;
+    using namespace qbb::qubus;
     
     long int N = 100;
 
@@ -146,9 +146,9 @@ TEST(contractions, reduction_to_r1)
         }
     }
 
-    qbb::kubus::index i("i");
-    qbb::kubus::index j("j");
-    qbb::kubus::index k("k");
+    qbb::qubus::index i("i");
+    qbb::qubus::index j("j");
+    qbb::qubus::index k("k");
 
     tensor<double, 2> A(N, N);
     tensor<double, 2> B(N, N);
@@ -222,7 +222,7 @@ TEST(contractions, reduction_to_r1)
 
 TEST(contractions, matrix_vector_product)
 {
-    using namespace qbb::kubus;
+    using namespace qbb::qubus;
     
     long int N = 100;
 
@@ -245,8 +245,8 @@ TEST(contractions, matrix_vector_product)
         B2[i] = dist(gen);
     }
 
-    qbb::kubus::index i("i");
-    qbb::kubus::index j("j");
+    qbb::qubus::index i("i");
+    qbb::qubus::index j("j");
 
     tensor<double, 2> A(N, N);
     tensor<double, 1> B(N);
@@ -314,7 +314,7 @@ TEST(contractions, matrix_vector_product)
 
 TEST(contractions, basis_change_r2)
 {
-    using namespace qbb::kubus;
+    using namespace qbb::qubus;
     
     long int N = 100;
 
@@ -337,10 +337,10 @@ TEST(contractions, basis_change_r2)
         }
     }
 
-    qbb::kubus::index i("i");
-    qbb::kubus::index j("j");
-    qbb::kubus::index k("k");
-    qbb::kubus::index l("l");
+    qbb::qubus::index i("i");
+    qbb::qubus::index j("j");
+    qbb::qubus::index k("k");
+    qbb::qubus::index l("l");
 
     tensor<double, 2> A(N, N);
     tensor<double, 2> B(N, N);
@@ -420,7 +420,7 @@ TEST(contractions, basis_change_r2)
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::kubus::init(argc, argv);
+    qbb::qubus::init(argc, argv);
     
     auto result = RUN_ALL_TESTS();
 

@@ -15,11 +15,11 @@
 
 TEST(multi_indices, simple_expr)
 {
-    using namespace qbb::kubus;
+    using namespace qbb::qubus;
 
     long int N = 100;
 
-    qbb::kubus::multi_index<2> ij("ij");
+    qbb::qubus::multi_index<2> ij("ij");
 
     tensor<double, 2> A(N, N);
 
@@ -54,13 +54,13 @@ TEST(multi_indices, simple_expr)
 
 TEST(multi_indices, index_splitting)
 {
-    using namespace qbb::kubus;
+    using namespace qbb::qubus;
 
     long int N = 100;
 
-    qbb::kubus::index i("i");
-    qbb::kubus::index j("j");
-    qbb::kubus::multi_index<2> ij({i, j}, "ij");
+    qbb::qubus::index i("i");
+    qbb::qubus::index j("j");
+    qbb::qubus::multi_index<2> ij({i, j}, "ij");
 
     std::random_device rd;
 
@@ -129,13 +129,13 @@ TEST(multi_indices, index_splitting)
 // TODO: Should this work?
 /*TEST(multi_indices, reverse_index_splitting)
 {
-    using namespace qbb::kubus;
+    using namespace qbb::qubus;
 
     long int N = 100;
 
-    qbb::kubus::index i("i");
-    qbb::kubus::index j("j");
-    qbb::kubus::multi_index<2> ij({i, j}, "ij");
+    qbb::qubus::index i("i");
+    qbb::qubus::index j("j");
+    qbb::qubus::multi_index<2> ij({i, j}, "ij");
 
     std::random_device rd;
 
@@ -203,12 +203,12 @@ TEST(multi_indices, index_splitting)
 
 TEST(multi_indices, multi_sum)
 {
-    using namespace qbb::kubus;
+    using namespace qbb::qubus;
 
     long int N = 100;
 
-    qbb::kubus::multi_index<2> ij("ij");
-    qbb::kubus::index k("k");
+    qbb::qubus::multi_index<2> ij("ij");
+    qbb::qubus::index k("k");
 
     std::random_device rd;
 
@@ -291,14 +291,14 @@ TEST(multi_indices, multi_sum)
 
 TEST(multi_indices, multi_sum_index_splitting)
 {
-    using namespace qbb::kubus;
+    using namespace qbb::qubus;
 
     long int N = 100;
 
-    qbb::kubus::index i("i");
-    qbb::kubus::index j("j");
-    qbb::kubus::multi_index<2> ij({i, j}, "ij");
-    qbb::kubus::index k("k");
+    qbb::qubus::index i("i");
+    qbb::qubus::index j("j");
+    qbb::qubus::multi_index<2> ij({i, j}, "ij");
+    qbb::qubus::index k("k");
 
     std::random_device rd;
 
@@ -381,7 +381,7 @@ TEST(multi_indices, multi_sum_index_splitting)
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::kubus::init(argc, argv);
+    qbb::qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

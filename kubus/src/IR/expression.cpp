@@ -9,7 +9,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 qbb::util::implementation_table expression::implementation_table_ = {};

@@ -23,7 +23,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 template <typename T, long int Rank>

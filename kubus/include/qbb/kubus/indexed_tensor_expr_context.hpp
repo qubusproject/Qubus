@@ -17,7 +17,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 namespace proto = boost::proto;

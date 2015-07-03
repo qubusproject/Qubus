@@ -14,7 +14,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 tensor_expr_info::tensor_expr_info(

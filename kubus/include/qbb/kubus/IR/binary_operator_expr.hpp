@@ -8,7 +8,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 enum class binary_op_tag

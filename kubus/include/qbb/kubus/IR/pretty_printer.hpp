@@ -6,7 +6,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 void pretty_print(const expression& expr, bool print_types = false);

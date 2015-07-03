@@ -15,7 +15,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 index_expr::index_expr(util::index_t value_) : constant_(value_)

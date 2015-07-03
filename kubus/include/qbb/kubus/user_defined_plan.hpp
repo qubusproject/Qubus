@@ -22,7 +22,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 using user_defined_plan_body_t = std::function<void(void* const*)>;

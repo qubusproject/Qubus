@@ -5,7 +5,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
    
 expression fold_kronecker_deltas(expression exp);

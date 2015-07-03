@@ -8,7 +8,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 std::unique_ptr<memory_block> cpu_allocator::allocate(std::size_t size, std::size_t alignment)
 {

@@ -7,7 +7,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 std::vector<std::string> deduce_host_cpu_features();

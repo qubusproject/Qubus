@@ -8,7 +8,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 type lookup_intrinsic_result_type(const std::string& name, const std::vector<type>& arg_types);

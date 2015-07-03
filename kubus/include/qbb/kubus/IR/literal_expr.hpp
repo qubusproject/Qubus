@@ -11,7 +11,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
  
 class double_literal_expr

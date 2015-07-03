@@ -14,7 +14,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 class cpu_object_factory final : public local_object_factory

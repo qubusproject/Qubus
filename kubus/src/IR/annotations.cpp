@@ -2,7 +2,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 bool annotation::has_value() const
 {

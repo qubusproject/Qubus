@@ -6,7 +6,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 if_expr::if_expr(expression condition_, expression then_branch_)

@@ -15,7 +15,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 class function_declaration_info;

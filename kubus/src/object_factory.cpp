@@ -7,7 +7,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
  
 void object_factory::add_factory_and_addr_space(const std::string& id, local_object_factory& factory,

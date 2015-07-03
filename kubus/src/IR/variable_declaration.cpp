@@ -2,7 +2,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 class variable_declaration_info

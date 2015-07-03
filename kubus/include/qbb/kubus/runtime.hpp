@@ -23,7 +23,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 class global_plan_repository;

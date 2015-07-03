@@ -5,7 +5,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
  
 function_declaration optimize_loops(function_declaration expr);

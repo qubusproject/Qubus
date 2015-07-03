@@ -2,7 +2,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 plan::plan(const util::handle& id_, std::vector<intent> intents_)

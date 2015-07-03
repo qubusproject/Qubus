@@ -7,7 +7,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 enum severity_level

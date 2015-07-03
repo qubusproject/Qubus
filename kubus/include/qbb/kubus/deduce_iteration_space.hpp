@@ -8,7 +8,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
     
 std::array<expression, 2> deduce_iteration_space(const variable_declaration& index, const expression& expr);

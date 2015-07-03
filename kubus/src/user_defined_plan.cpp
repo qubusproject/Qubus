@@ -6,7 +6,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 plan user_defined_plan_builder::finalize()
 {

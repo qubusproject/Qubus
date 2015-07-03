@@ -29,7 +29,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 class name_scope

@@ -9,7 +9,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 local_address_space::local_address_space(std::unique_ptr<allocator> allocator_)

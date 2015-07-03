@@ -10,7 +10,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 namespace
@@ -111,9 +111,9 @@ qbb::util::implementation_table type::implementation_table_ = {};
 
 namespace std
 {
-std::size_t hash<qbb::kubus::type>::operator()(const qbb::kubus::type& value) const noexcept
+std::size_t hash<qbb::qubus::type>::operator()(const qbb::qubus::type& value) const noexcept
 {
-    using namespace qbb::kubus;
+    using namespace qbb::qubus;
 
     pattern::variable<type> t;
 

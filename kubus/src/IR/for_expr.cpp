@@ -8,7 +8,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 for_expr::for_expr(variable_declaration loop_index_, expression lower_bound_,

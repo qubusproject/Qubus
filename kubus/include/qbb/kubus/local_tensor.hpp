@@ -10,7 +10,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 class local_tensor final : public basic_object

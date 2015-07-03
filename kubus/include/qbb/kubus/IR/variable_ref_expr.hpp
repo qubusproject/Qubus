@@ -13,7 +13,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
     
 class variable_ref_expr

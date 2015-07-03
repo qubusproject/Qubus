@@ -5,7 +5,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
     
 function_declaration make_implicit_conversions_explicit(function_declaration decl);

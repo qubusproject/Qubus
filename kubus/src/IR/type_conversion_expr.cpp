@@ -6,7 +6,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 type_conversion_expr::type_conversion_expr(class type target_type_, expression arg_)

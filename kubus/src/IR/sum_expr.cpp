@@ -8,7 +8,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 sum_expr::sum_expr(variable_declaration contraction_index_, expression body_)

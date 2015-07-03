@@ -13,7 +13,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 class stack_buffer

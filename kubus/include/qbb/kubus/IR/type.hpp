@@ -14,7 +14,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 namespace types
@@ -404,12 +404,12 @@ struct is_type<types::sparse_tensor> : std::true_type
 namespace std
 {
     template<>
-    struct hash<qbb::kubus::type>
+    struct hash<qbb::qubus::type>
     {
-        using argument_type = qbb::kubus::type;
+        using argument_type = qbb::qubus::type;
         using result_type = std::size_t;
         
-        std::size_t operator()(const qbb::kubus::type& value) const noexcept;
+        std::size_t operator()(const qbb::qubus::type& value) const noexcept;
     };
 }
 

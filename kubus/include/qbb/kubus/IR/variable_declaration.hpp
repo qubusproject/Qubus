@@ -12,7 +12,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 class variable_declaration_info;
@@ -49,13 +49,13 @@ namespace std
 {
 
 template<>
-struct less<qbb::kubus::variable_declaration>
+struct less<qbb::qubus::variable_declaration>
 {
     using result_type = bool;
-    using first_argument_type = qbb::kubus::variable_declaration;
+    using first_argument_type = qbb::qubus::variable_declaration;
     using second_argument_type = first_argument_type;
 
-    bool operator()(const qbb::kubus::variable_declaration& lhs, const qbb::kubus::variable_declaration& rhs) const
+    bool operator()(const qbb::qubus::variable_declaration& lhs, const qbb::qubus::variable_declaration& rhs) const
     {
         return lhs.id() < rhs.id();
     }

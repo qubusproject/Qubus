@@ -7,7 +7,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 expression extract_expr_as_function(expression expr, const std::string& extracted_func_name);

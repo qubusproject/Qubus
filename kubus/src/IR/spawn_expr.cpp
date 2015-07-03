@@ -4,7 +4,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 spawn_expr::spawn_expr(function_declaration spawned_plan_, std::vector<expression> arguments_)

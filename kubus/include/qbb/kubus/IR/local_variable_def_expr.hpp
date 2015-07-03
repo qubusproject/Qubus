@@ -9,7 +9,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 class local_variable_def_expr

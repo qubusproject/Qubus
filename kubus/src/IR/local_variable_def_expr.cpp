@@ -6,7 +6,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 local_variable_def_expr::local_variable_def_expr(variable_declaration decl_,

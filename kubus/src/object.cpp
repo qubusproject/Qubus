@@ -2,7 +2,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 void basic_object::on_destruction(const object_predestructor_signal::slot_type& subscriber) const

@@ -6,7 +6,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 evicting_allocator::evicting_allocator(std::unique_ptr<allocator> underlying_allocator_, local_address_space* ospace_)

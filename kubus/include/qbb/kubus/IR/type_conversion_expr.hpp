@@ -9,7 +9,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 class type_conversion_expr

@@ -12,7 +12,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 class local_array final : public basic_object

@@ -5,7 +5,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 function_declaration expand_multi_indices(function_declaration decl);

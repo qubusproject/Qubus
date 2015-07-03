@@ -4,7 +4,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 void backend_registry::register_backend(std::string id, std::unique_ptr<backend> backend)

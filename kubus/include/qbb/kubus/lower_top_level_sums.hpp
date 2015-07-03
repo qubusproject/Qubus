@@ -6,7 +6,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
  
 expression lower_top_level_sums(const expression& expr);

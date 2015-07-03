@@ -4,7 +4,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 compound_expr::compound_expr(std::vector<expression> body_)

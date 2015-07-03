@@ -5,7 +5,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 double_literal_expr::double_literal_expr(double value_) : value_{value_}

@@ -2,7 +2,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 cpu_memory_block::cpu_memory_block(void* data_, std::size_t size_, cpu_allocator& allocator_)
 : data_(data_), size_(size_), allocator_(&allocator_)

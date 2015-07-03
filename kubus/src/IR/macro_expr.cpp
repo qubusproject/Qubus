@@ -9,7 +9,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 macro_expr::macro_expr(std::vector<variable_declaration> params_, expression body_)
 : params_(std::move(params_)), body_(std::move(body_))

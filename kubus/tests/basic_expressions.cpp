@@ -21,12 +21,12 @@
 
 TEST(basic_expressions, constant_expr)
 {
-using namespace qbb::kubus;
+using namespace qbb::qubus;
 
 long int N = 100;
 
-qbb::kubus::index i("i");
-qbb::kubus::index j("j");
+qbb::qubus::index i("i");
+qbb::qubus::index j("j");
 
 tensor<double, 2> A(N, N);
 
@@ -61,7 +61,7 @@ ASSERT_NEAR(error, 0.0, 1e-14);
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::kubus::init(argc, argv);
+    qbb::qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

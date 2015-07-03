@@ -6,7 +6,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 void* build_array_metadata(const local_array& array, const local_address_space& addr_space,
                            const abi_info& abi, execution_stack& stack,

@@ -5,7 +5,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 template <typename T>
 struct is_expression : std::false_type

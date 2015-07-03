@@ -6,7 +6,7 @@
 
 namespace qbb
 {
-namespace kubus
+namespace qubus
 {
 
 for_all_expr::for_all_expr(variable_declaration loop_index_, expression body_)
