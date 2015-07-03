@@ -126,7 +126,7 @@ class code_region
 {
 public:
     code_region(util::handle token_, const expression& QBB_UNUSED(expr_), llvm_environment& env_)
-    : env_(&env_), token_(token_), laa_alias_analysis_(token_, env_)
+    : token_(token_), laa_alias_analysis_(token_, env_)
     {
     }
 
@@ -140,7 +140,6 @@ public:
     }
 
 private:
-    llvm_environment* env_;
     util::handle token_;
 
     local_array_access_alias_analysis laa_alias_analysis_;
