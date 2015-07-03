@@ -68,14 +68,14 @@ std::string mangle_type(const type& t)
 
 llvm_environment::llvm_environment()
 : builder_(llvm::getGlobalContext()), md_builder_(llvm::getGlobalContext()),
-  the_module_(util::make_unique<llvm::Module>("kubus module", llvm::getGlobalContext()))
+  the_module_(util::make_unique<llvm::Module>("Qubus module", llvm::getGlobalContext()))
 {
     llvm::FastMathFlags fast_math_flags;
     fast_math_flags.setUnsafeAlgebra();
 
     builder_.SetFastMathFlags(fast_math_flags);
 
-    global_alias_domain_ = md_builder_.createAliasScopeDomain("kubus.alias_domain");
+    global_alias_domain_ = md_builder_.createAliasScopeDomain("qubus.alias_domain");
     get_alias_scope(access_path());
 
     init_assume_align();
@@ -125,14 +125,14 @@ void llvm_environment::init_assume_align()
 void llvm_environment::init_alloc_scratch_mem()
 {
     auto generic_ptr = llvm::Type::getInt8PtrTy(llvm::getGlobalContext(), 0);
-    auto size_type = map_kubus_type(types::integer());
+    auto size_type = map_qubus_type(types::integer());
 
     std::vector<llvm::Type*> param_types = {generic_ptr, size_type};
 
     llvm::FunctionType* FT = llvm::FunctionType::get(generic_ptr, param_types, false);
 
     alloc_scratch_mem_ = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
-                                                "qbb_kubus_cpurt_alloc_scatch_mem", &module());
+                                                "qbb_qubus_cpurt_alloc_scatch_mem", &module());
 
     alloc_scratch_mem_->setDoesNotCapture(1);
     alloc_scratch_mem_->setDoesNotAlias(1);
@@ -143,14 +143,14 @@ void llvm_environment::init_dealloc_scratch_mem()
 {
     auto generic_ptr = llvm::Type::getInt8PtrTy(llvm::getGlobalContext(), 0);
     auto void_type = llvm::Type::getVoidTy(llvm::getGlobalContext());
-    auto size_type = map_kubus_type(types::integer());
+    auto size_type = map_qubus_type(types::integer());
 
     std::vector<llvm::Type*> param_types = {generic_ptr, size_type};
 
     llvm::FunctionType* FT = llvm::FunctionType::get(void_type, param_types, false);
 
     dealloc_scratch_mem_ = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
-                                                  "qbb_kubus_cpurt_dealloc_scratch_mem", &module());
+                                                  "qbb_qubus_cpurt_dealloc_scratch_mem", &module());
 
     dealloc_scratch_mem_->setDoesNotCapture(1);
     dealloc_scratch_mem_->setDoesNotAlias(1);
@@ -177,7 +177,7 @@ const llvm::Module& llvm_environment::module() const
     return *the_module_;
 }
 
-llvm::Type* llvm_environment::map_kubus_type(const type& t) const
+llvm::Type* llvm_environment::map_qubus_type(const type& t) const
 {
     llvm::Type*& llvm_type = type_map_[t];
 
@@ -215,7 +215,7 @@ llvm::Type* llvm_environment::map_kubus_type(const type& t) const
                 .case_(complex_t(subtype),
                        [&](const type& total_type)
                        {
-                           llvm::Type* real_type = map_kubus_type(types::double_());
+                           llvm::Type* real_type = map_qubus_type(types::double_());
 
                            llvm::Type* real_pair = llvm::ArrayType::get(real_type, 2);
 
@@ -224,17 +224,17 @@ llvm::Type* llvm_environment::map_kubus_type(const type& t) const
                 .case_(tensor_t(subtype),
                        [&](const type& total_type)
                        {
-                           llvm::Type* size_type = map_kubus_type(types::integer());
+                           llvm::Type* size_type = map_qubus_type(types::integer());
                            std::vector<llvm::Type*> types{
-                               llvm::PointerType::get(map_kubus_type(subtype.get()), 0),
+                               llvm::PointerType::get(map_qubus_type(subtype.get()), 0),
                                llvm::PointerType::get(size_type, 0)};
                            return llvm::StructType::create(types, mangle_type(total_type));
                        })
                 .case_(array_slice_t(subtype), [&](const type& total_type)
                        {
-                           llvm::Type* size_type = map_kubus_type(types::integer());
+                           llvm::Type* size_type = map_qubus_type(types::integer());
                            std::vector<llvm::Type*> types{
-                               llvm::PointerType::get(map_kubus_type(subtype.get()), 0),
+                               llvm::PointerType::get(map_qubus_type(subtype.get()), 0),
                                llvm::PointerType::get(size_type, 0),
                                llvm::PointerType::get(size_type, 0)};
                            return llvm::StructType::create(types, mangle_type(total_type));

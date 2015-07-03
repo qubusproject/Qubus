@@ -227,7 +227,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
                        std::cout << ", ";
 
-                               if (auto debug_name = decl.get().annotations().lookup("kubus.debug.name"))
+                               if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
                                {
                                    std::cout << debug_name.as<std::string>();
                                }
@@ -244,7 +244,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
                            for (const auto& idx : index_decls.get())
                            {
-                               if (auto debug_name = idx.annotations().lookup("kubus.debug.name"))
+                               if (auto debug_name = idx.annotations().lookup("qubus.debug.name"))
                                {
                                    std::cout << debug_name.as<std::string>();
                                }
@@ -261,7 +261,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        else
                        {
                            if (auto debug_name =
-                                   index_decls.get()[0].annotations().lookup("kubus.debug.name"))
+                                   index_decls.get()[0].annotations().lookup("qubus.debug.name"))
                            {
                                std::cout << debug_name.as<std::string>();
                            }
@@ -288,7 +288,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
                            for (const auto& idx : index_decls.get())
                            {
-                               if (auto debug_name = idx.annotations().lookup("kubus.debug.name"))
+                               if (auto debug_name = idx.annotations().lookup("qubus.debug.name"))
                                {
                                    std::cout << debug_name.as<std::string>();
                                }
@@ -305,7 +305,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        else
                        {
                            if (auto debug_name =
-                                   index_decls.get()[0].annotations().lookup("kubus.debug.name"))
+                                   index_decls.get()[0].annotations().lookup("qubus.debug.name"))
                            {
                                std::cout << debug_name.as<std::string>();
                            }
@@ -335,7 +335,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
             .case_(variable_ref(decl),
                    [&]
                    {
-                       if (auto debug_name = decl.get().annotations().lookup("kubus.debug.name"))
+                       if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
                        {
                            std::cout << debug_name.as<std::string>();
                        }
@@ -431,7 +431,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                    {
                        std::cout << "for ";
 
-                       if (auto debug_name = decl.get().annotations().lookup("kubus.debug.name"))
+                       if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
                        {
                            std::cout << debug_name.as<std::string>();
                        }
@@ -456,7 +456,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                    {
                        std::cout << "for all ";
 
-                               if (auto debug_name = decl.get().annotations().lookup("kubus.debug.name"))
+                               if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
                                {
                                    std::cout << debug_name.as<std::string>();
                                }
@@ -473,7 +473,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
                            for (const auto& idx : index_decls.get())
                            {
-                               if (auto debug_name = idx.annotations().lookup("kubus.debug.name"))
+                               if (auto debug_name = idx.annotations().lookup("qubus.debug.name"))
                                {
                                    std::cout << debug_name.as<std::string>();
                                }
@@ -490,7 +490,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        else
                        {
                            if (auto debug_name =
-                                   index_decls.get()[0].annotations().lookup("kubus.debug.name"))
+                                   index_decls.get()[0].annotations().lookup("qubus.debug.name"))
                            {
                                std::cout << debug_name.as<std::string>();
                            }
@@ -515,7 +515,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
                            for (const auto& idx : index_decls.get())
                            {
-                               if (auto debug_name = idx.annotations().lookup("kubus.debug.name"))
+                               if (auto debug_name = idx.annotations().lookup("qubus.debug.name"))
                                {
                                    std::cout << debug_name.as<std::string>();
                                }
@@ -532,7 +532,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        else
                        {
                            if (auto debug_name =
-                                   index_decls.get()[0].annotations().lookup("kubus.debug.name"))
+                                   index_decls.get()[0].annotations().lookup("qubus.debug.name"))
                            {
                                std::cout << debug_name.as<std::string>();
                            }
@@ -574,7 +574,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                    {
                        std::cout << "let ";
 
-                       if (auto debug_name = decl.get().annotations().lookup("kubus.debug.name"))
+                       if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
                        {
                            std::cout << debug_name.as<std::string>();
                        }

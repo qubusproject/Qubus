@@ -41,7 +41,7 @@ expression lower_abstract_indices_impl(const expression& expr)
         expression upper_bound = bounds[1];
 
         variable_declaration loop_index{types::integer()};
-        loop_index.annotations().add("kubus.debug.name", decl.get().annotations().lookup("kubus.debug.name"));
+        loop_index.annotations().add("qubus.debug.name", decl.get().annotations().lookup("qubus.debug.name"));
  
         auto m2 = pattern::make_matcher<expression, expression>().case_(index(protect(decl)), [&]
                                                                         {

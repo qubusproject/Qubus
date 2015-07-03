@@ -452,7 +452,7 @@ struct emit_sum_node : proto::transform<emit_sum_node<Evaluator>>
 
             if (idx.debug_name())
             {
-                index_decl.annotations().add("kubus.debug.name",
+                index_decl.annotations().add("qubus.debug.name",
                                              annotation(std::string(idx.debug_name())));
             }
 
@@ -479,7 +479,7 @@ struct emit_sum_node : proto::transform<emit_sum_node<Evaluator>>
 
             if (idx.debug_name())
             {
-                alias_decl.annotations().add("kubus.debug.name",
+                alias_decl.annotations().add("qubus.debug.name",
                                              annotation(std::string(idx.debug_name())));
             }
 
@@ -493,7 +493,7 @@ struct emit_sum_node : proto::transform<emit_sum_node<Evaluator>>
 
                 if (idx[i].debug_name())
                 {
-                    index_decl.annotations().add("kubus.debug.name",
+                    index_decl.annotations().add("qubus.debug.name",
                                                  annotation(std::string(idx[i].debug_name())));
                 }
 
@@ -715,7 +715,7 @@ inline index_info declare_index(ast_context& ctx, const index& idx)
 
     if (idx.debug_name())
     {
-        decl.annotations().add("kubus.debug.name", annotation(std::string(idx.debug_name())));
+        decl.annotations().add("qubus.debug.name", annotation(std::string(idx.debug_name())));
     }
 
     ctx.index_table().add(handle, decl);
@@ -732,7 +732,7 @@ inline index_info declare_index(ast_context& ctx, const multi_index<N>& idx)
 
     if (idx.debug_name())
     {
-        decl.annotations().add("kubus.debug.name", annotation(std::string(idx.debug_name())));
+        decl.annotations().add("qubus.debug.name", annotation(std::string(idx.debug_name())));
     }
 
     ctx.index_table().add(handle, decl);
@@ -745,7 +745,7 @@ inline index_info declare_index(ast_context& ctx, const multi_index<N>& idx)
 
         if (idx[i].debug_name())
         {
-            decl.annotations().add("kubus.debug.name",
+            decl.annotations().add("qubus.debug.name",
                                    annotation(std::string(idx[i].debug_name())));
         }
 

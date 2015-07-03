@@ -1,4 +1,4 @@
-option(QUBUS_BUILD_TESTS "build the kubus test suite" OFF)
+option(QUBUS_BUILD_TESTS "build the Qubus test suite" OFF)
 
 if(QUBUS_BUILD_TESTS)
   find_package(GTest REQUIRED)

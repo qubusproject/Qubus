@@ -107,13 +107,13 @@ private:
     char* current_stack_ptr_;
 };
 
-extern "C" QBB_QUBUS_EXPORT void* qbb_kubus_cpurt_alloc_scatch_mem(cpu_runtime* runtime,
+extern "C" QBB_QUBUS_EXPORT void* qbb_qubus_cpurt_alloc_scatch_mem(cpu_runtime* runtime,
                                                                    util::index_t size)
 {
     return runtime->alloc_scratch_mem(size);
 }
 
-extern "C" QBB_QUBUS_EXPORT void qbb_kubus_cpurt_dealloc_scratch_mem(cpu_runtime* runtime,
+extern "C" QBB_QUBUS_EXPORT void qbb_qubus_cpurt_dealloc_scratch_mem(cpu_runtime* runtime,
                                                                      util::index_t size)
 {
     runtime->dealloc_scratch_mem(size);
@@ -335,7 +335,7 @@ private:
         std::map<std::string, llvm::MDNode*> alias_scope_table;
 
         llvm::MDNode* global_alias_domain =
-            env_->md_builder().createAliasScopeDomain("kubus.alias_domain");
+            env_->md_builder().createAliasScopeDomain("qubus.alias_domain");
 
         for (const auto& query : pending_global_alias_queries_)
         {
@@ -843,7 +843,7 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
         auto m = pattern::make_matcher<type, llvm::Value*>().case_(
             pattern::integer_t, [&]
             {
-                llvm::Type* integer_type = env.map_kubus_type(types::integer{});
+                llvm::Type* integer_type = env.map_qubus_type(types::integer{});
 
                 auto quotient = builder.CreateSDiv(left_value, right_value);
                 auto remainder = builder.CreateSRem(left_value, right_value);
@@ -1054,7 +1054,7 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
                                      .case_(complex_t(pattern::double_t),
                                             [&]
                                             {
-                                                llvm::Type* complex_type = env.map_kubus_type(
+                                                llvm::Type* complex_type = env.map_qubus_type(
                                                     types::complex(types::double_()));
 
                                                 llvm::Value* result =
@@ -1081,7 +1081,7 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
                                       [&]
                                       {
                                           llvm::Type* complex_type =
-                                              env.map_kubus_type(types::complex(types::double_()));
+                                              env.map_qubus_type(types::complex(types::double_()));
 
                                           llvm::Value* result =
                                               llvm::ConstantAggregateZero::get(complex_type);
@@ -1089,7 +1089,7 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
                                           result = builder.CreateInsertValue(
                                               result,
                                               builder.CreateFPExt(
-                                                  arg_value, env.map_kubus_type(types::double_())),
+                                                  arg_value, env.map_qubus_type(types::double_())),
                                               std::vector<unsigned>{0, 0});
 
                                           return result;
@@ -1098,7 +1098,7 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
                                       [&]
                                       {
                                           llvm::Type* complex_type =
-                                              env.map_kubus_type(types::complex(types::float_()));
+                                              env.map_qubus_type(types::complex(types::float_()));
 
                                           llvm::Value* result =
                                               llvm::ConstantAggregateZero::get(complex_type);
@@ -1112,7 +1112,7 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
                                       [&]
                                       {
                                           return builder.CreateFPExt(
-                                              arg_value, env.map_kubus_type(target_type));
+                                              arg_value, env.map_qubus_type(target_type));
                                       })
                                .case_(pattern::float_t, [&]
                                       {
@@ -1131,7 +1131,7 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
                                             [&]
                                             {
                                                 llvm::Type* complex_type =
-                                                    env.map_kubus_type(target_type);
+                                                    env.map_qubus_type(target_type);
 
                                                 llvm::Value* result =
                                                     llvm::ConstantAggregateZero::get(complex_type);
@@ -1139,7 +1139,7 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
                                                 result = builder.CreateInsertValue(
                                                     result, builder.CreateSIToFP(
                                                                 arg_value,
-                                                                env.map_kubus_type(subtype.get())),
+                                                                env.map_qubus_type(subtype.get())),
                                                     std::vector<unsigned>{0, 0});
 
                                                 return result;
@@ -1148,7 +1148,7 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
                                             [&]
                                             {
                                                 return builder.CreateSIToFP(
-                                                    arg_value, env.map_kubus_type(subtype.get()));
+                                                    arg_value, env.map_qubus_type(subtype.get()));
                                             })
                                      .case_(pattern::integer_t, [&]
                                             {
@@ -1166,7 +1166,7 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
                                       [&]
                                       {
                                           llvm::Type* complex_type =
-                                              env.map_kubus_type(target_type);
+                                              env.map_qubus_type(target_type);
 
                                           llvm::Value* result = llvm::UndefValue::get(complex_type);
 
@@ -1178,13 +1178,13 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
                                           result = builder.CreateInsertValue(
                                               result, builder.CreateFPExt(
                                                           arg_value_real,
-                                                          env.map_kubus_type(types::double_())),
+                                                          env.map_qubus_type(types::double_())),
                                               std::vector<unsigned>{0, 0});
 
                                           result = builder.CreateInsertValue(
                                               result, builder.CreateFPExt(
                                                           arg_value_imag,
-                                                          env.map_kubus_type(types::double_())),
+                                                          env.map_qubus_type(types::double_())),
                                               std::vector<unsigned>{0, 1});
 
                                           return result;
@@ -1223,7 +1223,7 @@ llvm::Value* emit_array_access(llvm::Value* data, const std::vector<llvm::Value*
 {
     auto& builder = env.builder();
 
-    llvm::Type* size_type = env.map_kubus_type(types::integer());
+    llvm::Type* size_type = env.map_qubus_type(types::integer());
 
     llvm::Value* linearized_index = llvm::ConstantInt::get(size_type, 0);
 
@@ -1454,7 +1454,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                    {
                        ctx.enter_new_scope();
 
-                       llvm::Type* size_type = env.map_kubus_type(types::integer());
+                       llvm::Type* size_type = env.map_qubus_type(types::integer());
 
                        auto increment_ptr = compile(c.get(), env, ctx);
                        auto increment_value = load_from_ref(increment_ptr, env, ctx);
@@ -1526,7 +1526,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
             .case_(double_literal(dval),
                    [&]
                    {
-                       llvm::Type* double_type = env.map_kubus_type(types::double_());
+                       llvm::Type* double_type = env.map_qubus_type(types::double_());
 
                        llvm::Value* value = llvm::ConstantFP::get(double_type, dval.get());
 
@@ -1541,7 +1541,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
             .case_(float_literal(fval),
                    [&]
                    {
-                       llvm::Type* float_type = env.map_kubus_type(types::float_());
+                       llvm::Type* float_type = env.map_qubus_type(types::float_());
 
                        llvm::Value* value = llvm::ConstantFP::get(float_type, fval.get());
 
@@ -1556,7 +1556,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
             .case_(integer_literal(ival),
                    [&]
                    {
-                       llvm::Type* size_type = env.map_kubus_type(types::integer());
+                       llvm::Type* size_type = env.map_qubus_type(types::integer());
 
                        llvm::Value* value = llvm::ConstantInt::get(size_type, ival.get());
 
@@ -1573,7 +1573,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                    {
                        // TODO: Test if a and b are integers.
 
-                       auto int_type = env.map_kubus_type(types::integer());
+                       auto int_type = env.map_qubus_type(types::integer());
 
                        auto a_ref = compile(a.get(), env, ctx);
                        auto b_ref = compile(b.get(), env, ctx);
@@ -1731,7 +1731,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
             .case_(local_variable_def(var, a),
                    [&]
                    {
-                       auto var_type = env.map_kubus_type(var.get().var_type());
+                       auto var_type = env.map_qubus_type(var.get().var_type());
 
                        auto var_ptr =
                            create_entry_block_alloca(env.get_current_function(), var_type);
@@ -1755,11 +1755,11 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                        for (const auto& param : plan.get().params())
                        {
                            param_types.push_back(
-                               env.map_kubus_type(param.var_type())->getPointerTo());
+                               env.map_qubus_type(param.var_type())->getPointerTo());
                        }
 
                        param_types.push_back(
-                           env.map_kubus_type(plan.get().result().var_type())->getPointerTo());
+                           env.map_qubus_type(plan.get().result().var_type())->getPointerTo());
 
                        param_types.push_back(llvm::PointerType::get(
                            llvm::Type::getInt8Ty(llvm::getGlobalContext()), 0));
@@ -1804,7 +1804,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                                  tensor_t(value_type) || array_t(value_type),
                                  [&](const type& self)
                                  {
-                                     auto size_type = env.map_kubus_type(types::integer());
+                                     auto size_type = env.map_qubus_type(types::integer());
 
                                      const auto& args = expressions.get();
 
@@ -1835,7 +1835,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                                      if (mem_size < 256)
                                      {
                                          llvm::Type* multi_array_type =
-                                             env.map_kubus_type(value_type.get());
+                                             env.map_qubus_type(value_type.get());
 
                                          std::size_t size = 1;
 
@@ -1863,7 +1863,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
 
                                          data_ptr = builder.CreateBitCast(
                                              builder.CreateCall(env.get_alloc_scratch_mem(), args),
-                                             env.map_kubus_type(value_type.get())->getPointerTo(0));
+                                             env.map_qubus_type(value_type.get())->getPointerTo(0));
 
                                          ctx.get_current_scope().on_exit(
                                              [args, &env, &builder]
@@ -1890,7 +1890,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                                      }
 
                                      auto array_ptr = create_entry_block_alloca(
-                                         env.get_current_function(), env.map_kubus_type(self));
+                                         env.get_current_function(), env.map_qubus_type(self));
 
                                      auto data_member_ptr =
                                          builder.CreateConstInBoundsGEP2_32(array_ptr, 0, 0);
@@ -1911,7 +1911,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
 
                                        return create_entry_block_alloca(
                                            env.get_current_function(),
-                                           env.map_kubus_type(value_type.get()));
+                                           env.map_qubus_type(value_type.get()));
                                    });
 
                     return reference(pattern::match(t.get(), m), access_path());
@@ -1940,10 +1940,10 @@ void compile(const function_declaration& plan, llvm_environment& env, compilatio
 
     for (const auto& param : plan.params())
     {
-        param_types.push_back(env.map_kubus_type(param.var_type())->getPointerTo());
+        param_types.push_back(env.map_qubus_type(param.var_type())->getPointerTo());
     }
 
-    param_types.push_back(env.map_kubus_type(plan.result().var_type())->getPointerTo());
+    param_types.push_back(env.map_qubus_type(plan.result().var_type())->getPointerTo());
 
     param_types.push_back(
         llvm::PointerType::get(llvm::Type::getInt8Ty(llvm::getGlobalContext()), 0));
@@ -2009,7 +2009,7 @@ void compile_entry_point(const function_declaration& plan, llvm_environment& env
     llvm::FunctionType* FT = llvm::FunctionType::get(
         llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
 
-    std::string entry_point_name = "kubus_cpu_plan" + std::to_string(id);
+    std::string entry_point_name = "qubus_cpu_plan" + std::to_string(id);
 
     llvm::Function* kernel = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
                                                     entry_point_name, &env.module());
@@ -2031,7 +2031,7 @@ void compile_entry_point(const function_declaration& plan, llvm_environment& env
 
     auto add_param = [&](const variable_declaration& param) mutable
     {
-        llvm::Type* param_type = env.map_kubus_type(param.var_type());
+        llvm::Type* param_type = env.map_qubus_type(param.var_type());
 
         llvm::Value* ptr_to_arg =
             env.builder().CreateConstInBoundsGEP1_64(&kernel->getArgumentList().front(), counter);
@@ -2286,7 +2286,7 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, llvm::Execut
     engine.addModule(std::move(the_module));
 
     return util::make_unique<cpu_plan>(reinterpret_cast<void*>(
-        engine.getFunctionAddress("kubus_cpu_plan" + std::to_string(unique_id++))));
+        engine.getFunctionAddress("qubus_cpu_plan" + std::to_string(unique_id++))));
 }
 
 class cpu_plan_registry
@@ -2442,7 +2442,7 @@ public:
 
     std::string id() const override
     {
-        return "kubus.cpu";
+        return "qubus.cpu";
     }
 
     std::vector<executor*> executors() const override

@@ -208,7 +208,7 @@ hpx::lcos::future<void> runtime_executor::execute_plan(const plan& executed_plan
 }
 
 runtime::runtime()
-: cpu_plugin_(util::get_prefix("kubus") / "kubus/backends/libkubus_cpu_backend.so")
+: cpu_plugin_(util::get_prefix("qubus") / "qubus/backends/libqubus_cpu_backend.so")
 {
     init_logging();
 
@@ -216,9 +216,9 @@ runtime::runtime()
 
     logger slg;
 
-    BOOST_LOG_SEV(slg, normal) << "Initialize the kubus runtime";
+    BOOST_LOG_SEV(slg, normal) << "Initialize the Qubus runtime";
 
-    BOOST_LOG_SEV(slg, normal) << "Runtime prefix: " << util::get_prefix("kubus");
+    BOOST_LOG_SEV(slg, normal) << "Runtime prefix: " << util::get_prefix("qubus");
 
     BOOST_LOG_SEV(slg, normal) << "Bootstrapping virtual multiprocessor";
 
@@ -283,27 +283,27 @@ hpx::shared_future<void> runtime::when_ready(const object& obj)
 
 namespace
 {
-std::unique_ptr<runtime> kubus_runtime = {};
-std::once_flag kubus_runtime_init_flag;
+std::unique_ptr<runtime> qubus_runtime = {};
+std::once_flag qubus_runtime_init_flag;
 }
 
 void init(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
 {
-    std::call_once(kubus_runtime_init_flag, []
+    std::call_once(qubus_runtime_init_flag, []
                    {
-                       kubus_runtime = util::make_unique<runtime>();
+                       qubus_runtime = util::make_unique<runtime>();
                    });
 }
 
 runtime& get_runtime()
 {
     // FIXME: Is this thread-safe ?
-    if (!kubus_runtime)
+    if (!qubus_runtime)
     {
         throw 0;
     }
 
-    return *kubus_runtime;
+    return *qubus_runtime;
 }
 }
 }

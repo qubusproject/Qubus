@@ -21,13 +21,13 @@ std::unique_ptr<local_array> object_factory::create_array(type value_type, std::
 {
     //TODO: Reject arrays with a rank of 0
     
-    auto factory = local_factories_.at("kubus.cpu");
+    auto factory = local_factories_.at("qubus.cpu");
     
     auto mem_block = factory->create_array(std::move(value_type), std::move(shape));
     
     auto address = handle_fac_.create();
     
-    auto& address_space =  address_spaces_.at("kubus.cpu");
+    auto& address_space =  address_spaces_.at("qubus.cpu");
     
     address_space->register_mem_block(address, std::move(mem_block));
 

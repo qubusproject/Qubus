@@ -1108,9 +1108,9 @@ isl::schedule_node create_caches(isl::schedule_node band_to_tile, bool unroll_lo
         cache_info info(tile.parent, substitution);
 
         expression cache_constructor_code = macro_expr(constr_params, cache_constr_code);
-        cache_constructor_code.annotations().add("kubus.cache_info", annotation(info));
+        cache_constructor_code.annotations().add("qubus.cache_info", annotation(info));
 
-        auto cache_constr_id = s.add_symbol("kubus.construct_cache", cache_constructor_code);
+        auto cache_constr_id = s.add_symbol("qubus.construct_cache", cache_constructor_code);
 
         isl::basic_map cache_constr_map =
             isl::basic_map::identity(isl::space(isl_ctx, 0, outer_dim, outer_dim));
@@ -1337,9 +1337,9 @@ expression isl_ast_expr_to_kir(const isl::ast_expr& expr, ast_converter_context&
                 auto id = expr.get_arg(0).get_id().name();
                 auto macro = symbol_table.at(id).as<macro_expr>();
 
-                if (boost::starts_with(id, "kubus.construct_cache"))
+                if (boost::starts_with(id, "qubus.construct_cache"))
                 {
-                    auto cinfo = macro.annotations().lookup("kubus.cache_info").as<cache_info>();
+                    auto cinfo = macro.annotations().lookup("qubus.cache_info").as<cache_info>();
 
                     auto substitution = expand_macro(cinfo.substitution, indices).as<macro_expr>();
 

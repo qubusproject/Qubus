@@ -81,7 +81,7 @@ public:
 
     const llvm::Module& module() const;
 
-    llvm::Type* map_kubus_type(const type& t) const;
+    llvm::Type* map_qubus_type(const type& t) const;
 
     llvm::MDNode* get_alias_scope(const access_path& path) const;
     llvm::MDNode* get_noalias_set(const access_path& path) const;

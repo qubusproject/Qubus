@@ -58,7 +58,7 @@ void init_logging()
     typedef sinks::synchronous_sink<sinks::text_ostream_backend> text_sink;
     boost::shared_ptr<text_sink> sink = boost::make_shared<text_sink>();
 
-    sink->locked_backend()->add_stream(boost::make_shared<std::ofstream>("kubus.log"));
+    sink->locked_backend()->add_stream(boost::make_shared<std::ofstream>("qubus.log"));
 
     sink->set_formatter(
         expr::stream << std::hex << std::setw(8) << std::setfill('0') << line_id << std::dec

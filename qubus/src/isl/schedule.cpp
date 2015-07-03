@@ -163,7 +163,7 @@ namespace
 extern "C"
 {
 
-isl_schedule_node* qbb_kubus_isl_map_schedule_node_thunk(isl_schedule_node* node, void* user)
+isl_schedule_node* qbb_qubus_isl_map_schedule_node_thunk(isl_schedule_node* node, void* user)
 {
     auto& callback = *static_cast<std::function<schedule_node(schedule_node)>*>(user);
 
@@ -175,7 +175,7 @@ isl_schedule_node* qbb_kubus_isl_map_schedule_node_thunk(isl_schedule_node* node
 
 schedule map_schedule_node(schedule s, std::function<schedule_node(schedule_node)> callback)
 {
-    return schedule(isl_schedule_map_schedule_node_bottom_up(s.release(), &qbb_kubus_isl_map_schedule_node_thunk, &callback));
+    return schedule(isl_schedule_map_schedule_node_bottom_up(s.release(), &qbb_qubus_isl_map_schedule_node_thunk, &callback));
 }
 
 }

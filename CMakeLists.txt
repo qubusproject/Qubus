@@ -46,11 +46,11 @@ write_basic_package_version_file(
 
 set(ConfigPackageLocation lib/cmake/qubus)
 
-install(EXPORT kubus-targets
+install(EXPORT qubus-targets
   FILE
-    kubus-targets.cmake
+    qubus-targets.cmake
   NAMESPACE
-    kubus::
+    qubus::
   DESTINATION
     ${ConfigPackageLocation}
 )
@@ -68,4 +68,4 @@ install(
   DESTINATION
     ${ConfigPackageLocation})
     
-add_custom_target(doc DEPENDS kubus_doc COMMENT "Generating the documentation.")
+add_custom_target(doc DEPENDS qubus_doc COMMENT "Generating the documentation.")

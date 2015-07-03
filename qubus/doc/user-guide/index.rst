@@ -1,5 +1,5 @@
 
-Welcome to kubus' documentation!
+Welcome to Qubus' documentation!
 ===================================
 
 Contents:

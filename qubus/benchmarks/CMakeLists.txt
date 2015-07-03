@@ -1,4 +1,4 @@
-option(QUBUS_BUILD_BENCHMARKS "build the kubus benchmark suite" OFF)
+option(QUBUS_BUILD_BENCHMARKS "build the Qubus benchmark suite" OFF)
 
 if(QUBUS_BUILD_BENCHMARKS)
     add_executable(mm_bench mm_bench.cpp)

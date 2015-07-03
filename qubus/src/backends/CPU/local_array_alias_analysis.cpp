@@ -296,7 +296,7 @@ struct local_array_access_index_root
         if (!entry)
         {
             std::string domain_name =
-                "kubus.local_alias_domain." + token.str() + "." + info.accessed_array.id().str();
+                "qubus.local_alias_domain." + token.str() + "." + info.accessed_array.id().str();
 
             llvm::MDNode* domain = env->md_builder().createAliasScopeDomain(domain_name);
 
