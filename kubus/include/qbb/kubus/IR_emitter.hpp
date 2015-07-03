@@ -433,26 +433,80 @@ struct emit_sum_node : proto::transform<emit_sum_node<Evaluator>>
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
         {
+            return dispatch(proto::value(proto::child_c<1>(expr)), proto::child_c<0>(expr), state,
+                            data);
+        }
+
+    private:
+        template <typename Body>
+        result_type dispatch(const index& idx, const Body& body, typename impl::state_param state,
+                             typename impl::data_param data) const
+        {
             auto& context = state.get();
 
             context.index_table().enter_scope();
-
-            const auto& idx = proto::value(proto::child_c<1>(expr));
 
             auto index_id = id(idx);
 
             auto index_decl = variable_declaration(types::index());
 
-            index_decl.annotations().add("kubus.debug.name",
-                                         annotation(std::string(idx.debug_name())));
+            if (idx.debug_name())
+            {
+                index_decl.annotations().add("kubus.debug.name",
+                                             annotation(std::string(idx.debug_name())));
+            }
 
             context.index_table().add(index_id, index_decl);
 
-            auto body = Evaluator()(proto::child_c<0>(expr), state, data);
+            auto body_expr = Evaluator()(body, state, data);
 
             context.index_table().leave_scope();
 
-            return sum_expr(index_decl, body);
+            return sum_expr(index_decl, body_expr);
+        }
+
+        template <long int N, typename Body>
+        result_type dispatch(const multi_index<N>& idx, const Body& body,
+                             typename impl::state_param state, typename impl::data_param data) const
+        {
+            auto& context = state.get();
+
+            context.index_table().enter_scope();
+
+            auto alias_id = id(idx);
+
+            auto alias_decl = variable_declaration(types::multi_index(idx.rank()));
+
+            if (idx.debug_name())
+            {
+                alias_decl.annotations().add("kubus.debug.name",
+                                             annotation(std::string(idx.debug_name())));
+            }
+
+            context.index_table().add(alias_id, alias_decl);
+
+            std::vector<variable_declaration> indices;
+
+            for (long int i = 0; i < idx.rank(); ++i)
+            {
+                auto index_decl = variable_declaration(types::index());
+
+                if (idx[i].debug_name())
+                {
+                    index_decl.annotations().add("kubus.debug.name",
+                                                 annotation(std::string(idx[i].debug_name())));
+                }
+
+                context.index_table().add(id(idx[i]), index_decl);
+
+                indices.push_back(index_decl);
+            }
+
+            auto body_expr = Evaluator()(body, state, data);
+
+            context.index_table().leave_scope();
+
+            return sum_expr(indices, alias_decl, body_expr);
         }
     };
 };
@@ -546,7 +600,8 @@ struct emit_literal_node : proto::transform<emit_literal_node<Evaluator>>
     {
         using result_type = expression;
 
-        result_type operator()(typename impl::expr_param expr, typename impl::state_param QBB_UNUSED(state),
+        result_type operator()(typename impl::expr_param expr,
+                               typename impl::state_param QBB_UNUSED(state),
                                typename impl::data_param QBB_UNUSED(data)) const
         {
             return double_literal_expr(proto::value(expr));
@@ -647,11 +702,12 @@ struct emit_AST
                  proto::when<sum_<proto::_, proto::_>, emit_sum_node<emit_AST>>,
                  proto::when<unary_function_<proto::_, proto::_>, emit_function_node<emit_AST>>,
                  proto::when<index_terminal, emit_index_node<emit_AST>>,
+                 proto::when<multi_index_terminal, emit_index_node<emit_AST>>,
                  proto::when<proto::terminal<proto::_>, emit_literal_node<emit_AST>>>
 {
 };
 
-inline variable_declaration declare_index(ast_context& ctx, const index& idx)
+inline index_info declare_index(ast_context& ctx, const index& idx)
 {
     auto handle = id(idx);
 
@@ -664,19 +720,14 @@ inline variable_declaration declare_index(ast_context& ctx, const index& idx)
 
     ctx.index_table().add(handle, decl);
 
-    return decl;
+    return index_info(decl);
 }
 
-template<long int N>
-inline variable_declaration declare_index(ast_context& ctx, const multi_index<N>& idx)
+template <long int N>
+inline index_info declare_index(ast_context& ctx, const multi_index<N>& idx)
 {
     auto handle = id(idx);
 
-    for (long int i = 0; i < idx.rank(); ++i)
-    {
-        idx[i];
-    }
-    
     auto decl = variable_declaration(types::multi_index(idx.rank()));
 
     if (idx.debug_name())
@@ -686,12 +737,29 @@ inline variable_declaration declare_index(ast_context& ctx, const multi_index<N>
 
     ctx.index_table().add(handle, decl);
 
-    return decl;
+    std::vector<variable_declaration> element_indices;
+
+    for (long int i = 0; i < idx.rank(); ++i)
+    {
+        auto element_index = variable_declaration(types::index());
+
+        if (idx[i].debug_name())
+        {
+            decl.annotations().add("kubus.debug.name",
+                                   annotation(std::string(idx[i].debug_name())));
+        }
+
+        element_indices.push_back(element_index);
+
+        ctx.index_table().add(id(idx[i]), element_index);
+    }
+
+    return index_info(element_indices, decl);
 }
 
 struct deduce_indices : proto::callable
 {
-    using result_type = std::vector<variable_declaration>;
+    using result_type = std::vector<index_info>;
 
     template <typename... Indices>
     result_type operator()(std::reference_wrapper<ast_context> ctx, const Indices&... indices) const
@@ -741,8 +809,7 @@ struct deduce_variables
 };
 
 template <typename Expr>
-std::tuple<tensor_expr_closure, std::vector<std::shared_ptr<object>>>
-emit_ast(const Expr& expr)
+std::tuple<tensor_expr_closure, std::vector<std::shared_ptr<object>>> emit_ast(const Expr& expr)
 {
     using namespace boost::adaptors;
 

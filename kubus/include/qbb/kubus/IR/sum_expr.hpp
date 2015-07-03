@@ -5,6 +5,8 @@
 #include <qbb/kubus/IR/variable_declaration.hpp>
 #include <qbb/kubus/IR/expression_traits.hpp>
 
+#include <boost/optional.hpp>
+
 #include <vector>
 
 namespace qbb
@@ -15,11 +17,14 @@ namespace kubus
 class sum_expr
 {
 public:
-    sum_expr(variable_declaration index_decl_, expression body_);
-    
+    sum_expr(variable_declaration contraction_index_, expression body_);
+    sum_expr(std::vector<variable_declaration> contraction_indices_, expression body_);
+    sum_expr(std::vector<variable_declaration> contraction_indices_, variable_declaration alias_, expression body_);
+
     expression body() const;
     
-    const variable_declaration& index_decl() const;
+    const std::vector<variable_declaration>& contraction_indices() const;
+    const boost::optional<variable_declaration>& alias() const;
     
     std::vector<expression> sub_expressions() const;
     expression substitute_subexpressions(const std::vector<expression>& subexprs) const;
@@ -28,7 +33,8 @@ public:
     annotation_map& annotations();
 private:
     expression body_;
-    variable_declaration index_decl_;
+    std::vector<variable_declaration> contraction_indices_;
+    boost::optional<variable_declaration> alias_;
     
     mutable annotation_map annotations_;
 };

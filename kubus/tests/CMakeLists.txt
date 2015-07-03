@@ -13,4 +13,8 @@ if(KUBUS_BUILD_TESTS)
   target_link_libraries(contractions kubus hpx_init ${GTEST_BOTH_LIBRARIES})
   add_test(contractions ${CMAKE_CURRENT_BINARY_DIR}/contractions)
 
+  add_executable(multi_indices multi_indices.cpp)
+  target_include_directories(multi_indices PUBLIC ${GTEST_INCLUDE_DIRS})
+  target_link_libraries(multi_indices kubus hpx_init ${GTEST_BOTH_LIBRARIES})
+  add_test(multi_indices ${CMAKE_CURRENT_BINARY_DIR}/multi_indices)
 endif()

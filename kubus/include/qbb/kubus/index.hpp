@@ -94,8 +94,18 @@ public:
     {
     }
 
+    explicit multi_index(const char* debug_name_)
+    : info_(std::make_shared<multi_index_info>(debug_name_))
+    {
+    }
+
     multi_index(std::array<index, Rank> element_indices_)
     : info_(std::make_shared<multi_index_info>(std::move(element_indices_)))
+    {
+    }
+
+    multi_index(std::array<index, Rank> element_indices_, const char* debug_name_)
+    : info_(std::make_shared<multi_index_info>(std::move(element_indices_), debug_name_))
     {
     }
 
@@ -103,7 +113,7 @@ public:
     {
         return (*info_)[pos];
     }
-  
+
     long int rank() const
     {
         return Rank;
@@ -127,8 +137,17 @@ private:
         {
         }
 
+        explicit multi_index_info(const char* debug_name_) : debug_name_(debug_name_)
+        {
+        }
+
         explicit multi_index_info(std::array<index, Rank> element_indices_)
-        : debug_name_(nullptr), element_indices_(std::move(element_indices_))
+        : element_indices_(std::move(element_indices_)), debug_name_(nullptr)
+        {
+        }
+
+        explicit multi_index_info(std::array<index, Rank> element_indices_, const char* debug_name_)
+        : element_indices_(std::move(element_indices_)), debug_name_(debug_name_)
         {
         }
 
@@ -143,8 +162,8 @@ private:
         }
 
     private:
-        const char* debug_name_;
         std::array<index, Rank> element_indices_;
+        const char* debug_name_;
     };
 
     std::shared_ptr<multi_index_info> info_;
@@ -173,7 +192,6 @@ inline qbb::util::handle id(const multi_index<Rank>& value)
 {
     return value.id();
 }
-
 }
 }
 

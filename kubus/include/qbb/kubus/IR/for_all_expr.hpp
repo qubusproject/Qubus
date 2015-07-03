@@ -5,6 +5,8 @@
 #include <qbb/kubus/IR/variable_declaration.hpp>
 #include <qbb/kubus/IR/expression_traits.hpp>
 
+#include <boost/optional.hpp>
+
 #include <vector>
 
 namespace qbb
@@ -16,10 +18,13 @@ class for_all_expr
 {
 public:
     for_all_expr(variable_declaration loop_index_, expression body_);
+    for_all_expr(std::vector<variable_declaration> loop_indices_, expression body_);
+    for_all_expr(std::vector<variable_declaration> loop_indices_, variable_declaration alias_, expression body_);
     
     expression body() const;
     
-    const variable_declaration& loop_index() const;
+    const std::vector<variable_declaration>& loop_indices() const;
+    const boost::optional<variable_declaration>& alias() const;
     
     std::vector<expression> sub_expressions() const;
     expression substitute_subexpressions(const std::vector<expression>& subexprs) const;
@@ -27,7 +32,8 @@ public:
     annotation_map& annotations() const;
     annotation_map& annotations();
 private:
-    variable_declaration loop_index_;
+    std::vector<variable_declaration> loop_indices_;
+    boost::optional<variable_declaration> alias_;
     expression body_;
     
     mutable annotation_map annotations_;
