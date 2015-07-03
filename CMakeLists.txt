@@ -19,7 +19,7 @@ endif()
  
 message(STATUS "The install prefix is: ${CMAKE_INSTALL_PREFIX}")
 
-set(KUBUS_CMAKE_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/lib/cmake/kubus)
+set(KUBUS_CMAKE_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/lib/cmake/qubus)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -34,17 +34,17 @@ CheckSIMD()
 CheckFMA()
 
 add_subdirectory(util)
-add_subdirectory(kubus)
+add_subdirectory(qubus)
 
 include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
-  "${CMAKE_CURRENT_BINARY_DIR}/kubus/kubus-config-version.cmake"
+  "${CMAKE_CURRENT_BINARY_DIR}/qubus/qubus-config-version.cmake"
   VERSION ${KUBUS_VERSION}
   COMPATIBILITY AnyNewerVersion
 )
 
-set(ConfigPackageLocation lib/cmake/kubus)
+set(ConfigPackageLocation lib/cmake/qubus)
 
 install(EXPORT kubus-targets
   FILE
@@ -55,15 +55,15 @@ install(EXPORT kubus-targets
     ${ConfigPackageLocation}
 )
 
-configure_file(cmake/kubus-macros.cmake.in
-               ${CMAKE_CURRENT_BINARY_DIR}/kubus-macros.cmake
+configure_file(cmake/qubus-macros.cmake.in
+               ${CMAKE_CURRENT_BINARY_DIR}/qubus-macros.cmake
                ESCAPE_QUOTES @ONLY)
 
 install(
   FILES
-    cmake/kubus-config.cmake
-    "${CMAKE_CURRENT_BINARY_DIR}/kubus-macros.cmake"
-    "${CMAKE_CURRENT_BINARY_DIR}/kubus/kubus-config-version.cmake"
+    cmake/qubus-config.cmake
+    "${CMAKE_CURRENT_BINARY_DIR}/qubus-macros.cmake"
+    "${CMAKE_CURRENT_BINARY_DIR}/qubus/qubus-config-version.cmake"
     cmake/FindISL.cmake
   DESTINATION
     ${ConfigPackageLocation})
