@@ -5,7 +5,7 @@
 #include <qbb/qubus/pattern/core.hpp>
 #include <qbb/qubus/pattern/IR.hpp>
 
-#include <qbb/qubus/IR/kir.hpp>
+#include <qbb/qubus/IR/qir.hpp>
 
 #include <boost/optional.hpp>
 

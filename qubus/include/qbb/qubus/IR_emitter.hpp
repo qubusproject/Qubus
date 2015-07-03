@@ -1,7 +1,7 @@
 #ifndef QUBUS_AST_EMITTER_HPP
 #define QUBUS_AST_EMITTER_HPP
 
-#include <qbb/qubus/IR/kir.hpp>
+#include <qbb/qubus/IR/qir.hpp>
 
 #include <qbb/qubus/grammar.hpp>
 #include <qbb/qubus/object.hpp>

@@ -1,6 +1,6 @@
 #include <qbb/qubus/IR/expression.hpp> 
 
-#include <qbb/qubus/IR/kir.hpp>
+#include <qbb/qubus/IR/qir.hpp>
 
 #include <qbb/util/multi_method.hpp>
 

@@ -1,7 +1,7 @@
 #ifndef QBB_QUBUS_PATTERN_SUBSTITUTE_HPP
 #define QBB_QUBUS_PATTERN_SUBSTITUTE_HPP
 
-#include <qbb/qubus/IR/kir.hpp>
+#include <qbb/qubus/IR/qir.hpp>
 
 #include <qbb/qubus/pattern/IR.hpp>
 #include <qbb/qubus/pattern/core.hpp>

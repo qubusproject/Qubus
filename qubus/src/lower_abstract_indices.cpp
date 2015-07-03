@@ -1,6 +1,6 @@
 #include <qbb/qubus/lower_abstract_indices.hpp>
 
-#include <qbb/qubus/IR/kir.hpp>
+#include <qbb/qubus/IR/qir.hpp>
 #include <qbb/qubus/pattern/core.hpp>
 #include <qbb/qubus/pattern/IR.hpp>
 #include <qbb/qubus/pattern/substitute.hpp>

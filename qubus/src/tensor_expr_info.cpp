@@ -2,7 +2,7 @@
 
 #include <qbb/qubus/tensor_expr_info.hpp>
 
-#include <qbb/qubus/IR/kir.hpp>
+#include <qbb/qubus/IR/qir.hpp>
 
 #include <qbb/qubus/runtime.hpp>
 

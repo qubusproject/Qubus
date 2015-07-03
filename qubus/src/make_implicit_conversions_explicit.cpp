@@ -2,7 +2,7 @@
 
 #include <qbb/qubus/IR/type_inference.hpp>
 
-#include <qbb/qubus/IR/kir.hpp>
+#include <qbb/qubus/IR/qir.hpp>
 
 #include <qbb/qubus/pattern/core.hpp>
 #include <qbb/qubus/pattern/IR.hpp>

@@ -1,6 +1,6 @@
 #include <qbb/qubus/kronecker_delta_folding_pass.hpp>
 
-#include <qbb/qubus/IR/kir.hpp>
+#include <qbb/qubus/IR/qir.hpp>
 #include <qbb/util/multi_method.hpp>
 
 #include <boost/range/algorithm.hpp>

@@ -5,7 +5,7 @@ set(qubus_ir_header_file_names annotations.hpp binary_operator_expr.hpp compound
                                sum_expr.hpp type.hpp
                                type_conversion_expr.hpp type_inference.hpp unary_operator_expr.hpp
                                variable_ref_expr.hpp variable_declaration.hpp function_declaration.hpp
-                               kir.hpp)
+                               qir.hpp)
 
 set(qubus_ir_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../include/qbb/qubus/IR/)
 
