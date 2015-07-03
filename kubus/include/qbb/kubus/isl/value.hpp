@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_ISL_VALUE_HPP
-#define QBB_KUBUS_ISL_VALUE_HPP
+#ifndef QBB_QUBUS_ISL_VALUE_HPP
+#define QBB_QUBUS_ISL_VALUE_HPP
 
 #include <isl/val.h>
 

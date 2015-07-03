@@ -1,5 +1,5 @@
-#ifndef KUBUS_AST_EMITTER_HPP
-#define KUBUS_AST_EMITTER_HPP
+#ifndef QUBUS_AST_EMITTER_HPP
+#define QUBUS_AST_EMITTER_HPP
 
 #include <qbb/kubus/IR/kir.hpp>
 

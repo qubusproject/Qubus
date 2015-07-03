@@ -1,5 +1,5 @@
-#ifndef KUBUS_INDEX_HPP
-#define KUBUS_INDEX_HPP
+#ifndef QUBUS_INDEX_HPP
+#define QUBUS_INDEX_HPP
 
 #include <qbb/util/handle.hpp>
 

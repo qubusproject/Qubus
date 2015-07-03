@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_PATTERN_SEARCH_HPP
-#define QBB_KUBUS_PATTERN_SEARCH_HPP
+#ifndef QBB_QUBUS_PATTERN_SEARCH_HPP
+#define QBB_QUBUS_PATTERN_SEARCH_HPP
 
 #include <qbb/kubus/IR/kir.hpp>
 

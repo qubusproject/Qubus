@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_SPAWN_EXPR_HPP
-#define QBB_KUBUS_SPAWN_EXPR_HPP
+#ifndef QBB_QUBUS_SPAWN_EXPR_HPP
+#define QBB_QUBUS_SPAWN_EXPR_HPP
 
 #include <qbb/kubus/IR/function_declaration.hpp>
 #include <qbb/kubus/IR/expression.hpp>

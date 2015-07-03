@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_EXTRACT_HPP
-#define QBB_KUBUS_EXTRACT_HPP
+#ifndef QBB_QUBUS_EXTRACT_HPP
+#define QBB_QUBUS_EXTRACT_HPP
 
 #include <qbb/kubus/IR/expression.hpp>
 

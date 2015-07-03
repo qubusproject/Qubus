@@ -29,7 +29,7 @@
 
 #include <qbb/util/make_unique.hpp>
 
-#include <kubus/qbb_kubus_export.h>
+#include <kubus/qbb_qubus_export.h>
 
 #include <hpx/async.hpp>
 
@@ -107,13 +107,13 @@ private:
     char* current_stack_ptr_;
 };
 
-extern "C" QBB_KUBUS_EXPORT void* qbb_kubus_cpurt_alloc_scatch_mem(cpu_runtime* runtime,
+extern "C" QBB_QUBUS_EXPORT void* qbb_kubus_cpurt_alloc_scatch_mem(cpu_runtime* runtime,
                                                                    util::index_t size)
 {
     return runtime->alloc_scratch_mem(size);
 }
 
-extern "C" QBB_KUBUS_EXPORT void qbb_kubus_cpurt_dealloc_scratch_mem(cpu_runtime* runtime,
+extern "C" QBB_QUBUS_EXPORT void qbb_kubus_cpurt_dealloc_scratch_mem(cpu_runtime* runtime,
                                                                      util::index_t size)
 {
     runtime->dealloc_scratch_mem(size);
@@ -2476,7 +2476,7 @@ private:
 std::unique_ptr<cpu_backend> the_cpu_backend;
 std::once_flag cpu_backend_init_flag;
 
-extern "C" QBB_KUBUS_EXPORT backend* init_cpu_backend(const abi_info* abi)
+extern "C" QBB_QUBUS_EXPORT backend* init_cpu_backend(const abi_info* abi)
 {
     std::call_once(cpu_backend_init_flag, [&]
                    {

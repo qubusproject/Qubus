@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_CPU_OBJECT_FACTORY_HPP
-#define QBB_KUBUS_CPU_OBJECT_FACTORY_HPP
+#ifndef QBB_QUBUS_CPU_OBJECT_FACTORY_HPP
+#define QBB_QUBUS_CPU_OBJECT_FACTORY_HPP
 
 #include <qbb/kubus/local_object_factory.hpp>
 

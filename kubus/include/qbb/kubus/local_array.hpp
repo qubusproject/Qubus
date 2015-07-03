@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_LOCAL_ARRAY_HPP
-#define QBB_KUBUS_LOCAL_ARRAY_HPP
+#ifndef QBB_QUBUS_LOCAL_ARRAY_HPP
+#define QBB_QUBUS_LOCAL_ARRAY_HPP
 
 #include <qbb/kubus/object.hpp>
 

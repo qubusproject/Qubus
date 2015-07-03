@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_EXECUTOR_HPP
-#define QBB_KUBUS_EXECUTOR_HPP
+#ifndef QBB_QUBUS_EXECUTOR_HPP
+#define QBB_QUBUS_EXECUTOR_HPP
 
 #include <hpx/config.hpp>
 

@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_ISL_PW_MULTI_AFF_HPP
-#define QBB_KUBUS_ISL_PW_MULTI_AFF_HPP
+#ifndef QBB_QUBUS_ISL_PW_MULTI_AFF_HPP
+#define QBB_QUBUS_ISL_PW_MULTI_AFF_HPP
 
 #include <qbb/kubus/isl/pw_aff.hpp>
 #include <qbb/kubus/isl/set.hpp>

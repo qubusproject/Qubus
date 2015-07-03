@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_ISL_CONSTRAINT_HPP
-#define QBB_KUBUS_ISL_CONSTRAINT_HPP
+#ifndef QBB_QUBUS_ISL_CONSTRAINT_HPP
+#define QBB_QUBUS_ISL_CONSTRAINT_HPP
 
 #include <qbb/kubus/isl/local_space.hpp>
 #include <qbb/kubus/isl/affine_expr.hpp>

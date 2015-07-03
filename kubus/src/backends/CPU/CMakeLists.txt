@@ -7,11 +7,11 @@ target_compile_options(kubus_cpu_backend PUBLIC -std=c++14)
 target_compile_definitions(kubus_cpu_backend PRIVATE ${LLVM_DEFINITIONS})
 target_link_libraries(kubus_cpu_backend PUBLIC ${Boost_LIBRARIES} kubus_ir qbb_util wall PRIVATE ${REQ_LLVM_LIBRARIES})
 
-set_target_properties(kubus_cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${KUBUS_BUILD_PREFIX}/kubus/backends")
+set_target_properties(kubus_cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${QUBUS_BUILD_PREFIX}/kubus/backends")
 set_target_properties(kubus_cpu_backend PROPERTIES CXX_VISIBILITY_PRESET hidden)
 set_target_properties(kubus_cpu_backend PROPERTIES VISIBILITY_INLINES_HIDDEN 1)
 
-set_property(TARGET kubus_cpu_backend PROPERTY VERSION ${KUBUS_VERSION})
+set_property(TARGET kubus_cpu_backend PROPERTY VERSION ${QUBUS_VERSION})
 set_property(TARGET kubus_cpu_backend PROPERTY SOVERSION 0)
 set_property(TARGET kubus_cpu_backend PROPERTY INTERFACE_kubus_MAJOR_VERSION 0)
 set_property(TARGET kubus_cpu_backend PROPERTY INTERFACE_kubus_MINOR_VERSION 1)

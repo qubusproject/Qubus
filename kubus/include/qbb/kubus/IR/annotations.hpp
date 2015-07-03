@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_ANNOTATIONS_HPP
-#define QBB_KUBUS_ANNOTATIONS_HPP
+#ifndef QBB_QUBUS_ANNOTATIONS_HPP
+#define QBB_QUBUS_ANNOTATIONS_HPP
 
 #include <boost/any.hpp>
 

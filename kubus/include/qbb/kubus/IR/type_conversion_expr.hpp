@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_TYPE_CONVERSION_EXPR_HPP
-#define QBB_KUBUS_TYPE_CONVERSION_EXPR_HPP
+#ifndef QBB_QUBUS_TYPE_CONVERSION_EXPR_HPP
+#define QBB_QUBUS_TYPE_CONVERSION_EXPR_HPP
 
 #include <qbb/kubus/IR/expression.hpp>
 #include <qbb/kubus/IR/type.hpp>

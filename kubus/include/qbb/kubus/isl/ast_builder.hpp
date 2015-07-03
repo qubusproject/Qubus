@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_ISL_AST_BUILDER_HPP
-#define QBB_KUBUS_ISL_AST_BUILDER_HPP
+#ifndef QBB_QUBUS_ISL_AST_BUILDER_HPP
+#define QBB_QUBUS_ISL_AST_BUILDER_HPP
 
 #include <qbb/kubus/isl/context.hpp>
 #include <qbb/kubus/isl/schedule.hpp>

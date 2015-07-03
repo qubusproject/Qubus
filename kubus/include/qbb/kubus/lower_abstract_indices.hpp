@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_LOWER_ABSTRACT_INDICES_HPP
-#define QBB_KUBUS_LOWER_ABSTRACT_INDICES_HPP
+#ifndef QBB_QUBUS_LOWER_ABSTRACT_INDICES_HPP
+#define QBB_QUBUS_LOWER_ABSTRACT_INDICES_HPP
 
 #include <qbb/kubus/IR/expression.hpp>
 #include <qbb/kubus/IR/function_declaration.hpp>

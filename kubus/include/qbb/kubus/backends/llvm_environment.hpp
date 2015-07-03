@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_LLVM_ENVIRONMENT_HPP
-#define QBB_KUBUS_LLVM_ENVIRONMENT_HPP
+#ifndef QBB_QUBUS_LLVM_ENVIRONMENT_HPP
+#define QBB_QUBUS_LLVM_ENVIRONMENT_HPP
 
 //#include <qbb/kubus/backends/llvm/intrinsic_lookup_table.hpp>
 

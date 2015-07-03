@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_VARIABLE_DECLARATION_HPP
-#define QBB_KUBUS_VARIABLE_DECLARATION_HPP
+#ifndef QBB_QUBUS_VARIABLE_DECLARATION_HPP
+#define QBB_QUBUS_VARIABLE_DECLARATION_HPP
 
 #include <qbb/kubus/IR/type.hpp>
 #include <qbb/kubus/IR/expression.hpp>

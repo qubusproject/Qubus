@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_LOCAL_TENSOR_HPP
-#define QBB_KUBUS_LOCAL_TENSOR_HPP
+#ifndef QBB_QUBUS_LOCAL_TENSOR_HPP
+#define QBB_QUBUS_LOCAL_TENSOR_HPP
 
 #include <qbb/kubus/local_array.hpp>
 

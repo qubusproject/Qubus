@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_TENSOR_EXPR_INFO_HPP
-#define QBB_KUBUS_TENSOR_EXPR_INFO_HPP
+#ifndef QBB_QUBUS_TENSOR_EXPR_INFO_HPP
+#define QBB_QUBUS_TENSOR_EXPR_INFO_HPP
 
 #include <qbb/kubus/object.hpp>
 #include <qbb/kubus/plan.hpp>

@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_KIR_HPP
-#define QBB_KUBUS_KIR_HPP
+#ifndef QBB_QUBUS_KIR_HPP
+#define QBB_QUBUS_KIR_HPP
 
 #include <qbb/kubus/IR/binary_operator_expr.hpp>
 #include <qbb/kubus/IR/unary_operator_expr.hpp>

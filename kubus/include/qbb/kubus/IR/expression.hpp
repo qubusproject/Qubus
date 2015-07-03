@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_EXPRESSION_HPP
-#define QBB_KUBUS_EXPRESSION_HPP
+#ifndef QBB_QUBUS_EXPRESSION_HPP
+#define QBB_QUBUS_EXPRESSION_HPP
 
 #include <qbb/util/multi_method.hpp>
 #include <qbb/kubus/IR/annotations.hpp>

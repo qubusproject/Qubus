@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_TYPE_INFERENCE_HPP
-#define QBB_KUBUS_TYPE_INFERENCE_HPP
+#ifndef QBB_QUBUS_TYPE_INFERENCE_HPP
+#define QBB_QUBUS_TYPE_INFERENCE_HPP
 
 #include <qbb/kubus/IR/type.hpp>
 #include <qbb/kubus/IR/expression.hpp>

@@ -35,7 +35,7 @@ add_subdirectory(src)
 add_subdirectory(tests)
 add_subdirectory(benchmarks)
 
-generate_export_header(kubus BASE_NAME QBB_KUBUS)
+generate_export_header(kubus BASE_NAME QBB_QUBUS)
 
 add_executable(kubus_test main.cpp)
 target_link_libraries(kubus_test PUBLIC kubus hpx_init)
@@ -65,7 +65,7 @@ if(DOXYGEN_FOUND)
         WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/doc
         COMMENT "Generating API documentation with Doxygen." VERBATIM)
 
-    list(APPEND KUBUS_DOC_TARGETS kubus_api_doc)
+    list(APPEND QUBUS_DOC_TARGETS kubus_api_doc)
 
     if(SPHINX_FOUND)
     
@@ -96,7 +96,7 @@ if(DOXYGEN_FOUND)
                 "${SPHINX_HTML_DIR}"
                 COMMENT "Building user guide with Sphinx.")
 
-        list(APPEND KUBUS_DOC_TARGETS kubus_user_guide)
+        list(APPEND QUBUS_DOC_TARGETS kubus_user_guide)
         
         add_custom_target(kubus_user_guide_latex
                 ${SPHINX_EXECUTABLE}
@@ -110,4 +110,4 @@ if(DOXYGEN_FOUND)
     endif(SPHINX_FOUND)
 endif(DOXYGEN_FOUND)
 
-add_custom_target(kubus_doc DEPENDS ${KUBUS_DOC_TARGETS} COMMENT "Generating the Kubus documentation.")
+add_custom_target(kubus_doc DEPENDS ${QUBUS_DOC_TARGETS} COMMENT "Generating the Kubus documentation.")

@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_TYPE_HPP
-#define QBB_KUBUS_TYPE_HPP
+#ifndef QBB_QUBUS_TYPE_HPP
+#define QBB_QUBUS_TYPE_HPP
 
 #include <qbb/util/multi_method.hpp>
 

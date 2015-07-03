@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_USER_DEFINED_PLAN_HPP
-#define QBB_KUBUS_USER_DEFINED_PLAN_HPP
+#ifndef QBB_QUBUS_USER_DEFINED_PLAN_HPP
+#define QBB_QUBUS_USER_DEFINED_PLAN_HPP
 #include <hpx/config.hpp>
 
 #include <qbb/kubus/plan.hpp>

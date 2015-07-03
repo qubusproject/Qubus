@@ -26,7 +26,7 @@ message(STATUS "LLVM libraries: ${REQ_LLVM_LIBRARIES}")
 
 find_package(HPX 0.9.9 REQUIRED)
 
-set(KUBUS_BUILD_PREFIX ${CMAKE_CURRENT_BINARY_DIR})
+set(QUBUS_BUILD_PREFIX ${CMAKE_CURRENT_BINARY_DIR})
 
 add_subdirectory(IR)
 add_subdirectory(isl)
@@ -60,7 +60,7 @@ target_link_libraries(kubus PUBLIC kubus_ir kubus_isl qbb_util
 target_compile_definitions(kubus PUBLIC -DBOOST_LOG_DYN_LINK)
 add_dependencies(kubus kubus_cpu_backend)
 
-set_property(TARGET kubus PROPERTY VERSION ${KUBUS_VERSION})
+set_property(TARGET kubus PROPERTY VERSION ${QUBUS_VERSION})
 set_property(TARGET kubus PROPERTY SOVERSION 0)
 set_property(TARGET kubus PROPERTY INTERFACE_kubus_MAJOR_VERSION 0)
 set_property(TARGET kubus PROPERTY INTERFACE_kubus_MINOR_VERSION 1)

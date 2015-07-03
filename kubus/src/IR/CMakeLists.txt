@@ -43,7 +43,7 @@ target_compile_definitions(kubus_ir PUBLIC -DFUSION_MAX_VECTOR_SIZE=20)
 target_compile_options(kubus_ir PUBLIC -std=c++14)
 target_link_libraries(kubus_ir PUBLIC qbb_util)
 
-set_property(TARGET kubus_ir PROPERTY VERSION ${KUBUS_VERSION})
+set_property(TARGET kubus_ir PROPERTY VERSION ${QUBUS_VERSION})
 set_property(TARGET kubus_ir PROPERTY SOVERSION 0)
 set_property(TARGET kubus_ir PROPERTY INTERFACE_kubus_MAJOR_VERSION 0)
 set_property(TARGET kubus_ir PROPERTY INTERFACE_kubus_MINOR_VERSION 1)

@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_PATTERN_COMPOUND_HPP
-#define QBB_KUBUS_PATTERN_COMPOUND_HPP
+#ifndef QBB_QUBUS_PATTERN_COMPOUND_HPP
+#define QBB_QUBUS_PATTERN_COMPOUND_HPP
 
 #include <qbb/kubus/IR/compound_expr.hpp>
 

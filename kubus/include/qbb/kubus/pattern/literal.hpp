@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_PATTERN_LITERAL_HPP
-#define QBB_KUBUS_PATTERN_LITERAL_HPP
+#ifndef QBB_QUBUS_PATTERN_LITERAL_HPP
+#define QBB_QUBUS_PATTERN_LITERAL_HPP
 
 #include <qbb/kubus/IR/literal_expr.hpp>
 

@@ -1,5 +1,5 @@
-#ifndef KUBUS_GRAMMAR_HPP
-#define KUBUS_GRAMMAR_HPP
+#ifndef QUBUS_GRAMMAR_HPP
+#define QUBUS_GRAMMAR_HPP
 
 #include <qbb/kubus/local_tensor.hpp>
 #include <qbb/kubus/tensor_expr_info.hpp>

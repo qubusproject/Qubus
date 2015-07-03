@@ -1,5 +1,5 @@
-#ifndef KUBUS_MEMORY_BLOCK_HPP
-#define KUBUS_MEMORY_BLOCK_HPP
+#ifndef QUBUS_MEMORY_BLOCK_HPP
+#define QUBUS_MEMORY_BLOCK_HPP
 
 #include <cstddef>
 

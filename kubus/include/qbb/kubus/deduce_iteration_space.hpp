@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_DEDUCE_ITERATION_SPACE_HPP
-#define QBB_KUBUS_DEDUCE_ITERATION_SPACE_HPP
+#ifndef QBB_QUBUS_DEDUCE_ITERATION_SPACE_HPP
+#define QBB_QUBUS_DEDUCE_ITERATION_SPACE_HPP
 
 #include <qbb/kubus/IR/expression.hpp>
 #include <qbb/kubus/IR/variable_declaration.hpp>

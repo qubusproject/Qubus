@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_LOCAL_ADDRESS_SPACE_HPP
-#define QBB_KUBUS_LOCAL_ADDRESS_SPACE_HPP
+#ifndef QBB_QUBUS_LOCAL_ADDRESS_SPACE_HPP
+#define QBB_QUBUS_LOCAL_ADDRESS_SPACE_HPP
 
 #include <qbb/kubus/evicting_allocator.hpp>
 

@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_PATTERN_MACRO_HPP
-#define QBB_KUBUS_PATTERN_MACRO_HPP
+#ifndef QBB_QUBUS_PATTERN_MACRO_HPP
+#define QBB_QUBUS_PATTERN_MACRO_HPP
 
 #include <qbb/kubus/IR/macro_expr.hpp>
 

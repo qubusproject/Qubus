@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_PATTERN_TYPE_HPP
-#define QBB_KUBUS_PATTERN_TYPE_HPP
+#ifndef QBB_QUBUS_PATTERN_TYPE_HPP
+#define QBB_QUBUS_PATTERN_TYPE_HPP
 
 #include <qbb/kubus/IR/type.hpp>
 

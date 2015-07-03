@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_CPUINFO_HPP
-#define QBB_KUBUS_CPUINFO_HPP
+#ifndef QBB_QUBUS_CPUINFO_HPP
+#define QBB_QUBUS_CPUINFO_HPP
 
 #include <vector>
 #include <string>

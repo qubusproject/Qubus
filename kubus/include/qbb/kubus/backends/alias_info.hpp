@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_ALIAS_INFO_HPP
-#define QBB_KUBUS_ALIAS_INFO_HPP
+#ifndef QBB_QUBUS_ALIAS_INFO_HPP
+#define QBB_QUBUS_ALIAS_INFO_HPP
 
 #include <hpx/config.hpp>
 #include <hpx/lcos/future.hpp>

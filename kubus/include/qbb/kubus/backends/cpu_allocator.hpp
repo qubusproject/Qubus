@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_CPU_ALLOCATOR_HPP
-#define QBB_KUBUS_CPU_ALLOCATOR_HPP
+#ifndef QBB_QUBUS_CPU_ALLOCATOR_HPP
+#define QBB_QUBUS_CPU_ALLOCATOR_HPP
 
 #include <qbb/kubus/allocator.hpp>
 

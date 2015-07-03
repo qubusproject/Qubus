@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_ISL_SCHEDULE_NODE_HPP
-#define QBB_KUBUS_ISL_SCHEDULE_NODE_HPP
+#ifndef QBB_QUBUS_ISL_SCHEDULE_NODE_HPP
+#define QBB_QUBUS_ISL_SCHEDULE_NODE_HPP
 
 #include <qbb/kubus/isl/set.hpp>
 #include <qbb/kubus/isl/id.hpp>

@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_CPU_BACKEND_HPP
-#define QBB_KUBUS_CPU_BACKEND_HPP
+#ifndef QBB_QUBUS_CPU_BACKEND_HPP
+#define QBB_QUBUS_CPU_BACKEND_HPP
 
 #include <qbb/kubus/backend.hpp>
 

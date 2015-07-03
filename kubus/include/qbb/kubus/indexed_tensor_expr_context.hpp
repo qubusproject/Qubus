@@ -1,5 +1,5 @@
-#ifndef KUBUS_INDEXED_TENSOR_EXPR_CONTEXT_HPP
-#define KUBUS_INDEXED_TENSOR_EXPR_CONTEXT_HPP
+#ifndef QUBUS_INDEXED_TENSOR_EXPR_CONTEXT_HPP
+#define QUBUS_INDEXED_TENSOR_EXPR_CONTEXT_HPP
 
 #include <boost/proto/core.hpp>
 #include <boost/proto/context.hpp>

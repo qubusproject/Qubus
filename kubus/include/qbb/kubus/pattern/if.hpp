@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_IF_HPP
-#define QBB_KUBUS_IF_HPP
+#ifndef QBB_QUBUS_IF_HPP
+#define QBB_QUBUS_IF_HPP
 
 #include <qbb/kubus/IR/if_expr.hpp>
 

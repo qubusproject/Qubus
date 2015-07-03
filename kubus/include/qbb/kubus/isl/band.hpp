@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_ISL_BAND_HPP
-#define QBB_KUBUS_ISL_BAND_HPP
+#ifndef QBB_QUBUS_ISL_BAND_HPP
+#define QBB_QUBUS_ISL_BAND_HPP
 
 #include <qbb/kubus/isl/context.hpp>
 #include <qbb/kubus/isl/map.hpp>

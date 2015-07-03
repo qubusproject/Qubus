@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_ISL_PRINTER_HPP
-#define QBB_KUBUS_ISL_PRINTER_HPP
+#ifndef QBB_QUBUS_ISL_PRINTER_HPP
+#define QBB_QUBUS_ISL_PRINTER_HPP
 
 #include <isl/printer.h>
 #include <isl/ast.h>

@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_PATTERN_CONTAINS_HPP
-#define QBB_KUBUS_PATTERN_CONTAINS_HPP
+#ifndef QBB_QUBUS_PATTERN_CONTAINS_HPP
+#define QBB_QUBUS_PATTERN_CONTAINS_HPP
 
 #include <qbb/kubus/IR/expression.hpp>
 

@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_DEDUCE_EXPRESSION_ENVIRONMENT_HPP
-#define QBB_KUBUS_DEDUCE_EXPRESSION_ENVIRONMENT_HPP
+#ifndef QBB_QUBUS_DEDUCE_EXPRESSION_ENVIRONMENT_HPP
+#define QBB_QUBUS_DEDUCE_EXPRESSION_ENVIRONMENT_HPP
 
 #include <qbb/kubus/IR/expression.hpp>
 #include <qbb/kubus/IR/variable_declaration.hpp>

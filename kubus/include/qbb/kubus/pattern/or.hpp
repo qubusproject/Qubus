@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_PATTERN_OR_HPP
-#define QBB_KUBUS_PATTERN_OR_HPP
+#ifndef QBB_QUBUS_PATTERN_OR_HPP
+#define QBB_QUBUS_PATTERN_OR_HPP
 
 #include <qbb/kubus/pattern/variable.hpp>
 

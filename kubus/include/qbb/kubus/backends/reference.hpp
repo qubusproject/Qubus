@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_REFERENCE_HPP
-#define QBB_KUBUS_REFERENCE_HPP
+#ifndef QBB_QUBUS_REFERENCE_HPP
+#define QBB_QUBUS_REFERENCE_HPP
 
 #include <hpx/config.hpp>
 

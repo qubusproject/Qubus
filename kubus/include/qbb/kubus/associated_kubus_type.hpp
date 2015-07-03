@@ -1,5 +1,5 @@
-#ifndef ASSOCIATED_KUBUS_TYPE_HPP
-#define ASSOCIATED_KUBUS_TYPE_HPP
+#ifndef ASSOCIATED_QUBUS_TYPE_HPP
+#define ASSOCIATED_QUBUS_TYPE_HPP
 
 #include <qbb/kubus/IR/type.hpp>
 

@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_UNARY_OPERATOR_EXPR_HPP
-#define QBB_KUBUS_UNARY_OPERATOR_EXPR_HPP
+#ifndef QBB_QUBUS_UNARY_OPERATOR_EXPR_HPP
+#define QBB_QUBUS_UNARY_OPERATOR_EXPR_HPP
 
 #include <qbb/kubus/IR/expression.hpp>
 #include <qbb/kubus/IR/expression_traits.hpp>

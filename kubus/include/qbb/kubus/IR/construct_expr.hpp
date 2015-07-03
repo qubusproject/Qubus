@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_CONSTRUCT_EXPR_HPP
-#define QBB_KUBUS_CONSTRUCT_EXPR_HPP
+#ifndef QBB_QUBUS_CONSTRUCT_EXPR_HPP
+#define QBB_QUBUS_CONSTRUCT_EXPR_HPP
 
 #include <qbb/kubus/IR/expression.hpp>
 #include <qbb/kubus/IR/expression_traits.hpp>

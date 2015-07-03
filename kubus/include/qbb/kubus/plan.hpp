@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_PLAN_HPP
-#define QBB_KUBUS_PLAN_HPP
+#ifndef QBB_QUBUS_PLAN_HPP
+#define QBB_QUBUS_PLAN_HPP
 
 #include <qbb/util/handle.hpp>
 

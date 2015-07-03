@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_COMPILER_HPP
-#define QBB_KUBUS_COMPILER_HPP
+#ifndef QBB_QUBUS_COMPILER_HPP
+#define QBB_QUBUS_COMPILER_HPP
 
 #include <qbb/kubus/IR/function_declaration.hpp>
 #include <qbb/kubus/plan.hpp>

@@ -24,7 +24,7 @@ target_include_directories(kubus_isl PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR
 target_compile_options(kubus_isl PUBLIC -std=c++14)
 target_link_libraries(kubus_isl PUBLIC isl::isl qbb_util)
 
-set_property(TARGET kubus_isl PROPERTY VERSION ${KUBUS_VERSION})
+set_property(TARGET kubus_isl PROPERTY VERSION ${QUBUS_VERSION})
 set_property(TARGET kubus_isl PROPERTY SOVERSION 0)
 set_property(TARGET kubus_isl PROPERTY INTERFACE_kubus_MAJOR_VERSION 0)
 set_property(TARGET kubus_isl PROPERTY INTERFACE_kubus_MINOR_VERSION 1)

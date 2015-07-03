@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_METADATA_BUILDER_HPP
-#define QBB_KUBUS_METADATA_BUILDER_HPP
+#ifndef QBB_QUBUS_METADATA_BUILDER_HPP
+#define QBB_QUBUS_METADATA_BUILDER_HPP
 
 #include <qbb/kubus/local_array.hpp>
 #include <qbb/kubus/local_tensor.hpp>

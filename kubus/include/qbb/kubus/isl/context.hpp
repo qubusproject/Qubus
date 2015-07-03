@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_ISL_CONTEXT_HPP
-#define QBB_KUBUS_ISL_CONTEXT_HPP
+#ifndef QBB_QUBUS_ISL_CONTEXT_HPP
+#define QBB_QUBUS_ISL_CONTEXT_HPP
 
 #include <isl/ctx.h>
 

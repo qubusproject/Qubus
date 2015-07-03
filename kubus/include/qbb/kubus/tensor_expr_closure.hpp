@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_TENSOR_EXPR_CLOSURE_HPP
-#define QBB_KUBUS_TENSOR_EXPR_CLOSURE_HPP
+#ifndef QBB_QUBUS_TENSOR_EXPR_CLOSURE_HPP
+#define QBB_QUBUS_TENSOR_EXPR_CLOSURE_HPP
 
 #include <qbb/kubus/IR/variable_declaration.hpp>
 #include <qbb/kubus/IR/expression.hpp>

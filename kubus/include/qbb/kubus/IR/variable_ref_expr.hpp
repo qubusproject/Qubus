@@ -1,5 +1,5 @@
-#ifndef QBB_KUBUS_VARIABLE_REF_EXPR_HPP
-#define QBB_KUBUS_VARIABLE_REF_EXPR_HPP
+#ifndef QBB_QUBUS_VARIABLE_REF_EXPR_HPP
+#define QBB_QUBUS_VARIABLE_REF_EXPR_HPP
 
 #include <qbb/kubus/IR/variable_declaration.hpp>
 #include <qbb/kubus/IR/annotations.hpp>

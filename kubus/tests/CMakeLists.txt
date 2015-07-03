@@ -1,6 +1,6 @@
-option(KUBUS_BUILD_TESTS "build the kubus test suite" OFF)
+option(QUBUS_BUILD_TESTS "build the kubus test suite" OFF)
 
-if(KUBUS_BUILD_TESTS)
+if(QUBUS_BUILD_TESTS)
   find_package(GTest REQUIRED)
 
   add_executable(basic_expressions basic_expressions.cpp)
