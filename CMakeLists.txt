@@ -3,7 +3,7 @@ enable_testing()
 
 project(QBB)
 
-set(KUBUS_VERSION 0.1.0)
+set(QUBUS_VERSION 0.1.0)
 
 if(POLICY CMP0053)
   cmake_policy(SET CMP0053 NEW)
@@ -19,7 +19,7 @@ endif()
  
 message(STATUS "The install prefix is: ${CMAKE_INSTALL_PREFIX}")
 
-set(KUBUS_CMAKE_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/lib/cmake/qubus)
+set(QUBUS_CMAKE_MODULE_PATH ${CMAKE_INSTALL_PREFIX}/lib/cmake/qubus)
 
 set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
@@ -40,7 +40,7 @@ include(CMakePackageConfigHelpers)
 
 write_basic_package_version_file(
   "${CMAKE_CURRENT_BINARY_DIR}/qubus/qubus-config-version.cmake"
-  VERSION ${KUBUS_VERSION}
+  VERSION ${QUBUS_VERSION}
   COMPATIBILITY AnyNewerVersion
 )
 

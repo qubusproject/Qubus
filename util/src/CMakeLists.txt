@@ -23,7 +23,7 @@ target_include_directories(qbb_util PUBLIC ${Boost_INCLUDE_DIRS} $<BUILD_INTERFA
 target_link_libraries(qbb_util PUBLIC Threads::Threads ${Boost_LIBRARIES})
 set_target_properties(qbb_util PROPERTIES POSITION_INDEPENDENT_CODE True)
 
-set_property(TARGET qbb_util PROPERTY VERSION ${KUBUS_VERSION})
+set_property(TARGET qbb_util PROPERTY VERSION ${QUBUS_VERSION})
 set_property(TARGET qbb_util PROPERTY SOVERSION 0)
 set_property(TARGET qbb_util PROPERTY INTERFACE_kubus_MAJOR_VERSION 0)
 set_property(TARGET qbb_util PROPERTY INTERFACE_kubus_MINOR_VERSION 1)

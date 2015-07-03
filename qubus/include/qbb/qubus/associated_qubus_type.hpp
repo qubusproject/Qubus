@@ -13,10 +13,10 @@ namespace qubus
 {
  
 template<typename T>
-struct associated_kubus_type;
+struct associated_qubus_type;
 
 template<>
-struct associated_kubus_type<double>
+struct associated_qubus_type<double>
 {
     static type get()
     {
@@ -25,7 +25,7 @@ struct associated_kubus_type<double>
 };
 
 template<>
-struct associated_kubus_type<float>
+struct associated_qubus_type<float>
 {
     static type get()
     {
@@ -34,7 +34,7 @@ struct associated_kubus_type<float>
 };
 
 template<>
-struct associated_kubus_type<util::index_t>
+struct associated_qubus_type<util::index_t>
 {
     static type get()
     {
@@ -43,11 +43,11 @@ struct associated_kubus_type<util::index_t>
 };
 
 template<typename T>
-struct associated_kubus_type<std::complex<T>>
+struct associated_qubus_type<std::complex<T>>
 {
     static type get()
     {
-        return types::complex(associated_kubus_type<T>::get());
+        return types::complex(associated_qubus_type<T>::get());
     }
 };
     

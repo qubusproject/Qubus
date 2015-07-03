@@ -1,5 +1,5 @@
-#ifndef QUBUS_TENSOR_VAR_HPP
-#define QUBUS_TENSOR_VAR_HPP
+#ifndef QBB_QUBUS_TENSOR_VAR_HPP
+#define QBB_QUBUS_TENSOR_VAR_HPP
 
 #include <qbb/qubus/runtime.hpp>
 #include <qbb/qubus/local_tensor.hpp>
@@ -15,7 +15,7 @@
 #include <qbb/qubus/grammar.hpp>
 #include <qbb/qubus/IR_emitter.hpp>
 
-#include <qbb/qubus/associated_kubus_type.hpp>
+#include <qbb/qubus/associated_qubus_type.hpp>
 
 #include <memory>
 #include <vector>
@@ -36,7 +36,7 @@ public:
     template <typename Expr>
     tensor_expr(const Expr& expr)
     : tensor_expr::proto_derived_expr(tensor_expr::proto_base_expr::make(
-          tensor_expr_info(types::tensor(associated_kubus_type<T>::get()), emit_ast(expr))))
+          tensor_expr_info(types::tensor(associated_qubus_type<T>::get()), emit_ast(expr))))
     {
     }
     
@@ -76,7 +76,7 @@ public:
     explicit tensor(SizeTypes... sizes_)
     : tensor::proto_derived_expr(tensor::proto_base_expr::make(
           std::shared_ptr<local_tensor>(get_runtime().get_object_factory().create_tensor(
-              associated_kubus_type<T>::get(), {util::to_uindex(sizes_)...}))))
+              associated_qubus_type<T>::get(), {util::to_uindex(sizes_)...}))))
     {
     }
 
