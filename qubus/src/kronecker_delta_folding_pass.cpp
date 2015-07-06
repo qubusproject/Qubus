@@ -1,19 +1,13 @@
 #include <qbb/qubus/kronecker_delta_folding_pass.hpp>
 
 #include <qbb/qubus/IR/qir.hpp>
-#include <qbb/util/multi_method.hpp>
+#include <qbb/qubus/pattern/IR.hpp>
+#include <qbb/qubus/pattern/core.hpp>
 
-#include <boost/range/algorithm.hpp>
-#include <boost/range/algorithm_ext.hpp>
 #include <boost/optional.hpp>
 
-#include <mutex>
 #include <vector>
-#include <string>
-#include <tuple>
-#include <iterator>
 #include <algorithm>
-#include <utility>
 
 namespace qbb
 {
@@ -23,197 +17,186 @@ namespace qubus
 namespace
 {
 
-using bubble_t = std::tuple<std::string, std::string>;
+using bubble_t = std::tuple<variable_declaration, variable_declaration>;
 
-bubble_t make_bubble(std::string first, std::string second)
+bubble_t make_bubble(variable_declaration first, variable_declaration second)
 {
-    return first < second ? std::make_tuple(std::move(first), std::move(second))
-                          : std::make_tuple(std::move(second), std::move(first));
+    return std::less<variable_declaration>()(first, second)
+               ? std::make_tuple(std::move(first), std::move(second))
+               : std::make_tuple(std::move(second), std::move(first));
 }
 
-qbb::util::multi_method<expression(const qbb::util::virtual_<expression>&, std::vector<bubble_t>&)>
-fold_kronecker_deltas_ = {};
-
-template <typename T>
-bool isa(const expression&)
+struct collect_bubbles_context
 {
-    return false;
+    std::vector<bubble_t> bubbles;
+};
+
+void collect_bubbles(const expression& expr, collect_bubbles_context& ctx)
+{
+    using pattern::value;
+    using pattern::_;
+
+    pattern::variable<expression> a, b;
+    pattern::variable<variable_declaration> i, j;
+    pattern::variable<std::vector<variable_declaration>> indices;
+
+    auto m =
+        pattern::make_matcher<expression, void>()
+            .case_(sum_multi(a, indices),
+                   [&]
+                   {
+                       collect_bubbles(a.get(), ctx);
+
+                       for (const auto& index : indices.get())
+                       {
+                           auto last = std::remove_if(ctx.bubbles.begin(), ctx.bubbles.end(),
+                                                      [&](const bubble_t& value)
+                                                      {
+                                                          return index == std::get<0>(value) ||
+                                                                 index == std::get<1>(value);
+                                                      });
+
+                           ctx.bubbles.erase(last, ctx.bubbles.end());
+                       }
+                   })
+            .case_(binary_operator(value(binary_op_tag::plus) || value(binary_op_tag::minus), a, b),
+                   [&]
+                   {
+                       collect_bubbles_context ctx_left;
+                       collect_bubbles_context ctx_right;
+
+                       collect_bubbles(a.get(), ctx_left);
+                       collect_bubbles(b.get(), ctx_right);
+
+                       for (const auto& bubble : ctx_left.bubbles)
+                       {
+                           auto iter = std::find(ctx_right.bubbles.begin(), ctx_right.bubbles.end(),
+                                                 bubble);
+
+                           if (iter != ctx_right.bubbles.end())
+                           {
+                               ctx.bubbles.push_back(bubble);
+                           }
+                       }
+                   })
+            .case_(binary_operator(value(binary_op_tag::divides), a, _),
+                   [&]
+                   {
+                       collect_bubbles(a.get(), ctx);
+                   })
+            .case_(binary_operator(value(binary_op_tag::multiplies), a, b),
+                   [&]
+                   {
+                       collect_bubbles(a.get(), ctx);
+                       collect_bubbles(b.get(), ctx);
+                   })
+            .case_(delta(index(i), index(j)), [&]
+                   {
+                       // Eliminating contractions is only valid if the indices differ. Therefore,
+                       // we only produce a bubble in this case.
+                       if (i.get() != j.get())
+                       {
+                           ctx.bubbles.push_back(make_bubble(i.get(), j.get()));
+                       }
+                   });
+
+    pattern::try_match(expr, m);
 }
 
-expression fold_kronecker_deltas_subscription_expr(const subscription_expr& expr,
-                                                   std::vector<bubble_t>& bubbles)
+boost::optional<variable_declaration>
+contains_bubble_with_index(const variable_declaration& index, const std::vector<bubble_t>& bubbles)
 {
-    if (isa<delta_expr>(expr.indexed_expr()))
+    for (const auto& bubble : bubbles)
     {
-        bubbles.push_back(make_bubble(expr.indices()[0].as<index_expr>().id(),
-                                      expr.indices()[1].as<index_expr>().id()));
+        if (std::get<0>(bubble) == index)
+        {
+            return std::get<1>(bubble);
+        }
+        else if (std::get<1>(bubble) == index)
+        {
+            return std::get<0>(bubble);
+        }
+    }
 
+    return boost::none;
+}
+
+expression eliminate_trivial_deltas(const expression& expr)
+{
+    pattern::variable<variable_declaration> i;
+
+    auto m3 = pattern::make_matcher<expression, expression>().case_(
+            delta(index(i), index(i)), [&]
+    {
         return integer_literal_expr(1);
-    }
-    else
-    {
-        return expr;
-    }
+    });
+
+    return pattern::substitute(expr, m3);
 }
 
-expression fold_kronecker_deltas_binary_op_expr(const binary_operator_expr& expr,
-                                                std::vector<bubble_t>& bubbles)
+expression substitute_index(const expression& expr, const variable_declaration& idx, const variable_declaration& other_idx)
 {
-    std::vector<bubble_t> bubbles_from_left;
-    std::vector<bubble_t> bubbles_from_right;
+    using pattern::value;
 
-    expression new_left = fold_kronecker_deltas_(expr.left(), bubbles_from_left);
-    expression new_right = fold_kronecker_deltas_(expr.right(), bubbles_from_right);
-
-    switch (expr.tag())
+    auto m2 = pattern::make_matcher<expression, expression>().case_(
+            index(value(idx)), [&]
     {
-    case binary_op_tag::plus:
-    case binary_op_tag::minus:
-    {
-        boost::range::set_intersection(bubbles_from_left, bubbles_from_right,
-                                       std::back_inserter(bubbles));
+        return variable_ref_expr(other_idx);
+    });
 
-        std::vector<bubble_t> burst_bubbles_left;
-        std::vector<bubble_t> burst_bubbles_right;
-
-        boost::range::set_difference(bubbles_from_left, bubbles,
-                                     std::back_inserter(burst_bubbles_left));
-        boost::range::set_difference(bubbles_from_right, bubbles,
-                                     std::back_inserter(burst_bubbles_right));
-
-        for (auto bubble : burst_bubbles_left)
-        {
-            new_left = binary_operator_expr(
-                binary_op_tag::multiplies,
-                delta_expr( {index_expr(std::get<0>(bubble)),
-                             index_expr(std::get<1>(bubble))}),
-                new_left);
-        }
-
-        for (auto bubble : burst_bubbles_left)
-        {
-            new_right = binary_operator_expr(
-                binary_op_tag::multiplies,
-                delta_expr({index_expr(std::get<0>(bubble)),
-                            index_expr(std::get<1>(bubble))}),
-                new_right);
-        }
-
-        return binary_operator_expr(expr.tag(), new_left, new_right);
-    }
-    case binary_op_tag::multiplies:
-    {
-        boost::range::merge(bubbles_from_left, bubbles_from_right, std::back_inserter(bubbles));
-        return binary_operator_expr(expr.tag(), new_left, new_right);
-    }
-    default:
-    {
-        for (auto bubble : bubbles_from_left)
-        {
-            new_left = binary_operator_expr(
-                binary_op_tag::multiplies,
-                delta_expr( {index_expr(std::get<0>(bubble)),
-                             index_expr(std::get<1>(bubble))}),
-                new_left);
-        }
-
-        for (auto bubble : bubbles_from_right)
-        {
-            new_right = binary_operator_expr(
-                binary_op_tag::multiplies,
-               delta_expr( {index_expr(std::get<0>(bubble)),
-                            index_expr(std::get<1>(bubble))}),
-                new_right);
-        }
-
-        return binary_operator_expr(expr.tag(), new_left, new_right);
-    }
-    }
+    return pattern::substitute(expr, m2);
 }
 
-boost::optional<std::string> find__index(const std::vector<std::string>& sum_indices,
-                                         const bubble_t& bubble)
-{
-    auto iter = std::find(sum_indices.begin() , sum_indices.end(), std::get<0>(bubble));
-
-    if (iter != sum_indices.end())
-    {
-        return *iter;
-    }
-    else
-    {
-        auto iter2 = std::find(sum_indices.begin() , sum_indices.end(), std::get<1>(bubble));
-        
-        if (iter2 != sum_indices.end())
-        {
-            return *iter2;
-        }
-        else
-        {
-            return {};
-        }
-    }
-}
-
-expression fold_kronecker_deltas_sum_expr(const sum_expr& expr, std::vector<bubble_t>& bubbles)
-{
-    std::vector<std::string> sum_indices;
-
-    for (const auto& index : expr.indices())
-    {
-        sum_indices.push_back(index.as<index_expr>().id());
-    }
-
-    std::vector<bubble_t> bubbles_from_body;
-
-    expression new_body = fold_kronecker_deltas_(expr.body(), bubbles_from_body);
-    
-    boost::range::unique(bubbles_from_body);
-
-    std::vector<std::string> eliminated_indices;
-    std::vector<bubble_t> burst_bubbles;
-
-    for (const auto& bubble : bubbles_from_body)
-    {
-        if (auto index = find__index(sum_indices, bubble))
-        {
-            burst_bubbles.push_back(bubble);
-            eliminated_indices.push_back(*index);
-        }
-        else
-        {
-            bubbles.push_back(bubble);
-        }
-    }
-
-    std::vector<expression> surviving_indices;
-    
-    for(const auto& index : sum_indices)
-    {
-        if(std::find(eliminated_indices.begin(), eliminated_indices.end(), index) == eliminated_indices.end())
-        {
-            surviving_indices.emplace_back(index_expr(index));
-        }
-    }
-    
-    //FIXME: substitute eliminated indices
-    
-    if (surviving_indices.empty())
-    {
-        return expr.body();
-    }
-    else
-    {
-        return sum_expr(expr.body(), surviving_indices);
-    }
-}
 }
 
 expression fold_kronecker_deltas(expression expr)
 {
-    std::vector<bubble_t> bubbles;
+    pattern::variable<expression> body;
+    pattern::variable<std::vector<variable_declaration>> indices;
 
-    return fold_kronecker_deltas_(expr, bubbles);
+    auto m = pattern::make_matcher<expression, expression>().case_(
+        sum_multi(body, indices), [&]
+        {
+            expression new_body = body.get();
+
+            collect_bubbles_context ctx;
+
+            collect_bubbles(new_body, ctx);
+
+            std::vector<variable_declaration> surviving_indices;
+
+            for (const auto& index : indices.get())
+            {
+                if (auto other_index = contains_bubble_with_index(index, ctx.bubbles))
+                {
+                    new_body = substitute_index(new_body, index, *other_index);
+
+                    new_body = eliminate_trivial_deltas(new_body);
+                }
+                else
+                {
+                    surviving_indices.push_back(index);
+                }
+            }
+
+            if (surviving_indices.empty())
+            {
+                return new_body;
+            }
+            else
+            {
+                return expression(sum_expr(surviving_indices, new_body));
+            }
+        });
+
+    return pattern::substitute(expr, m);
+}
+
+function_declaration fold_kronecker_deltas(function_declaration decl)
+{
+    decl.substitute_body(fold_kronecker_deltas(decl.body()));
+
+    return decl;
 }
 }
 }

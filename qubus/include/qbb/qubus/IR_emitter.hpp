@@ -593,6 +593,27 @@ struct emit_tensor_node : proto::transform<emit_tensor_node<Evaluator>>
 };
 
 template <typename Evaluator>
+struct emit_delta_node : proto::transform<emit_delta_node<Evaluator>>
+{
+    template <typename Expr, typename State, typename Data>
+    struct impl : proto::transform_impl<Expr, State, Data>
+    {
+        using result_type = expression;
+
+        result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
+                               typename impl::data_param data) const
+        {
+            auto extent = proto::value(proto::child_c<0>(expr));
+
+            auto first_index = Evaluator()(proto::child_c<1>(expr), state, data);
+            auto second_index = Evaluator()(proto::child_c<2>(expr), state, data);
+
+            return kronecker_delta_expr(extent, first_index, second_index);
+        }
+    };
+};
+
+template <typename Evaluator>
 struct emit_literal_node : proto::transform<emit_literal_node<Evaluator>>
 {
     template <typename Expr, typename State, typename Data>
@@ -698,7 +719,8 @@ struct emit_logical_operations
 
 struct emit_AST
     : proto::or_<emit_logical_operations, emit_arithmetic_operations,
-                 proto::when<indexed_tensor, emit_tensor_node<emit_AST>>,
+                 proto::when<indexed_dense_tensor, emit_tensor_node<emit_AST>>,
+                 proto::when<delta_<proto::_, proto::_, proto::_>, emit_delta_node<emit_AST>>,
                  proto::when<sum_<proto::_, proto::_>, emit_sum_node<emit_AST>>,
                  proto::when<unary_function_<proto::_, proto::_>, emit_function_node<emit_AST>>,
                  proto::when<index_terminal, emit_index_node<emit_AST>>,
@@ -801,7 +823,7 @@ struct data_handle : proto::callable
 
 struct deduce_variables
     : proto::or_<
-          proto::when<indexed_tensor, add_variable(proto::_data, data_handle(proto::_child0))>,
+          proto::when<indexed_dense_tensor, add_variable(proto::_data, data_handle(proto::_child0))>,
           proto::when<proto::nary_expr<proto::_, proto::vararg<proto::_>>,
                       proto::fold<proto::_, proto::_data, deduce_variables(proto::_)>>,
           proto::when<proto::_, proto::_data>>

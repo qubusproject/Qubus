@@ -22,7 +22,7 @@ set(qubus_ir_source_files annotations.cpp binary_operator_expr.cpp compound_expr
                           variable_ref_expr.cpp variable_declaration.cpp
                           function_declaration.cpp macro_expr.cpp spawn_expr.cpp
                           local_variable_def_expr.cpp deduce_expression_environment.cpp construct_expr.cpp
-                          if_expr.cpp)
+                          if_expr.cpp kronecker_delta_expr.cpp)
         
 set(qubus_pattern_header_file_names any.hpp binary_operator.hpp bind_to.hpp compound.hpp core.hpp
                                     for.hpp for_all.hpp index.hpp intrinsic_function.hpp IR.hpp

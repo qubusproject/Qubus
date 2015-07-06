@@ -5,6 +5,11 @@
 #include <qbb/qubus/pattern/core.hpp>
 #include <qbb/qubus/pattern/IR.hpp>
 
+#include <boost/range/combine.hpp>
+#include <boost/optional.hpp>
+
+#include <qbb/util/assert.hpp>
+
 #include <map>
 #include <vector>
 
@@ -48,7 +53,7 @@ expression expand_multi_indices(expression expr)
     pattern::variable<std::vector<variable_declaration>> index_decls;
     pattern::variable<variable_declaration> alias;
 
-    pattern::variable<expression> body;
+    pattern::variable<expression> body, a, b;
 
     auto m = pattern::make_matcher<expression, expression>()
                  .case_(subscription(tensor, indices),
@@ -66,6 +71,39 @@ expression expand_multi_indices(expression expr)
 
                             return subscription_expr(tensor.get(), new_indices);
                         })
+//                 TODO: Reenable the code below after implementing tuples. They are needed to handle the extent.
+//                 .case_(delta(a, b),
+//                        [&]
+//                        {
+//                            auto new_indices_left = expand_multi_index(a.get(), multi_index_map);
+//                            auto new_indices_right = expand_multi_index(b.get(), multi_index_map);
+//
+//                            if (new_indices_left.size() != new_indices_right.size())
+//                                throw 0;
+//
+//                            boost::optional<expression> expanded_delta;
+//
+//                            for (const auto& index_pair :
+//                                 boost::range::combine(new_indices_left, new_indices_right))
+//                            {
+//                                expression delta = kronecker_delta_expr(
+//                                    0, boost::get<0>(index_pair), boost::get<1>(index_pair));
+//
+//                                if (expanded_delta)
+//                                {
+//                                    expanded_delta = binary_operator_expr(binary_op_tag::multiplies,
+//                                                                          *expanded_delta, delta);
+//                                }
+//                                else
+//                                {
+//                                    expanded_delta = delta;
+//                                };
+//                            }
+//
+//                            QBB_ASSERT(expanded_delta, "Invalid expression.");
+//
+//                            return *expanded_delta;
+//                        })
                  .case_(for_all_multi(index_decls, alias, body),
                         [&]
                         {

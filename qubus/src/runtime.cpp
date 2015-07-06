@@ -10,6 +10,7 @@
 #include <qbb/qubus/make_implicit_conversions_explicit.hpp>
 #include <qbb/qubus/IR/pretty_printer.hpp>
 #include <qbb/qubus/multi_index_handling.hpp>
+#include <qbb/qubus/kronecker_delta_folding_pass.hpp>
 
 #include <qbb/qubus/metadata_builder.hpp>
 #include <qbb/qubus/backends/execution_stack.hpp>
@@ -252,6 +253,8 @@ object_factory& runtime::get_object_factory()
 plan runtime::compile(function_declaration decl)
 {
     decl = expand_multi_indices(decl);
+
+    decl = fold_kronecker_deltas(decl);
 
     decl = lower_top_level_sums(decl);
 

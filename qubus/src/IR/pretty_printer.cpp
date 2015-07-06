@@ -372,7 +372,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
             .case_(delta(a, b),
                    [&]
                    {
-                       std::cout << id.get() << "[";
+                       std::cout << "delta[";
 
                        print(a.get(), ctx, print_types);
                        std::cout << ", ";
@@ -635,7 +635,14 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
                    });
 
-    pattern::match(expr, m);
+    try
+    {
+        pattern::match(expr, m);
+    }
+    catch(...)
+    {
+        std::cout << expr.rtti().name() << std::endl;
+    }
 }
 }
 

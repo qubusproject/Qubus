@@ -20,7 +20,7 @@ namespace qbb
 {
 namespace qubus
 {
- 
+
 namespace proto = boost::proto;
 
 template <typename T>
@@ -214,15 +214,15 @@ select(Cond const& cond, Then const& then, Else const& else_)
                                                              boost::ref(else_));
 }
 
-template <typename... Indices>
-using delta_ = proto::nary_expr<tag::delta, Indices...>;
+template <typename Extent, typename FirstIndex, typename SecondIndex>
+using delta_ = proto::nary_expr<tag::delta, Extent, FirstIndex, SecondIndex>;
 
-template <typename... Indices>
-inline typename proto::result_of::make_expr<tag::delta, tensor_expr_domain,
-                                            Indices const&...>::type const
-delta(Indices const&... indices)
+template <typename FirstIndex, typename SecondIndex>
+inline typename proto::result_of::make_expr<tag::delta, tensor_expr_domain, util::index_t,
+                                            FirstIndex const&, SecondIndex const &>::type const
+delta(util::index_t n, FirstIndex const& first_index, SecondIndex const& second_index)
 {
-    return proto::make_expr<tag::delta, tensor_expr_domain>(boost::ref(indices)...);
+    return proto::make_expr<tag::delta, tensor_expr_domain>(n, boost::ref(first_index), boost::ref(second_index));
 }
 
 template <typename Tag, typename Arg>
@@ -313,8 +313,13 @@ struct boolean_expr
 {
 };
 
-struct indexed_tensor : proto::or_<proto::function<tensor_terminal, proto::vararg<index_grammar>>,
-                                   delta_<proto::vararg<index_grammar>>>
+struct indexed_dense_tensor : proto::function<tensor_terminal, proto::vararg<index_grammar>>
+{
+};
+
+struct indexed_tensor
+    : proto::or_<indexed_dense_tensor,
+                 delta_<proto::terminal<util::index_t>, index_grammar, index_grammar>>
 {
 };
 
@@ -357,10 +362,9 @@ def_tensor(Indices const&... indices)
 }
 
 struct tensor_def
-: proto::subscript<def_tensor_<proto::vararg<proto::_>>, indexed_tensor_expr_grammar>
+    : proto::subscript<def_tensor_<proto::vararg<proto::_>>, indexed_tensor_expr_grammar>
 {
 };
-
 }
 }
 
