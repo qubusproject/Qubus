@@ -20,6 +20,7 @@
 #include <qbb/qubus/pattern/variable_scope.hpp>
 #include <qbb/qubus/pattern/construct.hpp>
 #include <qbb/qubus/pattern/if.hpp>
+#include <qbb/qubus/pattern/delta.hpp>
 
 #include <qbb/qubus/pattern/type.hpp>
 

@@ -5,7 +5,6 @@
 
 #include <qbb/qubus/pattern/variable.hpp>
 #include <qbb/qubus/pattern/sequence.hpp>
-#include <qbb/qubus/pattern/value.hpp>
 
 #include <utility>
 
@@ -68,12 +67,6 @@ template <typename Name, typename... Args>
 auto intrinsic_function_n(Name name, Args... args)
 {
     return intrinsic_function(name, sequence(args...));
-}
-
-template<typename FirstIndex, typename SecondIndex>
-auto delta(FirstIndex first_index, SecondIndex second_index)
-{
-    return intrinsic_function_n(value("delta"), first_index, second_index);
 }
 
 }

@@ -1683,6 +1683,35 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
 
                        return result_ref;
                    })
+            .case_(delta(a, b),
+                   [&]
+                   {
+                       // TODO: Test if a and b are integers.
+
+                       auto int_type = env.map_qubus_type(types::integer());
+
+                       auto a_ref = compile(a.get(), env, ctx);
+                       auto b_ref = compile(b.get(), env, ctx);
+
+                       auto a_value = load_from_ref(a_ref, env, ctx);
+
+                       auto b_value = load_from_ref(b_ref, env, ctx);
+
+                       auto cond = builder.CreateICmpEQ(a_value, b_value);
+
+                       auto one = llvm::ConstantInt::get(int_type, 1);
+                       auto zero = llvm::ConstantInt::get(int_type, 0);
+
+                       auto result_value = builder.CreateSelect(cond, one, zero);
+
+                       auto result =
+                           create_entry_block_alloca(env.get_current_function(), int_type);
+
+                       reference result_ref(result, access_path());
+                       store_to_ref(result_ref, result_value, env, ctx);
+
+                       return result_ref;
+                   })
             .case_(type_conversion(t, a),
                    [&]
                    {
