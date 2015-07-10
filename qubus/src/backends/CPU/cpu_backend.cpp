@@ -2502,15 +2502,20 @@ private:
     std::unique_ptr<cpu_executor> executor_;
 };
 
+extern "C" QBB_QUBUS_EXPORT unsigned long int cpu_backend_get_api_version()
+{
+    return 0;
+}
+
 std::unique_ptr<cpu_backend> the_cpu_backend;
 std::once_flag cpu_backend_init_flag;
 
 extern "C" QBB_QUBUS_EXPORT backend* init_cpu_backend(const abi_info* abi)
 {
     std::call_once(cpu_backend_init_flag, [&]
-                   {
-                       the_cpu_backend = std::make_unique<cpu_backend>(*abi);
-                   });
+    {
+        the_cpu_backend = util::make_unique<cpu_backend>(*abi);
+    });
 
     return the_cpu_backend.get();
 }

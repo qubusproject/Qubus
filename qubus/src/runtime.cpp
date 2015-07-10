@@ -226,8 +226,9 @@ runtime::runtime()
     BOOST_LOG_SEV(slg, normal) << "Scanning for backends";
     
     BOOST_LOG_SEV(slg, normal) << "Loading backend 'cpu_backend'";
-    auto init_cpu_backend = cpu_plugin_.lookup_symbol<backend*(const abi_info*)>("init_cpu_backend");
-    
+
+    auto init_cpu_backend = cpu_plugin_.get<backend*(const abi_info*)>("init_cpu_backend");
+
     cpu_backend_ = init_cpu_backend(&abi_info_);
 
     plan_repository_ =

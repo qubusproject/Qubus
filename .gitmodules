@@ -1,0 +1,3 @@
+[submodule "external/boost/dll"]
+	path = external/boost/dll
+	url = https://github.com/apolukhin/Boost.DLL.git
