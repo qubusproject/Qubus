@@ -20,6 +20,7 @@ find_package(Threads REQUIRED)
 add_library(qbb_util ${util_header_files} ${util_source_files} ../include/qbb/util/box.hpp)
 target_compile_options(qbb_util PUBLIC -std=c++14 -Wall -Wextra)
 target_include_directories(qbb_util PUBLIC ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/util/include/>)
+target_include_directories(qbb_util PUBLIC $<BUILD_INTERFACE:${QBB_EXTERNAL_DIR}/boost/dll/include>)
 target_link_libraries(qbb_util PUBLIC Threads::Threads ${Boost_LIBRARIES})
 set_target_properties(qbb_util PROPERTIES POSITION_INDEPENDENT_CODE True)
 

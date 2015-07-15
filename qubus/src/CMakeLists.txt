@@ -2,7 +2,7 @@ find_package(Boost 1.55.0 COMPONENTS log thread system REQUIRED)
 
 find_package(CUDA 7.0)
 
-find_package(LLVM 3.6.1 EXACT REQUIRED)
+find_package(LLVM 3.6.2 EXACT REQUIRED)
 
 message(STATUS "found LLVM version: ${LLVM_PACKAGE_VERSION}")
 
@@ -54,6 +54,7 @@ set(qubus_source_files allocator.cpp lower_abstract_indices.cpp
 add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 
 target_include_directories(qubus PUBLIC ${HPX_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include> ${LLVM_INCLUDE_DIRS})
+target_include_directories(qubus PUBLIC $<BUILD_INTERFACE:${QBB_EXTERNAL_DIR}/boost/dll/include>)
 target_compile_options(qubus PUBLIC -std=c++14)
 target_link_libraries(qubus PUBLIC qubus_ir qubus_isl qbb_util
                                    hpx hpx_serialization ${Boost_LIBRARIES} dl wall)

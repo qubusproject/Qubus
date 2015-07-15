@@ -16,7 +16,7 @@
 #include <qbb/qubus/backend_registry.hpp>
 #include <qbb/qubus/object_factory.hpp>
 
-#include <qbb/util/dll.hpp>
+#include <boost/dll.hpp>
 
 #include <memory>
 #include <utility>
@@ -54,7 +54,7 @@ public:
     hpx::shared_future<void> when_ready(const object& obj);
 private:
     abi_info abi_info_;
-    util::dll cpu_plugin_;
+    boost::dll::shared_library cpu_plugin_;
     
     backend* cpu_backend_;
     

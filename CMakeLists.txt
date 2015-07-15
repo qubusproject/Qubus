@@ -26,6 +26,7 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 message(STATUS "The cmake module path is: ${CMAKE_MODULE_PATH}")
 
 set(QBB_ROOT_DIR ${PROJECT_SOURCE_DIR})
+set(QBB_EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external)
 
 include (CheckSIMD)
 include (CheckFMA)
