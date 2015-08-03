@@ -41,4 +41,3 @@ Build documentation:
   - doc
   only:
   - master
-  - docker_executor
