@@ -34,8 +34,8 @@ Build documentation:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make doc
-  - cp -r build/qubus/doc/* /home/gitlab/doc/latest
-  - scp -r build/qubus/doc/html/* supas335@upload.rz.uni-kiel.de:htdocs/qubus/doc
+  - cp -r qubus/doc/* /home/gitlab/doc/latest
+  - scp -r qubus/doc/html/* supas335@upload.rz.uni-kiel.de:htdocs/qubus/doc
   type: deploy
   tags:
   - docker
