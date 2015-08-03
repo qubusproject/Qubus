@@ -34,6 +34,14 @@ include (CheckFMA)
 CheckSIMD()
 CheckFMA()
 
+if (NOT CMAKE_VERSION VERSION_LESS 3.3.0)
+  option(QBB_RUN_IWYU "Toggle if CMake (>= 3.3.0) should run include-what-you-use during compilation." OFF)
+endif()
+
+if (QBB_RUN_IWYU)
+  set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE include-what-you-use)
+endif()
+
 add_subdirectory(util)
 add_subdirectory(qubus)
 
