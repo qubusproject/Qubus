@@ -1,7 +1,7 @@
 set(util_header_file_names assert.hpp function_traits.hpp handle.hpp integer_sequence.hpp integers.hpp make_array.hpp
                            make_unique.hpp multi_array.hpp multi_method.hpp nested_for_each.hpp push_back.hpp
                            push_front.hpp unique_name_generator.hpp unreachable.hpp unused.hpp optional_ref.hpp
-                           hash.hpp
+                           hash.hpp benchmark.hpp
                            detail/dispatch_table.hpp detail/virtual.hpp
                            meta/contains.hpp meta/expand.hpp meta/type_sequence.hpp meta/unique.hpp
                            numeric/bisection.hpp)
