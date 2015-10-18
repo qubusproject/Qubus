@@ -1,5 +1,5 @@
 
-add_library(qubus_cpu_backend SHARED cpu_backend.cpp llvm_environment.cpp cpuinfo.cpp cpu_object_factory.cpp
+add_library(qubus_cpu_backend MODULE cpu_backend.cpp llvm_environment.cpp cpuinfo.cpp cpu_object_factory.cpp
                                      cpu_memory_block.cpp cpu_allocator.cpp local_array_alias_analysis.cpp)
 
 target_include_directories(qubus_cpu_backend PUBLIC ${Boost_LIBRARY_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}> PRIVATE ${LLVM_INCLUDE_DIRS})
