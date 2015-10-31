@@ -3,13 +3,7 @@
 #include <iostream>
 #include <eigen3/Eigen/Core>
 
-#include <qbb/qubus/IR/type.hpp>
-
-#include <qbb/qubus/runtime.hpp>
-
-#include <qbb/qubus/tensor_variable.hpp>
-
-#include <qbb/qubus/user_defined_plan.hpp>
+#include <qbb/qubus/qubus.hpp>
 
 #include <hpx/hpx_init.hpp>
 
