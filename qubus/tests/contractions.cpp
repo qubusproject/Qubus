@@ -3,11 +3,7 @@
 //  Distributed under the Boost Software License, Version 1.0. (See accompanying
 //  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
 
-#include <qbb/qubus/runtime.hpp>
-
-#include <qbb/qubus/tensor_variable.hpp>
-
-#include <qbb/qubus/user_defined_plan.hpp>
+#include <qbb/qubus/qubus.hpp>
 
 #include <hpx/hpx_init.hpp>
 
