@@ -217,15 +217,15 @@ runtime::runtime()
 
     logger slg;
 
-    BOOST_LOG_SEV(slg, normal) << "Initialize the Qubus runtime";
+    QUBUS_LOG(slg, normal) << "Initialize the Qubus runtime";
 
-    BOOST_LOG_SEV(slg, normal) << "Runtime prefix: " << util::get_prefix("qubus");
+    QUBUS_LOG(slg, normal) << "Runtime prefix: " << util::get_prefix("qubus");
 
-    BOOST_LOG_SEV(slg, normal) << "Bootstrapping virtual multiprocessor";
+    QUBUS_LOG(slg, normal) << "Bootstrapping virtual multiprocessor";
 
-    BOOST_LOG_SEV(slg, normal) << "Scanning for backends";
-    
-    BOOST_LOG_SEV(slg, normal) << "Loading backend 'cpu_backend'";
+    QUBUS_LOG(slg, normal) << "Scanning for backends";
+
+    QUBUS_LOG(slg, normal) << "Loading backend 'cpu_backend'";
 
     auto init_cpu_backend = cpu_plugin_.get<backend*(const abi_info*)>("init_cpu_backend");
 
