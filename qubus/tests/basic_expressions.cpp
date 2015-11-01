@@ -32,7 +32,7 @@ TEST(basic_expressions, constant_expr)
 
     double error;
 
-    auto test = make_plan()
+    auto test = make_computelet()
                     .body([&](cpu_tensor_view<double, 2> A)
                           {
                               error = 0.0;
@@ -83,7 +83,7 @@ TEST(basic_expressions, complex_addition)
     tensor<std::complex<double>, 1> B(N);
     tensor<std::complex<double>, 1> C(N);
 
-    auto init_A = make_plan()
+    auto init_A = make_computelet()
             .body([&](cpu_tensor_view<std::complex<double>, 1> A)
                   {
                       for (long int i = 0; i < N; ++i)
@@ -93,7 +93,7 @@ TEST(basic_expressions, complex_addition)
                   })
             .finalize();
 
-    auto init_B = make_plan()
+    auto init_B = make_computelet()
             .body([&](cpu_tensor_view<std::complex<double>, 1> B)
                   {
                       for (long int i = 0; i < N; ++i)
@@ -117,7 +117,7 @@ TEST(basic_expressions, complex_addition)
 
     double error;
 
-    auto test = make_plan()
+    auto test = make_computelet()
             .body([&](cpu_tensor_view<std::complex<double>, 1> C)
                   {
                       error = 0.0;
@@ -165,7 +165,7 @@ TEST(basic_expressions, complex_substraction)
     tensor<std::complex<double>, 1> B(N);
     tensor<std::complex<double>, 1> C(N);
 
-    auto init_A = make_plan()
+    auto init_A = make_computelet()
             .body([&](cpu_tensor_view<std::complex<double>, 1> A)
                   {
                       for (long int i = 0; i < N; ++i)
@@ -175,7 +175,7 @@ TEST(basic_expressions, complex_substraction)
                   })
             .finalize();
 
-    auto init_B = make_plan()
+    auto init_B = make_computelet()
             .body([&](cpu_tensor_view<std::complex<double>, 1> B)
                   {
                       for (long int i = 0; i < N; ++i)
@@ -199,7 +199,7 @@ TEST(basic_expressions, complex_substraction)
 
     double error;
 
-    auto test = make_plan()
+    auto test = make_computelet()
             .body([&](cpu_tensor_view<std::complex<double>, 1> C)
                   {
                       error = 0.0;
@@ -247,7 +247,7 @@ TEST(basic_expressions, complex_multiplication)
     tensor<std::complex<double>, 1> B(N);
     tensor<std::complex<double>, 1> C(N);
 
-    auto init_A = make_plan()
+    auto init_A = make_computelet()
                       .body([&](cpu_tensor_view<std::complex<double>, 1> A)
                             {
                                 for (long int i = 0; i < N; ++i)
@@ -257,7 +257,7 @@ TEST(basic_expressions, complex_multiplication)
                             })
                       .finalize();
 
-    auto init_B = make_plan()
+    auto init_B = make_computelet()
                       .body([&](cpu_tensor_view<std::complex<double>, 1> B)
                             {
                                 for (long int i = 0; i < N; ++i)
@@ -281,7 +281,7 @@ TEST(basic_expressions, complex_multiplication)
 
     double error;
 
-    auto test = make_plan()
+    auto test = make_computelet()
                     .body([&](cpu_tensor_view<std::complex<double>, 1> C)
                           {
                               error = 0.0;
@@ -329,7 +329,7 @@ TEST(basic_expressions, complex_division)
     tensor<std::complex<double>, 1> B(N);
     tensor<std::complex<double>, 1> C(N);
 
-    auto init_A = make_plan()
+    auto init_A = make_computelet()
             .body([&](cpu_tensor_view<std::complex<double>, 1> A)
                   {
                       for (long int i = 0; i < N; ++i)
@@ -339,7 +339,7 @@ TEST(basic_expressions, complex_division)
                   })
             .finalize();
 
-    auto init_B = make_plan()
+    auto init_B = make_computelet()
             .body([&](cpu_tensor_view<std::complex<double>, 1> B)
                   {
                       for (long int i = 0; i < N; ++i)
@@ -363,7 +363,7 @@ TEST(basic_expressions, complex_division)
 
     double error;
 
-    auto test = make_plan()
+    auto test = make_computelet()
             .body([&](cpu_tensor_view<std::complex<double>, 1> C)
                   {
                       error = 0.0;

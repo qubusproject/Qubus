@@ -43,7 +43,7 @@ TEST(qm_patterns, commutator)
     tensor<std::complex<double>, 2> B(N, N);
     tensor<std::complex<double>, 2> C(N, N);
 
-    auto init_A = make_plan()
+    auto init_A = make_computelet()
                       .body([&](cpu_tensor_view<std::complex<double>, 2> A)
                             {
                                 for (long int i = 0; i < N; ++i)
@@ -56,7 +56,7 @@ TEST(qm_patterns, commutator)
                             })
                       .finalize();
 
-    auto init_B = make_plan()
+    auto init_B = make_computelet()
                       .body([&](cpu_tensor_view<std::complex<double>, 2> B)
                             {
                                 for (long int i = 0; i < N; ++i)
@@ -90,7 +90,7 @@ TEST(qm_patterns, commutator)
 
     double error;
 
-    auto test = make_plan()
+    auto test = make_computelet()
                     .body([&](cpu_tensor_view<std::complex<double>, 2> C)
                           {
                               error = 0.0;

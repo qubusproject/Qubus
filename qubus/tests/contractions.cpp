@@ -49,7 +49,7 @@ TEST(contractions, simple_contraction)
     tensor<double, 2> B(N, N);
     tensor<double, 2> C(N, N);
 
-    auto init_A = make_plan()
+    auto init_A = make_computelet()
                       .body([&](cpu_tensor_view<double, 2> A)
                             {
                                 for (long int i = 0; i < N; ++i)
@@ -62,7 +62,7 @@ TEST(contractions, simple_contraction)
                             })
                       .finalize();
 
-    auto init_B = make_plan()
+    auto init_B = make_computelet()
                       .body([&](cpu_tensor_view<double, 2> B)
                             {
                                 for (long int i = 0; i < N; ++i)
@@ -95,7 +95,7 @@ TEST(contractions, simple_contraction)
     
     double error;
     
-    auto test = make_plan()
+    auto test = make_computelet()
                       .body([&](cpu_tensor_view<double, 2> C)
                             {
                                 error = 0.0;
@@ -151,7 +151,7 @@ TEST(contractions, complex_matrix_multiplication)
     tensor<std::complex<double>, 2> B(N, N);
     tensor<std::complex<double>, 2> C(N, N);
 
-    auto init_A = make_plan()
+    auto init_A = make_computelet()
             .body([&](cpu_tensor_view<std::complex<double>, 2> A)
                   {
                       for (long int i = 0; i < N; ++i)
@@ -164,7 +164,7 @@ TEST(contractions, complex_matrix_multiplication)
                   })
             .finalize();
 
-    auto init_B = make_plan()
+    auto init_B = make_computelet()
             .body([&](cpu_tensor_view<std::complex<double>, 2> B)
                   {
                       for (long int i = 0; i < N; ++i)
@@ -197,7 +197,7 @@ TEST(contractions, complex_matrix_multiplication)
 
     double error;
 
-    auto test = make_plan()
+    auto test = make_computelet()
             .body([&](cpu_tensor_view<std::complex<double>, 2> C)
                   {
                       error = 0.0;
@@ -253,7 +253,7 @@ TEST(contractions, reduction_to_r1)
     tensor<double, 2> B(N, N);
     tensor<double, 1> C(N);
 
-    auto init_A = make_plan()
+    auto init_A = make_computelet()
                       .body([&](cpu_tensor_view<double, 2> A)
                             {
                                 for (long int i = 0; i < N; ++i)
@@ -266,7 +266,7 @@ TEST(contractions, reduction_to_r1)
                             })
                       .finalize();
 
-    auto init_B = make_plan()
+    auto init_B = make_computelet()
                       .body([&](cpu_tensor_view<double, 2> B)
                             {
                                 for (long int i = 0; i < N; ++i)
@@ -299,7 +299,7 @@ TEST(contractions, reduction_to_r1)
     
     double error;
     
-    auto test = make_plan()
+    auto test = make_computelet()
                       .body([&](cpu_tensor_view<double, 1> C)
                             {
                                 error = 0.0;
@@ -351,7 +351,7 @@ TEST(contractions, matrix_vector_product)
     tensor<double, 1> B(N);
     tensor<double, 1> C(N);
 
-    auto init_A = make_plan()
+    auto init_A = make_computelet()
                       .body([&](cpu_tensor_view<double, 2> A)
                             {
                                 for (long int i = 0; i < N; ++i)
@@ -364,7 +364,7 @@ TEST(contractions, matrix_vector_product)
                             })
                       .finalize();
 
-    auto init_B = make_plan()
+    auto init_B = make_computelet()
                       .body([&](cpu_tensor_view<double, 1> B)
                             {
                                 for (long int i = 0; i < N; ++i)
@@ -391,7 +391,7 @@ TEST(contractions, matrix_vector_product)
     
     double error;
     
-    auto test = make_plan()
+    auto test = make_computelet()
                       .body([&](cpu_tensor_view<double, 1> C)
                             {
                                 error = 0.0;
@@ -445,7 +445,7 @@ TEST(contractions, basis_change_r2)
     tensor<double, 2> B(N, N);
     tensor<double, 2> C(N, N);
 
-    auto init_A = make_plan()
+    auto init_A = make_computelet()
                       .body([&](cpu_tensor_view<double, 2> A)
                             {
                                 for (long int i = 0; i < N; ++i)
@@ -458,7 +458,7 @@ TEST(contractions, basis_change_r2)
                             })
                       .finalize();
 
-    auto init_B = make_plan()
+    auto init_B = make_computelet()
                       .body([&](cpu_tensor_view<double, 2> B)
                             {
                                 for (long int i = 0; i < N; ++i)
@@ -494,7 +494,7 @@ TEST(contractions, basis_change_r2)
     
     double error;
     
-    auto test = make_plan()
+    auto test = make_computelet()
                       .body([&](cpu_tensor_view<double, 2> C)
                             {
                                 error = 0.0;
