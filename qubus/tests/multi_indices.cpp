@@ -1,8 +1,4 @@
-#include <qbb/qubus/runtime.hpp>
-
-#include <qbb/qubus/tensor_variable.hpp>
-
-#include <qbb/qubus/user_defined_plan.hpp>
+#include <qbb/qubus/qubus.hpp>
 
 #include <hpx/hpx_init.hpp>
 
@@ -29,7 +25,7 @@ TEST(multi_indices, simple_expr)
 
     double error;
 
-    auto test = make_plan()
+    auto test = make_computelet()
                     .body([&](cpu_tensor_view<double, 2> A)
                           {
                               error = 0.0;
@@ -80,7 +76,7 @@ TEST(multi_indices, index_splitting)
 
     tensor<double, 2> A(N, N);
 
-    auto init_A = make_plan()
+    auto init_A = make_computelet()
             .body([&](cpu_tensor_view<double, 2> A)
                   {
                       for (long int i = 0; i < N; ++i)
@@ -103,7 +99,7 @@ TEST(multi_indices, index_splitting)
 
     double error;
 
-    auto test = make_plan()
+    auto test = make_computelet()
             .body([&](cpu_tensor_view<double, 2> R)
                   {
                       error = 0.0;
@@ -155,7 +151,7 @@ TEST(multi_indices, index_splitting)
 
     tensor<double, 2> A(N, N);
 
-    auto init_A = make_plan()
+    auto init_A = make_computelet()
             .body([&](cpu_tensor_view<double, 2> A)
                   {
                       for (long int i = 0; i < N; ++i)
@@ -178,7 +174,7 @@ TEST(multi_indices, index_splitting)
 
     double error;
 
-    auto test = make_plan()
+    auto test = make_computelet()
             .body([&](cpu_tensor_view<double, 2> R)
                   {
                       error = 0.0;
@@ -232,7 +228,7 @@ TEST(multi_indices, multi_sum)
 
     tensor<double, 3> A(N, N, N);
 
-    auto init_A = make_plan()
+    auto init_A = make_computelet()
                       .body([&](cpu_tensor_view<double, 3> A)
                             {
                                 for (long int i = 0; i < N; ++i)
@@ -269,7 +265,7 @@ TEST(multi_indices, multi_sum)
 
     double error;
 
-    auto test = make_plan()
+    auto test = make_computelet()
                     .body([&](cpu_tensor_view<double, 1> R)
                           {
                               error = 0.0;
@@ -322,7 +318,7 @@ TEST(multi_indices, multi_sum_index_splitting)
 
     tensor<double, 3> A(N, N, N);
 
-    auto init_A = make_plan()
+    auto init_A = make_computelet()
             .body([&](cpu_tensor_view<double, 3> A)
                   {
                       for (long int i = 0; i < N; ++i)
@@ -359,7 +355,7 @@ TEST(multi_indices, multi_sum_index_splitting)
 
     double error;
 
-    auto test = make_plan()
+    auto test = make_computelet()
             .body([&](cpu_tensor_view<double, 1> R)
                   {
                       error = 0.0;

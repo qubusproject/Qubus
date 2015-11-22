@@ -94,7 +94,7 @@ void llvm_environment::init_assume_align()
 
     auto int_type = llvm::Type::getInt64Ty(llvm::getGlobalContext());
 
-    std::vector<llvm::Type*> params = {llvm::Type::getDoublePtrTy(llvm::getGlobalContext()),
+    std::vector<llvm::Type*> params = {llvm::Type::getInt8PtrTy(llvm::getGlobalContext()),
                                        int_type};
 
     llvm::FunctionType* FT = llvm::FunctionType::get(
@@ -215,7 +215,7 @@ llvm::Type* llvm_environment::map_qubus_type(const type& t) const
                 .case_(complex_t(subtype),
                        [&](const type& total_type)
                        {
-                           llvm::Type* real_type = map_qubus_type(types::double_());
+                           llvm::Type* real_type = map_qubus_type(subtype.get());
 
                            llvm::Type* real_pair = llvm::ArrayType::get(real_type, 2);
 

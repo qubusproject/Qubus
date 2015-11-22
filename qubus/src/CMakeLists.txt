@@ -56,8 +56,11 @@ add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 target_include_directories(qubus PUBLIC ${HPX_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include> ${LLVM_INCLUDE_DIRS})
 target_include_directories(qubus PUBLIC $<BUILD_INTERFACE:${QBB_EXTERNAL_DIR}/boost/dll/include>)
 target_compile_options(qubus PUBLIC -std=c++14)
-target_link_libraries(qubus PUBLIC qubus_ir qubus_isl qbb_util
-                                   hpx hpx_serialization ${Boost_LIBRARIES} dl wall)
+target_link_libraries(qubus PUBLIC qubus_ir qubus_isl qbb_util hpx)
+if (${HPX_VERSION} VERSION_LESS 0.9.11)
+    target_link_libraries(qubus PUBLIC hpx_serialization)
+endif()
+target_link_libraries(qubus PUBLIC ${HPX_LIBRARIES} ${Boost_LIBRARIES} dl wall)
 target_compile_definitions(qubus PUBLIC -DBOOST_LOG_DYN_LINK)
 add_dependencies(qubus qubus_cpu_backend)
 

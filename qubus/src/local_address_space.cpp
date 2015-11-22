@@ -54,13 +54,13 @@ void local_address_space::dump() const
     BOOST_LOG_NAMED_SCOPE("local_address_space");
     
     logger slg;
-    
-    BOOST_LOG_SEV(slg, info) << "object table\n";
-    BOOST_LOG_SEV(slg, info) << "contains " << objects_.size() << " objects\n";
+
+    QUBUS_LOG(slg, info) << "object table\n";
+    QUBUS_LOG(slg, info) << "contains " << objects_.size() << " objects\n";
 
     for (const auto& handle_object_pair : objects_)
     {
-        BOOST_LOG_SEV(slg, info) << handle_object_pair.first << " -> " << handle_object_pair.second->ptr() << "\n";
+        QUBUS_LOG(slg, info) << handle_object_pair.first << " -> " << handle_object_pair.second->ptr() << "\n";
     }
 }
 
@@ -77,7 +77,7 @@ bool local_address_space::evict_objects(std::size_t QBB_UNUSED(hint))
     {
         if (/*!first->second.is_pinned()*/ first->second.unique())
         {
-            BOOST_LOG_SEV(slg, info) << "evicting object " << first->first;
+            QUBUS_LOG(slg, info) << "evicting object " << first->first;
 
             objects_.erase(first);
 

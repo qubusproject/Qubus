@@ -1776,52 +1776,51 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
 
                        return reference();
                    })
-            .case_(spawn(plan, expressions),
-                   [&]
-                   {
-                       std::vector<llvm::Type*> param_types;
+            .case_(
+                spawn(plan, expressions),
+                [&]
+                {
+                    std::vector<llvm::Type*> param_types;
 
-                       for (const auto& param : plan.get().params())
-                       {
-                           param_types.push_back(
-                               env.map_qubus_type(param.var_type())->getPointerTo());
-                       }
+                    for (const auto& param : plan.get().params())
+                    {
+                        param_types.push_back(env.map_qubus_type(param.var_type())->getPointerTo());
+                    }
 
-                       param_types.push_back(
-                           env.map_qubus_type(plan.get().result().var_type())->getPointerTo());
+                    param_types.push_back(
+                        env.map_qubus_type(plan.get().result().var_type())->getPointerTo());
 
-                       param_types.push_back(llvm::PointerType::get(
-                           llvm::Type::getInt8Ty(llvm::getGlobalContext()), 0));
+                    param_types.push_back(
+                        llvm::PointerType::get(llvm::Type::getInt8Ty(llvm::getGlobalContext()), 0));
 
-                       llvm::FunctionType* fn_type = llvm::FunctionType::get(
-                           llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
+                    llvm::FunctionType* fn_type = llvm::FunctionType::get(
+                        llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
 
-                       auto plan_ptr =
-                           llvm::Function::Create(fn_type, llvm::Function::PrivateLinkage,
-                                                  plan.get().name(), &env.module());
+                    auto plan_ptr = llvm::Function::Create(fn_type, llvm::Function::PrivateLinkage,
+                                                           plan.get().name(), &env.module());
 
-                       for (std::size_t i = 0; i < plan_ptr->arg_size(); ++i)
-                       {
-                           plan_ptr->setDoesNotAlias(i + 1);
-                       }
+                    for (std::size_t i = 0; i < plan_ptr->arg_size(); ++i)
+                    {
+                        plan_ptr->setDoesNotAlias(i + 1);
+                    }
 
-                       ctx.add_plan_to_compile(plan.get());
+                    ctx.add_plan_to_compile(plan.get());
 
-                       std::vector<llvm::Value*> arguments;
+                    std::vector<llvm::Value*> arguments;
 
-                       for (const auto& arg : expressions.get())
-                       {
-                           auto arg_ref = compile(arg, env, ctx);
+                    for (const auto& arg : expressions.get())
+                    {
+                        auto arg_ref = compile(arg, env, ctx);
 
-                           arguments.push_back(arg_ref.addr());
-                       }
+                        arguments.push_back(arg_ref.addr());
+                    }
 
-                       arguments.push_back(&env.get_current_function()->getArgumentList().back());
+                    arguments.push_back(&env.get_current_function()->getArgumentList().back());
 
-                       builder.CreateCall(plan_ptr, arguments);
+                    builder.CreateCall(plan_ptr, arguments);
 
-                       return reference();
-                   })
+                    return reference();
+                })
             .case_(
                 construct(t, expressions), [&]
                 {
@@ -1830,109 +1829,108 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                     auto m =
                         pattern::make_matcher<type, llvm::Value*>()
                             .case_(
-                                 tensor_t(value_type) || array_t(value_type),
-                                 [&](const type& self)
-                                 {
-                                     auto size_type = env.map_qubus_type(types::integer());
+                                tensor_t(value_type) || array_t(value_type),
+                                [&](const type& self)
+                                {
+                                    auto size_type = env.map_qubus_type(types::integer());
 
-                                     const auto& args = expressions.get();
+                                    const auto& args = expressions.get();
 
-                                     std::vector<util::index_t> extents;
+                                    std::vector<util::index_t> extents;
 
-                                     try
-                                     {
-                                         for (const auto& arg : args)
-                                         {
-                                             extents.push_back(
-                                                 arg.as<integer_literal_expr>().value());
-                                         }
-                                     }
-                                     catch (const std::bad_cast&)
-                                     {
-                                         throw 0;
-                                     }
+                                    try
+                                    {
+                                        for (const auto& arg : args)
+                                        {
+                                            extents.push_back(
+                                                arg.as<integer_literal_expr>().value());
+                                        }
+                                    }
+                                    catch (const std::bad_cast&)
+                                    {
+                                        throw 0;
+                                    }
 
-                                     std::size_t mem_size = 8;
+                                    std::size_t mem_size = 8;
 
-                                     for (auto extent : extents)
-                                     {
-                                         mem_size *= extent;
-                                     }
+                                    for (auto extent : extents)
+                                    {
+                                        mem_size *= extent;
+                                    }
 
-                                     llvm::Value* data_ptr;
+                                    llvm::Value* data_ptr;
 
-                                     if (mem_size < 256)
-                                     {
-                                         llvm::Type* multi_array_type =
-                                             env.map_qubus_type(value_type.get());
+                                    if (mem_size < 256)
+                                    {
+                                        llvm::Type* multi_array_type =
+                                            env.map_qubus_type(value_type.get());
 
-                                         std::size_t size = 1;
+                                        std::size_t size = 1;
 
-                                         for (auto extent : extents)
-                                         {
-                                             size *= extent;
-                                         }
+                                        for (auto extent : extents)
+                                        {
+                                            size *= extent;
+                                        }
 
-                                         multi_array_type =
-                                             llvm::ArrayType::get(multi_array_type, size);
+                                        multi_array_type =
+                                            llvm::ArrayType::get(multi_array_type, size);
 
-                                         data_ptr = builder.CreateConstInBoundsGEP2_64(
-                                             create_entry_block_alloca(env.get_current_function(),
-                                                                       multi_array_type),
-                                             0, 0);
-                                     }
-                                     else
-                                     {
-                                         std::vector<llvm::Value*> args;
+                                        data_ptr = builder.CreateConstInBoundsGEP2_64(
+                                            create_entry_block_alloca(env.get_current_function(),
+                                                                      multi_array_type),
+                                            0, 0);
+                                    }
+                                    else
+                                    {
+                                        std::vector<llvm::Value*> args;
 
-                                         args.push_back(
-                                             &env.get_current_function()->getArgumentList().back());
-                                         args.push_back(
-                                             llvm::ConstantInt::get(size_type, mem_size));
+                                        args.push_back(
+                                            &env.get_current_function()->getArgumentList().back());
+                                        args.push_back(llvm::ConstantInt::get(size_type, mem_size));
 
-                                         data_ptr = builder.CreateBitCast(
-                                             builder.CreateCall(env.get_alloc_scratch_mem(), args),
-                                             env.map_qubus_type(value_type.get())->getPointerTo(0));
+                                        data_ptr = builder.CreateBitCast(
+                                            builder.CreateCall(env.get_alloc_scratch_mem(), args),
+                                            env.map_qubus_type(value_type.get())->getPointerTo(0));
 
-                                         ctx.get_current_scope().on_exit(
-                                             [args, &env, &builder]
-                                             {
-                                                 builder.CreateCall(env.get_dealloc_scratch_mem(),
-                                                                    args);
-                                             });
-                                     }
+                                        ctx.get_current_scope().on_exit(
+                                            [args, &env, &builder]
+                                            {
+                                                builder.CreateCall(env.get_dealloc_scratch_mem(),
+                                                                   args);
+                                            });
+                                    }
 
-                                     auto shape_ptr = builder.CreateConstInBoundsGEP2_64(
-                                         create_entry_block_alloca(
-                                             env.get_current_function(),
-                                             llvm::ArrayType::get(size_type, extents.size())),
-                                         0, 0, "shape_ptr");
+                                    auto shape_ptr = builder.CreateConstInBoundsGEP2_64(
+                                        create_entry_block_alloca(
+                                            env.get_current_function(),
+                                            llvm::ArrayType::get(size_type, extents.size())),
+                                        0, 0, "shape_ptr");
 
-                                     for (std::size_t i = 0; i < extents.size(); ++i)
-                                     {
-                                         auto extent_ptr = builder.CreateConstInBoundsGEP1_64(
-                                             shape_ptr, i, "extend_ptr");
+                                    for (std::size_t i = 0; i < extents.size(); ++i)
+                                    {
+                                        auto extent_ptr = builder.CreateConstInBoundsGEP1_64(
+                                            shape_ptr, i, "extend_ptr");
 
-                                         store_to_ref(reference(extent_ptr, access_path()),
-                                                      llvm::ConstantInt::get(size_type, extents[i]),
-                                                      env, ctx);
-                                     }
+                                        store_to_ref(reference(extent_ptr, access_path()),
+                                                     llvm::ConstantInt::get(size_type, extents[i]),
+                                                     env, ctx);
+                                    }
 
-                                     auto array_ptr = create_entry_block_alloca(
-                                         env.get_current_function(), env.map_qubus_type(self));
+                                    auto array_ptr = create_entry_block_alloca(
+                                        env.get_current_function(), env.map_qubus_type(self));
 
-                                     auto data_member_ptr =
-                                         builder.CreateConstInBoundsGEP2_32(array_ptr, 0, 0);
-                                     store_to_ref(reference(data_member_ptr, access_path()),
-                                                  data_ptr, env, ctx);
+                                    auto data_member_ptr =
+                                        builder.CreateConstInBoundsGEP2_32(array_ptr, 0, 0);
+                                    store_to_ref(reference(data_member_ptr, access_path()),
+                                                 data_ptr, env, ctx);
 
-                                     auto shape_member_ptr =
-                                         builder.CreateConstInBoundsGEP2_32(array_ptr, 0, 1);
-                                     store_to_ref(reference(shape_member_ptr, access_path()),
-                                                  shape_ptr, env, ctx);
+                                    auto shape_member_ptr =
+                                        builder.CreateConstInBoundsGEP2_32(array_ptr, 0, 1);
+                                    store_to_ref(reference(shape_member_ptr, access_path()),
+                                                 shape_ptr, env, ctx);
 
-                                     return array_ptr;
-                                 })
+                                    return array_ptr;
+                                })
                             .case_(value_type, [&]
                                    {
                                        if (expressions.get().size() != 0)
@@ -2077,7 +2075,8 @@ void compile_entry_point(const function_declaration& plan, llvm_environment& env
 
         // TODO: get alignement from the ABI
         env.builder().CreateCall2(
-            env.get_assume_align(), data,
+            env.get_assume_align(),
+            env.builder().CreateBitCast(data, llvm::Type::getInt8PtrTy(llvm::getGlobalContext())),
             llvm::ConstantInt::get(llvm::Type::getInt64Ty(llvm::getGlobalContext()), 32));
 
         arguments.push_back(typed_arg);
@@ -2513,9 +2512,9 @@ std::once_flag cpu_backend_init_flag;
 extern "C" QBB_QUBUS_EXPORT backend* init_cpu_backend(const abi_info* abi)
 {
     std::call_once(cpu_backend_init_flag, [&]
-    {
-        the_cpu_backend = util::make_unique<cpu_backend>(*abi);
-    });
+                   {
+                       the_cpu_backend = util::make_unique<cpu_backend>(*abi);
+                   });
 
     return the_cpu_backend.get();
 }

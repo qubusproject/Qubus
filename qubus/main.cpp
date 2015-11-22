@@ -3,13 +3,7 @@
 #include <iostream>
 #include <eigen3/Eigen/Core>
 
-#include <qbb/qubus/IR/type.hpp>
-
-#include <qbb/qubus/runtime.hpp>
-
-#include <qbb/qubus/tensor_variable.hpp>
-
-#include <qbb/qubus/user_defined_plan.hpp>
+#include <qbb/qubus/qubus.hpp>
 
 #include <qbb/qubus/assembly_tensor.hpp>
 
@@ -86,7 +80,7 @@ int hpx_main(int argc, char** argv)
     long int samples = 10;
 
     auto my_plan =
-        make_plan()
+        make_computelet()
             .body([](cpu_tensor_view<const double, 2> A)
                   {
                       for (long int i = 0; i < std::min((long int)(10), A.extent(0)); ++i)

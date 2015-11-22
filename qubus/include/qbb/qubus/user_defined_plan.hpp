@@ -26,11 +26,11 @@ namespace qubus
 {
 
 using user_defined_plan_body_t = std::function<void(void* const*)>;
-    
+
 class user_defined_plan_t
 {
 public:
-    std::vector<intent> intents;    
+    std::vector<intent> intents;
     user_defined_plan_body_t body;
 };
 
@@ -77,7 +77,7 @@ public:
 
         return data_[linear_index];
     }
-    
+
     util::index_t rank() const
     {
         return rank_;
@@ -134,7 +134,7 @@ private:
             std::is_const<
                 typename util::function_traits<F>::template arg<Indices>::type::value_type>::value
                 ? intent::in
-                : intent::inout ...};
+                : intent::inout...};
     }
 
     template <typename F, std::size_t... Indices>
@@ -152,9 +152,14 @@ private:
     user_defined_plan_body_t body_;
 };
 
-inline user_defined_plan_builder make_plan()
+inline user_defined_plan_builder make_computelet()
 {
     return user_defined_plan_builder();
+}
+
+[[deprecated("Use make_computelet instead.")]] inline user_defined_plan_builder make_plan()
+{
+    return make_computelet();
 }
 }
 }
