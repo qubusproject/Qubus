@@ -12,7 +12,7 @@ foreach(file_name IN LISTS util_header_file_names)
     list(APPEND util_header_files ${util_include_dir}/${file_name})
 endforeach()
 
-set(util_source_files handle.cpp unique_name_generator.cpp dll.cpp get_prefix.cpp)
+set(util_source_files handle.cpp unique_name_generator.cpp get_prefix.cpp)
 
 find_package(Boost COMPONENTS filesystem REQUIRED)
 find_package(Threads REQUIRED)
