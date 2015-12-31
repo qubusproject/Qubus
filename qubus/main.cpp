@@ -75,7 +75,7 @@ int hpx_main(int argc, char** argv)
 {
     qbb::qubus::init(argc, argv);
 
-    long int N = 1000000;
+    long int N = 1000;
 
     long int samples = 10;
 
@@ -95,7 +95,7 @@ int hpx_main(int argc, char** argv)
         qbb::qubus::index j("j");
         qbb::qubus::index k("k");
 
-        /*tensor<double, 2> A(N, N);
+        tensor<double, 2> A(N, N);
         tensor<double, 2> B(N, N);
         tensor<double, 2> C(N, N);
 
@@ -107,7 +107,7 @@ int hpx_main(int argc, char** argv)
         B = zeros;
 
         C = Cdef;
-        C.when_ready().wait();*/
+        C.when_ready().wait();
 
         long int M = 10000000;
 
@@ -127,12 +127,12 @@ int hpx_main(int argc, char** argv)
 
         auto start = std::chrono::high_resolution_clock::now();
 
-        /*for (long int i = 0; i < samples; ++i)
+        for (long int i = 0; i < samples; ++i)
         {
             C = Cdef;
         }
 
-        C.when_ready().wait();*/
+        C.when_ready().wait();
 
         assembly_tensor<double, 2> D(N, N);
 
@@ -148,8 +148,8 @@ int hpx_main(int argc, char** argv)
 
         std::cout << duration.count() / static_cast<double>(samples) << " seconds" << std::endl;
 
-        //execute(my_plan, C);
-        //C.when_ready().wait();
+        execute(my_plan, C);
+        C.when_ready().wait();
     }
 
     /*{
