@@ -374,8 +374,9 @@ expression lower_sparse_contraction(expression expr)
 {
     simple_sparse_pattern_analysis analysis(expr);
 
+    //TODO: Test if the expression is sparse but otherwise invalid. In this case throw an error.
     if (!analysis)
-        throw 0; // error: Invalid sparse pattern.
+        return expr;
 
     auto rhs = binary_operator_expr(binary_op_tag::plus_assign, analysis.lhs, analysis.body);
 
