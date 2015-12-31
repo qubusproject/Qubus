@@ -93,10 +93,29 @@ public:
 
         T* typed_addr = new (addr) T{std::forward<Args>(args)...};
 
-        tip_ = static_cast<char*>(tip_) + sizeof(T);
+        tip_ = static_cast<char*>(addr) + sizeof(T);
         remaining_size_ -= sizeof(T);
 
         return typed_addr;
+    }
+
+    template<typename T>
+    T* emplace_array(std::size_t size)
+    {
+        using value_type = T;
+
+        void* addr = util::align(alignof(value_type), sizeof(value_type), tip_, remaining_size_);
+
+        // TODO: Don't use bad_alloc for this error.
+        if (!addr)
+            throw std::bad_alloc();
+
+        value_type* start_addr = static_cast<value_type*>(addr);
+
+        tip_ = static_cast<char*>(addr) + size * sizeof(value_type);
+        remaining_size_ -= size * sizeof(value_type);
+
+        return start_addr;
     }
 
     void commit()

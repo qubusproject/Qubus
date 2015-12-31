@@ -15,20 +15,21 @@ namespace qubus
 {
 namespace pattern
 {
-template <typename Declaration>
+template <typename Declaration, typename TensorType>
 class tensor_pattern
 {
 public:
-    explicit tensor_pattern(Declaration declaration_) : declaration_(declaration_)
+    explicit tensor_pattern(Declaration declaration_, TensorType tensor_type_)
+    : declaration_(declaration_), tensor_type_(tensor_type_)
     {
     }
 
     template <typename BaseType>
     bool match(const BaseType& value, const variable<variable_ref_expr>* var = nullptr) const
-    {        
+    {
         if (auto concret_value = value.template try_as<variable_ref_expr>())
         {
-            if (tensor_t(_).match(concret_value->declaration().var_type()))
+            if (tensor_type_.match(concret_value->declaration().var_type()))
             {
                 if (declaration_.match(concret_value->declaration()))
                 {
@@ -48,15 +49,34 @@ public:
     void reset() const
     {
         declaration_.reset();
+        tensor_type_.reset();
     }
+
 private:
     Declaration declaration_;
+    TensorType tensor_type_;
 };
 
 template <typename Declaration>
-tensor_pattern<Declaration> tensor(Declaration declaration)
+auto tensor(Declaration declaration)
 {
-    return tensor_pattern<Declaration>(declaration);
+    return tensor_pattern<Declaration, decltype(tensor_t(_))>(declaration, tensor_t(_));
+}
+
+inline auto tensor()
+{
+    return tensor(_);
+}
+
+template <typename Declaration>
+auto sparse_tensor(Declaration declaration)
+{
+    return tensor_pattern<Declaration, decltype(sparse_tensor_t(_))>(declaration, sparse_tensor_t(_));
+}
+
+inline auto sparse_tensor()
+{
+    return sparse_tensor(_);
 }
 }
 }

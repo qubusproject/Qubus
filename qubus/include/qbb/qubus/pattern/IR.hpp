@@ -21,6 +21,7 @@
 #include <qbb/qubus/pattern/construct.hpp>
 #include <qbb/qubus/pattern/if.hpp>
 #include <qbb/qubus/pattern/delta.hpp>
+#include <qbb/qubus/pattern/member_access.hpp>
 
 #include <qbb/qubus/pattern/type.hpp>
 
@@ -29,5 +30,6 @@
 #include <qbb/qubus/pattern/substitute.hpp>
 #include <qbb/qubus/pattern/search.hpp>
 #include <qbb/qubus/pattern/for_each.hpp>
+#include <qbb/qubus/pattern/fold.hpp>
 
 #endif

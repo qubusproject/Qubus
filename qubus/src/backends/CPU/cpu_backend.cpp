@@ -1351,12 +1351,46 @@ reference emit_tensor_access(const variable_declaration& tensor,
         reference(builder.CreateInBoundsGEP(data, load_from_ref(linearized_index_, env, ctx)),
                   tensor_.origin() / "data");
 
-    if (auto code_region = ctx.current_code_region())
+    // TODO: Reenable LAAA
+    /*if (auto code_region = ctx.current_code_region())
     {
         auto alias_info = code_region->register_access(tensor, indices, data_ref);
 
         data_ref.add_alias_info(alias_info);
+    }*/
+
+    return data_ref;
+}
+
+reference emit_tensor_access(const expression& tensor, const std::vector<expression>& indices,
+                             llvm_environment& env, compilation_context& ctx)
+{
+    expression linearized_index = integer_literal_expr(0);
+
+    for (std::size_t i = 0; i < indices.size(); ++i)
+    {
+        auto extent = intrinsic_function_expr("extent", {tensor, integer_literal_expr(i)});
+
+        linearized_index = binary_operator_expr(
+            binary_op_tag::plus,
+            binary_operator_expr(binary_op_tag::multiplies, extent, linearized_index), indices[i]);
     }
+
+    linearized_index = reassociate_index_expression(std::move(linearized_index));
+
+    auto linearized_index_ = compile(linearized_index, env, ctx);
+
+    auto tensor_ = compile(tensor, env, ctx);
+
+    auto& builder = env.builder();
+
+    llvm::Value* data_ptr = builder.CreateConstInBoundsGEP2_32(tensor_.addr(), 0, 0, "data_ptr");
+
+    auto data = load_from_ref(reference(data_ptr, tensor_.origin()), env, ctx);
+
+    auto data_ref =
+        reference(builder.CreateInBoundsGEP(data, load_from_ref(linearized_index_, env, ctx)),
+                  tensor_.origin() / "data");
 
     return data_ref;
 }
@@ -1597,10 +1631,10 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
 
                        return result_ref;
                    })
-            .case_(intrinsic_function_n(pattern::value("extent"), variable_ref(idx), b),
+            .case_(intrinsic_function_n(pattern::value("extent"), a, b),
                    [&]
                    {
-                       auto tensor = symbol_table.at(idx.get().id());
+                       auto tensor = compile(a.get(), env, ctx);
 
                        llvm::Value* shape_ptr =
                            builder.CreateConstInBoundsGEP2_32(tensor.addr(), 0, 1, "shape_ptr");
@@ -1745,7 +1779,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
 
                        auto m =
                            pattern::make_matcher<type, reference>()
-                               .case_(pattern::tensor_t(_),
+                               .case_(pattern::tensor_t(_) || pattern::array_t(_),
                                       [&]
                                       {
                                           return emit_tensor_access(idx.get(), indices, env, ctx);
@@ -1756,6 +1790,56 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                                       });
 
                        return pattern::match(idx.get().var_type(), m);
+                   })
+            .case_(subscription(a, expressions),
+                   [&]
+                   {
+                       const auto& indices = expressions.get();
+
+                       std::vector<llvm::Value*> indices_;
+                       indices_.reserve(indices.size());
+
+                       for (const auto& index : indices)
+                       {
+                           auto index_ref = compile(index, env, ctx);
+
+                           auto index_ = load_from_ref(index_ref, env, ctx);
+
+                           indices_.push_back(index_);
+                       }
+
+                       using pattern::_;
+
+                       auto m =
+                           pattern::make_matcher<type, reference>()
+                               .case_(pattern::tensor_t(_) || pattern::array_t(_),
+                                      [&]
+                                      {
+                                          return emit_tensor_access(a.get(), indices, env, ctx);
+                                      })
+                               .case_(pattern::array_slice_t(_), [&]
+                                      {
+                                          auto ref = compile(a.get(), env, ctx);
+
+                                          return emit_array_slice_access(ref, indices_, env, ctx);
+                                      });
+
+                       return pattern::match(typeof_(a.get()), m);
+                   })
+            .case_(member_access(a, name),
+                   [&]
+                   {
+                       auto obj_type = typeof_(a.get()).as<types::struct_>();
+
+                       auto member_idx = obj_type.member_index(name.get());
+
+                       auto obj_ref = compile(a.get(), env, ctx);
+
+                       auto member = builder.CreateStructGEP(obj_ref.addr(), member_idx);
+
+                       auto member_ptr = load_from_ref(reference(member, obj_ref.origin()), env, ctx);
+
+                       return reference(member_ptr, obj_ref.origin() / name.get());
                    })
             .case_(local_variable_def(var, a),
                    [&]
@@ -2068,7 +2152,8 @@ void compile_entry_point(const function_declaration& plan, llvm_environment& env
         llvm::Value* typed_arg =
             env.builder().CreateBitCast(arg, llvm::PointerType::get(param_type, 0));
 
-        llvm::Value* data_ptr =
+        // TODO: Generalize and reenable alignment tracking.
+        /*llvm::Value* data_ptr =
             env.builder().CreateConstInBoundsGEP2_32(typed_arg, 0, 0, "data_ptr");
 
         auto data = load_from_ref(reference(data_ptr, access_path(param.id())), env, ctx);
@@ -2077,7 +2162,7 @@ void compile_entry_point(const function_declaration& plan, llvm_environment& env
         env.builder().CreateCall2(
             env.get_assume_align(),
             env.builder().CreateBitCast(data, llvm::Type::getInt8PtrTy(llvm::getGlobalContext())),
-            llvm::ConstantInt::get(llvm::Type::getInt64Ty(llvm::getGlobalContext()), 32));
+            llvm::ConstantInt::get(llvm::Type::getInt64Ty(llvm::getGlobalContext()), 32));*/
 
         arguments.push_back(typed_arg);
         ++counter;

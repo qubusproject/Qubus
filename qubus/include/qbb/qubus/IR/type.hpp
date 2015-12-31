@@ -11,6 +11,7 @@
 #include <utility>
 #include <functional>
 #include <type_traits>
+#include <vector>
 
 namespace qbb
 {
@@ -27,10 +28,9 @@ public:
         return true;
     }
 };
-
 }
 
-template<>
+template <>
 struct is_type<types::unknown> : std::true_type
 {
 };
@@ -92,7 +92,7 @@ public:
             return nullptr;
         }
     }
-    
+
     qbb::util::index_t tag() const
     {
         return self_->tag();
@@ -218,20 +218,20 @@ constexpr long int dynamic_rank = -1;
 class multi_index
 {
 public:
-    multi_index(long int rank_)
-    : rank_(rank_)
+    multi_index(long int rank_) : rank_(rank_)
     {
     }
-    
+
     bool is_primitive() const
     {
         return true;
     }
-    
+
     long int rank() const
     {
         return rank_;
     }
+
 private:
     long int rank_;
 };
@@ -239,20 +239,20 @@ private:
 class complex
 {
 public:
-    explicit complex(type real_type_)
-    : real_type_(real_type_)
+    explicit complex(type real_type_) : real_type_(real_type_)
     {
     }
-    
+
     bool is_primitive() const
     {
         return true;
     }
-    
+
     type real_type() const
     {
         return real_type_;
     }
+
 private:
     type real_type_;
 };
@@ -341,76 +341,141 @@ private:
     type value_type_;
 };
 
+class struct_
+{
+public:
+    struct member
+    {
+        member(type datatype, std::string id) : datatype(std::move(datatype)), id(std::move(id))
+        {
+        }
+
+        type datatype;
+        std::string id;
+    };
+
+    explicit struct_(std::string id_, std::vector<member> members_)
+    : id_(std::move(id_)), members_(std::move(members_))
+    {
+    }
+
+    const std::string& id() const
+    {
+        return id_;
+    }
+
+    const std::vector<member>& members() const
+    {
+        return members_;
+    }
+
+    const type& operator[](const std::string& id) const;
+
+    std::size_t member_index(const std::string& id) const;
+
+    auto begin() const
+    {
+        return members_.begin();
+    }
+
+    auto end() const
+    {
+        return members_.end();
+    }
+
+    bool is_primitive() const
+    {
+        return false;
+    }
+
+private:
+    std::string id_;
+    std::vector<member> members_;
+};
 }
 
-template<>
+template <>
 struct is_type<types::double_> : std::true_type
 {
 };
 
-template<>
+template <>
 struct is_type<types::float_> : std::true_type
 {
 };
 
-template<>
+template <>
 struct is_type<types::integer> : std::true_type
 {
 };
 
-template<>
+template <>
 struct is_type<types::bool_> : std::true_type
 {
 };
 
-template<>
+template <>
 struct is_type<types::index> : std::true_type
 {
 };
 
-template<>
+template <>
 struct is_type<types::multi_index> : std::true_type
 {
 };
 
-template<>
+template <>
 struct is_type<types::complex> : std::true_type
 {
 };
 
-template<>
+template <>
 struct is_type<types::array> : std::true_type
 {
 };
 
-template<>
+template <>
 struct is_type<types::array_slice> : std::true_type
 {
 };
 
-template<>
+template <>
 struct is_type<types::tensor> : std::true_type
 {
 };
 
-template<>
+template <>
 struct is_type<types::sparse_tensor> : std::true_type
 {
 };
 
+template <>
+struct is_type<types::struct_> : std::true_type
+{
+};
 }
 }
 
 namespace std
 {
-    template<>
-    struct hash<qbb::qubus::type>
-    {
-        using argument_type = qbb::qubus::type;
-        using result_type = std::size_t;
-        
-        std::size_t operator()(const qbb::qubus::type& value) const noexcept;
-    };
+template <>
+struct hash<qbb::qubus::type>
+{
+    using argument_type = qbb::qubus::type;
+    using result_type = std::size_t;
+
+    std::size_t operator()(const qbb::qubus::type& value) const noexcept;
+};
+
+template<>
+struct hash<qbb::qubus::types::struct_::member>
+{
+    using argument_type = qbb::qubus::types::struct_::member;
+    using result_type = std::size_t;
+
+    std::size_t operator()(const qbb::qubus::types::struct_::member& value) const noexcept;
+};
+
 }
 
 #endif

@@ -7,12 +7,14 @@
 
 #include <vector>
 #include <cstddef>
+#include <utility>
 
 namespace qbb
 {
 namespace qubus
 {
 
+//TODO: Make the members public.
 class array_layout
 {
 public:

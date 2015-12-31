@@ -2,6 +2,7 @@
 #define QBB_QUBUS_PATTERN_INDEX_HPP
 
 #include <qbb/qubus/IR/variable_ref_expr.hpp>
+#include <qbb/qubus/IR/variable_declaration.hpp>
 #include <qbb/qubus/pattern/variable.hpp>
 #include <qbb/qubus/pattern/any.hpp>
 #include <qbb/qubus/pattern/type.hpp>
@@ -24,7 +25,7 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<variable_ref_expr>* var = nullptr) const
+    bool match(const BaseType& value, const variable<variable_declaration>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<variable_ref_expr>())
         {
@@ -34,7 +35,7 @@ public:
                 {
                     if (var)
                     {
-                        var->set(*concret_value);
+                        var->set(concret_value->declaration());
                     }
 
                     return true;
@@ -73,7 +74,7 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<variable_ref_expr>* var = nullptr) const
+    bool match(const BaseType& value, const variable<variable_declaration>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<variable_ref_expr>())
         {
@@ -83,7 +84,7 @@ public:
                 {
                     if (var)
                     {
-                        var->set(*concret_value);
+                        var->set(concret_value->declaration());
                     }
 
                     return true;

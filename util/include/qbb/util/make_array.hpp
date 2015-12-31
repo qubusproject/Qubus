@@ -36,10 +36,16 @@ struct make_array_impl<T, 0>
 };
 }
 
+template <typename T, std::size_t N, typename ForwardIterator>
+std::array<T, N> make_array(const ForwardIterator& first, const ForwardIterator& last)
+{
+    return detail::make_array_impl<T, N>::eval(first, last);
+}
+
 template <typename T, std::size_t N, typename ForwardRange>
 std::array<T, N> make_array(const ForwardRange& range)
 {
-    return detail::make_array_impl<T, N>::eval(begin(range), end(range));
+    return make_array<T, N>(begin(range), end(range));
 }
 
 }
