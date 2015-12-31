@@ -35,6 +35,6 @@ std::unique_ptr<memory_block> cpu_object_factory::create_array(type value_type, 
     
     return mem_block;
 }
-    
+
 }
 }

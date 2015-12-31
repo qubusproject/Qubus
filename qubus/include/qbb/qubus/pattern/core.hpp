@@ -7,6 +7,7 @@
 #include <qbb/qubus/pattern/bind_to.hpp>
 #include <qbb/qubus/pattern/sequence.hpp>
 #include <qbb/qubus/pattern/any_of.hpp>
+#include <qbb/qubus/pattern/all_of.hpp>
 #include <qbb/qubus/pattern/value.hpp>
 #include <qbb/qubus/pattern/protect.hpp>
 #include <qbb/qubus/pattern/or.hpp>

@@ -4,6 +4,9 @@
 #include <qbb/qubus/IR/type.hpp>
 
 #include <qbb/qubus/pattern/variable.hpp>
+#include <qbb/qubus/pattern/value.hpp>
+#include <qbb/qubus/pattern/sequence.hpp>
+#include <qbb/qubus/pattern/any.hpp>
 
 #include <utility>
 
@@ -145,6 +148,86 @@ private:
     Rank rank_;
 };
 
+template <typename Id, typename Members>
+class struct_type_pattern
+{
+public:
+    struct_type_pattern(Id id_, Members members_)
+    : id_(std::move(id_)), members_(std::move(members_))
+    {
+    }
+
+    template <typename BaseType>
+    bool match(const BaseType& value, const variable<types::struct_>* var = nullptr) const
+    {
+        if (auto concret_value = value.template try_as<types::struct_>())
+        {
+            if (id_.match(concret_value->id()))
+            {
+                if (members_.match(concret_value->members()))
+                {
+                    if (var)
+                    {
+                        var->set(*concret_value);
+                    }
+
+                    return true;
+                }
+            }
+        }
+
+        return false;
+    }
+
+    void reset() const
+    {
+        id_.reset();
+        members_.reset();
+    }
+
+private:
+    Id id_;
+    Members members_;
+};
+
+template <typename Datatype, typename Id>
+class member_pattern
+{
+public:
+    member_pattern(Datatype datatype_, Id id_) : datatype_(datatype_), id_(id_)
+    {
+    }
+
+    bool match(const types::struct_::member& value,
+               const variable<types::struct_::member>* var = nullptr) const
+    {
+        if (datatype_.match(value.datatype))
+        {
+            if (id_.match(value.id))
+            {
+                if (var)
+                {
+                    var->set(value);
+                }
+
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    void reset() const
+    {
+        datatype_.reset();
+        id_.reset();
+    }
+
+private:
+    Datatype datatype_;
+    Id id_;
+};
+
 constexpr primitive_type_pattern<types::double_> double_t = {};
 constexpr primitive_type_pattern<types::float_> float_t = {};
 constexpr primitive_type_pattern<types::integer> integer_t = {};
@@ -161,12 +244,6 @@ template <typename ValueType>
 tensor_type_pattern<types::tensor, ValueType> tensor_t(ValueType value_type)
 {
     return tensor_type_pattern<types::tensor, ValueType>(std::move(value_type));
-}
-
-template <typename ValueType>
-tensor_type_pattern<types::sparse_tensor, ValueType> sparse_tensor_t(ValueType value_type)
-{
-    return tensor_type_pattern<types::sparse_tensor, ValueType>(std::move(value_type));
 }
 
 template <typename Rank>
@@ -187,6 +264,27 @@ tensor_type_pattern<types::array_slice, ValueType> array_slice_t(ValueType value
     return tensor_type_pattern<types::array_slice, ValueType>(std::move(value_type));
 }
 
+template <typename Id, typename Members>
+struct_type_pattern<Id, Members> struct_t(Id id, Members members)
+{
+    return struct_type_pattern<Id, Members>(std::move(id), std::move(members));
+}
+
+template <typename Datatype, typename Id>
+auto member(Datatype datatype, Id id)
+{
+    return member_pattern<Datatype, Id>(datatype, id);
+}
+
+template <typename ValueType>
+auto sparse_tensor_t(ValueType value_type)
+{
+    return struct_t(
+        value("sparse_tensor"),
+        sequence(member(struct_t(_, sequence(member(array_t(value_type), value("val")), _, _, _)),
+                        value("data")),
+                 member(_, value("shape"))));
+}
 }
 }
 }

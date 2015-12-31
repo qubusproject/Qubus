@@ -3,6 +3,7 @@
 
 #include <qbb/qubus/local_array.hpp>
 #include <qbb/qubus/local_tensor.hpp>
+#include <qbb/qubus/struct.hpp>
 #include <qbb/qubus/object.hpp>
 
 #include <qbb/qubus/backends/execution_stack.hpp>
@@ -10,6 +11,7 @@
 #include <qbb/qubus/local_address_space.hpp>
 
 #include <vector>
+#include <array>
 #include <memory>
 
 namespace qbb
@@ -28,6 +30,10 @@ void* build_array_metadata(const local_array& array, const local_address_space& 
                            std::vector<std::shared_ptr<memory_block>>& used_mem_blocks);
 
 void* build_tensor_metadata(const local_tensor& tensor, const local_address_space& addr_space,
+                            const abi_info& abi, execution_stack& stack,
+                            std::vector<std::shared_ptr<memory_block>>& used_mem_blocks);
+
+void* build_struct_metadata(const struct_& s, const local_address_space& addr_space,
                             const abi_info& abi, execution_stack& stack,
                             std::vector<std::shared_ptr<memory_block>>& used_mem_blocks);
 

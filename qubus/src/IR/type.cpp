@@ -6,6 +6,7 @@
 #include <qbb/util/multi_method.hpp>
 #include <qbb/util/hash.hpp>
 
+#include <algorithm>
 #include <mutex>
 
 namespace qbb
@@ -69,6 +70,11 @@ bool type_eq_sparse_tensor(const types::sparse_tensor& lhs, const types::sparse_
     return lhs.value_type() == rhs.value_type();
 }
 
+bool type_eq_struct(const types::struct_& lhs, const types::struct_& rhs)
+{
+    return lhs.id() == rhs.id();
+}
+
 bool type_eq_default(const type&, const type&)
 {
     return false;
@@ -86,6 +92,7 @@ void init_type_eq()
     type_eq.add_specialization(type_eq_array);
     type_eq.add_specialization(type_eq_array_slice);
     type_eq.add_specialization(type_eq_sparse_tensor);
+    type_eq.add_specialization(type_eq_struct);
 
     type_eq.set_fallback(type_eq_default);
 }
@@ -106,6 +113,43 @@ bool operator!=(const type& lhs, const type& rhs)
 }
 
 qbb::util::implementation_table type::implementation_table_ = {};
+
+namespace types
+{
+const type& struct_::operator[](const std::string& id) const
+{
+    auto iter = std::find_if(members_.begin(), members_.end(), [&id](const member& value)
+                             {
+                                 return value.id == id;
+                             });
+
+    if (iter != members_.end())
+    {
+        return iter->datatype;
+    }
+    else
+    {
+        throw 0;
+    }
+}
+
+std::size_t struct_::member_index(const std::string& id) const
+{
+    auto iter = std::find_if(members_.begin(), members_.end(), [&id](const member& value)
+                             {
+                                 return value.id == id;
+                             });
+
+    if (iter != members_.end())
+    {
+        return iter - members_.begin();
+    }
+    else
+    {
+        throw 0;
+    }
+}
+}
 }
 }
 
@@ -114,60 +158,100 @@ namespace std
 std::size_t hash<qbb::qubus::type>::operator()(const qbb::qubus::type& value) const noexcept
 {
     using namespace qbb::qubus;
+    using pattern::_;
 
     pattern::variable<type> t;
 
-    auto m = pattern::make_matcher<type, std::size_t>()
-                 .case_(pattern::double_t,
-                        [&]
-                        {
-                            return std::hash<std::type_index>()(typeid(types::double_));
-                        })
-                 .case_(pattern::float_t,
-                        [&]
-                        {
-                            return std::hash<std::type_index>()(typeid(types::float_));
-                        })
-                 .case_(pattern::integer_t,
-                        [&]
-                        {
-                            return std::hash<std::type_index>()(typeid(types::integer));
-                        })
-                 .case_(pattern::index_t,
-                        [&]
-                        {
-                            return std::hash<std::type_index>()(typeid(types::index));
-                        })
-                 .case_(pattern::complex_t(t),
-                        [&]
-                        {
-                            std::size_t seed = 0;
+    auto m =
+        pattern::make_matcher<type, std::size_t>()
+            .case_(pattern::double_t,
+                   [&]
+                   {
+                       return std::hash<std::type_index>()(typeid(types::double_));
+                   })
+            .case_(pattern::float_t,
+                   [&]
+                   {
+                       return std::hash<std::type_index>()(typeid(types::float_));
+                   })
+            .case_(pattern::integer_t,
+                   [&]
+                   {
+                       return std::hash<std::type_index>()(typeid(types::integer));
+                   })
+            .case_(pattern::index_t,
+                   [&]
+                   {
+                       return std::hash<std::type_index>()(typeid(types::index));
+                   })
+            .case_(pattern::complex_t(t),
+                   [&]
+                   {
+                       std::size_t seed = 0;
 
-                            qbb::util::hash_combine(seed, std::type_index(typeid(types::complex)));
-                            qbb::util::hash_combine(seed, t.get());
+                       qbb::util::hash_combine(seed, std::type_index(typeid(types::complex)));
+                       qbb::util::hash_combine(seed, t.get());
 
-                            return seed;
-                        })
-                 .case_(pattern::tensor_t(t),
-                        [&]
-                        {
-                            std::size_t seed = 0;
+                       return seed;
+                   })
+            .case_(pattern::tensor_t(t),
+                   [&]
+                   {
+                       std::size_t seed = 0;
 
-                            qbb::util::hash_combine(seed, std::type_index(typeid(types::tensor)));
-                            qbb::util::hash_combine(seed, t.get());
+                       qbb::util::hash_combine(seed, std::type_index(typeid(types::tensor)));
+                       qbb::util::hash_combine(seed, t.get());
 
-                            return seed;
-                        })
-                 .case_(pattern::sparse_tensor_t(t), [&]
-                        {
-                            std::size_t seed = 0;
+                       return seed;
+                   })
+            .case_(pattern::sparse_tensor_t(t),
+                   [&]
+                   {
+                       std::size_t seed = 0;
 
-                            qbb::util::hash_combine(seed, std::type_index(typeid(types::sparse_tensor)));
-                            qbb::util::hash_combine(seed, t.get());
+                       qbb::util::hash_combine(seed, std::type_index(typeid(types::sparse_tensor)));
+                       qbb::util::hash_combine(seed, t.get());
 
-                            return seed;
-                        });
+                       return seed;
+                   })
+            .case_(pattern::array_t(t),
+                   [&]
+                   {
+                       std::size_t seed = 0;
+
+                       qbb::util::hash_combine(seed, std::type_index(typeid(types::sparse_tensor)));
+                       qbb::util::hash_combine(seed, t.get());
+
+                       return seed;
+                   })
+            .case_(pattern::struct_t(_, _), [&](const type& self)
+                   {
+                       const auto& stype = self.as<types::struct_>();
+
+                       std::size_t seed = 0;
+
+                       qbb::util::hash_combine(seed, std::type_index(typeid(types::struct_)));
+                       qbb::util::hash_combine(seed, stype.id());
+
+                       for (const auto& member : stype)
+                       {
+                           qbb::util::hash_combine(seed, member);
+                       }
+
+                       return seed;
+                   });
 
     return pattern::match(value, m);
+}
+
+std::size_t hash<qbb::qubus::types::struct_::member>::
+operator()(const qbb::qubus::types::struct_::member& value) const noexcept
+{
+    std::size_t seed = 0;
+
+    qbb::util::hash_combine(seed, value.datatype);
+    qbb::util::hash_combine(seed, value.id);
+
+    return seed;
 }
 }
