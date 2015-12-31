@@ -3,6 +3,7 @@
 
 #include <qbb/util/concat.hpp>
 #include <qbb/util/assert.hpp>
+#include <qbb/util/unused.hpp>
 
 #include <array>
 #include <vector>
@@ -54,12 +55,12 @@ public:
     {
     }
 
-    IndexType& operator[](long int dim)
+    IndexType& operator[](long int QBB_UNUSED(dim))
     {
         return value_;
     }
 
-    const IndexType& operator[](long int dim) const
+    const IndexType& operator[](long int QBB_UNUSED(dim)) const
     {
         return value_;
     }
@@ -362,7 +363,7 @@ index_space_iterator<IndexType, Rank> begin(const index_space<IndexType, Rank>& 
 }
 
 template <typename IndexType, long int Rank>
-index_space_iterator<IndexType, Rank> end(const index_space<IndexType, Rank>& space)
+index_space_iterator<IndexType, Rank> end(const index_space<IndexType, Rank>& QBB_UNUSED(space))
 {
     return index_space_iterator<IndexType, Rank>();
 }
