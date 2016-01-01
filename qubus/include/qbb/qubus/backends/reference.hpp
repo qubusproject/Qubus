@@ -4,6 +4,7 @@
 #include <hpx/config.hpp>
 
 #include <qbb/qubus/backends/alias_info.hpp>
+#include <qbb/qubus/IR/type.hpp>
 
 #include <hpx/lcos/future.hpp>
 
@@ -13,6 +14,7 @@
 #include <qbb/qubus/backends/llvm_environment.hpp>
 
 #include <vector>
+#include <utility>
 
 namespace qbb
 {
@@ -24,7 +26,8 @@ class reference
 public:
     reference() = default;
 
-    reference(llvm::Value* addr_, access_path origin_) : addr_(addr_), origin_(origin_)
+    reference(llvm::Value* addr_, access_path origin_, type datatype_)
+    : addr_(std::move(addr_)), origin_(std::move(origin_)), datatype_(std::move(datatype_))
     {
     }
 
@@ -36,6 +39,11 @@ public:
     const access_path& origin() const
     {
         return origin_;
+    }
+
+    const type& datatype() const
+    {
+        return datatype_;
     }
 
     const std::vector<hpx::lcos::shared_future<llvm::MDNode*>>& alias_scopes() const
@@ -53,13 +61,14 @@ public:
         alias_scopes_.push_back(info.alias_scope);
         noalias_sets_.push_back(info.noalias_set);
     }
+
 private:
     llvm::Value* addr_;
     access_path origin_;
+    type datatype_;
     mutable std::vector<hpx::lcos::shared_future<llvm::MDNode*>> alias_scopes_;
     mutable std::vector<hpx::lcos::shared_future<llvm::MDNode*>> noalias_sets_;
 };
-
 }
 }
 
