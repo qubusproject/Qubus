@@ -5,6 +5,8 @@
 
 #include <qbb/qubus/qubus.hpp>
 
+#include <qbb/qubus/assembly_tensor.hpp>
+
 #include <hpx/hpx_init.hpp>
 
 #include <memory>
@@ -107,6 +109,22 @@ int hpx_main(int argc, char** argv)
         C = Cdef;
         C.when_ready().wait();
 
+        long int M = 10000000;
+
+        std::vector<qbb::util::index_t> indices(2*M);
+
+        std::random_device rd;
+
+        std::mt19937 engine(rd());
+
+        std::uniform_int_distribution<qbb::util::index_t> dist(0, N);
+
+        for (long int i = 0; i < M; ++i)
+        {
+            indices[2*i] = dist(engine);
+            indices[2*i] = dist(engine);
+        }
+
         auto start = std::chrono::high_resolution_clock::now();
 
         for (long int i = 0; i < samples; ++i)
@@ -115,6 +133,14 @@ int hpx_main(int argc, char** argv)
         }
 
         C.when_ready().wait();
+
+        assembly_tensor<double, 2> D(N, N);
+
+        for (long int i = 0; i < M; ++i)
+        {
+            D.add_nonzero({{indices[2*i], indices[2*i + 1]}}, 1.0);
+        }
+
 
         auto end = std::chrono::high_resolution_clock::now();
 

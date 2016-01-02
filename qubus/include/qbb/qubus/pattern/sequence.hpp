@@ -22,7 +22,7 @@ template <typename... Values>
 class sequence_pattern
 {
 public:
-    sequence_pattern(Values... values_) : values_(std::move(values_)...)
+    explicit sequence_pattern(Values... values_) : values_(std::move(values_)...)
     {
     }
 

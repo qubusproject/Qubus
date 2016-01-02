@@ -20,6 +20,8 @@ namespace qubus
 class expression
 {
 public:
+    expression() = default;
+
     template <typename T, typename Enabler = typename std::enable_if<is_expression<T>::value>::type>
     expression(T value)
     {

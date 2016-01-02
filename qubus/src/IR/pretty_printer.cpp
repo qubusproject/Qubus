@@ -227,14 +227,14 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
                        std::cout << ", ";
 
-                               if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
-                               {
-                                   std::cout << debug_name.as<std::string>();
-                               }
-                               else
-                               {
-                                   std::cout << ctx.get_name_for_handle(decl.get().id());
-                               }
+                       if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
+                       {
+                           std::cout << debug_name.as<std::string>();
+                       }
+                       else
+                       {
+                           std::cout << ctx.get_name_for_handle(decl.get().id());
+                       }
 
                        std::cout << " = ";
 
@@ -456,14 +456,14 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                    {
                        std::cout << "for all ";
 
-                               if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
-                               {
-                                   std::cout << debug_name.as<std::string>();
-                               }
-                               else
-                               {
-                                   std::cout << ctx.get_name_for_handle(decl.get().id());
-                               }
+                       if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
+                       {
+                           std::cout << debug_name.as<std::string>();
+                       }
+                       else
+                       {
+                           std::cout << ctx.get_name_for_handle(decl.get().id());
+                       }
 
                        std::cout << " = ";
 
@@ -616,7 +616,8 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
                        std::cout << ")";
                    })
-            .case_(macro(params, a), [&]
+            .case_(macro(params, a),
+                   [&]
                    {
                        std::cout << "macro(";
 
@@ -633,13 +634,19 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
                        std::cout << "\n}\n" << std::flush;
 
+                   })
+            .case_(member_access(a, id), [&]
+                   {
+                       print(a.get(), ctx, print_types);
+
+                       std::cout << "." << id.get();
                    });
 
     try
     {
         pattern::match(expr, m);
     }
-    catch(...)
+    catch (...)
     {
         std::cout << expr.rtti().name() << std::endl;
     }
@@ -701,5 +708,11 @@ void pretty_print(const function_declaration& decl, bool print_types)
         pretty_print(*next_fn, print_types);
     }
 }
+
+void pretty_print_type(const type& t)
+{
+    print_type(t);
+}
+
 }
 }

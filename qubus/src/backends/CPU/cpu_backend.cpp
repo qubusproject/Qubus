@@ -31,8 +31,6 @@
 
 #include <qubus/qbb_qubus_export.h>
 
-#include <hpx/async.hpp>
-
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
 #include <llvm/ExecutionEngine/JITEventListener.h>
@@ -41,12 +39,15 @@
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
 
-#include <llvm/PassManager.h>
+#include <llvm/IR/LegacyPassManager.h>
 #include <llvm/Transforms/IPO/PassManagerBuilder.h>
 #include <llvm/IR/Verifier.h>
 #include <llvm/IR/DataLayout.h>
 
-#include <llvm/Analysis/Passes.h>
+#include <llvm/Analysis/BasicAliasAnalysis.h>
+#include <llvm/Analysis/ScalarEvolutionAliasAnalysis.h>
+#include <llvm/Analysis/TypeBasedAliasAnalysis.h>
+#include <llvm/Analysis/ScopedNoAliasAA.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/IPO.h>
 #include <llvm/Transforms/Vectorize.h>
@@ -54,6 +55,8 @@
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/FormattedStream.h>
 #include <llvm/Support/Host.h>
+
+#include <hpx/async.hpp>
 
 #include <hpx/lcos/local/promise.hpp>
 #include <hpx/lcos/future.hpp>
@@ -955,7 +958,7 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
 
     auto result_var = create_entry_block_alloca(env.get_current_function(), result->getType());
 
-    reference result_var_ref(result_var, access_path());
+    reference result_var_ref(result_var, access_path(), result_type);
     store_to_ref(result_var_ref, result, env, ctx);
 
     return result_var_ref;
@@ -1025,7 +1028,7 @@ reference emit_unary_operator(unary_op_tag tag, const expression& arg, llvm_envi
 
     auto result_var = create_entry_block_alloca(env.get_current_function(), result->getType());
 
-    reference result_var_ref(result_var, access_path());
+    reference result_var_ref(result_var, access_path(), result_type);
 
     store_to_ref(result_var_ref, result, env, ctx);
 
@@ -1211,7 +1214,7 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
 
     auto result_var = create_entry_block_alloca(env.get_current_function(), result->getType());
 
-    reference result_var_ref(result_var, access_path());
+    reference result_var_ref(result_var, access_path(), target_type);
 
     store_to_ref(result_var_ref, result, env, ctx);
 
@@ -1249,18 +1252,26 @@ reference emit_array_access(const reference& data, const reference& shape,
     std::vector<llvm::Value*> shape_;
     shape_.reserve(indices.size());
 
+    auto shape_type = shape.datatype().as<types::array>();
+    auto shape_value_type = shape_type.value_type();
+
     for (std::size_t i = 0; i < indices.size(); ++i)
     {
-        auto extent_ptr = builder.CreateConstInBoundsGEP1_32(shape.addr(), i);
+        auto extent_ptr = builder.CreateConstInBoundsGEP1_32(env.map_qubus_type(shape.datatype()),
+                                                             shape.addr(), i);
 
-        auto extent = load_from_ref(reference(extent_ptr, shape.origin()), env, ctx);
+        auto extent =
+            load_from_ref(reference(extent_ptr, shape.origin(), shape_value_type), env, ctx);
 
         shape_.push_back(extent);
     }
 
     auto accessed_element = emit_array_access(data.addr(), shape_, indices, env);
 
-    return reference(accessed_element, data.origin());
+    auto data_type = data.datatype().as<types::array>();
+    auto data_value_type = data_type.value_type();
+
+    return reference(accessed_element, data.origin(), data_value_type);
 }
 
 expression reassociate_index_expression(expression expr)
@@ -1319,6 +1330,30 @@ expression reassociate_index_expression(expression expr)
     }
 }
 
+type value_type(const type& array_type)
+{
+    pattern::variable<type> value_type;
+
+    auto m = pattern::make_matcher<type, type>()
+                 .case_(array_t(value_type),
+                        [&]
+                        {
+                            return value_type.get();
+                        })
+                 .case_(tensor_t(value_type),
+                        [&]
+                        {
+                            return value_type.get();
+                        })
+                 .case_(array_slice_t(value_type), [&]
+                        {
+                            return value_type.get();
+                        });
+
+    // TODO: Error handling
+    return pattern::match(array_type, m);
+}
+
 reference emit_tensor_access(const variable_declaration& tensor,
                              const std::vector<expression>& indices, llvm_environment& env,
                              compilation_context& ctx)
@@ -1343,20 +1378,61 @@ reference emit_tensor_access(const variable_declaration& tensor,
 
     auto& builder = env.builder();
 
-    llvm::Value* data_ptr = builder.CreateConstInBoundsGEP2_32(tensor_.addr(), 0, 0, "data_ptr");
+    llvm::Value* data_ptr = builder.CreateConstInBoundsGEP2_32(
+        env.map_qubus_type(tensor_.datatype()), tensor_.addr(), 0, 0, "data_ptr");
 
-    auto data = load_from_ref(reference(data_ptr, tensor_.origin()), env, ctx);
+    auto data_value_type = value_type(tensor_.datatype());
 
-    auto data_ref =
-        reference(builder.CreateInBoundsGEP(data, load_from_ref(linearized_index_, env, ctx)),
-                  tensor_.origin() / "data");
+    auto data = load_from_ref(reference(data_ptr, tensor_.origin(), types::array(data_value_type)),
+                              env, ctx);
 
-    if (auto code_region = ctx.current_code_region())
+    auto data_ref = reference(builder.CreateInBoundsGEP(env.map_qubus_type(data_value_type), data,
+                                                        load_from_ref(linearized_index_, env, ctx)),
+                              tensor_.origin() / "data", data_value_type);
+
+    // TODO: Reenable LAAA
+    /*if (auto code_region = ctx.current_code_region())
     {
         auto alias_info = code_region->register_access(tensor, indices, data_ref);
 
         data_ref.add_alias_info(alias_info);
+    }*/
+
+    return data_ref;
+}
+
+reference emit_tensor_access(const expression& tensor, const std::vector<expression>& indices,
+                             llvm_environment& env, compilation_context& ctx)
+{
+    expression linearized_index = integer_literal_expr(0);
+
+    for (std::size_t i = 0; i < indices.size(); ++i)
+    {
+        auto extent = intrinsic_function_expr("extent", {tensor, integer_literal_expr(i)});
+
+        linearized_index = binary_operator_expr(
+            binary_op_tag::plus,
+            binary_operator_expr(binary_op_tag::multiplies, extent, linearized_index), indices[i]);
     }
+
+    linearized_index = reassociate_index_expression(std::move(linearized_index));
+
+    auto linearized_index_ = compile(linearized_index, env, ctx);
+
+    auto tensor_ = compile(tensor, env, ctx);
+
+    auto& builder = env.builder();
+
+    llvm::Value* data_ptr = builder.CreateConstInBoundsGEP2_32(env.map_qubus_type(typeof_(tensor)),
+                                                               tensor_.addr(), 0, 0, "data_ptr");
+
+    auto data_value_type = value_type(tensor_.datatype());
+
+    auto data = load_from_ref(reference(data_ptr, tensor_.origin(), data_value_type), env, ctx);
+
+    auto data_ref = reference(builder.CreateInBoundsGEP(env.map_qubus_type(data_value_type), data,
+                                                        load_from_ref(linearized_index_, env, ctx)),
+                              tensor_.origin() / "data", data_value_type);
 
     return data_ref;
 }
@@ -1367,31 +1443,38 @@ reference emit_array_slice_access(const reference& slice, const std::vector<llvm
 {
     auto& builder = env.builder();
 
-    llvm::Value* data_ptr = builder.CreateConstInBoundsGEP2_32(slice.addr(), 0, 0, "data_ptr");
-    llvm::Value* shape_ptr = builder.CreateConstInBoundsGEP2_32(slice.addr(), 0, 1, "shape_ptr");
-    llvm::Value* origin_ptr = builder.CreateConstInBoundsGEP2_32(slice.addr(), 0, 2, "origin_ptr");
+    llvm::Value* data_ptr = builder.CreateConstInBoundsGEP2_32(env.map_qubus_type(slice.datatype()),
+                                                               slice.addr(), 0, 0, "data_ptr");
+    llvm::Value* shape_ptr = builder.CreateConstInBoundsGEP2_32(
+        env.map_qubus_type(slice.datatype()), slice.addr(), 0, 1, "shape_ptr");
+    llvm::Value* origin_ptr = builder.CreateConstInBoundsGEP2_32(
+        env.map_qubus_type(slice.datatype()), slice.addr(), 0, 2, "origin_ptr");
 
-    auto shape = load_from_ref(reference(shape_ptr, slice.origin()), env, ctx);
-    auto data = load_from_ref(reference(data_ptr, slice.origin()), env, ctx);
-    auto origin = load_from_ref(reference(origin_ptr, slice.origin()), env, ctx);
+    auto data_value_type = value_type(slice.datatype());
+    auto shape_value_type = types::integer();
+    auto origin_value_type = types::integer();
+
+    auto shape = load_from_ref(reference(shape_ptr, slice.origin(), data_value_type), env, ctx);
+    auto data = load_from_ref(reference(data_ptr, slice.origin(), shape_value_type), env, ctx);
+    auto origin = load_from_ref(reference(origin_ptr, slice.origin(), origin_value_type), env, ctx);
 
     std::vector<llvm::Value*> transformed_indices;
     transformed_indices.reserve(indices.size());
 
     for (std::size_t i = 0; i < indices.size(); ++i)
     {
-        auto origin_component_ptr = builder.CreateConstInBoundsGEP1_32(origin, i);
+        auto origin_component_ptr = builder.CreateConstInBoundsGEP1_32(env.map_qubus_type(origin_value_type), origin, i);
 
         auto origin_component =
-            load_from_ref(reference(origin_component_ptr, slice.origin() / "origin"), env, ctx);
+            load_from_ref(reference(origin_component_ptr, slice.origin() / "origin", origin_value_type), env, ctx);
 
         auto transformed_index = builder.CreateAdd(origin_component, indices[i], "", true, true);
 
         transformed_indices.push_back(transformed_index);
     }
 
-    auto accessed_element = emit_array_access(reference(data, slice.origin() / "data"),
-                                              reference(shape, slice.origin() / "shape"),
+    auto accessed_element = emit_array_access(reference(data, slice.origin() / "data", data_value_type),
+                                              reference(shape, slice.origin() / "shape", shape_value_type),
                                               transformed_indices, env, ctx);
 
     return accessed_element;
@@ -1462,7 +1545,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                        llvm::Value* induction_var = create_entry_block_alloca(
                            env.get_current_function(), size_type, nullptr, "ind");
 
-                       auto induction_var_ref = reference(induction_var, access_path());
+                       auto induction_var_ref = reference(induction_var, access_path(), types::integer());
 
                        symbol_table[idx.get().id()] = induction_var_ref;
 
@@ -1533,7 +1616,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                        auto var =
                            create_entry_block_alloca(env.get_current_function(), double_type);
 
-                       reference var_ref(var, access_path());
+                       reference var_ref(var, access_path(), types::double_());
                        store_to_ref(var_ref, value, env, ctx);
 
                        return var_ref;
@@ -1548,7 +1631,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                        llvm::Value* var =
                            create_entry_block_alloca(env.get_current_function(), float_type);
 
-                       reference var_ref(var, access_path());
+                       reference var_ref(var, access_path(), types::float_());
                        store_to_ref(var_ref, value, env, ctx);
 
                        return var_ref;
@@ -1563,7 +1646,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                        llvm::Value* var =
                            create_entry_block_alloca(env.get_current_function(), size_type);
 
-                       reference var_ref(var, access_path());
+                       reference var_ref(var, access_path(), types::integer());
                        store_to_ref(var_ref, value, env, ctx);
 
                        return var_ref;
@@ -1592,20 +1675,20 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                        auto result =
                            create_entry_block_alloca(env.get_current_function(), int_type);
 
-                       reference result_ref(result, access_path());
+                       reference result_ref(result, access_path(), types::integer());
                        store_to_ref(result_ref, result_value, env, ctx);
 
                        return result_ref;
                    })
-            .case_(intrinsic_function_n(pattern::value("extent"), variable_ref(idx), b),
+            .case_(intrinsic_function_n(pattern::value("extent"), a, b),
                    [&]
                    {
-                       auto tensor = symbol_table.at(idx.get().id());
+                       auto tensor = compile(a.get(), env, ctx);
 
                        llvm::Value* shape_ptr =
-                           builder.CreateConstInBoundsGEP2_32(tensor.addr(), 0, 1, "shape_ptr");
+                           builder.CreateConstInBoundsGEP2_32(env.map_qubus_type(tensor.datatype()), tensor.addr(), 0, 1, "shape_ptr");
 
-                       auto shape = load_from_ref(reference(shape_ptr, tensor.origin()), env, ctx);
+                       auto shape = load_from_ref(reference(shape_ptr, tensor.origin(), types::integer()), env, ctx);
 
                        reference dim_ref = compile(b.get(), env, ctx);
 
@@ -1614,7 +1697,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                        llvm::Value* extent_ptr =
                            builder.CreateInBoundsGEP(shape, dim, "extent_ptr");
 
-                       return reference(extent_ptr, tensor.origin() / "shape");
+                       return reference(extent_ptr, tensor.origin() / "shape", types::integer());
                    })
             .case_(intrinsic_function_n(pattern::value("min"), a, b),
                    [&]
@@ -1633,9 +1716,9 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                        auto result = builder.CreateSelect(cond, left_value, right_value);
 
                        auto result_var =
-                           create_entry_block_alloca(env.get_current_function(), result->getType());
+                           create_entry_block_alloca(env.get_current_function(), env.map_qubus_type(result_type));
 
-                       reference result_ref(result_var, access_path());
+                       reference result_ref(result_var, access_path(), result_type);
                        store_to_ref(result_ref, result, env, ctx);
 
                        return result_ref;
@@ -1650,14 +1733,16 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
 
                        llvm::Instruction* right_value = load_from_ref(right_value_ptr, env, ctx);
 
+                       type result_type = typeof_(a.get());
+
                        auto cond = builder.CreateICmpSLT(left_value, right_value);
 
                        auto result = builder.CreateSelect(cond, right_value, left_value);
 
                        auto result_var =
-                           create_entry_block_alloca(env.get_current_function(), result->getType());
+                           create_entry_block_alloca(env.get_current_function(), env.map_qubus_type(result_type));
 
-                       reference result_ref(result_var, access_path());
+                       reference result_ref(result_var, access_path(), result_type);
                        store_to_ref(result_ref, result, env, ctx);
 
                        return result_ref;
@@ -1675,10 +1760,12 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
 
                        auto result = builder.CreateSelect(cond_value, then_value, else_value);
 
-                       auto result_var =
-                           create_entry_block_alloca(env.get_current_function(), result->getType());
+                       type result_type = typeof_(a.get());
 
-                       reference result_ref(result_var, access_path());
+                       auto result_var =
+                           create_entry_block_alloca(env.get_current_function(), env.map_qubus_type(result_type));
+
+                       reference result_ref(result_var, access_path(), result_type);
                        store_to_ref(result_ref, result, env, ctx);
 
                        return result_ref;
@@ -1707,7 +1794,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                        auto result =
                            create_entry_block_alloca(env.get_current_function(), int_type);
 
-                       reference result_ref(result, access_path());
+                       reference result_ref(result, access_path(), types::integer());
                        store_to_ref(result_ref, result_value, env, ctx);
 
                        return result_ref;
@@ -1745,7 +1832,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
 
                        auto m =
                            pattern::make_matcher<type, reference>()
-                               .case_(pattern::tensor_t(_),
+                               .case_(pattern::tensor_t(_) || pattern::array_t(_),
                                       [&]
                                       {
                                           return emit_tensor_access(idx.get(), indices, env, ctx);
@@ -1756,6 +1843,59 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                                       });
 
                        return pattern::match(idx.get().var_type(), m);
+                   })
+            .case_(subscription(a, expressions),
+                   [&]
+                   {
+                       const auto& indices = expressions.get();
+
+                       std::vector<llvm::Value*> indices_;
+                       indices_.reserve(indices.size());
+
+                       for (const auto& index : indices)
+                       {
+                           auto index_ref = compile(index, env, ctx);
+
+                           auto index_ = load_from_ref(index_ref, env, ctx);
+
+                           indices_.push_back(index_);
+                       }
+
+                       using pattern::_;
+
+                       auto m =
+                           pattern::make_matcher<type, reference>()
+                               .case_(pattern::tensor_t(_) || pattern::array_t(_),
+                                      [&]
+                                      {
+                                          return emit_tensor_access(a.get(), indices, env, ctx);
+                                      })
+                               .case_(pattern::array_slice_t(_), [&]
+                                      {
+                                          auto ref = compile(a.get(), env, ctx);
+
+                                          return emit_array_slice_access(ref, indices_, env, ctx);
+                                      });
+
+                       return pattern::match(typeof_(a.get()), m);
+                   })
+            .case_(member_access(a, name),
+                   [&]
+                   {
+                       auto obj_type = typeof_(a.get()).as<types::struct_>();
+
+                       auto member_idx = obj_type.member_index(name.get());
+
+                       auto obj_ref = compile(a.get(), env, ctx);
+
+                       auto member = builder.CreateStructGEP(env.map_qubus_type(obj_type), obj_ref.addr(), member_idx);
+
+                       auto member_type = obj_type[name.get()];
+
+                       auto member_ptr =
+                           load_from_ref(reference(member, obj_ref.origin(), member_type), env, ctx);
+
+                       return reference(member_ptr, obj_ref.origin() / name.get(), member_type);
                    })
             .case_(local_variable_def(var, a),
                    [&]
@@ -1769,7 +1909,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
 
                        auto init_value = load_from_ref(init_value_ref, env, ctx);
 
-                       reference var_ref(var_ptr, access_path(var.get().id()));
+                       reference var_ref(var_ptr, access_path(var.get().id()), var.get().var_type());
                        store_to_ref(var_ref, init_value, env, ctx);
 
                        symbol_table[var.get().id()] = var_ref;
@@ -1827,7 +1967,7 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                     pattern::variable<type> value_type;
 
                     auto m =
-                        pattern::make_matcher<type, llvm::Value*>()
+                        pattern::make_matcher<type, reference>()
                             .case_(
                                 tensor_t(value_type) || array_t(value_type),
                                 [&](const type& self)
@@ -1911,37 +2051,41 @@ reference compile(const expression& expr, llvm_environment& env, compilation_con
                                         auto extent_ptr = builder.CreateConstInBoundsGEP1_64(
                                             shape_ptr, i, "extend_ptr");
 
-                                        store_to_ref(reference(extent_ptr, access_path()),
+                                        store_to_ref(reference(extent_ptr, access_path(), types::integer()),
                                                      llvm::ConstantInt::get(size_type, extents[i]),
                                                      env, ctx);
                                     }
 
+                                    auto array_type = env.map_qubus_type(self);
+
                                     auto array_ptr = create_entry_block_alloca(
-                                        env.get_current_function(), env.map_qubus_type(self));
+                                        env.get_current_function(), array_type);
 
                                     auto data_member_ptr =
-                                        builder.CreateConstInBoundsGEP2_32(array_ptr, 0, 0);
-                                    store_to_ref(reference(data_member_ptr, access_path()),
+                                        builder.CreateConstInBoundsGEP2_32(array_type, array_ptr, 0, 0);
+                                    store_to_ref(reference(data_member_ptr, access_path(), value_type.get()),
                                                  data_ptr, env, ctx);
 
                                     auto shape_member_ptr =
-                                        builder.CreateConstInBoundsGEP2_32(array_ptr, 0, 1);
-                                    store_to_ref(reference(shape_member_ptr, access_path()),
+                                        builder.CreateConstInBoundsGEP2_32(array_type, array_ptr, 0, 1);
+                                    store_to_ref(reference(shape_member_ptr, access_path(), types::integer()),
                                                  shape_ptr, env, ctx);
 
-                                    return array_ptr;
+                                    return reference(array_ptr, access_path(), self);
                                 })
                             .case_(value_type, [&]
                                    {
                                        if (expressions.get().size() != 0)
                                            throw 0;
 
-                                       return create_entry_block_alloca(
-                                           env.get_current_function(),
-                                           env.map_qubus_type(value_type.get()));
+                                       auto var_ptr = create_entry_block_alloca(
+                                               env.get_current_function(),
+                                               env.map_qubus_type(value_type.get()));
+
+                                       return reference(var_ptr, access_path(), value_type.get());
                                    });
 
-                    return reference(pattern::match(t.get(), m), access_path());
+                    return pattern::match(t.get(), m);
                 });
 
     auto result = pattern::match(expr, m);
@@ -2004,12 +2148,12 @@ void compile(const function_declaration& plan, llvm_environment& env, compilatio
     for (const auto& param : plan.params())
     {
         access_path apath(param.id());
-        symbol_table[param.id()] = reference(&*current_arg, apath);
+        symbol_table[param.id()] = reference(&*current_arg, apath, param.var_type());
         env.get_alias_scope(apath);
         ++current_arg;
     }
 
-    symbol_table[plan.result().id()] = reference(&*current_arg, access_path(plan.result().id()));
+    symbol_table[plan.result().id()] = reference(&*current_arg, access_path(plan.result().id()), plan.result().var_type());
 
     compile(plan.body(), env, ctx);
 
@@ -2063,12 +2207,13 @@ void compile_entry_point(const function_declaration& plan, llvm_environment& env
         llvm::Value* ptr_to_arg =
             env.builder().CreateConstInBoundsGEP1_64(&kernel->getArgumentList().front(), counter);
 
-        auto arg = load_from_ref(reference(ptr_to_arg, access_path()), env, ctx);
+        auto arg = env.builder().CreateLoad(env.builder().getInt8PtrTy(0), ptr_to_arg);
 
         llvm::Value* typed_arg =
             env.builder().CreateBitCast(arg, llvm::PointerType::get(param_type, 0));
 
-        llvm::Value* data_ptr =
+        // TODO: Generalize and reenable alignment tracking.
+        /*llvm::Value* data_ptr =
             env.builder().CreateConstInBoundsGEP2_32(typed_arg, 0, 0, "data_ptr");
 
         auto data = load_from_ref(reference(data_ptr, access_path(param.id())), env, ctx);
@@ -2077,7 +2222,7 @@ void compile_entry_point(const function_declaration& plan, llvm_environment& env
         env.builder().CreateCall2(
             env.get_assume_align(),
             env.builder().CreateBitCast(data, llvm::Type::getInt8PtrTy(llvm::getGlobalContext())),
-            llvm::ConstantInt::get(llvm::Type::getInt64Ty(llvm::getGlobalContext()), 32));
+            llvm::ConstantInt::get(llvm::Type::getInt64Ty(llvm::getGlobalContext()), 32));*/
 
         arguments.push_back(typed_arg);
         ++counter;
@@ -2131,17 +2276,17 @@ private:
     void* entry_;
 };
 
-void setup_function_optimization_pipeline(llvm::FunctionPassManager& manager, bool optimize)
+void setup_function_optimization_pipeline(llvm::legacy::FunctionPassManager& manager, bool optimize)
 {
     using namespace llvm;
 
     if (!optimize)
         return;
 
-    manager.add(createBasicAliasAnalysisPass());
-    manager.add(createScalarEvolutionAliasAnalysisPass());
-    manager.add(createTypeBasedAliasAnalysisPass());
-    manager.add(createScopedNoAliasAAPass());
+    manager.add(createBasicAAWrapperPass());
+    manager.add(createSCEVAAWrapperPass());
+    manager.add(createTypeBasedAAWrapperPass());
+    manager.add(createScopedNoAliasAAWrapperPass());
 
     manager.add(createCFGSimplificationPass());
     manager.add(createSROAPass());
@@ -2149,17 +2294,17 @@ void setup_function_optimization_pipeline(llvm::FunctionPassManager& manager, bo
     manager.add(createLowerExpectIntrinsicPass());
 }
 
-void setup_optimization_pipeline(llvm::PassManager& manager, bool optimize, bool vectorize)
+void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimize, bool vectorize)
 {
     using namespace llvm;
 
     if (!optimize)
         return;
 
-    manager.add(createBasicAliasAnalysisPass());
-    manager.add(createScalarEvolutionAliasAnalysisPass());
-    manager.add(createTypeBasedAliasAnalysisPass());
-    manager.add(createScopedNoAliasAAPass());
+    manager.add(createBasicAAWrapperPass());
+    manager.add(createSCEVAAWrapperPass());
+    manager.add(createTypeBasedAAWrapperPass());
+    manager.add(createScopedNoAliasAAWrapperPass());
 
     manager.add(createIPSCCPPass());          // IP SCCP
     manager.add(createGlobalOptimizerPass()); // Optimize out global vars
@@ -2176,7 +2321,7 @@ void setup_optimization_pipeline(llvm::PassManager& manager, bool optimize, bool
 
     manager.add(createArgumentPromotionPass()); // Scalarize uninlined fn args
 
-    manager.add(createSROAPass(false));
+    manager.add(createSROAPass());
 
     manager.add(createEarlyCSEPass());                   // Catch trivial redundancies
     manager.add(createJumpThreadingPass());              // Thread jumps.
@@ -2272,14 +2417,8 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, llvm::Execut
     // the_module->dump();
     // std::cout << std::endl;
 
-    llvm::FunctionPassManager fn_pass_man(the_module.get());
-    llvm::PassManager pass_man;
-
-    fn_pass_man.add(new llvm::DataLayoutPass());
-    pass_man.add(new llvm::DataLayoutPass());
-
-    engine.getTargetMachine()->addAnalysisPasses(fn_pass_man);
-    engine.getTargetMachine()->addAnalysisPasses(pass_man);
+    llvm::legacy::FunctionPassManager fn_pass_man(the_module.get());
+    llvm::legacy::PassManager pass_man;
 
     setup_function_optimization_pipeline(fn_pass_man, true);
     setup_optimization_pipeline(pass_man, true, true);
@@ -2359,11 +2498,9 @@ public:
         {
             for (const auto& feature : features)
             {
-                std::cout << std::string(feature.getKey()) << std::endl;
                 if (feature.getValue())
                 {
                     available_features.push_back(feature.getKey());
-                    std::cout << std::string(feature.getKey()) << std::endl;
                 }
             }
         }

@@ -411,9 +411,16 @@ private:
     std::string idx_name_;
 };
 
-bool is_scop(const expression&)
+bool is_scop(const expression& expr)
 {
-    return true;
+    auto m = pattern::make_matcher<expression, bool>().case_(pattern::sparse_tensor(), []
+                                                             {
+                                                                 return true;
+                                                             });
+
+    auto result = pattern::search(expr, m);
+
+    return !result;
 }
 
 isl::union_map analyze_accesses(const expression& expr, const isl::set& domain, scop_info& ctx)
@@ -1153,9 +1160,9 @@ void separate_full_from_partial_tiles(isl::schedule_node& band, util::index_t to
     for (int j = 0; j < n_member; ++j)
     {
         auto c = isl::constraint::equality(s)
-                .set_coefficient(isl_dim_in, j, -1)
-                .set_coefficient(isl_dim_out, j, 1)
-                .set_constant(top_level_tile_size-1);
+                     .set_coefficient(isl_dim_in, j, -1)
+                     .set_coefficient(isl_dim_out, j, 1)
+                     .set_constant(top_level_tile_size - 1);
 
         m.add_constraint(c);
     }
@@ -1164,20 +1171,20 @@ void separate_full_from_partial_tiles(isl::schedule_node& band, util::index_t to
 
     for (const auto& map : subtree_schedule.get_maps())
     {
-        auto dom = extract_set(band.get_domain(),
-                               map.domain().get_space());
+        auto dom = extract_set(band.get_domain(), map.domain().get_space());
 
         auto time_dom = apply(dom, map);
 
-        auto reduced_time_dom = project_out(time_dom, isl_dim_set, 0,
-                                            time_dom.dim(isl_dim_set) - n_member);
+        auto reduced_time_dom =
+            project_out(time_dom, isl_dim_set, 0, time_dom.dim(isl_dim_set) - n_member);
 
         auto isolate_cond_ = apply(reduced_time_dom, m);
 
         isolate_cond = union_(isolate_cond, isolate_cond_);
     }
 
-    auto outer_dims = flat_product(isolate_cond, isl::set::universe(isl::space(isl_ctx, 0, n_outer_dim - n_member)));
+    auto outer_dims = flat_product(
+        isolate_cond, isl::set::universe(isl::space(isl_ctx, 0, n_outer_dim - n_member)));
 
     auto inner_dims = isl::set::universe(isl::space(isl_ctx, 0, n_member));
 
@@ -1245,8 +1252,7 @@ isl::schedule_node optimize_schedule_node(isl::schedule_node root, scop& s)
 
                             if (i == num_tile_levels - 1)
                             {
-                                band_to_tile =
-                                    create_caches(band_to_tile, unroll_loops, s);
+                                band_to_tile = create_caches(band_to_tile, unroll_loops, s);
                             }
                         }
 
@@ -1301,7 +1307,7 @@ scop optimize_scop(scop s)
                                        return optimize_schedule_node(node, s);
                                    });
 
-    //s.schedule.dump();
+    // s.schedule.dump();
 
     return s;
 }
@@ -1471,7 +1477,7 @@ expression isl_ast_expr_to_kir(const isl::ast_expr& expr, ast_converter_context&
 
 expression isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx)
 {
-    //static long int current_extracted_fn_id = 0;
+    // static long int current_extracted_fn_id = 0;
 
     auto& symbol_table = ctx.symbol_table;
 
@@ -1665,7 +1671,7 @@ expression generate_code_from_scop(const scop& s)
 
     auto ast = builder.build_node_from_schedule(s.schedule);
 
-    //printer.print(ast);
+    // printer.print(ast);
 
     ast_converter_context ctx(s.symbol_table);
 
@@ -1684,7 +1690,6 @@ expression detect_and_optimize_scops(expression expr)
     }
     else
     {
-        // TODO: recurse into children
         return expr;
     }
 }

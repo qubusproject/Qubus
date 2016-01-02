@@ -67,6 +67,11 @@ struct is_tensor<std::shared_ptr<local_tensor>> : boost::mpl::true_
 };
 
 template <>
+struct is_tensor<std::shared_ptr<struct_>> : boost::mpl::true_
+{
+};
+
+template <>
 struct is_tensor<tensor_expr_info> : boost::mpl::true_
 {
 };

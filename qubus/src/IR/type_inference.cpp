@@ -1,6 +1,8 @@
 #include <qbb/qubus/IR/type_inference.hpp>
 
 #include <qbb/qubus/IR/qir.hpp>
+#include <qbb/qubus/pattern/core.hpp>
+#include <qbb/qubus/pattern/IR.hpp>
 
 #include <qbb/util/multi_method.hpp>
 #include <qbb/util/assert.hpp>
@@ -17,7 +19,7 @@ namespace
 {
 
 qbb::util::multi_method<type(const qbb::util::virtual_<type>&, const qbb::util::virtual_<type>&)>
-common_type_ = {};
+    common_type_ = {};
 
 type common_type_double_double(const types::double_&, const types::double_&)
 {
@@ -119,7 +121,8 @@ type common_type_array_array(const types::array& lhs, const types::array& rhs)
     return types::array(common_type_(lhs.value_type(), rhs.value_type()));
 }
 
-type common_type_array_slice_array_slice(const types::array_slice& lhs, const types::array_slice& rhs)
+type common_type_array_slice_array_slice(const types::array_slice& lhs,
+                                         const types::array_slice& rhs)
 {
     return types::array_slice(common_type_(lhs.value_type(), rhs.value_type()));
 }
@@ -158,35 +161,28 @@ type common_type(const type& t1, const type& t2)
     return common_type_(t1, t2);
 }
 
-
-qbb::util::multi_method<type(const qbb::util::virtual_<type>&)>
-value_type_ = {};
-
-type value_type_tensor(const types::tensor& tensor_type)
-{
-    return tensor_type.value_type();
-}
-
-type value_type_sparse_tensor(const types::sparse_tensor& tensor_type)
-{
-    return tensor_type.value_type();
-}
-
-void init_value_type()
-{
-    value_type_.add_specialization(value_type_tensor);
-    value_type_.add_specialization(value_type_sparse_tensor);
-}
-
-std::once_flag value_type_init_flag = {};
-
 type value_type(const type& tensor_type)
 {
-    std::call_once(value_type_init_flag, init_value_type);
+    pattern::variable<type> value_type;
 
-    return value_type_(tensor_type);
+    auto m = pattern::make_matcher<type, type>()
+                 .case_(tensor_t(value_type),
+                        [&]
+                        {
+                            return value_type.get();
+                        })
+                 .case_(sparse_tensor_t(value_type),
+                        [&]
+                        {
+                            return value_type.get();
+                        })
+                 .case_(array_t(value_type), [&]
+                        {
+                            return value_type.get();
+                        });
+
+    return pattern::match(tensor_type, m);
 }
-
 
 qbb::util::multi_method<type(const qbb::util::virtual_<expression>&)> infer_type = {};
 
@@ -242,20 +238,20 @@ type infer_type_if_expr(const if_expr&)
 type infer_type_subscription_expr(const subscription_expr& expr)
 {
     type tensor_type = typeof_(expr.indexed_expr());
-    
+
     bool has_abstract_index = false;
-    
+
     for (const auto& index : expr.indices())
     {
         auto index_type = typeof_(index);
-        
+
         if (index_type == types::index())
         {
             has_abstract_index = true;
             break;
         }
     }
-    
+
     if (has_abstract_index)
     {
         return tensor_type;
@@ -289,12 +285,12 @@ type infer_type_integer_literal_expr(const integer_literal_expr&)
 type infer_type_intrinsic_function_expr(const intrinsic_function_expr& expr)
 {
     std::vector<type> arg_types;
-    
-    for(const auto& arg : expr.args())
+
+    for (const auto& arg : expr.args())
     {
         arg_types.push_back(typeof_(arg));
     }
-    
+
     return lookup_intrinsic_result_type(expr.name(), arg_types);
 }
 
@@ -328,6 +324,13 @@ type infer_type_kronecker_delta_expr(const kronecker_delta_expr& QBB_UNUSED(expr
     return types::integer();
 }
 
+type infer_type_member_access_expr(const member_access_expr& expr)
+{
+    auto obj_type = typeof_(expr.object()).as<types::struct_>();
+
+    return obj_type[expr.member_name()];
+}
+
 void init_infer_type()
 {
     infer_type.add_specialization(infer_type_binary_op_expr);
@@ -348,10 +351,10 @@ void init_infer_type()
     infer_type.add_specialization(infer_type_local_variable_def_expr);
     infer_type.add_specialization(infer_type_construct_expr);
     infer_type.add_specialization(infer_type_kronecker_delta_expr);
+    infer_type.add_specialization(infer_type_member_access_expr);
 }
 
 std::once_flag infer_type_init_flag = {};
-
 }
 
 type typeof_(const expression& expr)
@@ -363,11 +366,11 @@ type typeof_(const expression& expr)
     else
     {
         std::call_once(infer_type_init_flag, init_infer_type);
-        
+
         type infered_type = infer_type(expr);
 
         expr.annotations().add("type", annotation(infered_type));
-        
+
         return infered_type;
     }
 }

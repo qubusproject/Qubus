@@ -5,6 +5,7 @@
 #include <qbb/qubus/plan.hpp>
 
 #include <qbb/qubus/lower_top_level_sums.hpp>
+#include <qbb/qubus/sparse_patterns.hpp>
 #include <qbb/qubus/lower_abstract_indices.hpp>
 #include <qbb/qubus/loop_optimizer.hpp>
 #include <qbb/qubus/make_implicit_conversions_explicit.hpp>
@@ -86,9 +87,10 @@ public:
                 build_object_metadata(*arg, *addr_space_, *abi_, exec_stack_, used_mem_blocks));
         }
 
-        return hpx::async([body, args, used_mem_blocks]()
+        return hpx::async([body, args, used_mem_blocks, this]()
                           {
                               body(args.data());
+                              exec_stack_.clear();
                           });
     }
 
@@ -257,11 +259,13 @@ plan runtime::compile(function_declaration decl)
 
     decl = fold_kronecker_deltas(decl);
 
+    decl = optimize_sparse_patterns(decl);
+
     decl = lower_top_level_sums(decl);
 
-    decl = optimize_loops(decl);
-
     decl = lower_abstract_indices(decl);
+
+    decl = optimize_loops(decl);
 
     decl = make_implicit_conversions_explicit(decl);
 

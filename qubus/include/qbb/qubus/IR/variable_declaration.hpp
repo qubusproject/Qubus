@@ -27,6 +27,7 @@ enum class variable_intent
 class variable_declaration
 {
 public:
+    variable_declaration() = default;
     explicit variable_declaration(type var_type_, variable_intent intent_ = variable_intent::generic);
     
     const type& var_type() const;
