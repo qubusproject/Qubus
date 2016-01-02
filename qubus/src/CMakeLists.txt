@@ -17,7 +17,7 @@ endif()
 if(LLVM_HAS_INTEL_JITEVENTS)
     set(REQ_LLVM_TARGETS IntelJITEvents mcjit analysis ipo vectorize native)
 else()
-    set(REQ_LLVM_TARGETS mcjit ipa ipo vectorize native)
+    set(REQ_LLVM_TARGETS mcjit analysis ipo vectorize native)
 endif()
 
 llvm_map_components_to_libnames(REQ_LLVM_LIBRARIES ${REQ_LLVM_TARGETS})
