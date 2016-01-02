@@ -2,7 +2,7 @@ find_package(Boost 1.55.0 COMPONENTS log thread system REQUIRED)
 
 find_package(CUDA 7.0)
 
-find_package(LLVM 3.6.2 EXACT REQUIRED)
+find_package(LLVM 3.8.0 EXACT REQUIRED)
 
 message(STATUS "found LLVM version: ${LLVM_PACKAGE_VERSION}")
 
@@ -15,9 +15,9 @@ else()
 endif()
 
 if(LLVM_HAS_INTEL_JITEVENTS)
-    set(REQ_LLVM_TARGETS IntelJITEvents mcjit ipa ipo vectorize native)
+    set(REQ_LLVM_TARGETS IntelJITEvents mcjit analysis ipo vectorize native)
 else()
-    set(REQ_LLVM_TARGETS mcjit ipa ipo vectorize native)
+    set(REQ_LLVM_TARGETS mcjit analysis ipo vectorize native)
 endif()
 
 llvm_map_components_to_libnames(REQ_LLVM_LIBRARIES ${REQ_LLVM_TARGETS})
