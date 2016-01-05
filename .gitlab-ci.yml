@@ -1,5 +1,6 @@
 Clang (Release):
   script:
+  - "sudo chown -R `whoami`: ."
   - git submodule update --init
   - ls -la
   - export CC=clang
@@ -14,6 +15,7 @@ Clang (Release):
   - cuda
 GCC (Release):
   script:
+  - "sudo chown -R `whoami`: ."
   - git submodule update --init
   - ls -la
   - export CC=gcc
@@ -28,6 +30,7 @@ GCC (Release):
   - cuda
 Build documentation:
   script:
+  - "sudo chown -R `whoami`: ."
   - git submodule update --init
   - ls -la
   - mkdir build
