@@ -94,6 +94,7 @@ int hpx_main(int argc, char** argv)
             bench_data << result << "   ";
         }
 
+#if 0 // This portion of the benchmark does not work for arbitrary matrix sizes.
         {
             std::vector<double> A(N * N);
             std::vector<double> B(N * N);
@@ -171,6 +172,7 @@ int hpx_main(int argc, char** argv)
 
             bench_data << result << "   ";
         }
+#endif
 
         {
             std::vector<double> A(N * N);

@@ -26,6 +26,12 @@ target_link_libraries(usan INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILE
 add_library(wall INTERFACE)
 target_compile_options(wall INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-Wall -Wextra>)
 
+option(QUBUS_ENABLE_ADDRESS_SANITIZER "Enable the address sanitizer" OFF)
+
+if(QUBUS_ENABLE_ADDRESS_SANITIZER)
+    add_compile_options(-fsanitize=address)
+endif()
+
 install(TARGETS asan tsan usan wall EXPORT qubus-targets)
 
 include(GenerateExportHeader)
