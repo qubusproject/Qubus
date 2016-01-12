@@ -14,7 +14,7 @@
 #include <qbb/qubus/kronecker_delta_folding_pass.hpp>
 
 #include <qbb/qubus/metadata_builder.hpp>
-#include <qbb/qubus/backends/execution_stack.hpp>
+#include <qbb/qubus/jit/execution_stack.hpp>
 
 #include <qbb/qubus/logging.hpp>
 
@@ -231,7 +231,12 @@ runtime::runtime()
 
     auto init_cpu_backend = cpu_plugin_.get<backend*(const abi_info*)>("init_cpu_backend");
 
-    cpu_backend_ = init_cpu_backend(&abi_info_);
+    cpu_backend_ = dynamic_cast<host_backend*>(init_cpu_backend(&abi_info_));
+
+    if (!cpu_backend_)
+    {
+        throw 0;
+    }
 
     plan_repository_ =
         util::make_unique<global_plan_repository>(cpu_backend_->address_space(), abi_info_);
@@ -276,7 +281,9 @@ plan runtime::compile(function_declaration decl)
 
 plan runtime::register_user_defined_plan(user_defined_plan_t plan)
 {
-    return plan_repository_->add_user_defined_plan(std::move(plan));
+    auto cpu_plan = cpu_backend_->register_function_as_plan(plan.body, plan.intents);
+
+    return plan_repository_->add_plan(cpu_backend_, cpu_plan);
 }
 
 void runtime::execute(plan p, execution_context ctx)
