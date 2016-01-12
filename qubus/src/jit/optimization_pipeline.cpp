@@ -6,6 +6,8 @@
 #include <llvm/Analysis/ScopedNoAliasAA.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/IPO.h>
+#include <llvm/Transforms/IPO/ForceFunctionAttrs.h>
+#include <llvm/Transforms/IPO/InferFunctionAttrs.h>
 #include <llvm/Transforms/Vectorize.h>
 
 namespace qbb
@@ -37,6 +39,8 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
 {
     using namespace llvm;
 
+    manager.add(createForceFunctionAttrsLegacyPass());
+
     if (!optimize)
         return;
 
@@ -45,8 +49,12 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
     manager.add(createTypeBasedAAWrapperPass());
     manager.add(createScopedNoAliasAAWrapperPass());
 
+    manager.add(createInferFunctionAttrsLegacyPass());
+
     manager.add(createIPSCCPPass());          // IP SCCP
     manager.add(createGlobalOptimizerPass()); // Optimize out global vars
+
+    manager.add(createPromoteMemoryToRegisterPass());
 
     manager.add(createDeadArgEliminationPass()); // Dead argument elimination
 
@@ -56,7 +64,7 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
 
     manager.add(createFunctionInliningPass());
 
-    manager.add(createFunctionAttrsPass()); // Set readonly/readnone attrs
+    manager.add(createPostOrderFunctionAttrsPass());
 
     manager.add(createArgumentPromotionPass()); // Scalarize uninlined fn args
 
@@ -80,6 +88,8 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
     manager.add(createIndVarSimplifyPass()); // Canonicalize indvars
     // manager.add(createLoopIdiomPass());             // Recognize idioms like memset.
     manager.add(createLoopDeletionPass()); // Delete dead loops
+
+    // manager.add(createLoopInterchangePass());
 
     manager.add(createMergedLoadStoreMotionPass());
     manager.add(createGVNPass(false));
@@ -106,9 +116,13 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
 
     if (vectorize)
     {
-        manager.add(createLoopRotatePass());
+        manager.add(createLoopRotatePass(-1));
+
+        //manager.add(createLoopDistributePass());
 
         manager.add(createLoopVectorizePass(true, true));
+
+        manager.add(createLoopLoadEliminationPass());
 
         manager.add(createInstructionCombiningPass());
 

@@ -88,7 +88,7 @@ llvm_environment::llvm_environment()
     llvm::FastMathFlags fast_math_flags;
     fast_math_flags.setUnsafeAlgebra();
 
-    builder_.SetFastMathFlags(fast_math_flags);
+    builder_.setFastMathFlags(fast_math_flags);
 
     global_alias_domain_ = md_builder_.createAliasScopeDomain("qubus.alias_domain");
     get_alias_scope(access_path());
