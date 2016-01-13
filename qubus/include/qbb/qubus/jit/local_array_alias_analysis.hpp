@@ -1,14 +1,14 @@
-#ifndef QBB_QUBUS_LOCAL_ALIAS_ANALYSIS_HPP
-#define QBB_QUBUS_LOCAL_ALIAS_ANALYSIS_HPP
+#ifndef QBB_QUBUS_JIT_LOCAL_ALIAS_ANALYSIS_HPP
+#define QBB_QUBUS_JIT_LOCAL_ALIAS_ANALYSIS_HPP
 
 #include <hpx/config.hpp>
 
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/variable_declaration.hpp>
 
-#include <qbb/qubus/backends/reference.hpp>
-#include <qbb/qubus/backends/alias_info.hpp>
-#include <qbb/qubus/backends/llvm_environment.hpp>
+#include <qbb/qubus/jit/reference.hpp>
+#include <qbb/qubus/jit/alias_info.hpp>
+#include <qbb/qubus/jit/llvm_environment.hpp>
 
 #include <qbb/util/handle.hpp>
 #include <qbb/util/make_unique.hpp>
@@ -21,7 +21,8 @@ namespace qbb
 {
 namespace qubus
 {
-
+namespace jit
+{
 class index_expr
 {
 public:
@@ -60,11 +61,13 @@ class local_array_access_alias_analysis_impl;
 class local_array_access_alias_analysis
 {
 public:
-    local_array_access_alias_analysis(util::handle token_, llvm_environment& env_);
+    local_array_access_alias_analysis(util::handle token_, llvm_environment &env_);
+
     ~local_array_access_alias_analysis();
 
-    local_array_access_alias_analysis(const local_array_access_alias_analysis&) = delete;
-    local_array_access_alias_analysis& operator=(const local_array_access_alias_analysis&) = delete;
+    local_array_access_alias_analysis(const local_array_access_alias_analysis &) = delete;
+
+    local_array_access_alias_analysis &operator=(const local_array_access_alias_analysis &) = delete;
 
     alias_info query(variable_declaration accessed_array, std::vector<expression> indices,
                      reference data_ref);
@@ -72,6 +75,7 @@ public:
 private:
     std::unique_ptr<local_array_access_alias_analysis_impl> impl_;
 };
+}
 }
 }
 

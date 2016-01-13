@@ -6,7 +6,7 @@
 #include <qbb/qubus/struct.hpp>
 #include <qbb/qubus/object.hpp>
 
-#include <qbb/qubus/backends/execution_stack.hpp>
+#include <qbb/qubus/jit/execution_stack.hpp>
 #include <qbb/qubus/abi_info.hpp>
 #include <qbb/qubus/local_address_space.hpp>
 

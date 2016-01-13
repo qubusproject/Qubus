@@ -2,34 +2,13 @@ find_package(Boost 1.55.0 COMPONENTS log thread system REQUIRED)
 
 find_package(CUDA 7.0)
 
-find_package(LLVM 3.8.0 EXACT REQUIRED)
-
-message(STATUS "found LLVM version: ${LLVM_PACKAGE_VERSION}")
-
-list(FIND LLVM_AVAILABLE_LIBS LLVMIntelJITEvents LLVMIntelJITEvents_FIND_RESULT)
-
-if(${LLVMIntelJITEvents_FIND_RESULT} LESS 0)
-    set(LLVM_HAS_INTEL_JITEVENTS FALSE)
-else()
-    set(LLVM_HAS_INTEL_JITEVENTS TRUE)
-endif()
-
-if(LLVM_HAS_INTEL_JITEVENTS)
-    set(REQ_LLVM_TARGETS IntelJITEvents mcjit analysis ipo vectorize native)
-else()
-    set(REQ_LLVM_TARGETS mcjit analysis ipo vectorize native)
-endif()
-
-llvm_map_components_to_libnames(REQ_LLVM_LIBRARIES ${REQ_LLVM_TARGETS})
-
-message(STATUS "LLVM libraries: ${REQ_LLVM_LIBRARIES}")
-
 find_package(HPX 0.9.9 REQUIRED)
 
 set(QUBUS_BUILD_PREFIX ${CMAKE_CURRENT_BINARY_DIR})
 
 add_subdirectory(IR)
 add_subdirectory(isl)
+add_subdirectory(jit)
 add_subdirectory(backends)
 
 set(qubus_header_file_names allocator.hpp lower_abstract_indices.hpp
@@ -53,7 +32,7 @@ set(qubus_source_files allocator.cpp lower_abstract_indices.cpp
 
 add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 
-target_include_directories(qubus PUBLIC ${HPX_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include> ${LLVM_INCLUDE_DIRS})
+target_include_directories(qubus PUBLIC ${HPX_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 target_include_directories(qubus PUBLIC $<BUILD_INTERFACE:${QBB_EXTERNAL_DIR}/boost/dll/include>)
 target_compile_options(qubus PUBLIC -std=c++14)
 target_link_libraries(qubus PUBLIC qubus_ir qubus_isl qbb_util hpx)

@@ -14,6 +14,7 @@
 #include <qbb/qubus/user_defined_plan.hpp>
 
 #include <qbb/qubus/backend_registry.hpp>
+#include <qbb/qubus/host_backend.hpp>
 #include <qbb/qubus/object_factory.hpp>
 
 #include <boost/dll.hpp>
@@ -52,11 +53,16 @@ public:
     
     void execute(plan p, execution_context ctx);
     hpx::shared_future<void> when_ready(const object& obj);
+
+    const abi_info& get_abi_info()
+    {
+        return abi_info_;
+    }
 private:
     abi_info abi_info_;
     boost::dll::shared_library cpu_plugin_;
     
-    backend* cpu_backend_;
+    host_backend* cpu_backend_;
     
     object_factory object_factory_;
     

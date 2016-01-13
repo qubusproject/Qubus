@@ -1,8 +1,6 @@
 #ifndef QBB_QUBUS_LLVM_ENVIRONMENT_HPP
 #define QBB_QUBUS_LLVM_ENVIRONMENT_HPP
 
-//#include <qbb/qubus/backends/llvm/intrinsic_lookup_table.hpp>
-
 #include <qbb/qubus/IR/type.hpp>
 #include <qbb/qubus/IR/expression.hpp>
 
@@ -24,7 +22,8 @@ namespace qbb
 {
 namespace qubus
 {
-
+namespace jit
+{
 class access_path
 {
 public:
@@ -40,7 +39,7 @@ public:
     {
         std::string result = root_.str();
 
-        for (const auto& component : components_)
+        for (const auto &component : components_)
         {
             result += ".";
             result += component;
@@ -49,7 +48,7 @@ public:
         return result;
     }
 
-    access_path& member_access(std::string component)
+    access_path &member_access(std::string component)
     {
         components_.push_back(component);
 
@@ -73,60 +72,68 @@ class llvm_environment
 public:
     llvm_environment();
 
-    llvm::IRBuilder<>& builder();
+    llvm::IRBuilder<> &builder();
 
-    llvm::MDBuilder& md_builder();
+    llvm::MDBuilder &md_builder();
 
-    llvm::Module& module();
+    llvm::Module &module();
 
-    const llvm::Module& module() const;
+    const llvm::Module &module() const;
 
-    llvm::Type* map_qubus_type(const type& t) const;
+    llvm::Type *map_qubus_type(const type &t) const;
 
-    llvm::MDNode* get_alias_scope(const access_path& path) const;
-    llvm::MDNode* get_noalias_set(const access_path& path) const;
+    llvm::MDNode *get_alias_scope(const access_path &path) const;
 
-    bool bind_symbol(const std::string& symbol, llvm::Value* value);
+    llvm::MDNode *get_noalias_set(const access_path &path) const;
 
-    bool unbind_symbol(const std::string& symbol);
+    bool bind_symbol(const std::string &symbol, llvm::Value *value);
 
-    llvm::Value* lookup_symbol(const std::string& symbol) const;
+    bool unbind_symbol(const std::string &symbol);
 
-    llvm::Function* get_current_function() const;
-    void set_current_function(llvm::Function* func);
+    llvm::Value *lookup_symbol(const std::string &symbol) const;
 
-    llvm::Function* get_assume_align() const;
-    llvm::Function* get_alloc_scratch_mem() const;
-    llvm::Function* get_dealloc_scratch_mem() const;
+    llvm::Function *get_current_function() const;
+
+    void set_current_function(llvm::Function *func);
+
+    llvm::Function *get_assume_align() const;
+
+    llvm::Function *get_alloc_scratch_mem() const;
+
+    llvm::Function *get_dealloc_scratch_mem() const;
 
     // llvm::Value* lookup_intrinsic_function(const std::string& name,
     //                                       const std::vector<type>& arg_types)const;
 
     std::unique_ptr<llvm::Module> detach_module();
+
 private:
     mutable llvm::IRBuilder<> builder_;
     mutable llvm::MDBuilder md_builder_;
 
     std::unique_ptr<llvm::Module> the_module_;
 
-    llvm::MDNode* global_alias_domain_;
+    llvm::MDNode *global_alias_domain_;
 
-    llvm::Function* current_function_;
+    llvm::Function *current_function_;
 
-    mutable std::unordered_map<type, llvm::Type*> type_map_;
-    mutable std::map<std::string, llvm::MDNode*> alias_scope_table_;
-    std::map<std::string, llvm::Value*> symbol_table_;
+    mutable std::unordered_map<type, llvm::Type *> type_map_;
+    mutable std::map<std::string, llvm::MDNode *> alias_scope_table_;
+    std::map<std::string, llvm::Value *> symbol_table_;
 
-    llvm::Function* assume_align_;
-    llvm::Function* alloc_scratch_mem_;
-    llvm::Function* dealloc_scratch_mem_;
+    llvm::Function *assume_align_;
+    llvm::Function *alloc_scratch_mem_;
+    llvm::Function *dealloc_scratch_mem_;
 
     void init_assume_align();
+
     void init_alloc_scratch_mem();
+
     void init_dealloc_scratch_mem();
 
     // intrinsic_lookup_table instrinsic_lookup_table_;
 };
+}
 }
 }
 
