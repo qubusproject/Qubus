@@ -24,5 +24,5 @@ add_library(qubus_jit SHARED compiler.cpp compile.cpp llvm_environment.cpp local
             loops.cpp control_flow.cpp operators.cpp type_conversion.cpp array_access.cpp optimization_pipeline.cpp compilation_context.cpp reference.cpp)
 target_include_directories(qubus_jit PUBLIC ${Boost_LIBRARY_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}> ${LLVM_INCLUDE_DIRS})
 target_compile_options(qubus_jit PUBLIC -std=c++14)
-target_compile_definitions(qubus_jit PRIVATE ${LLVM_DEFINITIONS})
-target_link_libraries(qubus_jit PUBLIC ${Boost_LIBRARIES} qubus_ir qbb_util wall PRIVATE ${REQ_LLVM_LIBRARIES})
+target_compile_definitions(qubus_jit PUBLIC ${LLVM_DEFINITIONS})
+target_link_libraries(qubus_jit PUBLIC ${Boost_LIBRARIES} qubus_ir qbb_util wall ${REQ_LLVM_LIBRARIES})
