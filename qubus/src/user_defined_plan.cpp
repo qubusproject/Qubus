@@ -1,6 +1,6 @@
 #include <qbb/qubus/user_defined_plan.hpp>
 
-#include <qbb/qubus/runtime.hpp>
+#include <qbb/qubus/local_runtime.hpp>
 
 #include <utility>
 

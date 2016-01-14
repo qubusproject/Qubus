@@ -8,7 +8,7 @@
 #include <qbb/qubus/object_factory.hpp>
 #include <qbb/qubus/assembly_tensor.hpp>
 
-#include <qbb/qubus/runtime.hpp>
+#include <qbb/qubus/local_runtime.hpp>
 
 #include <qbb/util/integers.hpp>
 #include <qbb/util/index_space.hpp>

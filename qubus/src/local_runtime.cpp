@@ -1,6 +1,6 @@
 #include <hpx/config.hpp>
 
-#include <qbb/qubus/runtime.hpp>
+#include <qbb/qubus/local_runtime.hpp>
 
 #include <qbb/qubus/plan.hpp>
 
@@ -210,7 +210,7 @@ hpx::lcos::future<void> runtime_executor::execute_plan(const plan& executed_plan
     return plan->execute(std::move(ctx));
 }
 
-runtime::runtime()
+local_runtime::local_runtime()
 : cpu_plugin_(util::get_prefix("qubus") / "qubus/backends/libqubus_cpu_backend.so")
 {
     init_logging();
@@ -249,16 +249,16 @@ runtime::runtime()
     scheduler_ = util::make_unique<greedy_scheduler>(*runtime_exec_);
 }
 
-runtime::~runtime()
+local_runtime::~local_runtime()
 {
 }
 
-object_factory& runtime::get_object_factory()
+object_factory& local_runtime::get_object_factory()
 {
     return object_factory_;
 }
 
-plan runtime::compile(function_declaration decl)
+plan local_runtime::compile(function_declaration decl)
 {
     decl = expand_multi_indices(decl);
 
@@ -279,26 +279,26 @@ plan runtime::compile(function_declaration decl)
     return plan_repository_->add_plan(cpu_backend_, compiler.compile_plan(decl));
 }
 
-plan runtime::register_user_defined_plan(user_defined_plan_t plan)
+plan local_runtime::register_user_defined_plan(user_defined_plan_t plan)
 {
     auto cpu_plan = cpu_backend_->register_function_as_plan(plan.body, plan.intents);
 
     return plan_repository_->add_plan(cpu_backend_, cpu_plan);
 }
 
-void runtime::execute(plan p, execution_context ctx)
+void local_runtime::execute(plan p, execution_context ctx)
 {
     scheduler_->schedule(p, std::move(ctx));
 }
 
-hpx::shared_future<void> runtime::when_ready(const object& obj)
+hpx::shared_future<void> local_runtime::when_ready(const object& obj)
 {
     return scheduler_->when_ready(obj);
 }
 
 namespace
 {
-std::unique_ptr<runtime> qubus_runtime = {};
+std::unique_ptr<local_runtime> qubus_runtime = {};
 std::once_flag qubus_runtime_init_flag;
 }
 
@@ -306,11 +306,11 @@ void init(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
 {
     std::call_once(qubus_runtime_init_flag, []
                    {
-                       qubus_runtime = util::make_unique<runtime>();
+                       qubus_runtime = util::make_unique<local_runtime>();
                    });
 }
 
-runtime& get_runtime()
+local_runtime& get_runtime()
 {
     // FIXME: Is this thread-safe ?
     if (!qubus_runtime)

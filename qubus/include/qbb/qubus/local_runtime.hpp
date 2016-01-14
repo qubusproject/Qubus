@@ -40,11 +40,11 @@ private:
     global_plan_repository* plan_repository_;
 };
 
-class runtime
+class local_runtime
 {
-public: 
-    runtime();
-    ~runtime();
+public:
+    local_runtime();
+    ~local_runtime();
     
     object_factory& get_object_factory();
     
@@ -75,7 +75,7 @@ private:
 };
 
 void init(int argc, char** argv);
-runtime& get_runtime();
+local_runtime& get_runtime();
 
 template<typename... Args>
 void execute(const plan& p, Args&&... args)
