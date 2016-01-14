@@ -1,7 +1,7 @@
 #ifndef QBB_QUBUS_TENSOR_VAR_HPP
 #define QBB_QUBUS_TENSOR_VAR_HPP
 
-#include <qbb/qubus/runtime.hpp>
+#include "local_runtime.hpp"
 #include <qbb/qubus/local_tensor.hpp>
 
 #include <qbb/util/handle.hpp>

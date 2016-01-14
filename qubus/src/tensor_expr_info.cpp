@@ -4,7 +4,7 @@
 
 #include <qbb/qubus/IR/qir.hpp>
 
-#include <qbb/qubus/runtime.hpp>
+#include <qbb/qubus/local_runtime.hpp>
 
 #include <boost/range/adaptor/reversed.hpp>
 
