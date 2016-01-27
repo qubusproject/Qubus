@@ -58,6 +58,8 @@ public:
 private:
     static auto tensor_to_expr(const tensor<T, Rank>& var)
     {
+        // TODO: Generalize this.
+
         index i("i");
         index j("j");
         
