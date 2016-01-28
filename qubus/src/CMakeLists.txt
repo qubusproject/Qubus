@@ -2,7 +2,7 @@ find_package(Boost 1.55.0 COMPONENTS log thread system REQUIRED)
 
 find_package(CUDA 7.0)
 
-find_package(HPX 0.9.9 REQUIRED)
+find_package(HPX 0.9.12 REQUIRED)
 
 set(QUBUS_BUILD_PREFIX ${CMAKE_CURRENT_BINARY_DIR})
 
