@@ -4,6 +4,7 @@
 #include <qbb/qubus/IR/function_declaration.hpp>
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/expression_traits.hpp>
+#include <qbb/util/unused.hpp>
 
 #include <vector>
 
@@ -15,6 +16,7 @@ namespace qubus
 class spawn_expr
 {
 public:
+    spawn_expr() = default;
     spawn_expr(function_declaration spawned_plan_, std::vector<expression> arguments_);
     
     const function_declaration& spawned_plan() const;
@@ -25,6 +27,13 @@ public:
     
     annotation_map& annotations() const;
     annotation_map& annotations();
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & spawned_plan_;
+        ar & arguments_;
+    }
 private:   
     function_declaration spawned_plan_;
     std::vector<expression> arguments_;

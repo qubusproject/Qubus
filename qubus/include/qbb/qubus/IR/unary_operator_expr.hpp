@@ -3,6 +3,7 @@
 
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/expression_traits.hpp>
+#include <qbb/util/unused.hpp>
 
 #include <vector>
 
@@ -12,13 +13,15 @@ namespace qubus
 {
 
 enum class unary_op_tag
-{ plus,
+{ nop,
+  plus,
   negate,
   logical_not };
 
 class unary_operator_expr
 {
 public:
+    unary_operator_expr();
     unary_operator_expr(unary_op_tag tag_, expression arg_);
 
     unary_op_tag tag() const;
@@ -30,6 +33,13 @@ public:
     
     annotation_map& annotations() const;
     annotation_map& annotations();
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & tag_;
+        ar & arg_;
+    }
 private:
     unary_op_tag tag_;
     expression arg_;

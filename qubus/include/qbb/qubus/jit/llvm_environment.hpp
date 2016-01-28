@@ -1,6 +1,8 @@
 #ifndef QBB_QUBUS_LLVM_ENVIRONMENT_HPP
 #define QBB_QUBUS_LLVM_ENVIRONMENT_HPP
 
+#include <hpx/config.hpp>
+
 #include <qbb/qubus/IR/type.hpp>
 #include <qbb/qubus/IR/expression.hpp>
 

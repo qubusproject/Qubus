@@ -1,6 +1,8 @@
 #ifndef QBB_QUBUS_INTRINSIC_FUNCTION_TABLE_HPP
 #define QBB_QUBUS_INTRINSIC_FUNCTION_TABLE_HPP
 
+#include <hpx/config.hpp>
+
 #include <qbb/qubus/IR/type.hpp>
 
 #include <string>

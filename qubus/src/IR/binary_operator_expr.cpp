@@ -9,6 +9,11 @@ namespace qbb
 namespace qubus
 {
 
+binary_operator_expr::binary_operator_expr()
+: tag_(binary_op_tag::nop)
+{
+}
+
 binary_operator_expr::binary_operator_expr(binary_op_tag tag_, expression left_, expression right_)
 : tag_{tag_}, left_{std::move(left_)}, right_{std::move(right_)}
 {

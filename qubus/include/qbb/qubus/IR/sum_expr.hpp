@@ -4,6 +4,10 @@
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/variable_declaration.hpp>
 #include <qbb/qubus/IR/expression_traits.hpp>
+#include <qbb/util/unused.hpp>
+
+#include <hpx/runtime/serialization/vector.hpp>
+#include <qbb/util/hpx/serialization/optional.hpp>
 
 #include <boost/optional.hpp>
 
@@ -17,6 +21,7 @@ namespace qubus
 class sum_expr
 {
 public:
+    sum_expr() = default;
     sum_expr(variable_declaration contraction_index_, expression body_);
     sum_expr(std::vector<variable_declaration> contraction_indices_, expression body_);
     sum_expr(std::vector<variable_declaration> contraction_indices_, variable_declaration alias_, expression body_);
@@ -31,6 +36,14 @@ public:
     
     annotation_map& annotations() const;
     annotation_map& annotations();
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & body_;
+        ar & contraction_indices_;
+        ar & alias_;
+    }
 private:
     expression body_;
     std::vector<variable_declaration> contraction_indices_;

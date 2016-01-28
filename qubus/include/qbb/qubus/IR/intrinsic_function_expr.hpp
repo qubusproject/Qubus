@@ -3,6 +3,10 @@
 
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/expression_traits.hpp>
+#include <qbb/util/unused.hpp>
+
+#include <hpx/runtime/serialization/string.hpp>
+#include <hpx/runtime/serialization/vector.hpp>
 
 #include <string>
 #include <vector>
@@ -15,6 +19,7 @@ namespace qubus
 class intrinsic_function_expr
 {
 public:
+    intrinsic_function_expr() = default;
     intrinsic_function_expr(std::string name_, std::vector<expression> args_);
 
     const std::string& name() const;
@@ -26,6 +31,13 @@ public:
     
     annotation_map& annotations() const;
     annotation_map& annotations();
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & name_;
+        ar & args_;
+    }
 private:
     std::string name_;
     std::vector<expression> args_;

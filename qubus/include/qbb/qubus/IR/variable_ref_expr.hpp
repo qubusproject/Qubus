@@ -6,6 +6,7 @@
 #include <qbb/qubus/IR/expression_traits.hpp>
 
 #include <qbb/util/hash.hpp>
+#include <qbb/util/unused.hpp>
 
 #include <memory>
 #include <vector>
@@ -19,6 +20,7 @@ namespace qubus
 class variable_ref_expr
 {
 public:
+    variable_ref_expr() = default;
     explicit variable_ref_expr(variable_declaration declaration_);
     
     const variable_declaration& declaration() const;
@@ -28,6 +30,12 @@ public:
     
     annotation_map& annotations() const;
     annotation_map& annotations();
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & declaration_;
+    }
 private:
     variable_declaration declaration_;
     

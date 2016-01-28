@@ -4,6 +4,9 @@
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/variable_declaration.hpp>
 #include <qbb/qubus/IR/expression_traits.hpp>
+#include <qbb/util/unused.hpp>
+
+#include <qbb/util/hpx/serialization/optional.hpp>
 
 #include <boost/optional.hpp>
 
@@ -15,6 +18,7 @@ namespace qubus
 class if_expr
 {
 public:
+    if_expr() = default;
     if_expr(expression condition_, expression then_branch_);
     if_expr(expression condition_, expression then_branch_, expression else_branch_);
 
@@ -29,6 +33,13 @@ public:
     annotation_map& annotations() const;
     annotation_map& annotations();
 
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & condition_;
+        ar & then_branch_;
+        ar & else_branch_;
+    }
 private:
     expression condition_;
     expression then_branch_;

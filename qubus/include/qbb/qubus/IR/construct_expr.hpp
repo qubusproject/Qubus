@@ -4,6 +4,7 @@
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/expression_traits.hpp>
 #include <qbb/qubus/IR/type.hpp>
+#include <qbb/util/unused.hpp>
 
 #include <vector>
 
@@ -15,6 +16,7 @@ namespace qubus
 class construct_expr
 {
 public:
+    construct_expr() = default;
     construct_expr(type result_type_, std::vector<expression> parameters_);
 
     const type& result_type() const;
@@ -26,6 +28,13 @@ public:
 
     annotation_map& annotations() const;
     annotation_map& annotations();
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & result_type_;
+        ar & parameters_;
+    }
 private:
     type result_type_;
     std::vector<expression> parameters_;

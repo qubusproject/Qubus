@@ -6,6 +6,7 @@
 #include <qbb/qubus/IR/expression_traits.hpp>
 
 #include <qbb/util/integers.hpp>
+#include <qbb/util/unused.hpp>
 
 #include <vector>
 
@@ -18,6 +19,7 @@ class double_literal_expr
 {
     
 public:
+    double_literal_expr() = default;
     explicit double_literal_expr(double value_);
     
     double value() const;
@@ -27,6 +29,12 @@ public:
     
     annotation_map& annotations() const;
     annotation_map& annotations();
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & value_;
+    }
 private:
     double value_;
     
@@ -45,6 +53,7 @@ class float_literal_expr
 {
     
 public:
+    float_literal_expr() = default;
     explicit float_literal_expr(float value_);
     
     float value() const;
@@ -54,6 +63,12 @@ public:
     
     annotation_map& annotations() const;
     annotation_map& annotations();
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & value_;
+    }
 private:
     float value_;
     
@@ -72,6 +87,7 @@ class integer_literal_expr
 {
     
 public:
+    integer_literal_expr() = default;
     explicit integer_literal_expr(qbb::util::index_t value_);
     
     qbb::util::index_t value() const;
@@ -81,6 +97,12 @@ public:
     
     annotation_map& annotations() const;
     annotation_map& annotations();
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & value_;
+    }
 private:
     qbb::util::index_t value_;
     

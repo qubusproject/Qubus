@@ -3,6 +3,7 @@
 
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/expression_traits.hpp>
+#include <qbb/util/unused.hpp>
 
 #include <vector>
 
@@ -12,7 +13,8 @@ namespace qubus
 {
 
 enum class binary_op_tag
-{ plus,
+{ nop,
+  plus,
   minus,
   multiplies,
   divides,
@@ -32,6 +34,7 @@ enum class binary_op_tag
 class binary_operator_expr
 {
 public:
+    binary_operator_expr();
     binary_operator_expr(binary_op_tag tag_, expression left_, expression right_);
 
     binary_op_tag tag() const;
@@ -44,6 +47,14 @@ public:
     
     annotation_map& annotations() const;
     annotation_map& annotations();
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & tag_;
+        ar & left_;
+        ar & right_;
+    }
 private:
     binary_op_tag tag_;
     expression left_;
