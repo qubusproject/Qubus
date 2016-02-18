@@ -1,3 +1,6 @@
 [submodule "external/boost/dll"]
 	path = external/boost/dll
 	url = https://github.com/apolukhin/Boost.DLL.git
+[submodule "external/nonius"]
+	path = external/nonius
+	url = https://github.com/rmartinho/nonius.git
