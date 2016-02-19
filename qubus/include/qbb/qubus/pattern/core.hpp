@@ -12,5 +12,6 @@
 #include <qbb/qubus/pattern/protect.hpp>
 #include <qbb/qubus/pattern/or.hpp>
 #include <qbb/qubus/pattern/control_flow.hpp>
+#include <qbb/qubus/pattern/tuple.hpp>
 
 #endif

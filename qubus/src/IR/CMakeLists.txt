@@ -43,7 +43,7 @@ add_library(qubus_ir SHARED ${qubus_pattern_header_files} ${qubus_ir_header_file
 
 target_include_directories(qubus_ir PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 target_compile_definitions(qubus_ir PUBLIC -DFUSION_MAX_VECTOR_SIZE=20)
-target_compile_options(qubus_ir PUBLIC -std=c++14)
+target_compile_features(qubus_ir PUBLIC cxx_generic_lambdas)
 target_link_libraries(qubus_ir PUBLIC qbb_util)
 
 set_property(TARGET qubus_ir PROPERTY VERSION ${QUBUS_VERSION})
