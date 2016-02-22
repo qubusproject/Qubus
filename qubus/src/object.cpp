@@ -9,10 +9,6 @@ basic_object::basic_object() : last_modification_(hpx::make_ready_future())
 {
 }
 
-basic_object::~basic_object()
-{
-}
-
 hpx::shared_future<void> basic_object::get_last_modification() const
 {
     return last_modification_;

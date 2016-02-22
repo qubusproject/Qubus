@@ -96,9 +96,8 @@ extern "C" QBB_QUBUS_EXPORT void qbb_qubus_cpurt_dealloc_scratch_mem(cpu_runtime
 class cpu_executor : public executor
 {
 public:
-    cpu_executor(cpu_plan_registry& plan_registry_, local_address_space& addr_space_,
-                 const abi_info& abi_)
-    : plan_registry_(&plan_registry_), addr_space_(&addr_space_), abi_(&abi_), exec_stack_(4 * 1024)
+    cpu_executor(cpu_plan_registry& plan_registry_, const abi_info& abi_)
+    : plan_registry_(&plan_registry_), abi_(&abi_), exec_stack_(4 * 1024)
     {
     }
 
@@ -128,7 +127,6 @@ public:
 
 private:
     cpu_plan_registry* plan_registry_;
-    local_address_space* addr_space_;
     const abi_info* abi_;
     execution_stack exec_stack_;
 };
@@ -140,7 +138,7 @@ public:
     : addr_space_(util::make_unique<local_address_space>(util::make_unique<cpu_allocator>())),
       obj_factory_(util::make_unique<cpu_object_factory>(addr_space_->get_allocator(), abi_)),
       compiler_(util::make_unique<cpu_compiler>(plan_registry_)),
-      executor_(util::make_unique<cpu_executor>(plan_registry_, *addr_space_, abi_))
+      executor_(util::make_unique<cpu_executor>(plan_registry_, abi_))
     {
         // use hwloc to obtain informations over all local CPUs
     }

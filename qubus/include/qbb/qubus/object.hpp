@@ -34,7 +34,7 @@ class basic_object : public object
 public:
     basic_object();
 
-    virtual ~basic_object();
+    virtual ~basic_object() = default;
 
     hpx::shared_future<void> get_last_modification() const;
 
