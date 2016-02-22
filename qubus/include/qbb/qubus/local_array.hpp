@@ -3,12 +3,14 @@
 
 #include <qbb/qubus/object.hpp>
 
+#include <qbb/qubus/memory_block.hpp>
+
 #include <qbb/qubus/IR/type.hpp>
 
-#include <qbb/util/handle.hpp>
 #include <qbb/util/integers.hpp>
 
 #include <vector>
+#include <utility>
 
 namespace qbb
 {
@@ -18,19 +20,21 @@ namespace qubus
 class local_array final : public basic_object
 {
 public:
-    explicit local_array(util::handle address_, type value_type_, std::vector<util::index_t> shape_)
-    : address_(address_), value_type_(value_type_), shape_(shape_)
+    explicit local_array(std::unique_ptr<memory_block> data_, type value_type_, std::vector<util::index_t> shape_)
+    : data_(std::move(data_)), value_type_(value_type_), shape_(shape_)
     {
     }
     
-    virtual ~local_array()
-    {
-        destruct();
-    }
+    virtual ~local_array() = default;
     
-    const util::handle& address() const
+    const memory_block& data() const
     {
-        return address_;
+        return *data_;
+    }
+
+    std::shared_ptr<memory_block> data_shared() const
+    {
+        return data_;
     }
     
     const type& value_type() const
@@ -63,7 +67,7 @@ public:
         return 1;
     }
 private:
-    util::handle address_;
+    std::shared_ptr<memory_block> data_;
     type value_type_;
     std::vector<util::index_t> shape_;
 };

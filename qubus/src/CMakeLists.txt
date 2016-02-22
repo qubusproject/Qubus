@@ -29,7 +29,7 @@ set(qubus_source_files allocator.cpp lower_abstract_indices.cpp
                        plan.cpp abi_info.cpp logging.cpp object_factory.cpp metadata_builder.cpp
                        make_implicit_conversions_explicit.cpp scheduler.cpp user_defined_plan.cpp object.cpp
                        tensor_expr_info.cpp multi_index_handling.cpp kronecker_delta_folding_pass.cpp sparse_patterns.cpp
-                       runtime.cpp)
+                       runtime.cpp computelet.cpp host_allocator.cpp)
 
 add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 

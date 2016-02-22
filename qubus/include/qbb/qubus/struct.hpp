@@ -24,10 +24,7 @@ public:
     {
     }
 
-    virtual ~struct_()
-    {
-        destruct();
-    }
+    virtual ~struct_() = default;
 
     const std::vector<std::unique_ptr<object>>& members() const
     {

@@ -5,15 +5,22 @@ namespace qbb
 namespace qubus
 {
 
-void basic_object::on_destruction(const object_predestructor_signal::slot_type& subscriber) const
+basic_object::basic_object() : last_modification_(hpx::make_ready_future())
 {
-    on_destruction_.connect(subscriber);
 }
 
-void basic_object::destruct() const
+basic_object::~basic_object()
 {
-    on_destruction_(*this);
 }
 
+hpx::shared_future<void> basic_object::get_last_modification() const
+{
+    return last_modification_;
+}
+
+void basic_object::record_modification(hpx::shared_future<void> modification)
+{
+    last_modification_ = modification;
+}
 }
 }

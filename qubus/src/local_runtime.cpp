@@ -66,69 +66,12 @@ private:
     plan handle_;
 };
 
-class user_defined_plan_executor
-{
-public:
-    user_defined_plan_executor(local_address_space& addr_space_, const abi_info& abi_)
-    : addr_space_(&addr_space_), abi_(&abi_), exec_stack_(1024)
-    {
-    }
-
-    hpx::lcos::future<void> execute_plan(const user_defined_plan_body_t& body,
-                                         const execution_context& ctx)
-    {
-        std::vector<void*> args;
-
-        std::vector<std::shared_ptr<memory_block>> used_mem_blocks;
-
-        for (const auto& arg : ctx.args())
-        {
-            args.push_back(
-                build_object_metadata(*arg, *addr_space_, *abi_, exec_stack_, used_mem_blocks));
-        }
-
-        return hpx::async([body, args, used_mem_blocks, this]()
-                          {
-                              body(args.data());
-                              exec_stack_.clear();
-                          });
-    }
-
-private:
-    local_address_space* addr_space_;
-    const abi_info* abi_;
-    execution_stack exec_stack_;
-};
-
-class user_defined_plan final : public runtime_plan
-{
-public:
-    explicit user_defined_plan(user_defined_plan_executor& executor_,
-                               user_defined_plan_body_t body_)
-    : executor_(&executor_), body_(std::move(body_))
-    {
-    }
-
-    hpx::lcos::future<void> execute(execution_context ctx) const override
-    {
-        return executor_->execute_plan(body_, ctx);
-    }
-
-private:
-    user_defined_plan_executor* executor_;
-    user_defined_plan_body_t body_;
-};
 }
 
 // TODO: Guard this with a mutex
 class global_plan_repository
 {
 public:
-    global_plan_repository(local_address_space& host_addr_space_, const abi_info& abi)
-    : udp_executor_(host_addr_space_, abi)
-    {
-    }
-
     plan add_plan(backend* backend, plan handle)
     {
         auto id = id_factory_.create();
@@ -136,15 +79,6 @@ public:
         plans_.emplace(id, util::make_unique<simple_plan>(backend, handle));
 
         return plan(id, handle.intents());
-    }
-
-    plan add_user_defined_plan(user_defined_plan_t p)
-    {
-        auto id = id_factory_.create();
-
-        plans_.emplace(id, util::make_unique<user_defined_plan>(udp_executor_, std::move(p.body)));
-
-        return plan(id, std::move(p.intents));
     }
 
     runtime_plan* lookup_plan(const plan& p) const
@@ -155,7 +89,6 @@ public:
 private:
     util::handle_factory id_factory_;
     std::unordered_map<util::handle, std::unique_ptr<runtime_plan>> plans_;
-    user_defined_plan_executor udp_executor_;
 };
 
 runtime_executor::runtime_executor(global_plan_repository& plan_repository_)
@@ -211,7 +144,8 @@ hpx::lcos::future<void> runtime_executor::execute_plan(const plan& executed_plan
 }
 
 local_runtime::local_runtime()
-: cpu_plugin_(util::get_prefix("qubus") / "qubus/backends/libqubus_cpu_backend.so")
+: cpu_plugin_(util::get_prefix("qubus") / "qubus/backends/libqubus_cpu_backend.so"),
+  object_factory_(abi_info_)
 {
     init_logging();
 
@@ -239,10 +173,7 @@ local_runtime::local_runtime()
     }
 
     plan_repository_ =
-        util::make_unique<global_plan_repository>(cpu_backend_->address_space(), abi_info_);
-
-    object_factory_.add_factory_and_addr_space(cpu_backend_->id(), cpu_backend_->local_factory(),
-                                               cpu_backend_->address_space());
+        util::make_unique<global_plan_repository>();
 
     runtime_exec_ = util::make_unique<runtime_executor>(*plan_repository_);
 

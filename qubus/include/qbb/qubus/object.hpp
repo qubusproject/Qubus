@@ -1,9 +1,9 @@
 #ifndef QBB_QUBUS_OBJECT_HPP
 #define QBB_QUBUS_OBJECT_HPP
 
-#include <qbb/qubus/IR/type.hpp>
+#include <hpx/include/lcos.hpp>
 
-#include <boost/signals2.hpp>
+#include <qbb/qubus/IR/type.hpp>
 
 #include <qbb/util/handle.hpp>
 
@@ -11,10 +11,6 @@ namespace qbb
 {
 namespace qubus
 {
-
-class object;
-    
-using object_predestructor_signal = boost::signals2::signal<void(const object&)>;
 
 class object
 {
@@ -28,20 +24,23 @@ public:
     virtual type object_type() const = 0;
     virtual util::handle id() const = 0;
     virtual unsigned long int tag() const = 0;
-    
-    virtual void on_destruction(const object_predestructor_signal::slot_type& subscriber) const = 0;
+
+    virtual hpx::shared_future<void> get_last_modification() const = 0;
+    virtual void record_modification(hpx::shared_future<void> f) = 0;
 };
 
 class basic_object : public object
 {
 public:
-    virtual ~basic_object() = default;
-    
-    void on_destruction(const object_predestructor_signal::slot_type& subscriber) const override final;
+    basic_object();
+
+    virtual ~basic_object();
+
+    hpx::shared_future<void> get_last_modification() const;
+
+    void record_modification(hpx::shared_future<void> modification);
 private:
-    mutable object_predestructor_signal on_destruction_;
-protected:
-    void destruct() const;
+    hpx::shared_future<void> last_modification_;
 };
     
 }

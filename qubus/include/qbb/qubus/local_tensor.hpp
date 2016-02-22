@@ -20,10 +20,7 @@ public:
     {
     }
     
-    virtual ~local_tensor()
-    {
-        destruct();
-    }
+    virtual ~local_tensor() = default;
 
     const local_array& data() const
     {

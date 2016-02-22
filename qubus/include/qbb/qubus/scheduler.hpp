@@ -41,16 +41,12 @@ class greedy_scheduler final : public base_scheduler
 {
 public:
     explicit greedy_scheduler(executor& exec_);
-    virtual ~greedy_scheduler();
+    virtual ~greedy_scheduler() = default;
     
     void schedule(const plan& p, execution_context ctx) override;
     hpx::shared_future<void> when_ready(const object& obj) override;
 private:
-    void purge_object_metadata(const object& obj);
-    
     executor* exec_;
-    std::unordered_map<util::handle, hpx::shared_future<void>> latest_write_requests_;
-    bool is_shutting_down_ = false;
 };
 
 }

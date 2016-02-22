@@ -1,3 +1,5 @@
+#include <hpx/config.hpp>
+
 #include <nonius/nonius.h++>
 
 #include <qbb/qubus/IR/qir.hpp>

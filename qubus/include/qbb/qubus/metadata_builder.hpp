@@ -25,20 +25,16 @@ struct array_metadata
     void* shape;
 };
 
-void* build_array_metadata(const local_array& array, const local_address_space& addr_space,
-                           const abi_info& abi, execution_stack& stack,
+void* build_array_metadata(const local_array& array, const abi_info& abi, execution_stack& stack,
                            std::vector<std::shared_ptr<memory_block>>& used_mem_blocks);
 
-void* build_tensor_metadata(const local_tensor& tensor, const local_address_space& addr_space,
-                            const abi_info& abi, execution_stack& stack,
+void* build_tensor_metadata(const local_tensor& tensor, const abi_info& abi, execution_stack& stack,
                             std::vector<std::shared_ptr<memory_block>>& used_mem_blocks);
 
-void* build_struct_metadata(const struct_& s, const local_address_space& addr_space,
-                            const abi_info& abi, execution_stack& stack,
+void* build_struct_metadata(const struct_& s, const abi_info& abi, execution_stack& stack,
                             std::vector<std::shared_ptr<memory_block>>& used_mem_blocks);
 
-void* build_object_metadata(const object& obj, const local_address_space& addr_space,
-                            const abi_info& abi, execution_stack& stack,
+void* build_object_metadata(const object& obj, const abi_info& abi, execution_stack& stack,
                             std::vector<std::shared_ptr<memory_block>>& used_mem_blocks);
 }
 }

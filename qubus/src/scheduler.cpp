@@ -37,43 +37,19 @@ greedy_scheduler::greedy_scheduler(executor& exec_) : exec_(&exec_)
 {
 }
 
-greedy_scheduler::~greedy_scheduler()
-{
-    is_shutting_down_ = true;
-
-    for (const auto& pair : latest_write_requests_)
-    {
-        pair.second.wait();
-    }
-}
-
 void greedy_scheduler::schedule(const plan& executed_plan, execution_context ctx)
 {
     std::vector<hpx::shared_future<void>> arg_futures;
-
-    std::vector<hpx::shared_future<void>*> result_futures;
+    std::vector<std::shared_ptr<object>> modified_objects;
 
     for (const auto& arg : ctx.args() | boost::adaptors::indexed())
     {
-        auto iter_success =
-            latest_write_requests_.emplace(arg.value()->id(), hpx::make_ready_future());
+        auto arg_future = arg.value()->get_last_modification();
 
         if (executed_plan.intents().at(arg.index()) == intent::inout)
         {
-            result_futures.push_back(&iter_success.first->second);
+            modified_objects.push_back(arg.value());
         }
-
-        if (iter_success.second)
-        {
-            arg.value()->on_destruction([this](const object& obj)
-                                       {
-                                           purge_object_metadata(obj);
-                                       });
-        }
-
-        auto iter = iter_success.first;
-
-        auto& arg_future = iter->second;
 
         arg_futures.push_back(arg_future);
     }
@@ -83,32 +59,16 @@ void greedy_scheduler::schedule(const plan& executed_plan, execution_context ctx
     hpx::shared_future<void> task_done =
         deps_ready.then(scheduled_task(executed_plan, std::move(ctx), exec_));
 
-    for (auto future : result_futures)
+    for (const auto& obj : modified_objects)
     {
-       *future = task_done;
+        obj->record_modification(task_done);
     }
 }
 
 hpx::shared_future<void> greedy_scheduler::when_ready(const object& obj)
 {
-    auto iter_success = latest_write_requests_.emplace(obj.id(), hpx::make_ready_future());
-
-    if (iter_success.second)
-    {
-        obj.on_destruction([this](const object& obj)
-                           {
-                               purge_object_metadata(obj);
-                           });
-    }
-
-    auto iter = iter_success.first;
-
-    return iter->second;
+    return obj.get_last_modification();
 }
 
-void greedy_scheduler::purge_object_metadata(const object& obj)
-{
-    latest_write_requests_.erase(obj.id());
-}
 }
 }
