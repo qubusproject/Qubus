@@ -17,22 +17,13 @@ void runtime_server::execute(computelet c)
 
 }
 
-runtime_client::runtime_client(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
-{
-}
-
-void runtime_client::execute(computelet c)
-{
-    hpx::apply<runtime_server::execute_action>(this->get_id(), std::move(c));
-}
-
-runtime::runtime() : client_(hpx::new_<runtime_server>(hpx::find_here()))
+runtime::runtime(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
 {
 }
 
 void runtime::execute(computelet c)
 {
-    client_.execute(std::move(c));
+    hpx::apply<runtime_server::execute_action>(this->get_id(), std::move(c));
 }
 
 }

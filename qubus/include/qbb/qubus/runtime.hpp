@@ -27,20 +27,12 @@ private:
     local_runtime runtime_;
 };
 
-class runtime_client : public hpx::components::client_base<runtime_client, runtime_server>
+class runtime : public hpx::components::client_base<runtime, runtime_server>
 {
 public:
-    using base_type = hpx::components::client_base<runtime_client, runtime_server>;
+    using base_type = hpx::components::client_base<runtime, runtime_server>;
 
-    runtime_client(hpx::future<hpx::id_type>&& id);
-
-    void execute(computelet c);
-};
-
-class runtime
-{
-public:
-    runtime();
+    runtime(hpx::future<hpx::id_type>&& id);
 
     // object_factory& get_object_factory();
 
@@ -49,9 +41,8 @@ public:
     void execute(computelet c);
 
     // const abi_info& abi();
-private:
-    runtime_client client_;
 };
+
 }
 }
 
