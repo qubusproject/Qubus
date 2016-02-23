@@ -135,9 +135,7 @@ class cpu_backend final : public host_backend
 {
 public:
     cpu_backend(const abi_info& abi_)
-    : addr_space_(util::make_unique<local_address_space>(util::make_unique<cpu_allocator>())),
-      obj_factory_(util::make_unique<cpu_object_factory>(addr_space_->get_allocator(), abi_)),
-      compiler_(util::make_unique<cpu_compiler>(plan_registry_)),
+    : compiler_(util::make_unique<cpu_compiler>(plan_registry_)),
       executor_(util::make_unique<cpu_executor>(plan_registry_, abi_))
     {
         // use hwloc to obtain informations over all local CPUs
@@ -160,16 +158,6 @@ public:
         return *compiler_;
     }
 
-    local_object_factory& local_factory() const override
-    {
-        return *obj_factory_;
-    }
-
-    local_address_space& address_space() const override
-    {
-        return *addr_space_;
-    }
-
     plan register_function_as_plan(std::function<void(void* const*)> func,
                                    std::vector<intent> intents) override
     {
@@ -183,8 +171,6 @@ public:
     }
 
 private:
-    std::unique_ptr<local_address_space> addr_space_;
-    std::unique_ptr<cpu_object_factory> obj_factory_;
     cpu_plan_registry plan_registry_;
     std::unique_ptr<cpu_compiler> compiler_;
     std::unique_ptr<cpu_executor> executor_;

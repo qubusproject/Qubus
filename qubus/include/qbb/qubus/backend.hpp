@@ -33,11 +33,6 @@ public:
     
     virtual std::vector<executor*> executors() const = 0;    
     virtual compiler& get_compiler() const = 0;
-    
-    virtual local_object_factory& local_factory() const = 0;
-    virtual local_address_space& address_space() const = 0;
-    
-    //virtual void connect(const backend& other) = 0;
 };
 
 }   
