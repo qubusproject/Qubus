@@ -32,6 +32,8 @@ class runtime : public hpx::components::client_base<runtime, runtime_server>
 public:
     using base_type = hpx::components::client_base<runtime, runtime_server>;
 
+    runtime() = default;
+
     runtime(hpx::future<hpx::id_type>&& id);
 
     // object_factory& get_object_factory();
@@ -42,6 +44,8 @@ public:
 
     // const abi_info& abi();
 };
+
+void init_new(int argc, char** argv);
 
 }
 }
