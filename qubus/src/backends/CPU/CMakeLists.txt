@@ -1,9 +1,10 @@
 add_library(qubus_cpu_backend MODULE cpu_backend.cpp cpuinfo.cpp cpu_object_factory.cpp
                                      cpu_memory_block.cpp cpu_allocator.cpp cpu_compiler.cpp cpu_plan_registry.cpp)
 
-target_include_directories(qubus_cpu_backend PUBLIC ${Boost_LIBRARY_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>)
+target_include_directories(qubus_cpu_backend PUBLIC ${Boost_LIBRARY_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>
+                                                    ${HPX_INCLUDE_DIRS})
 target_compile_options(qubus_cpu_backend PUBLIC -std=c++14)
-target_link_libraries(qubus_cpu_backend PUBLIC ${Boost_LIBRARIES} qubus_ir qbb_util wall PRIVATE qubus_jit)
+target_link_libraries(qubus_cpu_backend PUBLIC hpx ${Boost_LIBRARIES} qubus_ir qbb_util wall PRIVATE qubus_jit)
 
 set_target_properties(qubus_cpu_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${QUBUS_BUILD_PREFIX}/qubus/backends")
 set_target_properties(qubus_cpu_backend PROPERTIES CXX_VISIBILITY_PRESET hidden)

@@ -1,5 +1,9 @@
 #include <qbb/qubus/backends/cpu_compiler.hpp>
 
+// Workaround for LLVM's definition of DEBUG
+#pragma push_macro("DEBUG")
+#undef DEBUG
+
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/MCJIT.h>
 #include <llvm/ExecutionEngine/JITEventListener.h>
@@ -8,6 +12,8 @@
 
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
+
+#pragma pop_macro("DEBUG")
 
 #include <qbb/qubus/jit/optimization_pipeline.hpp>
 
