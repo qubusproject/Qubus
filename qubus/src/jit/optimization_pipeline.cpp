@@ -5,10 +5,14 @@
 #include <llvm/Analysis/TypeBasedAliasAnalysis.h>
 #include <llvm/Analysis/ScopedNoAliasAA.h>
 #include <llvm/Transforms/Scalar.h>
+#include <llvm/Transforms/Scalar/GVN.h>
 #include <llvm/Transforms/IPO.h>
+#include <llvm/Transforms/IPO/FunctionAttrs.h>
 #include <llvm/Transforms/IPO/ForceFunctionAttrs.h>
 #include <llvm/Transforms/IPO/InferFunctionAttrs.h>
 #include <llvm/Transforms/Vectorize.h>
+
+#include <llvm/Config/llvm-config.h>
 
 namespace qbb
 {
@@ -64,7 +68,11 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
 
     manager.add(createFunctionInliningPass());
 
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR <= 8
     manager.add(createPostOrderFunctionAttrsPass());
+#elif LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR == 9
+    manager.add(createPostOrderFunctionAttrsLegacyPass());
+#endif
 
     manager.add(createArgumentPromotionPass()); // Scalarize uninlined fn args
 
