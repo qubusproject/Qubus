@@ -9,7 +9,9 @@
 #   include <llvm/Transforms/Scalar/GVN.h>
 #endif
 #include <llvm/Transforms/IPO.h>
-#include <llvm/Transforms/IPO/FunctionAttrs.h>
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR == 9
+#   include <llvm/Transforms/IPO/FunctionAttrs.h>
+#endif
 #include <llvm/Transforms/IPO/ForceFunctionAttrs.h>
 #include <llvm/Transforms/IPO/InferFunctionAttrs.h>
 #include <llvm/Transforms/Vectorize.h>
