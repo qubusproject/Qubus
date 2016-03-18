@@ -5,7 +5,9 @@
 #include <llvm/Analysis/TypeBasedAliasAnalysis.h>
 #include <llvm/Analysis/ScopedNoAliasAA.h>
 #include <llvm/Transforms/Scalar.h>
-#include <llvm/Transforms/Scalar/GVN.h>
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR == 9
+#   include <llvm/Transforms/Scalar/GVN.h>
+#endif
 #include <llvm/Transforms/IPO.h>
 #include <llvm/Transforms/IPO/FunctionAttrs.h>
 #include <llvm/Transforms/IPO/ForceFunctionAttrs.h>
