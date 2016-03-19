@@ -5,10 +5,18 @@
 #include <llvm/Analysis/TypeBasedAliasAnalysis.h>
 #include <llvm/Analysis/ScopedNoAliasAA.h>
 #include <llvm/Transforms/Scalar.h>
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR == 9
+#   include <llvm/Transforms/Scalar/GVN.h>
+#endif
 #include <llvm/Transforms/IPO.h>
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR == 9
+#   include <llvm/Transforms/IPO/FunctionAttrs.h>
+#endif
 #include <llvm/Transforms/IPO/ForceFunctionAttrs.h>
 #include <llvm/Transforms/IPO/InferFunctionAttrs.h>
 #include <llvm/Transforms/Vectorize.h>
+
+#include <llvm/Config/llvm-config.h>
 
 namespace qbb
 {
@@ -39,6 +47,8 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
 {
     using namespace llvm;
 
+    bool use_experimental_passes = true;
+
     manager.add(createForceFunctionAttrsLegacyPass());
 
     if (!optimize)
@@ -64,7 +74,11 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
 
     manager.add(createFunctionInliningPass());
 
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR <= 8
     manager.add(createPostOrderFunctionAttrsPass());
+#elif LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR == 9
+    manager.add(createPostOrderFunctionAttrsLegacyPass());
+#endif
 
     manager.add(createArgumentPromotionPass()); // Scalarize uninlined fn args
 
@@ -89,7 +103,13 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
     // manager.add(createLoopIdiomPass());             // Recognize idioms like memset.
     manager.add(createLoopDeletionPass()); // Delete dead loops
 
-    // manager.add(createLoopInterchangePass());
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR == 9
+    if (use_experimental_passes)
+    {
+        manager.add(createLoopInterchangePass()); // Interchange loops
+        manager.add(createCFGSimplificationPass());
+    }
+#endif
 
     manager.add(createMergedLoadStoreMotionPass());
     manager.add(createGVNPass(false));
@@ -111,6 +131,18 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
     manager.add(createInstructionCombiningPass()); // Clean up after everything.
 
     manager.add(createBarrierNoopPass());
+
+#if LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR == 9
+    if (use_experimental_passes)
+    {
+        manager.add(createLoopRerollPass());
+
+        manager.add(createLoopVersioningLICMPass());    // Do LoopVersioningLICM
+        manager.add(createLICMPass());                  // Hoist loop invariants
+
+        manager.add(createLoopDistributePass());
+    }
+#endif
 
     // vectorization
 
