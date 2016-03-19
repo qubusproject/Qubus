@@ -32,6 +32,7 @@
 #include <llvm/ExecutionEngine/MCJIT.h>
 #include <llvm/ExecutionEngine/JITEventListener.h>
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/Analysis/TargetTransformInfo.h>
 
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
@@ -155,6 +156,9 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, llvm::Execut
     llvm::legacy::FunctionPassManager fn_pass_man(the_module.get());
     llvm::legacy::PassManager pass_man;
 
+    fn_pass_man.add(llvm::createTargetTransformInfoWrapperPass(engine.getTargetMachine()->getTargetIRAnalysis()));
+    pass_man.add(llvm::createTargetTransformInfoWrapperPass(engine.getTargetMachine()->getTargetIRAnalysis()));
+
     jit::setup_function_optimization_pipeline(fn_pass_man, true);
     jit::setup_optimization_pipeline(pass_man, true, true);
 
@@ -175,9 +179,9 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, llvm::Execut
     /*std::cout << "The assembler output:\n\n";
 
     llvm::raw_os_ostream m3log(std::cout);
-    llvm::formatted_raw_ostream fm3log(m3log);
+    llvm::buffer_ostream fm3log(m3log);
 
-    llvm::PassManager pMPasses;
+    llvm::legacy::PassManager pMPasses;
     // pMPasses.add(new llvm::DataLayoutPass(*engine.getDataLayout()));
     engine.getTargetMachine()->addPassesToEmitFile(pMPasses, fm3log,
                                                    llvm::TargetMachine::CGFT_AssemblyFile);
@@ -233,6 +237,8 @@ public:
 
         if (llvm::sys::getHostCPUFeatures(features))
         {
+            builder.setMCPU(llvm::sys::getHostCPUName());
+
             for (const auto& feature : features)
             {
                 if (feature.getValue())
