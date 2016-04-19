@@ -8,7 +8,8 @@
 #include <qbb/qubus/object_factory.hpp>
 #include <qbb/qubus/assembly_tensor.hpp>
 
-#include <qbb/qubus/local_runtime.hpp>
+#include <qbb/qubus/metadata_builder.hpp>
+#include <qbb/qubus/host_objects_views.hpp>
 
 #include <qbb/util/integers.hpp>
 #include <qbb/util/index_space.hpp>
@@ -22,81 +23,6 @@ namespace qbb
 {
 namespace qubus
 {
-
-template <typename T, util::index_t Rank>
-class cpu_array_view
-{
-public:
-    using value_type = T;
-
-    template <typename... Indices>
-    T& operator()(Indices... indices)
-    {
-        static_assert(Rank == sizeof...(indices), "insufficient number of indices");
-
-        util::index_t linear_index = 0;
-
-        std::array<util::index_t, Rank> indices_{{util::to_uindex(indices)...}};
-
-        for (util::index_t i = 0; i < Rank; ++i)
-        {
-            linear_index = shape_[i] * linear_index + indices_[i];
-        }
-
-        QBB_ASSERT(linear_index >= 0, "Linear index can't be negative.");
-
-        return data_[linear_index];
-    }
-
-    template <typename... Indices>
-    const T& operator()(Indices... indices) const
-    {
-        static_assert(Rank == sizeof...(indices), "insufficient number of indices");
-
-        util::index_t linear_index = 0;
-
-        std::array<util::index_t, Rank> indices_{util::to_uindex(indices)...};
-
-        for (util::index_t i = 0; i < Rank; ++i)
-        {
-            linear_index = shape_[i] * linear_index + indices_[i];
-        }
-
-        QBB_ASSERT(linear_index >= 0, "Linear index can't be negative.");
-
-        return data_[linear_index];
-    }
-
-    util::index_t rank() const
-    {
-        return rank_;
-    }
-
-    util::index_t extent(util::index_t dim) const
-    {
-        return shape_[dim];
-    }
-
-    // TODO: implement shape
-
-    static cpu_array_view<T, Rank> construct(void* metadata)
-    {
-        auto array_md = static_cast<array_metadata*>(metadata);
-
-        return cpu_array_view<T, Rank>(Rank, static_cast<util::index_t*>(array_md->shape),
-                                       static_cast<T*>(array_md->data));
-    }
-
-private:
-    cpu_array_view(util::index_t rank_, util::index_t* shape_, T* data_)
-    : rank_(rank_), shape_(shape_), data_(data_)
-    {
-    }
-
-    util::index_t rank_;
-    util::index_t* shape_;
-    T* data_;
-};
 
 template <typename T, long int Rank>
 class mutable_cpu_sparse_tensor_view
@@ -220,7 +146,7 @@ private:
     cpu_array_view<util::index_t, 1> shape_;
 };
 
-template <typename T, long int Rank>
+/*template <typename T, long int Rank>
 class sparse_tensor : public tensor_expr_<typename boost::proto::terminal< std::shared_ptr<struct_>>::type>
 {
 public:
@@ -270,13 +196,13 @@ public:
                 num_chuncks += 1;
             }
 
-            sparse_tensor_layout layout(num_chuncks, padded_nnz);
+            sparse_tensor_layout layout(num_chuncks, padded_nnz);*/
 
-            boost::proto::value(*this) = get_runtime().get_object_factory().create_sparse_tensor(types::double_(), shape_,
-                                                                              layout);
+            /*boost::proto::value(*this) = get_runtime().get_object_factory().create_sparse_tensor(types::double_(), shape_,
+                                                                              layout);*/
 
 
-            const auto setup =
+            /*const auto setup =
                     make_computelet()
                             .body([&](mutable_cpu_sparse_tensor_view<T, Rank> s)
                                   {
@@ -332,9 +258,9 @@ public:
                                   })
                             .finalize();
 
-            execute(setup, *this);
+            execute(setup, *this);*/
 
-            get_runtime().when_ready(tensor()).wait();
+  /*          tensor().get_last_modification().wait();
         }
     }
 
@@ -353,7 +279,7 @@ private:
     {
         return *boost::proto::value(*this);
     }
-};
+};*/
 }
 }
 

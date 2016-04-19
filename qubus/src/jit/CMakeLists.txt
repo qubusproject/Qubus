@@ -33,3 +33,9 @@ target_include_directories(qubus_jit PUBLIC ${Boost_LIBRARY_DIRS} $<BUILD_INTERF
 target_compile_options(qubus_jit PUBLIC -std=c++14)
 target_compile_definitions(qubus_jit PUBLIC ${LLVM_DEFINITIONS})
 target_link_libraries(qubus_jit PUBLIC ${Boost_LIBRARIES} qubus_ir qbb_util wall ${REQ_LLVM_LIBRARIES})
+
+install(TARGETS qubus_jit EXPORT qubus-targets
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)

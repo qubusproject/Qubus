@@ -1,7 +1,5 @@
 #include <qbb/qubus/evicting_allocator.hpp>
 
-#include <qbb/qubus/local_address_space.hpp>
-
 #include <utility>
 
 namespace qbb
@@ -9,8 +7,8 @@ namespace qbb
 namespace qubus
 {
 
-evicting_allocator::evicting_allocator(std::unique_ptr<allocator> underlying_allocator_, local_address_space* ospace_)
-: underlying_allocator_(std::move(underlying_allocator_)), ospace_(ospace_)
+evicting_allocator::evicting_allocator(std::unique_ptr<allocator> underlying_allocator_, std::function<bool(std::size_t)> evict_callback_)
+: underlying_allocator_(std::move(underlying_allocator_)), evict_callback_(std::move(evict_callback_))
 {
 }
 
@@ -20,7 +18,7 @@ std::unique_ptr<memory_block> evicting_allocator::allocate(std::size_t size, std
 
     while (!memblock)
     {
-        if (!ospace_->evict_objects(0))
+        if (!evict_callback_(0))
             return {};
 
         memblock = underlying_allocator_->allocate(size, alignment);

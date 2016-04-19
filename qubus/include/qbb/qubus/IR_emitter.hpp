@@ -35,15 +35,15 @@ namespace qubus
 class name_scope
 {
 public:
-    using iterator = std::map<util::handle, variable_declaration>::iterator;
-    using const_iterator = std::map<util::handle, variable_declaration>::const_iterator;
+    using iterator = std::map<hpx::naming::gid_type, variable_declaration>::iterator;
+    using const_iterator = std::map<hpx::naming::gid_type, variable_declaration>::const_iterator;
 
-    void add(util::handle id, variable_declaration decl)
+    void add(hpx::naming::gid_type id, variable_declaration decl)
     {
         table_.emplace(id, decl);
     }
 
-    util::optional_ref<const variable_declaration> lookup(const util::handle& id) const
+    util::optional_ref<const variable_declaration> lookup(const hpx::naming::gid_type& id) const
     {
         auto iter = table_.find(id);
 
@@ -78,7 +78,7 @@ public:
     }
 
 private:
-    std::map<util::handle, variable_declaration> table_;
+    std::map<hpx::naming::gid_type, variable_declaration> table_;
 };
 
 class symbol_table
@@ -89,7 +89,7 @@ public:
         enter_scope();
     }
 
-    void add(util::handle id, variable_declaration decl)
+    void add(hpx::naming::gid_type id, variable_declaration decl)
     {
         if (scopes_.empty())
             throw 0;
@@ -97,7 +97,7 @@ public:
         current_scope().add(std::move(id), std::move(decl));
     }
 
-    util::optional_ref<const variable_declaration> lookup(const util::handle& id) const
+    util::optional_ref<const variable_declaration> lookup(const hpx::naming::gid_type& id) const
     {
         for (auto iter = scopes_.crbegin(), end = scopes_.crend(); iter != end; ++iter)
         {
@@ -800,9 +800,9 @@ struct deduce_free_indices
 
 struct add_variable : proto::callable
 {
-    using result_type = std::vector<std::shared_ptr<object>>&;
+    using result_type = std::vector<object_client>&;
 
-    result_type operator()(result_type variables, std::shared_ptr<object> h) const
+    result_type operator()(result_type variables, object_client h) const
     {
         variables.push_back(h);
 
@@ -812,7 +812,7 @@ struct add_variable : proto::callable
 
 struct data_handle : proto::callable
 {
-    using result_type = std::shared_ptr<object>;
+    using result_type = object_client;
 
     template <typename Expr>
     result_type operator()(const Expr& expr) const
@@ -831,7 +831,7 @@ struct deduce_variables
 };
 
 template <typename Expr>
-std::tuple<tensor_expr_closure, std::vector<std::shared_ptr<object>>> emit_ast(const Expr& expr)
+std::tuple<tensor_expr_closure, std::vector<object_client>> emit_ast(const Expr& expr)
 {
     using namespace boost::adaptors;
 
@@ -841,12 +841,14 @@ std::tuple<tensor_expr_closure, std::vector<std::shared_ptr<object>>> emit_ast(c
 
     auto free_indices = deduce_free_indices()(expr, std::ref(ctx));
 
-    std::vector<std::shared_ptr<object>> param_objs;
+    std::vector<object_client> param_objs;
 
     deduce_variables()(expr, 0, std::ref(param_objs));
 
-    boost::sort(param_objs);
-    auto new_end = std::unique(param_objs.begin(), param_objs.end());
+    auto pred = [](const auto& lhs, const auto& rhs) { return lhs.id() < rhs.id(); };
+
+    boost::sort(param_objs, pred);
+    auto new_end = std::unique(param_objs.begin(), param_objs.end(), pred);
 
     param_objs.erase(new_end, param_objs.end());
 
@@ -854,9 +856,9 @@ std::tuple<tensor_expr_closure, std::vector<std::shared_ptr<object>>> emit_ast(c
 
     for (const auto& obj : param_objs)
     {
-        auto decl = variable_declaration(obj->object_type());
+        auto decl = variable_declaration(obj.object_type());
 
-        ctx.variable_table().add(util::handle_from_ptr(obj.get()), decl);
+        ctx.variable_table().add(obj.get_id().get_gid(), decl);
 
         params.push_back(decl);
     }

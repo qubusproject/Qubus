@@ -71,11 +71,30 @@ private:
 
 using namespace qbb::qubus;
 
+void print_vector(host_tensor_view<const double, 1> v)
+{
+    for (long int i = 0; i < 10; ++i)
+    {
+        std::cout << v(i) << std::endl;
+    }
+}
+
 int hpx_main(int argc, char** argv)
 {
     qbb::qubus::init(argc, argv);
 
-    long int N = 1000;
+    long int N = 10;
+
+    tensor<double, 1> b(N);
+    tensor<double, 1> rb(N);
+
+    qbb::qubus::index i;
+
+    tensor_expr<double, 1> zero = def_tensor (i) [0];
+
+    b = zero;
+
+    /*long int N = 1000;
 
     long int samples = 10;
 
@@ -150,7 +169,7 @@ int hpx_main(int argc, char** argv)
 
         execute(my_plan, C);
         C.when_ready().wait();
-    }
+    }*/
 
     /*{
         std::vector<double> A(N * N);

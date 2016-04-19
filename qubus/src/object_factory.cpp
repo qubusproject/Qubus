@@ -1,22 +1,38 @@
 #include <qbb/qubus/object_factory.hpp>
 
-#include <qbb/qubus/host_allocator.hpp>
+#include <qbb/qubus/primitive_object.hpp>
 
 #include <qbb/util/integers.hpp>
 
 #include <utility>
+
+using server_type = hpx::components::component<qbb::qubus::object_factory_server>;
+HPX_REGISTER_COMPONENT(server_type, qbb_qubus_object_factory_server);
+
+typedef qbb::qubus::object_factory_server::create_array_action create_array_action;
+HPX_REGISTER_ACTION_DECLARATION(create_array_action);
+HPX_REGISTER_ACTION(create_array_action);
 
 namespace qbb
 {
 namespace qubus
 {
 
-object_factory::object_factory(abi_info abi_)
-: abi_(std::move(abi_)), allocator_(std::make_unique<host_allocator>())
+object_factory_server::object_factory_server(abi_info abi_, std::vector<local_runtime> local_runtimes_)
+: abi_(std::move(abi_))
 {
+    for (const auto& runtime : local_runtimes_)
+    {
+        local_factories_.push_back(runtime.get_local_object_factory());
+    }
 }
 
-std::unique_ptr<local_array> object_factory::create_array(type value_type,
+object_client object_factory_server::create_array(type value_type, std::vector<util::index_t> shape)
+{
+    return local_factories_.at(0).create_array(std::move(value_type), std::move(shape));
+}
+
+/*std::unique_ptr<local_array> object_factory::create_array(type value_type,
                                                           std::vector<util::index_t> shape)
 {
     // TODO: Reject arrays with a rank of 0
@@ -89,6 +105,17 @@ std::unique_ptr<struct_> object_factory::create_sparse_tensor(type value_type,
     sparse_tensor_members.push_back(std::move(shape_array));
 
     return create_struct(sparse_tensor_type, std::move(sparse_tensor_members));
+}*/
+
+object_factory::object_factory(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
+{
+}
+
+object_client object_factory::create_array(type value_type, std::vector<util::index_t> shape)
+{
+    return hpx::async<object_factory_server::create_array_action>(
+               this->get_id(), std::move(value_type), std::move(shape))
+        .get();
 }
 }
 }

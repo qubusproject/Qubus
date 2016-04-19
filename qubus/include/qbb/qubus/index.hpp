@@ -1,7 +1,9 @@
 #ifndef QUBUS_INDEX_HPP
 #define QUBUS_INDEX_HPP
 
-#include <qbb/util/handle.hpp>
+#include <hpx/include/components.hpp>
+
+#include <qbb/qubus/hpx_utils.hpp>
 
 #include <cstddef>
 #include <memory>
@@ -14,10 +16,23 @@ namespace qbb
 namespace qubus
 {
 
+class id_type_server : public hpx::components::component_base<id_type_server>
+{
+};
+
+class id_type : public hpx::components::client_base<id_type, id_type_server>
+{
+public:
+    using base_type = hpx::components::client_base<id_type, id_type_server>;
+
+    id_type() = default;
+    id_type(hpx::future<hpx::id_type>&& id);
+};
+
 class index
 {
 public:
-    index() : info_(std::make_shared<index_info>())
+    index() : info_(std::make_shared<index_info>()), id_(new_here<id_type_server>())
     {
     }
 
@@ -25,9 +40,9 @@ public:
     {
     }
 
-    qbb::util::handle id() const
+    hpx::naming::gid_type id() const
     {
-        return info_->id();
+        return id_.get_id().get_gid();
     }
 
     const char* debug_name() const
@@ -47,11 +62,6 @@ private:
         {
         }
 
-        qbb::util::handle id() const
-        {
-            return qbb::util::handle_from_ptr(this);
-        }
-
         const char* debug_name() const
         {
             return debug_name_;
@@ -62,6 +72,7 @@ private:
     };
 
     std::shared_ptr<index_info> info_;
+    id_type id_;
 };
 
 inline bool operator==(const index& lhs, const index& rhs)
@@ -79,7 +90,7 @@ inline std::ostream& operator<<(std::ostream& os, const index& idx)
     return os << "index( " << idx.debug_name() << " )";
 }
 
-inline qbb::util::handle id(const index& value)
+inline hpx::naming::gid_type id(const index& value)
 {
     return value.id();
 }
@@ -90,7 +101,7 @@ class multi_index
 public:
     static_assert(Rank >= 0, "Rank must be non-negative.");
 
-    multi_index() : info_(std::make_shared<multi_index_info>())
+    multi_index() : info_(std::make_shared<multi_index_info>()), id_(new_here<id_type_server>())
     {
     }
 
@@ -119,9 +130,9 @@ public:
         return Rank;
     }
 
-    qbb::util::handle id() const
+    hpx::naming::gid_type id() const
     {
-        return qbb::util::handle_from_ptr(this);
+        return id_.get_id().get_gid();
     }
 
     const char* debug_name() const
@@ -167,6 +178,7 @@ private:
     };
 
     std::shared_ptr<multi_index_info> info_;
+    id_type id_;
 };
 
 template <long int LHSRank, long int RHSRank>
@@ -188,7 +200,7 @@ inline std::ostream& operator<<(std::ostream& os, const multi_index<Rank>& idx)
 }
 
 template <long int Rank>
-inline qbb::util::handle id(const multi_index<Rank>& value)
+inline hpx::naming::gid_type id(const multi_index<Rank>& value)
 {
     return value.id();
 }

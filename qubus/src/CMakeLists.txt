@@ -26,10 +26,10 @@ endforeach()
 set(qubus_source_files allocator.cpp lower_abstract_indices.cpp
                        loop_optimizer.cpp lower_top_level_sums.cpp deduce_iteration_space.cpp
                        local_runtime.cpp backend_registry.cpp local_address_space.cpp evicting_allocator.cpp
-                       plan.cpp abi_info.cpp logging.cpp object_factory.cpp metadata_builder.cpp
-                       make_implicit_conversions_explicit.cpp scheduler.cpp user_defined_plan.cpp object.cpp
+                       abi_info.cpp logging.cpp object_factory.cpp metadata_builder.cpp
+                       make_implicit_conversions_explicit.cpp scheduler.cpp object.cpp
                        tensor_expr_info.cpp multi_index_handling.cpp kronecker_delta_folding_pass.cpp sparse_patterns.cpp
-                       runtime.cpp computelet.cpp host_allocator.cpp)
+                       runtime.cpp computelet.cpp host_allocator.cpp primitive_type.cpp local_object_factory.cpp vpu.cpp aggregate_vpu.cpp index.cpp architecture_identifier.cpp)
 
 add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 
@@ -40,7 +40,7 @@ target_link_libraries(qubus PUBLIC qubus_ir qubus_isl qbb_util hpx)
 if (${HPX_VERSION} VERSION_LESS 0.9.11)
     target_link_libraries(qubus PUBLIC hpx_serialization)
 endif()
-target_link_libraries(qubus PUBLIC ${HPX_LIBRARIES} ${Boost_LIBRARIES} dl wall)
+target_link_libraries(qubus PUBLIC ${HPX_LIBRARIES} ${Boost_LIBRARIES} qubus_cpu_backend dl wall)
 target_compile_definitions(qubus PUBLIC -DBOOST_LOG_DYN_LINK)
 add_dependencies(qubus qubus_cpu_backend)
 

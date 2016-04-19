@@ -180,6 +180,8 @@ void print_type(const type& t)
 
 void print(const expression& expr, pretty_printer_context& ctx, bool print_types)
 {
+    using pattern::_;
+
     pattern::variable<expression> a, b, c, d;
     pattern::variable<boost::optional<expression>> opt_expr;
     pattern::variable<binary_op_tag> btag;
@@ -635,11 +637,24 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << "\n}\n" << std::flush;
 
                    })
-            .case_(member_access(a, id), [&]
+            .case_(member_access(a, id),
+                   [&]
                    {
                        print(a.get(), ctx, print_types);
 
                        std::cout << "." << id.get();
+                   })
+            .case_(call_foreign(_, args), [&]
+                   {
+                       std::cout << "foreign call (";
+
+                       for (const auto& arg : args.get())
+                       {
+                           print(arg, ctx, print_types);
+                           std::cout << ", ";
+                       }
+
+                       std::cout << ")";
                    });
 
     try
@@ -713,6 +728,5 @@ void pretty_print_type(const type& t)
 {
     print_type(t);
 }
-
 }
 }

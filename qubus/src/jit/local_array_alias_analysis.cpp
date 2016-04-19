@@ -434,7 +434,7 @@ void local_array_access_alias_analysis_impl::emit_noalias_info()
             {
                 access_info->alias_scope_promise.set_value(indices_subindex.second->scope);
                 access_info->noalias_set_promise.set_value(
-                        llvm::MDNode::get(llvm::getGlobalContext(), alias_set));
+                        llvm::MDNode::get(env_->ctx(), alias_set));
             }
         }
     }

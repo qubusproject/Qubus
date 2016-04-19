@@ -5,11 +5,17 @@
 
 #include <qbb/qubus/local_runtime.hpp>
 
+#include <qbb/qubus/vpu.hpp>
+
 #include <qbb/qubus/computelet.hpp>
 #include <qbb/qubus/execution_context.hpp>
 
+#include <qbb/qubus/object_factory.hpp>
+
 #include <hpx/include/components.hpp>
 #include <hpx/include/actions.hpp>
+
+#include <vector>
 
 namespace qbb
 {
@@ -19,12 +25,17 @@ namespace qubus
 class runtime_server : public hpx::components::component_base<runtime_server>
 {
 public:
-    void execute(computelet c);
+    runtime_server();
+    void execute(computelet c, execution_context ctx);
+
+    object_factory get_object_factory() const;
 
     HPX_DEFINE_COMPONENT_ACTION(runtime_server, execute, execute_action);
-
+    HPX_DEFINE_COMPONENT_ACTION(runtime_server, get_object_factory, get_object_factory_action);
 private:
-    local_runtime runtime_;
+    std::vector<local_runtime> local_runtimes_;
+    object_factory obj_factory_;
+    vpu global_vpu_;
 };
 
 class runtime : public hpx::components::client_base<runtime, runtime_server>
@@ -36,16 +47,26 @@ public:
 
     runtime(hpx::future<hpx::id_type>&& id);
 
-    // object_factory& get_object_factory();
+    object_factory get_object_factory() const;
 
     // plan register_user_defined_plan(user_defined_plan_t plan); Is this still necessary?
 
-    void execute(computelet c);
+    void execute(computelet c, execution_context ctx);
 
     // const abi_info& abi();
 };
 
-void init_new(int argc, char** argv);
+void init(int argc, char** argv);
+runtime get_runtime();
+HPX_DEFINE_PLAIN_ACTION(get_runtime, get_runtime_action);
+
+template<typename... Args>
+void execute(const computelet& c, Args&&... args)
+{
+    execution_context ctx({std::forward<Args>(args).get_object()...});
+
+    get_runtime().execute(c, std::move(ctx));
+}
 
 }
 }

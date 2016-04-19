@@ -331,6 +331,11 @@ type infer_type_member_access_expr(const member_access_expr& expr)
     return obj_type[expr.member_name()];
 }
 
+type infer_type_foreign_call_expr(const foreign_call_expr& QBB_UNUSED(expr))
+{
+    return types::unknown{};
+}
+
 void init_infer_type()
 {
     infer_type.add_specialization(infer_type_binary_op_expr);
@@ -352,6 +357,7 @@ void init_infer_type()
     infer_type.add_specialization(infer_type_construct_expr);
     infer_type.add_specialization(infer_type_kronecker_delta_expr);
     infer_type.add_specialization(infer_type_member_access_expr);
+    infer_type.add_specialization(infer_type_foreign_call_expr);
 }
 
 std::once_flag infer_type_init_flag = {};

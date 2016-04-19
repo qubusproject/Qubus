@@ -21,11 +21,11 @@ void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Val
 
     store_to_ref(induction_variable, lower_bound, env, ctx);
 
-    llvm::BasicBlock* header = llvm::BasicBlock::Create(llvm::getGlobalContext(), "header",
+    llvm::BasicBlock* header = llvm::BasicBlock::Create(env.ctx(), "header",
                                                         builder_.GetInsertBlock()->getParent());
-    llvm::BasicBlock* body = llvm::BasicBlock::Create(llvm::getGlobalContext(), "body",
+    llvm::BasicBlock* body = llvm::BasicBlock::Create(env.ctx(), "body",
                                                       builder_.GetInsertBlock()->getParent());
-    llvm::BasicBlock* exit = llvm::BasicBlock::Create(llvm::getGlobalContext(), "exit",
+    llvm::BasicBlock* exit = llvm::BasicBlock::Create(env.ctx(), "exit",
                                                       builder_.GetInsertBlock()->getParent());
 
     builder_.CreateBr(header);

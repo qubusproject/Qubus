@@ -1,8 +1,7 @@
 #ifndef QBB_QUBUS_TENSOR_VAR_HPP
 #define QBB_QUBUS_TENSOR_VAR_HPP
 
-#include "local_runtime.hpp"
-#include <qbb/qubus/local_tensor.hpp>
+#include <qbb/qubus/local_runtime.hpp>
 
 #include <qbb/util/handle.hpp>
 #include <qbb/qubus/IR/type.hpp>
@@ -45,12 +44,12 @@ public:
     {
     }
 
-    const plan& compiled_plan() const
+    computelet stored_computelet() const
     {
-        return proto::value(*this).compiled_plan();
+        return proto::value(*this).stored_computelet();
     }
 
-    const std::vector<std::shared_ptr<object>>& args() const
+    const std::vector<object_client>& args() const
     {
         return proto::value(*this).args();
     }
@@ -69,7 +68,7 @@ private:
 
 template <typename T, long int Rank>
 class tensor
-    : public tensor_expr_<typename boost::proto::terminal<std::shared_ptr<local_tensor>>::type>
+    : public tensor_expr_<typename boost::proto::terminal<tensor_info<T, Rank>>::type>
 {
 public:
     using value_type = T;
@@ -77,7 +76,7 @@ public:
     template <typename... SizeTypes>
     explicit tensor(SizeTypes... sizes_)
     : tensor::proto_derived_expr(tensor::proto_base_expr::make(
-          std::shared_ptr<local_tensor>(get_runtime().get_object_factory().create_tensor(
+            tensor_info<T, Rank>(get_runtime().get_object_factory().create_array(
               associated_qubus_type<T>::get(), {util::to_uindex(sizes_)...}))))
     {
     }
@@ -95,27 +94,28 @@ public:
         
         ctx.push_back_arg(get_object());
 
-        auto p = tensor_expr.compiled_plan();
+        auto c = tensor_expr.stored_computelet();
 
-        get_runtime().execute(p, std::move(ctx));
+        get_runtime().execute(c, std::move(ctx));
 
         return *this;
     }
 
     hpx::shared_future<void> when_ready() const
     {
-        return get_runtime().when_ready(*boost::proto::value(*this));
+        return boost::proto::value(*this).get_last_modification();
     }
-    
-    std::shared_ptr<local_tensor> get_object()
+
+    object_client get_object() const
     {
-        return boost::proto::value(*this);
+        return boost::proto::value(*this).get_object();
     }
 };
 
-inline std::ostream& operator<<(std::ostream& os, const local_tensor&)
+template<typename T, long int Rank>
+std::ostream& operator<<(std::ostream& os, const tensor_info<T, Rank>&)
 {
-    return os << "tensor ( Rank = " << 2 << " )";
+    return os << "tensor ( Rank = " << Rank << " )";
 }
 }
 }

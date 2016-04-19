@@ -11,7 +11,7 @@ namespace qbb
 namespace qubus
 {
 
-namespace
+/*namespace
 {
 class scheduled_task
 {
@@ -40,11 +40,11 @@ greedy_scheduler::greedy_scheduler(executor& exec_) : exec_(&exec_)
 void greedy_scheduler::schedule(const plan& executed_plan, execution_context ctx)
 {
     std::vector<hpx::shared_future<void>> arg_futures;
-    std::vector<std::shared_ptr<object>> modified_objects;
+    std::vector<object_client> modified_objects;
 
     for (const auto& arg : ctx.args() | boost::adaptors::indexed())
     {
-        auto arg_future = arg.value()->get_last_modification();
+        auto arg_future = arg.value().get_last_modification();
 
         if (executed_plan.intents().at(arg.index()) == intent::inout)
         {
@@ -59,16 +59,11 @@ void greedy_scheduler::schedule(const plan& executed_plan, execution_context ctx
     hpx::shared_future<void> task_done =
         deps_ready.then(scheduled_task(executed_plan, std::move(ctx), exec_));
 
-    for (const auto& obj : modified_objects)
+    for (auto& obj : modified_objects)
     {
-        obj->record_modification(task_done);
+        obj.record_modification(task_done);
     }
-}
-
-hpx::shared_future<void> greedy_scheduler::when_ready(const object& obj)
-{
-    return obj.get_last_modification();
-}
+}*/
 
 }
 }

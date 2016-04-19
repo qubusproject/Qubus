@@ -3,8 +3,6 @@
 
 #include <hpx/config.hpp>
 
-#include <qbb/qubus/executor.hpp>
-#include <qbb/qubus/plan.hpp>
 #include <qbb/qubus/execution_context.hpp>
 
 #include <hpx/include/lcos.hpp>
@@ -18,7 +16,7 @@ namespace qbb
 namespace qubus
 {
 
-class scheduler
+/*class scheduler
 {
 public:
     scheduler() = default;
@@ -28,7 +26,6 @@ public:
     scheduler& operator=(const scheduler&) = delete;
     
     virtual void schedule(const plan& p, execution_context ctx) = 0;
-    virtual hpx::shared_future<void> when_ready(const object& obj) = 0;
 };
 
 class base_scheduler : public scheduler
@@ -44,10 +41,9 @@ public:
     virtual ~greedy_scheduler() = default;
     
     void schedule(const plan& p, execution_context ctx) override;
-    hpx::shared_future<void> when_ready(const object& obj) override;
 private:
     executor* exec_;
-};
+};*/
 
 }
 }

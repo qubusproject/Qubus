@@ -1,9 +1,6 @@
 #ifndef QBB_QUBUS_METADATA_BUILDER_HPP
 #define QBB_QUBUS_METADATA_BUILDER_HPP
 
-#include <qbb/qubus/local_array.hpp>
-#include <qbb/qubus/local_tensor.hpp>
-#include <qbb/qubus/struct.hpp>
 #include <qbb/qubus/object.hpp>
 
 #include <qbb/qubus/jit/execution_stack.hpp>
@@ -19,13 +16,7 @@ namespace qbb
 namespace qubus
 {
 
-struct array_metadata
-{
-    void* data;
-    void* shape;
-};
-
-void* build_array_metadata(const local_array& array, const abi_info& abi, execution_stack& stack,
+/*void* build_array_metadata(const local_array& array, const abi_info& abi, execution_stack& stack,
                            std::vector<std::shared_ptr<memory_block>>& used_mem_blocks);
 
 void* build_tensor_metadata(const local_tensor& tensor, const abi_info& abi, execution_stack& stack,
@@ -35,7 +26,7 @@ void* build_struct_metadata(const struct_& s, const abi_info& abi, execution_sta
                             std::vector<std::shared_ptr<memory_block>>& used_mem_blocks);
 
 void* build_object_metadata(const object& obj, const abi_info& abi, execution_stack& stack,
-                            std::vector<std::shared_ptr<memory_block>>& used_mem_blocks);
+                            std::vector<std::shared_ptr<memory_block>>& used_mem_blocks);*/
 }
 }
 

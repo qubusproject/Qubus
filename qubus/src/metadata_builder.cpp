@@ -6,16 +6,16 @@ namespace qbb
 {
 namespace qubus
 {
-void* build_array_metadata(const local_array& array, const abi_info& abi, execution_stack& stack,
+/*void* build_array_metadata(const local_array& array, const abi_info& abi, execution_stack& stack,
                            std::vector<std::shared_ptr<memory_block>>& used_mem_blocks)
 {
     auto layout = abi.get_array_layout(array.value_type(), array.shape());
 
     logger slg;
 
-    auto mem_block = array.data_shared();
+    const auto& mem_block = array.data();
 
-    void* base_addr = mem_block->ptr();
+    void* base_addr = mem_block.ptr();
 
     // BOOST_LOG_NAMED_SCOPE("memory");
 
@@ -23,8 +23,6 @@ void* build_array_metadata(const local_array& array, const abi_info& abi, execut
 
     void* data_addr = static_cast<char*>(base_addr) + layout.data_offset();
     void* shape_addr = static_cast<char*>(base_addr) + layout.shape_offset();
-
-    used_mem_blocks.push_back(std::move(mem_block));
 
     return stack.emplace<array_metadata>(data_addr, shape_addr);
 }
@@ -71,6 +69,6 @@ void* build_object_metadata(const object& obj, const abi_info& abi, execution_st
     {
         throw 0;
     }
-}
+}*/
 }
 }

@@ -19,7 +19,10 @@ namespace util
 class handle
 {
 public:
-    explicit handle(std::uintptr_t id_);
+    handle() = default;
+    explicit constexpr handle(std::uintptr_t id_) : id_(id_)
+    {
+    }
     
     std::uintptr_t id() const;
     std::string str() const;
