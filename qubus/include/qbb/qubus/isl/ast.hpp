@@ -8,6 +8,8 @@
 
 #include <isl/ast.h>
 
+#include <vector>
+
 namespace qbb
 {
 namespace qubus
