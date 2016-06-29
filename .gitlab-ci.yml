@@ -7,12 +7,11 @@ Clang (Release):
   - export CXX=clang++
   - mkdir build
   - cd build
-  - cmake -DLLVM_DIR=/opt/llvm-3.8/share/llvm/cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
   - ctest
   tags:
   - docker
-  - cuda
 GCC (Release):
   script:
   - "sudo chown -R `whoami`: ."
@@ -22,12 +21,11 @@ GCC (Release):
   - export CXX=g++
   - mkdir build
   - cd build
-  - cmake -DLLVM_DIR=/opt/llvm-3.8/share/llvm/cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
   - ctest
   tags:
   - docker
-  - cuda
 Build documentation:
   script:
   - "sudo chown -R `whoami`: ."
@@ -35,7 +33,7 @@ Build documentation:
   - ls -la
   - mkdir build
   - cd build
-  - cmake -DLLVM_DIR=/opt/llvm-3.8/share/llvm/cmake -DCMAKE_BUILD_TYPE=Release -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - cmake -DCMAKE_BUILD_TYPE=Release -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make doc
   - scp -r qubus/doc/html/* supas335@upload.rz.uni-kiel.de:htdocs/qubus/doc
   type: deploy
