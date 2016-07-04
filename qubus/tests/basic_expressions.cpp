@@ -166,7 +166,7 @@ TEST(basic_expressions, complex_substraction)
         C2[i] = A2[i] - B2[i];
     }
 
-    double error;
+    double error = 0.0;
 
     {
         auto C_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<const std::complex<double>, 1>>(C).get();
@@ -235,7 +235,7 @@ TEST(basic_expressions, complex_multiplication)
         C2[i] = A2[i] * B2[i];
     }
 
-    double error;
+    double error = 0.0;
 
     {
         auto C_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<const std::complex<double>, 1>>(C).get();
@@ -304,7 +304,7 @@ TEST(basic_expressions, complex_division)
         C2[i] = A2[i] / B2[i];
     }
 
-    double error;
+    double error = 0.0;
 
     {
         auto C_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<const std::complex<double>, 1>>(C).get();
