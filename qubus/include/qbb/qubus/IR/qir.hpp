@@ -18,6 +18,7 @@
 #include <qbb/qubus/IR/if_expr.hpp>
 #include <qbb/qubus/IR/kronecker_delta_expr.hpp>
 #include <qbb/qubus/IR/member_access_expr.hpp>
+#include <qbb/qubus/IR/foreign_call_expr.hpp>
 
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/type.hpp>

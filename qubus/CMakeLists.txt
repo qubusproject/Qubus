@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8.12)
+cmake_minimum_required(VERSION 3.5.0)
 enable_testing()
 
 project(qubus)
@@ -24,18 +24,26 @@ target_compile_options(usan INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPIL
 target_link_libraries(usan INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fsanitize=undefined>)
 
 add_library(wall INTERFACE)
-target_compile_options(wall INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-Wall -Wextra>)
+target_compile_options(wall INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-Wall -Wextra -Wno-unused-parameter>)
 
-option(QUBUS_ENABLE_ADDRESS_SANITIZER "Enable the address sanitizer" OFF)
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    option(QUBUS_ENABLE_ADDRESS_SANITIZER "Enable the address sanitizer" ON)
+else()
+    option(QUBUS_ENABLE_ADDRESS_SANITIZER "Enable the address sanitizer" OFF)
+endif()
 
 if(QUBUS_ENABLE_ADDRESS_SANITIZER)
     add_compile_options(-fsanitize=address)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 endif()
 
 install(TARGETS asan tsan usan wall EXPORT qubus-targets)
 
 include(GenerateExportHeader)
 include(FeatureSummary)
+include(Qubus_SetOutputName)
+
+find_package(HPX 0.9.12 REQUIRED)
 
 add_subdirectory(src)
 add_subdirectory(tests)
@@ -44,10 +52,10 @@ add_subdirectory(benchmarks)
 generate_export_header(qubus BASE_NAME QBB_QUBUS)
 
 add_executable(qubus_test main.cpp)
-target_link_libraries(qubus_test PUBLIC qubus hpx_init)
-target_compile_options(qubus_test PRIVATE -mavx2 -mfma -fopenmp)
-target_link_libraries(qubus_test PRIVATE -fopenmp)
+target_link_libraries(qubus_test qubus)
+target_compile_options(qubus_test PRIVATE -mavx2 -mfma)
 target_compile_definitions(qubus_test PRIVATE -DEIGEN_DONT_VECTORIZE -DEIGEN_DONT_PARALLELIZE)
+hpx_setup_target(qubus_test COMPONENT_DEPENDENCIES iostreams)
 
 feature_summary(WHAT ALL)
 

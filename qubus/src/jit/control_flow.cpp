@@ -20,11 +20,11 @@ void emit_if_else(reference condition, std::function<void()> then_emitter,
 
     auto condition_value = load_from_ref(condition, env, ctx);
 
-    llvm::BasicBlock* then_block = llvm::BasicBlock::Create(llvm::getGlobalContext(), "then",
+    llvm::BasicBlock* then_block = llvm::BasicBlock::Create(env.ctx(), "then",
                                                             builder_.GetInsertBlock()->getParent());
-    llvm::BasicBlock* else_block = llvm::BasicBlock::Create(llvm::getGlobalContext(), "else",
+    llvm::BasicBlock* else_block = llvm::BasicBlock::Create(env.ctx(), "else",
                                                             builder_.GetInsertBlock()->getParent());
-    llvm::BasicBlock* merge = llvm::BasicBlock::Create(llvm::getGlobalContext(), "merge",
+    llvm::BasicBlock* merge = llvm::BasicBlock::Create(env.ctx(), "merge",
                                                        builder_.GetInsertBlock()->getParent());
 
     builder_.CreateCondBr(condition_value, then_block, else_block);

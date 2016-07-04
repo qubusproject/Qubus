@@ -46,6 +46,8 @@ reference compile(const expression& expr, compiler& comp)
     pattern::variable<float> fval;
     pattern::variable<double> dval;
 
+    pattern::variable<foreign_computelet> foreign_comp;
+
     pattern::variable<std::string> name;
 
     pattern::variable<type> t;
@@ -365,7 +367,7 @@ reference compile(const expression& expr, compiler& comp)
                        using pattern::_;
 
                        auto m = pattern::make_matcher<type, reference>()
-                                    .case_(pattern::tensor_t(_) || pattern::array_t(_),
+                                    .case_(pattern::array_t(_),
                                            [&]
                                            {
                                                return emit_tensor_access(idx.get(), indices, comp);
@@ -397,7 +399,7 @@ reference compile(const expression& expr, compiler& comp)
                        using pattern::_;
 
                        auto m = pattern::make_matcher<type, reference>()
-                                    .case_(pattern::tensor_t(_) || pattern::array_t(_),
+                                    .case_(pattern::array_t(_),
                                            [&]
                                            {
                                                return emit_tensor_access(a.get(), indices, comp);
@@ -420,15 +422,20 @@ reference compile(const expression& expr, compiler& comp)
 
                        auto obj_ref = comp.compile(a.get());
 
-                       auto member = builder.CreateStructGEP(env.map_qubus_type(obj_type),
-                                                             obj_ref.addr(), member_idx);
+                       llvm::Value* indices[] = {builder.getInt32(0), builder.getInt32(0), builder.getInt32(member_idx)};
+
+                       auto member = builder.CreateInBoundsGEP(env.map_qubus_type(obj_type),
+                                                               obj_ref.addr(), indices);
 
                        auto member_type = obj_type[name.get()];
 
-                       auto member_ptr = load_from_ref(
-                           reference(member, obj_ref.origin(), member_type), env, ctx);
+                       auto runtime = &env.get_current_function()->getArgumentList().back();
 
-                       return reference(member_ptr, obj_ref.origin() / name.get(), member_type);
+                       auto member_ptr = builder.CreateCall(env.get_translate_address(), {runtime, member});
+
+                       auto typed_member_ptr = builder.CreateBitCast(member_ptr, env.map_qubus_type(member_type)->getPointerTo(0));
+
+                       return reference(typed_member_ptr, obj_ref.origin() / name.get(), member_type);
                    })
             .case_(
                 local_variable_def(var, a),
@@ -464,10 +471,10 @@ reference compile(const expression& expr, compiler& comp)
                         env.map_qubus_type(plan.get().result().var_type())->getPointerTo());
 
                     param_types.push_back(
-                        llvm::PointerType::get(llvm::Type::getInt8Ty(llvm::getGlobalContext()), 0));
+                        llvm::PointerType::get(llvm::Type::getInt8Ty(env.ctx()), 0));
 
                     llvm::FunctionType* fn_type = llvm::FunctionType::get(
-                        llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
+                        llvm::Type::getVoidTy(env.ctx()), param_types, false);
 
                     auto plan_ptr = llvm::Function::Create(fn_type, llvm::Function::PrivateLinkage,
                                                            plan.get().name(), &env.module());
@@ -501,8 +508,7 @@ reference compile(const expression& expr, compiler& comp)
 
                     auto m =
                         pattern::make_matcher<type, reference>()
-                            .case_(
-                                tensor_t(value_type) || array_t(value_type),
+                            .case_(array_t(value_type),
                                 [&](const type& self)
                                 {
                                     auto size_type = env.map_qubus_type(types::integer());
@@ -609,7 +615,8 @@ reference compile(const expression& expr, compiler& comp)
 
                                     return reference(array_ptr, access_path(), self);
                                 })
-                            .case_(value_type, [&]
+                            .case_(value_type,
+                                   [&]
                                    {
                                        if (expressions.get().size() != 0)
                                            throw 0;
@@ -619,6 +626,61 @@ reference compile(const expression& expr, compiler& comp)
                                            env.map_qubus_type(value_type.get()));
 
                                        return reference(var_ptr, access_path(), value_type.get());
+                                   })
+                            .case_(call_foreign(foreign_comp, expressions), [&]
+                                   {
+                                       auto& computelet = foreign_comp.get();
+
+                                       auto computelet_version =
+                                           computelet.lookup_version(architectures::host);
+
+                                       auto uintptr_t = llvm::IntegerType::get(
+                                           env.ctx(), CHAR_BIT * sizeof(std::uintptr_t));
+
+                                       auto thunk_result_type = llvm::Type::getVoidTy(env.ctx());
+
+                                       std::vector<llvm::Type*> thunk_arg_types;
+
+                                       auto generic_ptr_type =
+                                           llvm::Type::getInt8PtrTy(env.ctx(), 0);
+
+                                       thunk_arg_types.push_back(generic_ptr_type);
+
+                                       for (const auto& arg_type : computelet.argument_types())
+                                       {
+                                           thunk_arg_types.push_back(
+                                               env.map_qubus_type(arg_type)->getPointerTo(0));
+                                       }
+
+                                       auto thunk_type = llvm::FunctionType::get(
+                                           thunk_result_type, thunk_arg_types, false);
+
+                                       auto thunk_ptr = builder.CreateBitCast(
+                                           llvm::ConstantInt::get(
+                                               uintptr_t, reinterpret_cast<std::uintptr_t>(
+                                                              computelet_version->get_function())),
+                                           thunk_type->getPointerTo(0));
+
+                                       std::vector<llvm::Value*> args;
+
+                                       auto data_ptr = builder.CreateBitCast(
+                                           llvm::ConstantInt::get(
+                                               uintptr_t, reinterpret_cast<std::uintptr_t>(
+                                                              computelet_version->get_data())),
+                                           generic_ptr_type);
+
+                                       args.push_back(data_ptr);
+
+                                       for (const auto& arg : expressions.get())
+                                       {
+                                           auto arg_ref = comp.compile(arg);
+
+                                           args.push_back(arg_ref.addr());
+                                       }
+
+                                       builder.CreateCall(thunk_ptr, args);
+
+                                       return reference();
                                    });
 
                     return pattern::match(t.get(), m);

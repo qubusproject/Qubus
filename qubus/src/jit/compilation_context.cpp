@@ -189,7 +189,7 @@ void compilation_context::answer_pending_global_alias_queries()
             }
         }
 
-        auto noalias_set = llvm::MDNode::get(llvm::getGlobalContext(), alias_scopes);
+        auto noalias_set = llvm::MDNode::get(env_->ctx(), alias_scopes);
 
         auto alias_scope = alias_scope_table.at(name);
 

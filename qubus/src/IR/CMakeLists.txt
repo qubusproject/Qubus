@@ -22,7 +22,7 @@ set(qubus_ir_source_files annotations.cpp binary_operator_expr.cpp compound_expr
                           variable_ref_expr.cpp variable_declaration.cpp
                           function_declaration.cpp macro_expr.cpp spawn_expr.cpp
                           local_variable_def_expr.cpp deduce_expression_environment.cpp construct_expr.cpp
-                          if_expr.cpp kronecker_delta_expr.cpp member_access_expr.cpp)
+                          if_expr.cpp kronecker_delta_expr.cpp member_access_expr.cpp foreign_call_expr.cpp)
         
 set(qubus_pattern_header_file_names any.hpp binary_operator.hpp bind_to.hpp compound.hpp core.hpp
                                     for.hpp for_all.hpp index.hpp intrinsic_function.hpp IR.hpp
@@ -42,9 +42,10 @@ add_library(qubus_ir SHARED ${qubus_pattern_header_files} ${qubus_ir_header_file
             ../../include/qbb/qubus/pattern/variable_scope.hpp)
 
 target_include_directories(qubus_ir PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
-target_compile_definitions(qubus_ir PUBLIC -DFUSION_MAX_VECTOR_SIZE=20)
 target_compile_options(qubus_ir PUBLIC -std=c++14)
-target_link_libraries(qubus_ir PUBLIC qbb_util)
+target_link_libraries(qubus_ir qbb_util)
+hpx_setup_target(qubus_ir)
+qubus_set_output_name(qubus_ir qubus_ir)
 
 set_property(TARGET qubus_ir PROPERTY VERSION ${QUBUS_VERSION})
 set_property(TARGET qubus_ir PROPERTY SOVERSION 0)

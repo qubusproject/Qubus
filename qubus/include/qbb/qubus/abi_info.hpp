@@ -4,6 +4,7 @@
 #include <qbb/qubus/IR/type.hpp>
 
 #include <qbb/util/integers.hpp>
+#include <qbb/util/unused.hpp>
 
 #include <vector>
 #include <cstddef>
@@ -18,6 +19,8 @@ namespace qubus
 class array_layout
 {
 public:
+    array_layout() = default;
+
     array_layout(std::size_t size_, std::size_t alignment_, std::size_t shape_offset_, std::size_t shape_size_,
                  std::size_t data_offset_, std::size_t data_size_)
     : size_(size_), alignment_(alignment_), shape_offset_(shape_offset_), shape_size_(shape_size_),
@@ -54,6 +57,17 @@ public:
     {
         return alignment_;
     }
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & size_;
+        ar & alignment_;
+        ar & shape_offset_;
+        ar & shape_size_;
+        ar & data_offset_;
+        ar & data_size_;
+    }
 private:
     std::size_t size_;
     std::size_t alignment_;
@@ -73,6 +87,11 @@ public:
 
     array_layout get_array_layout(const type& value_type,
                                   const std::vector<util::index_t>& shape) const;
+
+    template <typename Archive>
+    void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
+    {
+    }
 };
 }
 }

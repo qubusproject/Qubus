@@ -110,6 +110,13 @@ class basic_multi_method<ReturnType(Args...), DispatchTable>
 public:
     using specialization_t = std::function<ReturnType(remove_virtual<Args>...)>;
 
+    basic_multi_method() = default;
+
+    explicit basic_multi_method(specialization_t fallback_)
+    {
+        set_fallback(std::move(fallback_));
+    }
+
     ReturnType operator()(remove_virtual<Args>... args) const
     {
         if (!specializations_)
@@ -150,14 +157,17 @@ public:
     void set_fallback(specialization_t fallback)
     {
         init_dispatch_table(false);
-        
+
         dispatch_table_->set_fallback(std::move(fallback));
     }
+
 private:
     void init_dispatch_table(bool updated_specializations) const
     {
         std::call_once(initialization_flag_, [this]()
-                       { dispatch_table_.reset(new DispatchTable()); });
+                       {
+                           dispatch_table_.reset(new DispatchTable());
+                       });
 
         dispatch_table_->build_dispatch_table(*specializations_, updated_specializations);
     }
@@ -166,15 +176,19 @@ private:
     void add_specialization_impl(F specialization, index_sequence<Indices...>)
     {
         specialization_t thunk = [=](remove_virtual<Args>... args)
-        { return specialization(unwrap_arg<Args, arg_type<F, Indices>>(args)...); };
+        {
+            return specialization(unwrap_arg<Args, arg_type<F, Indices>>(args)...);
+        };
 
-        specializations_->insert({specialization_args_rtti<meta::type_sequence<arg_type<F, Indices>...> ,Args...>(), std::move(thunk)});
+        specializations_->insert(
+            {specialization_args_rtti<meta::type_sequence<arg_type<F, Indices>...>, Args...>(),
+             std::move(thunk)});
     }
 
     mutable std::unique_ptr<DispatchTable> dispatch_table_;
 
     std::unique_ptr<std::map<std::array<std::type_index, polymorphic_arity()>, specialization_t>>
-    specializations_;
+        specializations_;
 
     mutable std::once_flag initialization_flag_;
 };
@@ -185,6 +199,24 @@ using sparse_multi_method = basic_multi_method<T, sparse_dispatch_table<T>>;
 template <typename T>
 using multi_method = basic_multi_method<T, dense_dispatch_table<T>>;
 
+class multi_method_specialization_initializer
+{
+public:
+    template <typename T, typename DispatchTable, typename Specialazation>
+    explicit multi_method_specialization_initializer(
+        basic_multi_method<T, DispatchTable>& multi_method, Specialazation specialization)
+    {
+        multi_method.add_specialization(specialization);
+    }
+};
+
+#define QBB_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(multi_method, specialization, name)       \
+    ::qbb::util::multi_method_specialization_initializer qbb_mm_##name##_initializer(              \
+        multi_method, specialization)
+
+#define QBB_DEFINE_MULTI_METHOD_SPECIALIZATION(multi_method, specialization)                       \
+    QBB_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(multi_method, specialization,                 \
+                                                     multi_method##_##specialization)
 }
 }
 

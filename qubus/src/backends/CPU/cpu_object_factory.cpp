@@ -1,4 +1,4 @@
-#include <qbb/qubus/backends/cpu_object_factory.hpp>
+/*#include <qbb/qubus/backends/cpu_object_factory.hpp>
 
 #include <limits>
 #include <algorithm>
@@ -37,4 +37,4 @@ std::unique_ptr<memory_block> cpu_object_factory::create_array(type value_type, 
 }
 
 }
-}
+}*/

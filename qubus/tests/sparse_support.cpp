@@ -1,16 +1,11 @@
-//  Copyright (c) 2015 Christopher Hinz
-//
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying
-//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
 #include <qbb/qubus/qubus.hpp>
 
 #include <hpx/hpx_init.hpp>
 
 #include <qbb/util/unused.hpp>
 
-#include <vector>
 #include <random>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -70,21 +65,16 @@ TEST_P(sparse_support, sparse_matrix_vector_product)
     tensor<double, 1> B(N);
     tensor<double, 1> C(N);
 
-    auto init_B = make_computelet()
-                      .body([&](cpu_tensor_view<double, 1> B)
-                            {
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    B(i) = B2[i];
-                                }
-                            })
-                      .finalize();
-
-    execute(init_B, B);
-
-    B.when_ready().wait();
-
     tensor_expr<double, 1> Cdef = def_tensor(i)[sum(A(i, j) * B(j), j)];
+
+    {
+        auto B_view = get_view<host_tensor_view<double, 1>>(B).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            B_view(i) = B2[i];
+        }
+    }
 
     C = Cdef;
 
@@ -96,24 +86,18 @@ TEST_P(sparse_support, sparse_matrix_vector_product)
         }
     }
 
-    double error;
+    double error = 0.0;
 
-    auto test = make_computelet()
-                    .body([&](cpu_tensor_view<double, 1> C)
-                          {
-                              error = 0.0;
+    {
+        auto C_view = get_view<host_tensor_view<const double, 1>>(C).get();
 
-                              for (long int i = 0; i < N; ++i)
-                              {
-                                  double diff = C(i) - C2[i];
+        for (long int i = 0; i < N; ++i)
+        {
+            double diff = C_view(i) - C2[i];
 
-                                  error += diff * diff;
-                              }
-                          })
-                    .finalize();
-
-    execute(test, C);
-    C.when_ready().wait();
+            error += diff * diff;
+        }
+    }
 
     ASSERT_NEAR(error, 0.0, 1e-12);
 }
@@ -168,22 +152,17 @@ TEST_P(sparse_support, sparse_matrix_matrix_product)
     tensor<double, 2> B(N, N);
     tensor<double, 2> C(N, N);
 
-    auto init_B = make_computelet()
-                      .body([&](cpu_tensor_view<double, 2> B)
-                            {
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    for (long int j = 0; j < N; ++j)
-                                    {
-                                        B(i, j) = B2[i * N + j];
-                                    }
-                                }
-                            })
-                      .finalize();
+    {
+        auto B_view = get_view<host_tensor_view<double, 2>>(B).get();
 
-    execute(init_B, B);
-
-    B.when_ready().wait();
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                B_view(i, j) = B2[i * N + j];
+            }
+        }
+    }
 
     tensor_expr<double, 2> Cdef = def_tensor(i, k)[sum(A(i, j) * B(j, k), j)];
 
@@ -200,27 +179,21 @@ TEST_P(sparse_support, sparse_matrix_matrix_product)
         }
     }
 
-    double error;
+    double error = 0.0;
 
-    auto test = make_computelet()
-                    .body([&](cpu_tensor_view<double, 2> C)
-                          {
-                              error = 0.0;
+    {
+        auto C_view = get_view<host_tensor_view<const double, 2>>(C).get();
 
-                              for (long int i = 0; i < N; ++i)
-                              {
-                                  for (long int j = 0; j < N; ++j)
-                                  {
-                                      double diff = C(i, j) - C2[i * N + j];
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                double diff = C_view(i, j) - C2[i * N + j];
 
-                                      error += diff * diff;
-                                  }
-                              }
-                          })
-                    .finalize();
-
-    execute(test, C);
-    C.when_ready().wait();
+                error += diff * diff;
+            }
+        }
+    }
 
     ASSERT_NEAR(error, 0.0, 1e-12);
 }

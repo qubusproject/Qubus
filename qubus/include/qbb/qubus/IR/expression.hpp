@@ -1,10 +1,17 @@
 #ifndef QBB_QUBUS_EXPRESSION_HPP
 #define QBB_QUBUS_EXPRESSION_HPP
 
+#include <hpx/config.hpp>
+
 #include <qbb/util/multi_method.hpp>
 #include <qbb/qubus/IR/annotations.hpp>
 
 #include <qbb/qubus/IR/expression_traits.hpp>
+#include <qbb/util/unused.hpp>
+
+#include <hpx/include/serialization.hpp>
+#include <hpx/runtime/serialization/base_object.hpp>
+
 
 #include <memory>
 #include <vector>
@@ -103,6 +110,11 @@ public:
         return implementation_table_.number_of_implementations();
     }
 
+    template<typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & self_;
+    }
 private:
     class expression_interface
     {
@@ -118,12 +130,21 @@ private:
 
         virtual std::type_index rtti() const = 0;
         virtual qbb::util::index_t tag() const = 0;
+
+        template<typename Archive>
+        void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
+        {
+        }
+
+        HPX_SERIALIZATION_POLYMORPHIC_ABSTRACT(expression_interface);
     };
 
     template <typename T>
-    class expression_wrapper final : public expression_interface
+    class expression_wrapper : public expression_interface
     {
     public:
+        expression_wrapper() = default;
+
         explicit expression_wrapper(T value_, qbb::util::index_t tag_) : value_(value_), tag_(tag_)
         {
         }
@@ -132,23 +153,23 @@ private:
         {
         }
 
-        annotation_map& annotations() const override
+        annotation_map& annotations() const override final
         {
             return value_.annotations();
         }
 
-        annotation_map& annotations() override
+        annotation_map& annotations() override final
         {
             return value_.annotations();
         }
 
-        std::vector<expression> sub_expressions() const override
+        std::vector<expression> sub_expressions() const override final
         {
             return value_.sub_expressions();
         }
 
         expression
-        substitute_subexpressions(const std::vector<expression>& new_subexprs) const override
+        substitute_subexpressions(const std::vector<expression>& new_subexprs) const override final
         {
             return value_.substitute_subexpressions(new_subexprs);
         }
@@ -163,16 +184,26 @@ private:
             return value_;
         }
 
-        std::type_index rtti() const override
+        std::type_index rtti() const override final
         {
             return typeid(T);
         }
 
-        qbb::util::index_t tag() const override
+        qbb::util::index_t tag() const override final
         {
             return tag_;
         }
 
+        template<typename Archive>
+        void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+        {
+            ar & hpx::serialization::base_object<expression_interface>(*this);
+
+            ar & value_;
+            ar & tag_;
+        }
+
+        HPX_SERIALIZATION_POLYMORPHIC_TEMPLATE(expression_wrapper);
     private:
         T value_;
         qbb::util::index_t tag_;

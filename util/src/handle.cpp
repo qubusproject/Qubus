@@ -10,10 +10,6 @@ namespace qbb
 namespace util
 {
 
-handle::handle(std::uintptr_t id_) : id_(id_)
-{
-}
-
 std::uintptr_t handle::id() const
 {
     return id_;

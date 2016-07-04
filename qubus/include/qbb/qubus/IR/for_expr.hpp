@@ -4,6 +4,7 @@
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/variable_declaration.hpp>
 #include <qbb/qubus/IR/expression_traits.hpp>
+#include <qbb/util/unused.hpp>
 
 #include <vector>
 
@@ -15,6 +16,7 @@ namespace qubus
 class for_expr
 {
 public:
+    for_expr() = default;
     for_expr(variable_declaration loop_index_, expression lower_bound_, expression upper_bound_, expression body_);
     for_expr(variable_declaration loop_index_, expression lower_bound_, expression upper_bound_, expression increment_, expression body_);
     
@@ -32,6 +34,15 @@ public:
     annotation_map& annotations() const;
     annotation_map& annotations();
 
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & loop_index_;
+        ar & lower_bound_;
+        ar & upper_bound_;
+        ar & increment_;
+        ar & body_;
+    }
 private:
     variable_declaration loop_index_;
     expression lower_bound_;

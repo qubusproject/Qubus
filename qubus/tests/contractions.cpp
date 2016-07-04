@@ -15,11 +15,10 @@
 
 #include <gtest/gtest.h>
 
-
 TEST(contractions, simple_contraction)
 {
     using namespace qbb::qubus;
-    
+
     long int N = 100;
 
     std::vector<double> A2(N * N);
@@ -49,37 +48,30 @@ TEST(contractions, simple_contraction)
     tensor<double, 2> B(N, N);
     tensor<double, 2> C(N, N);
 
-    auto init_A = make_computelet()
-                      .body([&](cpu_tensor_view<double, 2> A)
-                            {
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    for (long int j = 0; j < N; ++j)
-                                    {
-                                        A(i, j) = A2[i * N + j];
-                                    }
-                                }
-                            })
-                      .finalize();
+    {
+        auto A_view = get_view<host_tensor_view<double, 2>>(A).get();
 
-    auto init_B = make_computelet()
-                      .body([&](cpu_tensor_view<double, 2> B)
-                            {
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    for (long int j = 0; j < N; ++j)
-                                    {
-                                        B(i, j) = B2[i * N + j];
-                                    }
-                                }
-                            })
-                      .finalize();
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                A_view(i, j) = A2[i * N + j];
+            }
+        }
 
-    execute(init_A, A);
-    execute(init_B, B);
+        auto B_view = get_view<host_tensor_view<double, 2>>(B).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                B_view(i, j) = B2[i * N + j];
+            }
+        }
+    }
 
     tensor_expr<double, 2> Cdef = def_tensor(i, j)[sum(A(i, k) * B(j, k), k)];
-    
+
     C = Cdef;
 
     for (long int i = 0; i < N; ++i)
@@ -92,29 +84,25 @@ TEST(contractions, simple_contraction)
             }
         }
     }
-    
-    double error;
-    
-    auto test = make_computelet()
-                      .body([&](cpu_tensor_view<double, 2> C)
-                            {
-                                error = 0.0;
-                                
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    for (long int j = 0; j < N; ++j)
-                                    {
-                                        double diff = C(i, j) - C2[i * N + j];
 
-                                        error += diff * diff;
-                                    }
-                                }
-                            })
-                      .finalize();
+    double error = 0.0;
 
-    execute(test, C);
+    {
+        auto C_view = get_view<host_tensor_view<const double, 2>>(C).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                double diff = C_view(i, j) - C2[i * N + j];
+
+                error += diff * diff;
+            }
+        }
+    }
+
     C.when_ready().wait();
-    
+
     ASSERT_NEAR(error, 0.0, 1e-12);
 }
 
@@ -151,34 +139,28 @@ TEST(contractions, complex_matrix_multiplication)
     tensor<std::complex<double>, 2> B(N, N);
     tensor<std::complex<double>, 2> C(N, N);
 
-    auto init_A = make_computelet()
-            .body([&](cpu_tensor_view<std::complex<double>, 2> A)
-                  {
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          for (long int j = 0; j < N; ++j)
-                          {
-                              A(i, j) = A2[i * N + j];
-                          }
-                      }
-                  })
-            .finalize();
+    {
+        auto A_view = get_view<host_tensor_view<std::complex<double>, 2>>(A).get();
 
-    auto init_B = make_computelet()
-            .body([&](cpu_tensor_view<std::complex<double>, 2> B)
-                  {
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          for (long int j = 0; j < N; ++j)
-                          {
-                              B(i, j) = B2[i * N + j];
-                          }
-                      }
-                  })
-            .finalize();
 
-    execute(init_A, A);
-    execute(init_B, B);
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                A_view(i, j) = A2[i * N + j];
+            }
+        }
+
+        auto B_view = get_view<host_tensor_view<std::complex<double>, 2>>(B).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                B_view(i, j) = B2[i * N + j];
+            }
+        }
+    }
 
     tensor_expr<std::complex<double>, 2> Cdef = def_tensor(i, j)[sum(A(i, k) * B(k, j), k)];
 
@@ -195,26 +177,22 @@ TEST(contractions, complex_matrix_multiplication)
         }
     }
 
-    double error;
+    double error = 0.0;
 
-    auto test = make_computelet()
-            .body([&](cpu_tensor_view<std::complex<double>, 2> C)
-                  {
-                      error = 0.0;
+    {
+        auto C_view = get_view<host_tensor_view<const std::complex<double>, 2>>(C).get();
 
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          for (long int j = 0; j < N; ++j)
-                          {
-                              std::complex<double> diff = C(i, j) - C2[i * N + j];
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                std::complex<double> diff = C_view(i, j) - C2[i * N + j];
 
-                              error += std::norm(diff);
-                          }
-                      }
-                  })
-            .finalize();
+                error += std::norm(diff);
+            }
+        }
+    }
 
-    execute(test, C);
     C.when_ready().wait();
 
     ASSERT_NEAR(error, 0.0, 1e-12);
@@ -223,7 +201,7 @@ TEST(contractions, complex_matrix_multiplication)
 TEST(contractions, reduction_to_r1)
 {
     using namespace qbb::qubus;
-    
+
     long int N = 100;
 
     std::vector<double> A2(N * N);
@@ -253,37 +231,30 @@ TEST(contractions, reduction_to_r1)
     tensor<double, 2> B(N, N);
     tensor<double, 1> C(N);
 
-    auto init_A = make_computelet()
-                      .body([&](cpu_tensor_view<double, 2> A)
-                            {
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    for (long int j = 0; j < N; ++j)
-                                    {
-                                        A(i, j) = A2[i * N + j];
-                                    }
-                                }
-                            })
-                      .finalize();
+    {
+        auto A_view = get_view<host_tensor_view<double, 2>>(A).get();
 
-    auto init_B = make_computelet()
-                      .body([&](cpu_tensor_view<double, 2> B)
-                            {
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    for (long int j = 0; j < N; ++j)
-                                    {
-                                        B(i, j) = B2[i * N + j];
-                                    }
-                                }
-                            })
-                      .finalize();
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                A_view(i, j) = A2[i * N + j];
+            }
+        }
 
-    execute(init_A, A);
-    execute(init_B, B);
+        auto B_view = get_view<host_tensor_view<double, 2>>(B).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                B_view(i, j) = B2[i * N + j];
+            }
+        }
+    }
 
     tensor_expr<double, 1> Cdef = def_tensor(i)[sum(sum(A(i, k) * B(j, k), k), j)];
-    
+
     C = Cdef;
 
     for (long int i = 0; i < N; ++i)
@@ -296,33 +267,29 @@ TEST(contractions, reduction_to_r1)
             }
         }
     }
-    
-    double error;
-    
-    auto test = make_computelet()
-                      .body([&](cpu_tensor_view<double, 1> C)
-                            {
-                                error = 0.0;
-                                
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                        double diff = C(i) - C2[i];
 
-                                        error += diff * diff;
-                                }
-                            })
-                      .finalize();
+    double error = 0.0;
 
-    execute(test, C);
+    {
+        auto C_view = get_view<host_tensor_view<const double, 1>>(C).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            double diff = C_view(i) - C2[i];
+
+            error += diff * diff;
+        }
+    }
+
     C.when_ready().wait();
-    
+
     ASSERT_NEAR(error, 0.0, 1e-12);
 }
 
 TEST(contractions, matrix_vector_product)
 {
     using namespace qbb::qubus;
-    
+
     long int N = 100;
 
     std::vector<double> A2(N * N);
@@ -351,34 +318,27 @@ TEST(contractions, matrix_vector_product)
     tensor<double, 1> B(N);
     tensor<double, 1> C(N);
 
-    auto init_A = make_computelet()
-                      .body([&](cpu_tensor_view<double, 2> A)
-                            {
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    for (long int j = 0; j < N; ++j)
-                                    {
-                                        A(i, j) = A2[i * N + j];
-                                    }
-                                }
-                            })
-                      .finalize();
+    {
+        auto A_view = get_view<host_tensor_view<double, 2>>(A).get();
 
-    auto init_B = make_computelet()
-                      .body([&](cpu_tensor_view<double, 1> B)
-                            {
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    B(i) = B2[i];
-                                }
-                            })
-                      .finalize();
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                A_view(i, j) = A2[i * N + j];
+            }
+        }
 
-    execute(init_A, A);
-    execute(init_B, B);
+        auto B_view = get_view<host_tensor_view<double, 1>>(B).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            B_view(i) = B2[i];
+        }
+    }
 
     tensor_expr<double, 1> Cdef = def_tensor(i)[sum(A(i, j) * B(j), j)];
-    
+
     C = Cdef;
 
     for (long int i = 0; i < N; ++i)
@@ -388,33 +348,27 @@ TEST(contractions, matrix_vector_product)
             C2[i] += A2[i * N + j] * B2[j];
         }
     }
-    
-    double error;
-    
-    auto test = make_computelet()
-                      .body([&](cpu_tensor_view<double, 1> C)
-                            {
-                                error = 0.0;
-                                
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                        double diff = C(i) - C2[i];
 
-                                        error += diff * diff;
-                                }
-                            })
-                      .finalize();
+    auto C_view = get_view<host_tensor_view<const double, 1>>(C).get();
 
-    execute(test, C);
+    double error = 0.0;
+
+    for (long int i = 0; i < N; ++i)
+    {
+        double diff = C_view(i) - C2[i];
+
+        error += diff * diff;
+    }
+
     C.when_ready().wait();
-    
+
     ASSERT_NEAR(error, 0.0, 1e-12);
 }
 
 TEST(contractions, basis_change_r2)
 {
     using namespace qbb::qubus;
-    
+
     long int N = 100;
 
     std::vector<double> A2(N * N);
@@ -445,37 +399,30 @@ TEST(contractions, basis_change_r2)
     tensor<double, 2> B(N, N);
     tensor<double, 2> C(N, N);
 
-    auto init_A = make_computelet()
-                      .body([&](cpu_tensor_view<double, 2> A)
-                            {
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    for (long int j = 0; j < N; ++j)
-                                    {
-                                        A(i, j) = A2[i * N + j];
-                                    }
-                                }
-                            })
-                      .finalize();
+    {
+        auto A_view = get_view<host_tensor_view<double, 2>>(A).get();
 
-    auto init_B = make_computelet()
-                      .body([&](cpu_tensor_view<double, 2> B)
-                            {
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    for (long int j = 0; j < N; ++j)
-                                    {
-                                        B(i, j) = B2[i * N + j];
-                                    }
-                                }
-                            })
-                      .finalize();
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                A_view(i, j) = A2[i * N + j];
+            }
+        }
 
-    execute(init_A, A);
-    execute(init_B, B);
+        auto B_view = get_view<host_tensor_view<double, 2>>(B).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                B_view(i, j) = B2[i * N + j];
+            }
+        }
+    }
 
     tensor_expr<double, 2> Cdef = def_tensor(i, j)[sum(sum(A(i, k) * B(k, l) * A(l, j), k), l)];
-    
+
     C = Cdef;
 
     for (long int i = 0; i < N; ++i)
@@ -491,40 +438,36 @@ TEST(contractions, basis_change_r2)
             }
         }
     }
-    
-    double error;
-    
-    auto test = make_computelet()
-                      .body([&](cpu_tensor_view<double, 2> C)
-                            {
-                                error = 0.0;
-                                
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    for (long int j = 0; j < N; ++j)
-                                    {
-                                        double diff = C(i, j) - C2[i * N + j];
 
-                                        error += diff * diff;
-                                    }
-                                }
-                            })
-                      .finalize();
+    double error = 0.0;
 
-    execute(test, C);
+    {
+        auto C_view = get_view<host_tensor_view<const double, 2>>(C).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                double diff = C_view(i, j) - C2[i * N + j];
+
+                error += diff * diff;
+            }
+        }
+    }
+
     C.when_ready().wait();
-    
+
     ASSERT_NEAR(error, 0.0, 1e-12);
 }
 
 int hpx_main(int argc, char** argv)
 {
     qbb::qubus::init(argc, argv);
-    
+
     auto result = RUN_ALL_TESTS();
 
     hpx::finalize();
-    
+
     return result;
 }
 

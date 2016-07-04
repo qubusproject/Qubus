@@ -45,11 +45,10 @@ void compile_function(const function_declaration& plan, compiler& comp)
 
     param_types.push_back(env.map_qubus_type(plan.result().var_type())->getPointerTo());
 
-    param_types.push_back(
-        llvm::PointerType::get(llvm::Type::getInt8Ty(llvm::getGlobalContext()), 0));
+    param_types.push_back(llvm::PointerType::get(llvm::Type::getInt8Ty(env.ctx()), 0));
 
-    llvm::FunctionType* FT = llvm::FunctionType::get(
-        llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
+    llvm::FunctionType* FT =
+        llvm::FunctionType::get(llvm::Type::getVoidTy(env.ctx()), param_types, false);
 
     llvm::Function* compiled_plan;
 
@@ -66,8 +65,7 @@ void compile_function(const function_declaration& plan, compiler& comp)
 
     env.set_current_function(compiled_plan);
 
-    llvm::BasicBlock* BB =
-        llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", compiled_plan);
+    llvm::BasicBlock* BB = llvm::BasicBlock::Create(env.ctx(), "entry", compiled_plan);
     env.builder().SetInsertPoint(BB);
 
     // body
@@ -93,7 +91,8 @@ void compile_function(const function_declaration& plan, compiler& comp)
     env.builder().CreateRetVoid();
 }
 
-void compile_entry_point(const function_declaration& plan, compiler& comp, const std::string& namespace_)
+void compile_entry_point(const function_declaration& plan, compiler& comp,
+                         const std::string& namespace_)
 {
     auto& env = comp.get_module().env();
     auto& ctx = comp.get_module().ctx();
@@ -103,13 +102,15 @@ void compile_entry_point(const function_declaration& plan, compiler& comp, const
     // Prolog
     std::vector<llvm::Type*> param_types;
 
-    param_types.push_back(llvm::PointerType::get(
-        llvm::PointerType::get(llvm::Type::getInt8Ty(llvm::getGlobalContext()), 0), 0));
-    param_types.push_back(
-        llvm::PointerType::get(llvm::Type::getInt8Ty(llvm::getGlobalContext()), 0));
+    auto generic_ptr_type = llvm::PointerType::get(llvm::Type::getInt8Ty(env.ctx()), 0);
 
-    llvm::FunctionType* FT = llvm::FunctionType::get(
-        llvm::Type::getVoidTy(llvm::getGlobalContext()), param_types, false);
+    auto address_type = env.get_address_type();
+
+    param_types.push_back(address_type->getPointerTo(0));
+    param_types.push_back(generic_ptr_type);
+
+    llvm::FunctionType* FT =
+        llvm::FunctionType::get(llvm::Type::getVoidTy(env.ctx()), param_types, false);
 
     std::string entry_point_name = namespace_;
 
@@ -123,7 +124,7 @@ void compile_entry_point(const function_declaration& plan, compiler& comp, const
 
     env.set_current_function(kernel);
 
-    llvm::BasicBlock* BB = llvm::BasicBlock::Create(llvm::getGlobalContext(), "entry", kernel);
+    llvm::BasicBlock* BB = llvm::BasicBlock::Create(env.ctx(), "entry", kernel);
     env.builder().SetInsertPoint(BB);
 
     // unpack args
@@ -138,22 +139,14 @@ void compile_entry_point(const function_declaration& plan, compiler& comp, const
         llvm::Value* ptr_to_arg =
             env.builder().CreateConstInBoundsGEP1_64(&kernel->getArgumentList().front(), counter);
 
-        auto arg = env.builder().CreateLoad(env.builder().getInt8PtrTy(0), ptr_to_arg);
+        auto arg = env.builder().CreateCall(env.get_translate_address(),
+                                            {&kernel->getArgumentList().back(), ptr_to_arg});
 
         llvm::Value* typed_arg =
             env.builder().CreateBitCast(arg, llvm::PointerType::get(param_type, 0));
 
         // TODO: Generalize and reenable alignment tracking.
-        /*llvm::Value* data_ptr =
-            env.builder().CreateConstInBoundsGEP2_32(typed_arg, 0, 0, "data_ptr");
-
-        auto data = load_from_ref(reference(data_ptr, access_path(param.id())), env, ctx);
-
         // TODO: get alignement from the ABI
-        env.builder().CreateCall2(
-            env.get_assume_align(),
-            env.builder().CreateBitCast(data, llvm::Type::getInt8PtrTy(llvm::getGlobalContext())),
-            llvm::ConstantInt::get(llvm::Type::getInt64Ty(llvm::getGlobalContext()), 32));*/
 
         arguments.push_back(typed_arg);
         ++counter;
@@ -185,13 +178,19 @@ void compile_entry_point(const function_declaration& plan, compiler& comp, const
 }
 }
 
-module::module(std::string namespace_) : namespace_(std::move(namespace_)), ctx_(std::make_unique<compilation_context>(env_))
+module::module(std::string namespace_, llvm::LLVMContext& llvm_ctx_)
+: namespace_(std::move(namespace_)), env_(llvm_ctx_), ctx_(std::make_unique<compilation_context>(env_))
 {
 }
 
 const std::string& module::get_namespace() const
 {
     return namespace_;
+}
+
+std::unique_ptr<llvm::Module> module::detach_module()
+{
+    return env().detach_module();
 }
 
 llvm_environment& module::env()
@@ -207,6 +206,11 @@ compilation_context& module::ctx()
 void module::finish()
 {
     ctx_.reset();
+}
+
+compiler::compiler()
+: ctx_(std::make_unique<llvm::LLVMContext>())
+{
 }
 
 reference compiler::compile(const expression& expr)
@@ -235,6 +239,11 @@ module& compiler::get_module()
     return *current_module_;
 }
 
+llvm::LLVMContext& compiler::get_context()
+{
+    return *ctx_;
+}
+
 void compiler::reset()
 {
     current_module_->finish();
@@ -246,7 +255,7 @@ std::unique_ptr<module> compile(const function_declaration& func, compiler& comp
 {
     static std::size_t unique_id = 0;
 
-    auto mod = std::make_unique<module>("qubus_plan" + std::to_string(unique_id));
+    auto mod = std::make_unique<module>("qubus_plan" + std::to_string(unique_id), comp.get_context());
 
     ++unique_id;
 

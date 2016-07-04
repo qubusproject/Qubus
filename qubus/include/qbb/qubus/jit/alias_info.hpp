@@ -4,7 +4,12 @@
 #include <hpx/config.hpp>
 #include <hpx/lcos/future.hpp>
 
+#pragma push_macro("DEBUG")
+#undef DEBUG
+
 #include <llvm/IR/Metadata.h>
+
+#pragma pop_macro("DEBUG")
 
 #include <utility>
 

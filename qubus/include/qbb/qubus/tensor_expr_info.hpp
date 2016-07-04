@@ -2,7 +2,7 @@
 #define QBB_QUBUS_TENSOR_EXPR_INFO_HPP
 
 #include <qbb/qubus/object.hpp>
-#include <qbb/qubus/plan.hpp>
+#include <qbb/qubus/computelet.hpp>
 
 #include <qbb/qubus/IR/type.hpp>
 
@@ -22,18 +22,18 @@ class tensor_expr_info
 {
 public:
     explicit tensor_expr_info(type result_type_,
-                              std::tuple<tensor_expr_closure, std::vector<std::shared_ptr<object>>> ir_info);
+                              std::tuple<tensor_expr_closure, std::vector<object>> ir_info);
 
-    const plan& compiled_plan() const;
+    computelet stored_computelet() const;
 
-    const std::vector<std::shared_ptr<object>>& args() const;
+    const std::vector<object>& args() const;
 
 private:
     type result_type_;
     tensor_expr_closure closure_;
-    std::vector<std::shared_ptr<object>> args_;
+    std::vector<object> args_;
 
-    mutable boost::optional<plan> plan_;
+    computelet stored_computelet_;
 };
 }
 }

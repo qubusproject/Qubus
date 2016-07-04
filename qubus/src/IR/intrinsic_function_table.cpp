@@ -82,8 +82,6 @@ public:
 
         for (const auto& t : math_types)
         {
-            add_intrinsic_function("extent", {types::tensor(t), types::integer{}},
-                                   types::integer{});
             add_intrinsic_function("extent", {types::array(t), types::integer{}}, types::integer{});
             add_intrinsic_function("extent", {types::sparse_tensor(t), types::integer{}},
                                    types::integer{});

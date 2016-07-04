@@ -50,11 +50,6 @@ bool type_eq_complex(const types::complex& lhs, const types::complex& rhs)
     return lhs.real_type() == rhs.real_type();
 }
 
-bool type_eq_tensor(const types::tensor& lhs, const types::tensor& rhs)
-{
-    return lhs.value_type() == rhs.value_type();
-}
-
 bool type_eq_array(const types::array& lhs, const types::array& rhs)
 {
     return lhs.value_type() == rhs.value_type();
@@ -88,7 +83,6 @@ void init_type_eq()
     type_eq.add_specialization(type_eq_bool);
     type_eq.add_specialization(type_eq_index);
     type_eq.add_specialization(type_eq_complex);
-    type_eq.add_specialization(type_eq_tensor);
     type_eq.add_specialization(type_eq_array);
     type_eq.add_specialization(type_eq_array_slice);
     type_eq.add_specialization(type_eq_sparse_tensor);
@@ -190,16 +184,6 @@ std::size_t hash<qbb::qubus::type>::operator()(const qbb::qubus::type& value) co
                        std::size_t seed = 0;
 
                        qbb::util::hash_combine(seed, std::type_index(typeid(types::complex)));
-                       qbb::util::hash_combine(seed, t.get());
-
-                       return seed;
-                   })
-            .case_(pattern::tensor_t(t),
-                   [&]
-                   {
-                       std::size_t seed = 0;
-
-                       qbb::util::hash_combine(seed, std::type_index(typeid(types::tensor)));
                        qbb::util::hash_combine(seed, t.get());
 
                        return seed;

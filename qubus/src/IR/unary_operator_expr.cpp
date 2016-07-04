@@ -9,6 +9,10 @@ namespace qbb
 namespace qubus
 {
 
+unary_operator_expr::unary_operator_expr() : tag_(unary_op_tag::nop)
+{
+}
+
 unary_operator_expr::unary_operator_expr(unary_op_tag tag_, expression arg_)
 : tag_{tag_}, arg_{std::move(arg_)}
 {

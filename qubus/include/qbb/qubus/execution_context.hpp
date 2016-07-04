@@ -3,6 +3,8 @@
 
 #include <qbb/qubus/object.hpp>
 
+#include <qbb/util/unused.hpp>
+
 #include <vector>
 #include <memory>
 #include <utility>
@@ -15,29 +17,37 @@ namespace qubus
 class execution_context
 {
 public:
-    explicit execution_context(std::vector<std::shared_ptr<object>> arguments_)
-    : arguments_(std::move(arguments_))
-    {
-    }
-    
     execution_context() = default;
-    execution_context(const execution_context&) = delete;
-    execution_context(execution_context&&) = default;
     
-    execution_context& operator=(const execution_context&) = delete;
-    execution_context& operator=(execution_context&&) = default;
-    
-    const std::vector<std::shared_ptr<object>>& args() const
+    std::vector<object>& args()
     {
         return arguments_;
     }
     
-    void push_back_arg(std::shared_ptr<object> arg)
+    void push_back_arg(object arg)
     {
         arguments_.push_back(arg);
     }
+
+    std::vector<object>& results()
+    {
+        return results_;
+    }
+
+    void push_back_result(object result)
+    {
+        results_.push_back(result);
+    }
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & arguments_;
+        ar & results_;
+    }
 private:
-    std::vector<std::shared_ptr<object>> arguments_;
+    std::vector<object> arguments_;
+    std::vector<object> results_;
 };
     
 }

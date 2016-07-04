@@ -5,6 +5,7 @@
 #include <qbb/qubus/IR/expression_traits.hpp>
 
 #include <qbb/util/integers.hpp>
+#include <qbb/util/unused.hpp>
 
 #include <vector>
 
@@ -16,6 +17,7 @@ namespace qubus
 class kronecker_delta_expr
 {
 public:
+    kronecker_delta_expr() = default;
     kronecker_delta_expr(util::index_t extent_, expression first_index_, expression second_index_);
 
     util::index_t extent() const;
@@ -27,6 +29,14 @@ public:
 
     annotation_map& annotations() const;
     annotation_map& annotations();
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & extent_;
+        ar & first_index_;
+        ar & second_index_;
+    }
 private:
     util::index_t extent_;
     expression first_index_;

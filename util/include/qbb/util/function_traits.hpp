@@ -2,6 +2,7 @@
 #define QBB_UTIL_FUNCTION_TRAITS_HPP
 
 #include <type_traits>
+#include <tuple>
 
 namespace qbb
 {
@@ -25,7 +26,7 @@ struct function_traits<ReturnType(Args...)>
 
     typedef ReturnType result_type;
 
-    template <size_t i>
+    template <std::size_t i>
     struct arg
     {
         typedef typename std::tuple_element<i, std::tuple<Args...>>::type type;

@@ -3,11 +3,7 @@
 
 #include <hpx/config.hpp>
 
-#include <qbb/qubus/local_address_space.hpp>
-#include <qbb/qubus/local_object_factory.hpp>
-
-#include <qbb/qubus/executor.hpp>
-#include <qbb/qubus/compiler.hpp>
+#include <qbb/qubus/vpu.hpp>
 
 #include <vector>
 #include <string>
@@ -17,6 +13,12 @@ namespace qbb
 {
 namespace qubus
 {
+
+enum class backend_type : unsigned int
+{
+    vpu = 0,
+    host = 1
+};
 
 class backend
 {
@@ -30,14 +32,8 @@ public:
     
     //TODO: Substitute string with string_view
     virtual std::string id() const = 0;
-    
-    virtual std::vector<executor*> executors() const = 0;    
-    virtual compiler& get_compiler() const = 0;
-    
-    virtual local_object_factory& local_factory() const = 0;
-    virtual local_address_space& address_space() const = 0;
-    
-    //virtual void connect(const backend& other) = 0;
+
+    virtual std::vector<std::unique_ptr<vpu>> create_vpus() const = 0;
 };
 
 }   

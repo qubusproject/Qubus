@@ -2,36 +2,27 @@
 
 #include <qbb/qubus/local_runtime.hpp>
 
-#include <qbb/qubus/plan.hpp>
-
-#include <qbb/qubus/lower_top_level_sums.hpp>
-#include <qbb/qubus/sparse_patterns.hpp>
-#include <qbb/qubus/lower_abstract_indices.hpp>
-#include <qbb/qubus/loop_optimizer.hpp>
-#include <qbb/qubus/make_implicit_conversions_explicit.hpp>
-#include <qbb/qubus/IR/pretty_printer.hpp>
-#include <qbb/qubus/multi_index_handling.hpp>
-#include <qbb/qubus/kronecker_delta_folding_pass.hpp>
-
-#include <qbb/qubus/metadata_builder.hpp>
-#include <qbb/qubus/jit/execution_stack.hpp>
-
 #include <qbb/qubus/logging.hpp>
 
-#include <boost/range/adaptor/indexed.hpp>
+#include <qbb/qubus/hpx_utils.hpp>
 
 #include <qbb/util/get_prefix.hpp>
-#include <qbb/util/make_unique.hpp>
-#include <qbb/util/unused.hpp>
 
 #include <hpx/include/lcos.hpp>
 
-#include <mutex>
-#include <string>
-#include <unordered_map>
+#include <memory>
 #include <utility>
-#include <algorithm>
-#include <iterator>
+
+using server_type = hpx::components::component<qbb::qubus::local_runtime_reference_server>;
+HPX_REGISTER_COMPONENT(server_type, qbb_qubus_local_runtime_reference_server);
+
+typedef qbb::qubus::local_runtime_reference_server::get_local_object_factory_action get_local_object_factory_action;
+HPX_REGISTER_ACTION_DECLARATION(get_local_object_factory_action);
+HPX_REGISTER_ACTION(get_local_object_factory_action)
+
+typedef qbb::qubus::local_runtime_reference_server::get_local_vpu_action get_local_vpu_action;
+HPX_REGISTER_ACTION_DECLARATION(get_local_vpu_action);
+HPX_REGISTER_ACTION(get_local_vpu_action);
 
 namespace qbb
 {
@@ -41,177 +32,14 @@ namespace qubus
 namespace
 {
 
-class runtime_plan
-{
-public:
-    virtual ~runtime_plan() = default;
+std::unique_ptr<local_runtime> local_qubus_runtime;
 
-    virtual hpx::lcos::future<void> execute(execution_context ctx) const = 0;
-};
-
-class simple_plan final : public runtime_plan
-{
-public:
-    simple_plan(backend* backend_, plan handle_) : backend_(backend_), handle_(handle_)
-    {
-    }
-
-    hpx::lcos::future<void> execute(execution_context ctx) const override
-    {
-        return backend_->executors()[0]->execute_plan(handle_, std::move(ctx));
-    }
-
-private:
-    backend* backend_;
-    plan handle_;
-};
-
-class user_defined_plan_executor
-{
-public:
-    user_defined_plan_executor(local_address_space& addr_space_, const abi_info& abi_)
-    : addr_space_(&addr_space_), abi_(&abi_), exec_stack_(1024)
-    {
-    }
-
-    hpx::lcos::future<void> execute_plan(const user_defined_plan_body_t& body,
-                                         const execution_context& ctx)
-    {
-        std::vector<void*> args;
-
-        std::vector<std::shared_ptr<memory_block>> used_mem_blocks;
-
-        for (const auto& arg : ctx.args())
-        {
-            args.push_back(
-                build_object_metadata(*arg, *addr_space_, *abi_, exec_stack_, used_mem_blocks));
-        }
-
-        return hpx::async([body, args, used_mem_blocks, this]()
-                          {
-                              body(args.data());
-                              exec_stack_.clear();
-                          });
-    }
-
-private:
-    local_address_space* addr_space_;
-    const abi_info* abi_;
-    execution_stack exec_stack_;
-};
-
-class user_defined_plan final : public runtime_plan
-{
-public:
-    explicit user_defined_plan(user_defined_plan_executor& executor_,
-                               user_defined_plan_body_t body_)
-    : executor_(&executor_), body_(std::move(body_))
-    {
-    }
-
-    hpx::lcos::future<void> execute(execution_context ctx) const override
-    {
-        return executor_->execute_plan(body_, ctx);
-    }
-
-private:
-    user_defined_plan_executor* executor_;
-    user_defined_plan_body_t body_;
-};
 }
 
-// TODO: Guard this with a mutex
-class global_plan_repository
-{
-public:
-    global_plan_repository(local_address_space& host_addr_space_, const abi_info& abi)
-    : udp_executor_(host_addr_space_, abi)
-    {
-    }
-
-    plan add_plan(backend* backend, plan handle)
-    {
-        auto id = id_factory_.create();
-
-        plans_.emplace(id, util::make_unique<simple_plan>(backend, handle));
-
-        return plan(id, handle.intents());
-    }
-
-    plan add_user_defined_plan(user_defined_plan_t p)
-    {
-        auto id = id_factory_.create();
-
-        plans_.emplace(id, util::make_unique<user_defined_plan>(udp_executor_, std::move(p.body)));
-
-        return plan(id, std::move(p.intents));
-    }
-
-    runtime_plan* lookup_plan(const plan& p) const
-    {
-        return plans_.at(p.id()).get();
-    }
-
-private:
-    util::handle_factory id_factory_;
-    std::unordered_map<util::handle, std::unique_ptr<runtime_plan>> plans_;
-    user_defined_plan_executor udp_executor_;
-};
-
-runtime_executor::runtime_executor(global_plan_repository& plan_repository_)
-: plan_repository_(&plan_repository_)
-{
-}
-
-hpx::lcos::future<void> runtime_executor::execute_plan(const plan& executed_plan,
-                                                       execution_context ctx)
-{
-    for (const auto& arg : ctx.args() | boost::adaptors::indexed())
-    {
-        bool must_alias = false;
-
-        if (executed_plan.intents()[arg.index()] == intent::inout)
-        {
-            for (const auto& arg2 : ctx.args() | boost::adaptors::indexed())
-            {
-                if (arg.index() != arg2.index() && arg2.value()->id() == arg.value()->id())
-                {
-                    must_alias = true;
-                    break;
-                }
-            }
-        }
-
-        if (must_alias)
-        {
-            /*
-            auto original_result = ctx.result();
-
-            auto temp_result = original_result->clone();
-
-            auto patched_ctx = ctx;
-
-            patched_ctx.set_result(temp_result);
-
-            auto f = plan->execute(patched_ctx);
-
-            return f.then([](const hpx::lcos::future<void>&)
-            {
-                original_result->substitute_with(temp_result);
-            });
-             */
-
-            throw 0;
-        }
-    }
-
-    auto plan = plan_repository_->lookup_plan(executed_plan);
-
-    return plan->execute(std::move(ctx));
-}
+extern "C" backend* init_cpu_backend(const abi_info*);
 
 local_runtime::local_runtime()
-: cpu_plugin_(util::get_prefix("qubus") / "qubus/backends/libqubus_cpu_backend.so")
+//: cpu_plugin_(util::get_prefix("qubus") / "qubus/backends/libqubus_cpu_backend.so")
 {
     init_logging();
 
@@ -229,7 +57,7 @@ local_runtime::local_runtime()
 
     QUBUS_LOG(slg, normal) << "Loading backend 'cpu_backend'";
 
-    auto init_cpu_backend = cpu_plugin_.get<backend*(const abi_info*)>("init_cpu_backend");
+    //auto init_cpu_backend = cpu_plugin_.get<backend*(const abi_info*)>("init_cpu_backend");
 
     cpu_backend_ = dynamic_cast<host_backend*>(init_cpu_backend(&abi_info_));
 
@@ -238,87 +66,103 @@ local_runtime::local_runtime()
         throw 0;
     }
 
-    plan_repository_ =
-        util::make_unique<global_plan_repository>(cpu_backend_->address_space(), abi_info_);
+    address_space_ = std::make_unique<local_address_space>(cpu_backend_->get_host_address_space());
 
-    object_factory_.add_factory_and_addr_space(cpu_backend_->id(), cpu_backend_->local_factory(),
-                                               cpu_backend_->address_space());
+    object_factory_ = new_here<local_object_factory_server>(address_space_.get());
 
-    runtime_exec_ = util::make_unique<runtime_executor>(*plan_repository_);
+    //local_vpu_ = std::make_unique<aggregate_vpu>(std::make_unique<round_robin_scheduler>());
 
-    scheduler_ = util::make_unique<greedy_scheduler>(*runtime_exec_);
+    /*for (auto&& vpu : cpu_backend_->create_vpus())
+    {
+        local_vpu_->add_member_vpu(std::move(vpu));
+    }*/
+
+    local_vpu_ = std::move(cpu_backend_->create_vpus()[0]);
 }
 
-local_runtime::~local_runtime()
-{
-}
-
-object_factory& local_runtime::get_object_factory()
+local_object_factory local_runtime::get_local_object_factory() const
 {
     return object_factory_;
 }
 
-plan local_runtime::compile(function_declaration decl)
+vpu& local_runtime::get_local_vpu() const
 {
-    decl = expand_multi_indices(decl);
-
-    decl = fold_kronecker_deltas(decl);
-
-    decl = optimize_sparse_patterns(decl);
-
-    decl = lower_top_level_sums(decl);
-
-    decl = lower_abstract_indices(decl);
-
-    decl = optimize_loops(decl);
-
-    decl = make_implicit_conversions_explicit(decl);
-
-    auto& compiler = cpu_backend_->get_compiler();
-
-    return plan_repository_->add_plan(cpu_backend_, compiler.compile_plan(decl));
+    return *local_vpu_;
 }
 
-plan local_runtime::register_user_defined_plan(user_defined_plan_t plan)
+local_address_space& local_runtime::get_address_space() const
 {
-    auto cpu_plan = cpu_backend_->register_function_as_plan(plan.body, plan.intents);
-
-    return plan_repository_->add_plan(cpu_backend_, cpu_plan);
+    return *address_space_;
 }
 
-void local_runtime::execute(plan p, execution_context ctx)
+local_runtime_reference_server::local_runtime_reference_server(local_runtime* runtime_)
+: runtime_(runtime_)
 {
-    scheduler_->schedule(p, std::move(ctx));
 }
 
-hpx::shared_future<void> local_runtime::when_ready(const object& obj)
+hpx::future<hpx::id_type> local_runtime_reference_server::get_local_object_factory() const
 {
-    return scheduler_->when_ready(obj);
+    return hpx::make_ready_future(runtime_->get_local_object_factory().get());
 }
 
-namespace
+std::unique_ptr<remote_vpu_reference> local_runtime_reference_server::get_local_vpu() const
 {
-std::unique_ptr<local_runtime> qubus_runtime = {};
-std::once_flag qubus_runtime_init_flag;
+    return std::make_unique<remote_vpu_reference>(new_here<remote_vpu_reference_server>(&runtime_->get_local_vpu()));
 }
 
-void init(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
+local_runtime_reference::local_runtime_reference(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
 {
-    std::call_once(qubus_runtime_init_flag, []
-                   {
-                       qubus_runtime = util::make_unique<local_runtime>();
-                   });
 }
 
-local_runtime& get_runtime()
+local_object_factory local_runtime_reference::get_local_object_factory() const
 {
-    // FIXME: Is this thread-safe ?
-    if (!qubus_runtime)
-    {
-        throw 0;
-    }
+    return hpx::async<local_runtime_reference_server::get_local_object_factory_action>(this->get_id());
+}
 
-    return *qubus_runtime;
+std::unique_ptr<remote_vpu_reference> local_runtime_reference::get_local_vpu() const
+{
+    return hpx::async<local_runtime_reference_server::get_local_vpu_action>(this->get_id()).get();
+}
+
+local_runtime& init_local_runtime()
+{
+    local_qubus_runtime = std::make_unique<local_runtime>();
+
+    return *local_qubus_runtime;
+}
+
+local_runtime& get_local_runtime()
+{
+    return *local_qubus_runtime;
+}
+
+hpx::future<hpx::id_type> init_local_runtime_remote()
+{
+    return new_here<local_runtime_reference_server>(&init_local_runtime());
+}
+
+hpx::future<hpx::id_type> get_local_runtime_remote()
+{
+    return new_here<local_runtime_reference_server>(&get_local_runtime());
+}
+
+HPX_DEFINE_PLAIN_ACTION(init_local_runtime_remote, init_local_runtime_remote_action);
+HPX_DEFINE_PLAIN_ACTION(get_local_runtime_remote, get_local_runtime_remote_action);
+
+local_runtime_reference init_local_runtime_on_locality(const hpx::id_type& locality)
+{
+    return hpx::async<init_local_runtime_remote_action>(locality);
+}
+
+local_runtime_reference get_local_runtime_on_locality(const hpx::id_type& locality)
+{
+    return hpx::async<get_local_runtime_remote_action>(locality);
+}
+
 }
 }
-}
+
+HPX_REGISTER_ACTION(qbb::qubus::init_local_runtime_remote_action, qbb_qubus_init_local_runtime_remote_action);
+HPX_REGISTER_ACTION(qbb::qubus::get_local_runtime_remote_action, qbb_qubus_get_local_runtime_remote_action);
+
+

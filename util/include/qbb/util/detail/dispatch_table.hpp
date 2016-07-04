@@ -85,6 +85,10 @@ public:
 class implementation_table
 {
 public:
+    ~implementation_table()
+    {
+    }
+
     template <typename T>
     index_t register_type()
     {

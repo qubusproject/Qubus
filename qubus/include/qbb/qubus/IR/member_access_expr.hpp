@@ -3,6 +3,9 @@
 
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/expression_traits.hpp>
+#include <qbb/util/unused.hpp>
+
+#include <hpx/runtime/serialization/string.hpp>
 
 #include <string>
 
@@ -14,6 +17,7 @@ namespace qubus
 class member_access_expr
 {
 public:
+    member_access_expr() = default;
     member_access_expr(expression object_, std::string member_name_);
 
     const expression& object() const;
@@ -24,6 +28,13 @@ public:
 
     annotation_map& annotations() const;
     annotation_map& annotations();
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & object_;
+        ar & member_name_;
+    }
 private:
     expression object_;
     std::string member_name_;

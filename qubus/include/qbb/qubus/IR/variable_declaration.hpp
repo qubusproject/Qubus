@@ -1,11 +1,15 @@
 #ifndef QBB_QUBUS_VARIABLE_DECLARATION_HPP
 #define QBB_QUBUS_VARIABLE_DECLARATION_HPP
 
+#include <hpx/config.hpp>
+
 #include <qbb/qubus/IR/type.hpp>
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/annotations.hpp>
 
 #include <qbb/util/handle.hpp>
+#include <qbb/util/unused.hpp>
+#include <hpx/include/serialization.hpp>
 
 #include <memory>
 #include <functional>
@@ -15,13 +19,41 @@ namespace qbb
 namespace qubus
 {
 
-class variable_declaration_info;
-
 enum class variable_intent
 {
     generic,
     in,
     out
+};
+
+class variable_declaration_info
+{
+public:
+    variable_declaration_info();
+    explicit variable_declaration_info(type var_type_, variable_intent intent_);
+
+    variable_declaration_info(const variable_declaration_info&) = delete;
+    variable_declaration_info& operator=(const variable_declaration_info&) = delete;
+
+    const type& var_type() const;
+
+    variable_intent intent() const;
+
+    annotation_map& annotations() const;
+
+    annotation_map& annotations();
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & var_type_;
+        ar & intent_;
+    }
+private:
+    type var_type_;
+    variable_intent intent_;
+
+    mutable annotation_map annotations_;
 };
 
 class variable_declaration
@@ -36,6 +68,12 @@ public:
     
     annotation_map& annotations() const;
     annotation_map& annotations();
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & info_;
+    }
 private:
     std::shared_ptr<variable_declaration_info> info_;
 };

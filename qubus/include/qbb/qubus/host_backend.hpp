@@ -2,7 +2,7 @@
 #define QBB_HOST_BACKEND_HPP
 
 #include <qbb/qubus/backend.hpp>
-#include <qbb/qubus/plan.hpp>
+#include <qbb/qubus/local_address_space.hpp>
 
 #include <functional>
 #include <vector>
@@ -21,8 +21,7 @@ public:
     host_backend(const host_backend&) = delete;
     host_backend& operator=(const host_backend&) = delete;
 
-    virtual plan register_function_as_plan(std::function<void(void* const*)> func,
-                                           std::vector<intent> intents) = 0;
+    virtual host_address_space& get_host_address_space() = 0;
 };
 }
 }

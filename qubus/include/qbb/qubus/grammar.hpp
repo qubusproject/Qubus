@@ -1,8 +1,9 @@
 #ifndef QUBUS_GRAMMAR_HPP
 #define QUBUS_GRAMMAR_HPP
 
-#include <qbb/qubus/local_tensor.hpp>
 #include <qbb/qubus/tensor_expr_info.hpp>
+#include <qbb/qubus/tensor_info.hpp>
+#include <qbb/qubus/sparse_tensor.hpp>
 
 #include <qbb/qubus/indexed_tensor_expr_context.hpp>
 #include <qbb/qubus/index.hpp>
@@ -61,13 +62,13 @@ struct is_tensor : boost::mpl::false_
 {
 };
 
-template <>
-struct is_tensor<std::shared_ptr<local_tensor>> : boost::mpl::true_
+template <typename T, long int Rank>
+struct is_tensor<tensor_info<T, Rank>> : boost::mpl::true_
 {
 };
 
-template <>
-struct is_tensor<std::shared_ptr<struct_>> : boost::mpl::true_
+template <typename T, long int Rank>
+struct is_tensor<sparse_tensor_info<T, Rank>> : boost::mpl::true_
 {
 };
 
