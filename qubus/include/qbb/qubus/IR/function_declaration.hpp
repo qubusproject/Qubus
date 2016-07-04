@@ -11,9 +11,7 @@
 #include <qbb/util/handle.hpp>
 #include <qbb/util/unused.hpp>
 
-#include <qbb/util/hpx/serialization/shared_ptr.hpp>
-#include <hpx/runtime/serialization/vector.hpp>
-#include <hpx/runtime/serialization/string.hpp>
+#include <hpx/include/serialization.hpp>
 
 #include <boost/optional.hpp>
 

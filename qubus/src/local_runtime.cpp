@@ -2,8 +2,6 @@
 
 #include <qbb/qubus/local_runtime.hpp>
 
-#include <qbb/qubus/aggregate_vpu.hpp>
-
 #include <qbb/qubus/logging.hpp>
 
 #include <qbb/qubus/hpx_utils.hpp>
@@ -15,17 +13,14 @@
 #include <memory>
 #include <utility>
 
-using server_type = hpx::components::component<qbb::qubus::local_runtime_server>;
-HPX_REGISTER_COMPONENT(server_type, qbb_qubus_local_runtime_server);
+using server_type = hpx::components::component<qbb::qubus::local_runtime_reference_server>;
+HPX_REGISTER_COMPONENT(server_type, qbb_qubus_local_runtime_reference_server);
 
-HPX_REGISTER_ACTION(qbb::qubus::init_local_runtime_action, qbb_qubus_init_local_runtime_action);
-HPX_REGISTER_ACTION(qbb::qubus::get_local_runtime_action, qbb_qubus_get_local_runtime);
-
-typedef qbb::qubus::local_runtime_server::get_local_object_factory_action get_local_object_factory_action;
+typedef qbb::qubus::local_runtime_reference_server::get_local_object_factory_action get_local_object_factory_action;
 HPX_REGISTER_ACTION_DECLARATION(get_local_object_factory_action);
 HPX_REGISTER_ACTION(get_local_object_factory_action)
 
-typedef qbb::qubus::local_runtime_server::get_local_vpu_action get_local_vpu_action;
+typedef qbb::qubus::local_runtime_reference_server::get_local_vpu_action get_local_vpu_action;
 HPX_REGISTER_ACTION_DECLARATION(get_local_vpu_action);
 HPX_REGISTER_ACTION(get_local_vpu_action);
 
@@ -37,13 +32,13 @@ namespace qubus
 namespace
 {
 
-local_runtime local_qubus_runtime;
+std::unique_ptr<local_runtime> local_qubus_runtime;
 
 }
 
 extern "C" backend* init_cpu_backend(const abi_info*);
 
-local_runtime_server::local_runtime_server()
+local_runtime::local_runtime()
 //: cpu_plugin_(util::get_prefix("qubus") / "qubus/backends/libqubus_cpu_backend.so")
 {
     init_logging();
@@ -73,63 +68,101 @@ local_runtime_server::local_runtime_server()
 
     address_space_ = std::make_unique<local_address_space>(cpu_backend_->get_host_address_space());
 
-    using local_object_factory_component_type = hpx::components::component<local_object_factory_server>;
-    object_factory_ = hpx::make_ready_future(
-        hpx::id_type(hpx::components::server::construct<local_object_factory_component_type>(
-                         address_space_.get()),
-                     hpx::id_type::managed));
+    object_factory_ = new_here<local_object_factory_server>(address_space_.get());
 
-    local_vpu_ = new_here<aggregate_vpu>();
+    //local_vpu_ = std::make_unique<aggregate_vpu>(std::make_unique<round_robin_scheduler>());
 
-    auto local_cpu_ptr = hpx::get_ptr_sync<aggregate_vpu>(local_vpu_.get_id());
-
-    for (const auto& vpu : cpu_backend_->vpus())
+    /*for (auto&& vpu : cpu_backend_->create_vpus())
     {
-        local_cpu_ptr->add_member_vpu(vpu);
-    }
-}
+        local_vpu_->add_member_vpu(std::move(vpu));
+    }*/
 
-local_runtime_server::~local_runtime_server()
-{
-}
-
-local_object_factory local_runtime_server::get_local_object_factory() const
-{
-    return object_factory_;
-}
-
-vpu local_runtime_server::get_local_vpu() const
-{
-    return local_vpu_;
-}
-
-local_runtime::local_runtime(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
-{
+    local_vpu_ = std::move(cpu_backend_->create_vpus()[0]);
 }
 
 local_object_factory local_runtime::get_local_object_factory() const
 {
-    return hpx::async<get_local_object_factory_action>(this->get_id()).get();
+    return object_factory_;
 }
 
-vpu local_runtime::get_local_vpu() const
+vpu& local_runtime::get_local_vpu() const
 {
-    return hpx::async<get_local_vpu_action>(this->get_id()).get();
+    return *local_vpu_;
 }
 
-local_runtime init_local_runtime()
+local_address_space& local_runtime::get_address_space() const
 {
-    local_qubus_runtime = new_here<local_runtime_server>();
-
-    return local_qubus_runtime;
+    return *address_space_;
 }
 
-local_runtime get_local_runtime()
+local_runtime_reference_server::local_runtime_reference_server(local_runtime* runtime_)
+: runtime_(runtime_)
 {
-    return local_qubus_runtime;
+}
+
+hpx::future<hpx::id_type> local_runtime_reference_server::get_local_object_factory() const
+{
+    return hpx::make_ready_future(runtime_->get_local_object_factory().get());
+}
+
+std::unique_ptr<remote_vpu_reference> local_runtime_reference_server::get_local_vpu() const
+{
+    return std::make_unique<remote_vpu_reference>(new_here<remote_vpu_reference_server>(&runtime_->get_local_vpu()));
+}
+
+local_runtime_reference::local_runtime_reference(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
+{
+}
+
+local_object_factory local_runtime_reference::get_local_object_factory() const
+{
+    return hpx::async<local_runtime_reference_server::get_local_object_factory_action>(this->get_id());
+}
+
+std::unique_ptr<remote_vpu_reference> local_runtime_reference::get_local_vpu() const
+{
+    return hpx::async<local_runtime_reference_server::get_local_vpu_action>(this->get_id()).get();
+}
+
+local_runtime& init_local_runtime()
+{
+    local_qubus_runtime = std::make_unique<local_runtime>();
+
+    return *local_qubus_runtime;
+}
+
+local_runtime& get_local_runtime()
+{
+    return *local_qubus_runtime;
+}
+
+hpx::future<hpx::id_type> init_local_runtime_remote()
+{
+    return new_here<local_runtime_reference_server>(&init_local_runtime());
+}
+
+hpx::future<hpx::id_type> get_local_runtime_remote()
+{
+    return new_here<local_runtime_reference_server>(&get_local_runtime());
+}
+
+HPX_DEFINE_PLAIN_ACTION(init_local_runtime_remote, init_local_runtime_remote_action);
+HPX_DEFINE_PLAIN_ACTION(get_local_runtime_remote, get_local_runtime_remote_action);
+
+local_runtime_reference init_local_runtime_on_locality(const hpx::id_type& locality)
+{
+    return hpx::async<init_local_runtime_remote_action>(locality);
+}
+
+local_runtime_reference get_local_runtime_on_locality(const hpx::id_type& locality)
+{
+    return hpx::async<get_local_runtime_remote_action>(locality);
 }
 
 }
 }
+
+HPX_REGISTER_ACTION(qbb::qubus::init_local_runtime_remote_action, qbb_qubus_init_local_runtime_remote_action);
+HPX_REGISTER_ACTION(qbb::qubus::get_local_runtime_remote_action, qbb_qubus_get_local_runtime_remote_action);
 
 

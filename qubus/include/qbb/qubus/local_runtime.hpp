@@ -3,8 +3,7 @@
 
 #include <hpx/config.hpp>
 
-#include <qbb/qubus/vpu.hpp>
-#include <qbb/qubus/scheduler.hpp>
+#include <qbb/qubus/aggregate_vpu.hpp>
 
 #include <qbb/qubus/abi_info.hpp>
 
@@ -29,27 +28,30 @@ namespace qbb
 namespace qubus
 {
 
-class local_runtime_server : public hpx::components::component_base<local_runtime_server>
+class local_runtime
 {
 public:
-    local_runtime_server();
-    ~local_runtime_server();
+    local_runtime();
+
+    local_runtime(const local_runtime&) = delete;
+    local_runtime& operator=(const local_runtime&) = delete;
+
+    local_runtime(local_runtime&&) = delete;
+    local_runtime& operator=(local_runtime&&) = delete;
 
     local_object_factory get_local_object_factory() const;
-
-    vpu get_local_vpu() const;
+    vpu& get_local_vpu() const;
+    local_address_space& get_address_space() const;
 
     const abi_info& get_abi_info()
     {
         return abi_info_;
     }
 
-    HPX_DEFINE_COMPONENT_ACTION(local_runtime_server, get_local_object_factory, get_local_object_factory_action);
-    HPX_DEFINE_COMPONENT_ACTION(local_runtime_server, get_local_vpu, get_local_vpu_action);
 private:
     abi_info abi_info_;
     //boost::dll::shared_library cpu_plugin_;
-    
+
     host_backend* cpu_backend_;
 
     backend_registry backend_registry_;
@@ -57,28 +59,44 @@ private:
     std::unique_ptr<local_address_space> address_space_;
     local_object_factory object_factory_;
 
-    vpu local_vpu_;
+    std::unique_ptr<vpu> local_vpu_;
 };
 
-class local_runtime : public hpx::components::client_base<local_runtime, local_runtime_server>
+class local_runtime_reference_server : public hpx::components::component_base<local_runtime_reference_server>
 {
 public:
-    using base_type = hpx::components::client_base<local_runtime, local_runtime_server>;
+    local_runtime_reference_server() = default;
+    explicit local_runtime_reference_server(local_runtime* runtime_);
 
-    local_runtime() = default;
+    hpx::future<hpx::id_type> get_local_object_factory() const;
 
-    local_runtime(hpx::future<hpx::id_type>&& id);
+    std::unique_ptr<remote_vpu_reference> get_local_vpu() const;
+
+    HPX_DEFINE_COMPONENT_ACTION(local_runtime_reference_server, get_local_object_factory, get_local_object_factory_action);
+    HPX_DEFINE_COMPONENT_ACTION(local_runtime_reference_server, get_local_vpu, get_local_vpu_action);
+private:
+    local_runtime* runtime_;
+};
+
+class local_runtime_reference : public hpx::components::client_base<local_runtime_reference, local_runtime_reference_server>
+{
+public:
+    using base_type = hpx::components::client_base<local_runtime_reference, local_runtime_reference_server>;
+
+    local_runtime_reference() = default;
+
+    local_runtime_reference(hpx::future<hpx::id_type>&& id);
 
     local_object_factory get_local_object_factory() const;
 
-    vpu get_local_vpu() const;
+    std::unique_ptr<remote_vpu_reference> get_local_vpu() const;
 };
 
-local_runtime init_local_runtime();
-HPX_DEFINE_PLAIN_ACTION(init_local_runtime, init_local_runtime_action);
+local_runtime& init_local_runtime();
+local_runtime& get_local_runtime();
 
-local_runtime get_local_runtime();
-HPX_DEFINE_PLAIN_ACTION(get_local_runtime, get_local_runtime_action);
+local_runtime_reference init_local_runtime_on_locality(const hpx::id_type& locality);
+local_runtime_reference get_local_runtime_on_locality(const hpx::id_type& locality);
 
 }
 }

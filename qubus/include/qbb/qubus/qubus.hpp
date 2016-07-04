@@ -7,6 +7,7 @@
 #include <qbb/qubus/sparse_tensor.hpp>
 
 #include <qbb/qubus/foreign_computelet.hpp>
-#include <qbb/qubus/host_objects_views.hpp>
+#include <qbb/qubus/host_object_views.hpp>
+#include <qbb/qubus/get_view.hpp>
 
 #endif

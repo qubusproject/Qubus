@@ -6,12 +6,17 @@
 #include <qbb/qubus/IR/type.hpp>
 #include <qbb/qubus/IR/expression.hpp>
 
+#pragma push_macro("DEBUG")
+#undef DEBUG
+
 #include <llvm/IR/IRBuilder.h>
 #include <llvm/IR/MDBuilder.h>
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Type.h>
 #include <llvm/IR/Function.h>
+
+#pragma pop_macro("DEBUG")
 
 #include <qbb/util/handle.hpp>
 

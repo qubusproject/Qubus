@@ -1,6 +1,8 @@
 #ifndef QBB_QUBUS_ADDRESS_HPP
 #define QBB_QUBUS_ADDRESS_HPP
 
+#include <hpx/include/naming.hpp>
+
 #include <functional>
 #include <cstdint>
 #include <array>
@@ -15,11 +17,11 @@ namespace qubus
 class address
 {
 public:
-    constexpr address() : components_{0, 0}
+    constexpr address() : components_{{0, 0}}
     {
     }
 
-    constexpr address(std::uint64_t msb, std::uint64_t lsb) : components_{msb, lsb}
+    constexpr address(std::uint64_t msb, std::uint64_t lsb) : components_{{msb, lsb}}
     {
     }
 
@@ -71,6 +73,12 @@ inline std::ostream& operator<<(std::ostream& os, const address& value)
 }
 
 constexpr address nulladdr = address();
+
+inline address make_address_from_id(const hpx::id_type &id)
+{
+    return address(id.get_msb(), id.get_lsb());
+}
+
 }
 }
 

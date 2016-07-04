@@ -162,15 +162,6 @@ void print_type(const type& t)
 
                             std::cout << ">";
                         })
-                 .case_(tensor_t(subtype),
-                        [&]
-                        {
-                            std::cout << "tensor<";
-
-                            print_type(subtype.get());
-
-                            std::cout << ">";
-                        })
                  .case_(pattern::_, [&]
                         {
                         });

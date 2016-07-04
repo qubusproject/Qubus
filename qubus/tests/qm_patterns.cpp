@@ -43,34 +43,27 @@ TEST(qm_patterns, commutator)
     tensor<std::complex<double>, 2> B(N, N);
     tensor<std::complex<double>, 2> C(N, N);
 
-    auto init_A = make_computelet()
-                      .body([&](cpu_tensor_view<std::complex<double>, 2> A)
-                            {
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    for (long int j = 0; j < N; ++j)
-                                    {
-                                        A(i, j) = A2[i * N + j];
-                                    }
-                                }
-                            })
-                      .finalize();
+    {
+        auto A_view = get_view<host_tensor_view<std::complex<double>, 2>>(A).get();
 
-    auto init_B = make_computelet()
-                      .body([&](cpu_tensor_view<std::complex<double>, 2> B)
-                            {
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    for (long int j = 0; j < N; ++j)
-                                    {
-                                        B(i, j) = B2[i * N + j];
-                                    }
-                                }
-                            })
-                      .finalize();
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                A_view(i, j) = A2[i * N + j];
+            }
+        }
 
-    execute(init_A, A);
-    execute(init_B, B);
+        auto B_view = get_view<host_tensor_view<std::complex<double>, 2>>(B).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                B_view(i, j) = B2[i * N + j];
+            }
+        }
+    }
 
     tensor_expr<std::complex<double>, 2> Cdef =
         def_tensor(i, j)[sum(A(i, k) * B(k, j) - B(i, k) * A(k, j), k)];
@@ -88,26 +81,22 @@ TEST(qm_patterns, commutator)
         }
     }
 
-    double error;
+    double error = 0.0;
 
-    auto test = make_computelet()
-                    .body([&](cpu_tensor_view<std::complex<double>, 2> C)
-                          {
-                              error = 0.0;
+    {
+        auto C_view = get_view<host_tensor_view<const std::complex<double>, 2>>(C).get();
 
-                              for (long int i = 0; i < N; ++i)
-                              {
-                                  for (long int j = 0; j < N; ++j)
-                                  {
-                                      std::complex<double> diff = C(i, j) - C2[i * N + j];
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                std::complex<double> diff = C_view(i, j) - C2[i * N + j];
 
-                                      error += std::norm(diff);
-                                  }
-                              }
-                          })
-                    .finalize();
+                error += std::norm(diff);
+            }
+        }
+    }
 
-    execute(test, C);
     C.when_ready().wait();
 
     ASSERT_NEAR(error, 0.0, 1e-12);

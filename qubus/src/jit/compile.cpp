@@ -367,7 +367,7 @@ reference compile(const expression& expr, compiler& comp)
                        using pattern::_;
 
                        auto m = pattern::make_matcher<type, reference>()
-                                    .case_(pattern::tensor_t(_) || pattern::array_t(_),
+                                    .case_(pattern::array_t(_),
                                            [&]
                                            {
                                                return emit_tensor_access(idx.get(), indices, comp);
@@ -399,7 +399,7 @@ reference compile(const expression& expr, compiler& comp)
                        using pattern::_;
 
                        auto m = pattern::make_matcher<type, reference>()
-                                    .case_(pattern::tensor_t(_) || pattern::array_t(_),
+                                    .case_(pattern::array_t(_),
                                            [&]
                                            {
                                                return emit_tensor_access(a.get(), indices, comp);
@@ -422,15 +422,20 @@ reference compile(const expression& expr, compiler& comp)
 
                        auto obj_ref = comp.compile(a.get());
 
-                       auto member = builder.CreateStructGEP(env.map_qubus_type(obj_type),
-                                                             obj_ref.addr(), member_idx);
+                       llvm::Value* indices[] = {builder.getInt32(0), builder.getInt32(0), builder.getInt32(member_idx)};
+
+                       auto member = builder.CreateInBoundsGEP(env.map_qubus_type(obj_type),
+                                                               obj_ref.addr(), indices);
 
                        auto member_type = obj_type[name.get()];
 
-                       auto member_ptr = load_from_ref(
-                           reference(member, obj_ref.origin(), member_type), env, ctx);
+                       auto runtime = &env.get_current_function()->getArgumentList().back();
 
-                       return reference(member_ptr, obj_ref.origin() / name.get(), member_type);
+                       auto member_ptr = builder.CreateCall(env.get_translate_address(), {runtime, member});
+
+                       auto typed_member_ptr = builder.CreateBitCast(member_ptr, env.map_qubus_type(member_type)->getPointerTo(0));
+
+                       return reference(typed_member_ptr, obj_ref.origin() / name.get(), member_type);
                    })
             .case_(
                 local_variable_def(var, a),
@@ -503,8 +508,7 @@ reference compile(const expression& expr, compiler& comp)
 
                     auto m =
                         pattern::make_matcher<type, reference>()
-                            .case_(
-                                tensor_t(value_type) || array_t(value_type),
+                            .case_(array_t(value_type),
                                 [&](const type& self)
                                 {
                                     auto size_type = env.map_qubus_type(types::integer());

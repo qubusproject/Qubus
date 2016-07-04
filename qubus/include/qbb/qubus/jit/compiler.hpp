@@ -1,8 +1,6 @@
 #ifndef QBB_QUBUS_JIT_COMPILER_HPP
 #define QBB_QUBUS_JIT_COMPILER_HPP
 
-#include <hpx/config.hpp>
-
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/function_declaration.hpp>
 

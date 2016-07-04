@@ -2,7 +2,6 @@
 #define QBB_QUBUS_COMPUTELET_HPP
 
 #include <qbb/qubus/IR/function_declaration.hpp>
-#include <qbb/qubus/foreign_computelet.hpp>
 
 #include <hpx/include/components.hpp>
 #include <hpx/include/actions.hpp>
@@ -39,8 +38,6 @@ public:
 };
 
 computelet make_computelet(function_declaration code);
-
-computelet make_foreign_computelet(foreign_computelet computelet);
 
 }
 }

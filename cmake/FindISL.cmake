@@ -3,9 +3,11 @@ include(FindPackageHandleStandardArgs)
 set(ISL_ROOT $ENV{ISL_ROOT} CACHE PATH "ISL's root directory")
 
 find_path(ISL_INCLUDE_DIR isl/version.h
+          PATH_SUFFIXES include
           HINTS ${ISL_ROOT})
 
 find_library(ISL_LIBRARY NAMES isl
+             PATH_SUFFIXES lib
              HINTS ${ISL_ROOT})
 
 if(NOT TARGET isl::isl)

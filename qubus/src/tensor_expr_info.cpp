@@ -23,7 +23,7 @@ namespace qubus
 
 tensor_expr_info::tensor_expr_info(
     type result_type_,
-    std::tuple<tensor_expr_closure, std::vector<object_client>> ir_info)
+    std::tuple<tensor_expr_closure, std::vector<object>> ir_info)
 : result_type_(std::move(result_type_)), closure_(std::move(std::get<0>(ir_info))),
   args_(std::move(std::get<1>(ir_info)))
 {
@@ -87,7 +87,7 @@ computelet tensor_expr_info::stored_computelet() const
     return stored_computelet_;
 }
 
-const std::vector<object_client>& tensor_expr_info::args() const
+const std::vector<object>& tensor_expr_info::args() const
 {
     return args_;
 }

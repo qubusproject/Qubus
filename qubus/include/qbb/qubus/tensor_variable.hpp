@@ -14,6 +14,8 @@
 #include <qbb/qubus/grammar.hpp>
 #include <qbb/qubus/IR_emitter.hpp>
 
+#include <qbb/qubus/get_view.hpp>
+
 #include <qbb/qubus/associated_qubus_type.hpp>
 
 #include <memory>
@@ -35,7 +37,7 @@ public:
     template <typename Expr>
     tensor_expr(const Expr& expr)
     : tensor_expr::proto_derived_expr(tensor_expr::proto_base_expr::make(
-          tensor_expr_info(types::tensor(associated_qubus_type<T>::get()), emit_ast(expr))))
+          tensor_expr_info(types::array(associated_qubus_type<T>::get()), emit_ast(expr))))
     {
     }
     
@@ -49,7 +51,7 @@ public:
         return proto::value(*this).stored_computelet();
     }
 
-    const std::vector<object_client>& args() const
+    const std::vector<object>& args() const
     {
         return proto::value(*this).args();
     }
@@ -57,12 +59,9 @@ public:
 private:
     static auto tensor_to_expr(const tensor<T, Rank>& var)
     {
-        // TODO: Generalize this.
-
-        index i("i");
-        index j("j");
+        multi_index<Rank> I("I");
         
-        return def_tensor(i, j) [ var(i, j) ];
+        return def_tensor(I) [ var(I) ];
     }
 };
 
@@ -92,25 +91,31 @@ public:
             ctx.push_back_arg(arg);
         }
         
-        ctx.push_back_arg(get_object());
+        ctx.push_back_result(get_object());
 
         auto c = tensor_expr.stored_computelet();
 
-        get_runtime().execute(c, std::move(ctx));
+        get_runtime().execute(c, std::move(ctx)).get();
 
         return *this;
     }
 
-    hpx::shared_future<void> when_ready() const
+    hpx::future<void> when_ready()
     {
-        return boost::proto::value(*this).get_last_modification();
+        return boost::proto::value(*this).when_ready();
     }
 
-    object_client get_object() const
+    object get_object() const
     {
         return boost::proto::value(*this).get_object();
     }
 };
+
+template <typename View, typename T, long int Rank>
+auto get_view(const tensor<T, Rank>& value)
+{
+    return get_view<View>(value.get_object());
+}
 
 template<typename T, long int Rank>
 std::ostream& operator<<(std::ostream& os, const tensor_info<T, Rank>&)

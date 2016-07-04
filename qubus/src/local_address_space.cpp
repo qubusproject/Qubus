@@ -1,5 +1,7 @@
 #include <qbb/qubus/local_address_space.hpp>
 
+#include <qbb/qubus/object.hpp>
+
 #include <qbb/qubus/evicting_allocator.hpp>
 
 #include <qbb/qubus/logging.hpp>
@@ -167,7 +169,7 @@ address_space::address_space(std::unique_ptr<allocator> allocator_)
 {
 }
 
-address_space::handle address_space::allocate_object_page(const object_client& obj, long int size,
+address_space::handle address_space::allocate_object_page(const object& obj, long int size,
                                                           long int alignment)
 {
     std::unique_lock<hpx::lcos::local::mutex> guard(address_translation_table_mutex_);
@@ -195,7 +197,7 @@ address_space::handle address_space::allocate_object_page(const object_client& o
     return address_space::handle(pos->second);
 }
 
-hpx::future<address_space::handle> address_space::resolve_object(const object_client& obj)
+hpx::future<address_space::handle> address_space::resolve_object(const object& obj)
 {
     std::unique_lock<hpx::lcos::local::mutex> guard(address_translation_table_mutex_);
 
@@ -223,7 +225,7 @@ hpx::future<address_space::handle> address_space::resolve_object(const object_cl
     }
 }
 
-address_space::handle address_space::try_resolve_object(const object_client& obj) const
+address_space::handle address_space::try_resolve_object(const object& obj) const
 {
     std::unique_lock<hpx::lcos::local::mutex> guard(address_translation_table_mutex_);
 
@@ -319,17 +321,17 @@ local_address_space::local_address_space(host_address_space& host_addr_space_)
 }
 
 local_address_space::handle
-local_address_space::allocate_object_page(const object_client& obj, long int size, long int alignment)
+local_address_space::allocate_object_page(const object& obj, long int size, long int alignment)
 {
     return host_addr_space_->allocate_object_page(obj, size, alignment);
 }
 
-hpx::future<local_address_space::handle> local_address_space::resolve_object(const object_client& obj)
+hpx::future<local_address_space::handle> local_address_space::resolve_object(const object& obj)
 {
     return host_addr_space_->resolve_object(obj);
 }
 
-local_address_space::handle local_address_space::try_resolve_object(const object_client& obj) const
+local_address_space::handle local_address_space::try_resolve_object(const object& obj) const
 {
     return host_addr_space_->try_resolve_object(obj);
 }

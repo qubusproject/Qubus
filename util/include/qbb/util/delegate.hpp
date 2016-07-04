@@ -34,7 +34,7 @@ public:
     }
 
     delegate(delegate&& other) noexcept : delegate_callback_(std::move(other.delegate_callback_)),
-                                          default_callback_(std::move(default_callback_))
+                                          default_callback_(std::move(other.default_callback_))
     {
     }
 

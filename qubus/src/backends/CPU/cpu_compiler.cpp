@@ -40,6 +40,7 @@
 #include <qbb/qubus/jit/execution_stack.hpp>
 
 #include <utility>
+#include <cstdlib>
 
 namespace qbb
 {
@@ -174,8 +175,8 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, jit::compile
 
     llvm::verifyModule(*the_module);
 
-    the_module->dump();
-    std::cout << std::endl;
+    // the_module->dump();
+    // std::cout << std::endl;
 
     llvm::legacy::FunctionPassManager fn_pass_man(the_module.get());
     llvm::legacy::PassManager pass_man;

@@ -139,11 +139,6 @@ type value_type(const type& array_type)
                         {
                             return value_type.get();
                         })
-                 .case_(tensor_t(value_type),
-                        [&]
-                        {
-                            return value_type.get();
-                        })
                  .case_(array_slice_t(value_type), [&]
                         {
                             return value_type.get();

@@ -22,16 +22,16 @@ class tensor_expr_info
 {
 public:
     explicit tensor_expr_info(type result_type_,
-                              std::tuple<tensor_expr_closure, std::vector<object_client>> ir_info);
+                              std::tuple<tensor_expr_closure, std::vector<object>> ir_info);
 
     computelet stored_computelet() const;
 
-    const std::vector<object_client>& args() const;
+    const std::vector<object>& args() const;
 
 private:
     type result_type_;
     tensor_expr_closure closure_;
-    std::vector<object_client> args_;
+    std::vector<object> args_;
 
     computelet stored_computelet_;
 };

@@ -573,7 +573,7 @@ struct emit_tensor_node : proto::transform<emit_tensor_node<Evaluator>>
             auto& symbol_table = state.get().variable_table();
 
             boost::optional<variable_declaration> tensor_decl =
-                symbol_table.lookup(util::handle_from_ptr(obj.get()));
+                symbol_table.lookup(obj.get_object().id().get_gid());
 
             if (!tensor_decl)
             {
@@ -800,9 +800,9 @@ struct deduce_free_indices
 
 struct add_variable : proto::callable
 {
-    using result_type = std::vector<object_client>&;
+    using result_type = std::vector<object>&;
 
-    result_type operator()(result_type variables, object_client h) const
+    result_type operator()(result_type variables, object h) const
     {
         variables.push_back(h);
 
@@ -812,12 +812,12 @@ struct add_variable : proto::callable
 
 struct data_handle : proto::callable
 {
-    using result_type = object_client;
+    using result_type = object;
 
     template <typename Expr>
     result_type operator()(const Expr& expr) const
     {
-        return proto::value(expr);
+        return proto::value(expr).get_object();
     }
 };
 
@@ -831,7 +831,7 @@ struct deduce_variables
 };
 
 template <typename Expr>
-std::tuple<tensor_expr_closure, std::vector<object_client>> emit_ast(const Expr& expr)
+std::tuple<tensor_expr_closure, std::vector<object>> emit_ast(const Expr& expr)
 {
     using namespace boost::adaptors;
 
@@ -841,14 +841,15 @@ std::tuple<tensor_expr_closure, std::vector<object_client>> emit_ast(const Expr&
 
     auto free_indices = deduce_free_indices()(expr, std::ref(ctx));
 
-    std::vector<object_client> param_objs;
+    std::vector<object> param_objs;
 
     deduce_variables()(expr, 0, std::ref(param_objs));
 
-    auto pred = [](const auto& lhs, const auto& rhs) { return lhs.id() < rhs.id(); };
+    auto ordering_pred = [](const auto& lhs, const auto& rhs) { return lhs.id() < rhs.id(); };
+    auto equality_pred = [](const auto& lhs, const auto& rhs) { return lhs.id() == rhs.id(); };
 
-    boost::sort(param_objs, pred);
-    auto new_end = std::unique(param_objs.begin(), param_objs.end(), pred);
+    boost::sort(param_objs, ordering_pred);
+    auto new_end = std::unique(param_objs.begin(), param_objs.end(), equality_pred);
 
     param_objs.erase(new_end, param_objs.end());
 

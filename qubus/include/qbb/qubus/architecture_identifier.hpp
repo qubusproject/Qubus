@@ -200,7 +200,7 @@ class host_architecture_identifier : public architecture_identifier_base<host_ar
 {
 public:
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
     {
     }
 };

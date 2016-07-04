@@ -60,7 +60,7 @@ private:
 template <typename Declaration>
 auto tensor(Declaration declaration)
 {
-    return tensor_pattern<Declaration, decltype(tensor_t(_))>(declaration, tensor_t(_));
+    return tensor_pattern<Declaration, decltype(array_t(_))>(declaration, array_t(_));
 }
 
 inline auto tensor()

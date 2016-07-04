@@ -1,6 +1,9 @@
 #include <qbb/qubus/host_allocator.hpp>
 
+#include <qbb/util/assert.hpp>
+
 #include <cstdlib>
+#include <type_traits>
 
 namespace qbb
 {
@@ -24,9 +27,32 @@ private:
     host_allocator* allocator_;
 };
 
+namespace
+{
+template<typename T>
+constexpr bool is_power_of_two(T x)
+{
+    static_assert(std::is_integral<T>::value, "T needs to be integral.");
+    static_assert(std::is_unsigned<T>::value, "T must be unsigned.");
+
+    return !(x == 0) && !(x & (x - 1));
+}
+
+template<typename T>
+constexpr bool is_multiple_of(T x, T y)
+{
+    static_assert(std::is_integral<T>::value, "T needs to be integral.");
+
+    return x % y == 0;
+}
+}
+
 std::unique_ptr<memory_block> host_allocator::allocate(std::size_t size, std::size_t alignment)
 {
     void* data;
+
+    QBB_ASSERT(is_multiple_of(alignment, sizeof(void*)), "The alignment needs to be a multiple of sizeof(void*).");
+    QBB_ASSERT(is_power_of_two(alignment), "The alignment needs to be a power of two.");
 
     if (posix_memalign(&data, alignment, size))
     {

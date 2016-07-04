@@ -6,38 +6,85 @@
 
 #include <hpx/include/components.hpp>
 
+#include <memory>
+
 namespace qbb
 {
 namespace qubus
 {
 
-class vpu_interface : public hpx::components::abstract_component_base<vpu_interface>
+class vpu
 {
 public:
-    vpu_interface() = default;
-    virtual ~vpu_interface() = default;
+    vpu() = default;
 
-    vpu_interface(const vpu_interface&) = delete;
-    vpu_interface& operator=(const vpu_interface&) = delete;
+    virtual ~vpu() = default;
 
-    vpu_interface(vpu_interface&&) = delete;
-    vpu_interface& operator=(vpu_interface&&) = delete;
+    virtual hpx::future<void> execute(computelet c, execution_context ctx) const = 0;
 
-    virtual void execute(computelet c, execution_context ctx) const = 0;
+protected:
+    vpu(const vpu &) = default;
 
-    void execute_nonvirt(computelet c, execution_context ctx) const;
-    HPX_DEFINE_COMPONENT_ACTION(vpu_interface, execute_nonvirt, execute_action);
+    vpu &operator=(const vpu &) = default;
+
+    vpu(vpu &&) = default;
+
+    vpu &operator=(vpu &&) = default;
 };
 
-class vpu : public hpx::components::client_base<vpu, vpu_interface>
+class remote_vpu_server : public hpx::components::component_base<remote_vpu_server>
 {
 public:
-    using base_type = hpx::components::client_base<vpu, vpu_interface>;
+    remote_vpu_server() = default;
 
-    vpu() = default;
-    vpu(hpx::future<hpx::id_type>&& id);
+    explicit remote_vpu_server(std::unique_ptr<vpu> underlying_vpu_);
 
     void execute(computelet c, execution_context ctx) const;
+
+    HPX_DEFINE_COMPONENT_ACTION(remote_vpu_server, execute, execute_action);
+
+private:
+    std::unique_ptr<vpu> underlying_vpu_;
+};
+
+class remote_vpu : public vpu, public hpx::components::client_base<remote_vpu, remote_vpu_server>
+{
+public:
+    using base_type = hpx::components::client_base<remote_vpu, remote_vpu_server>;
+
+    remote_vpu() = default;
+
+    remote_vpu(hpx::future<hpx::id_type> &&id);
+
+    hpx::future<void> execute(computelet c, execution_context ctx) const;
+};
+
+class remote_vpu_reference_server : public hpx::components::component_base<remote_vpu_reference_server>
+{
+public:
+    remote_vpu_reference_server() = default;
+
+    explicit remote_vpu_reference_server(vpu *underlying_vpu_);
+
+    void execute(computelet c, execution_context ctx) const;
+
+    HPX_DEFINE_COMPONENT_ACTION(remote_vpu_reference_server, execute, execute_action);
+
+private:
+    vpu *underlying_vpu_;
+};
+
+class remote_vpu_reference
+        : public vpu, public hpx::components::client_base<remote_vpu_reference, remote_vpu_reference_server>
+{
+public:
+    using base_type = hpx::components::client_base<remote_vpu_reference, remote_vpu_reference_server>;
+
+    remote_vpu_reference() = default;
+
+    remote_vpu_reference(hpx::future<hpx::id_type> &&id);
+
+    hpx::future<void> execute(computelet c, execution_context ctx) const;
 };
 
 }

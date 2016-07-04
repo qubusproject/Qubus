@@ -33,7 +33,7 @@ public:
     //TODO: Substitute string with string_view
     virtual std::string id() const = 0;
 
-    virtual std::vector<vpu> vpus() const = 0;
+    virtual std::vector<std::unique_ptr<vpu>> create_vpus() const = 0;
 };
 
 }   

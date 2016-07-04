@@ -240,12 +240,6 @@ complex_type_pattern<RealType> complex_t(RealType real_type)
     return complex_type_pattern<RealType>(std::move(real_type));
 }
 
-template <typename ValueType>
-tensor_type_pattern<types::tensor, ValueType> tensor_t(ValueType value_type)
-{
-    return tensor_type_pattern<types::tensor, ValueType>(std::move(value_type));
-}
-
 template <typename Rank>
 multi_index_type_pattern<Rank> multi_index_t(Rank rank)
 {

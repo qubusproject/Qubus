@@ -1,8 +1,3 @@
-//  Copyright (c) 2015 Christopher Hinz
-//
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying
-//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
 #include <qbb/qubus/qubus.hpp>
 
 #include <hpx/hpx_init.hpp>
@@ -26,31 +21,25 @@ TEST(basic_expressions, constant_expr)
 
     tensor<double, 2> A(N, N);
 
-    tensor_expr<double, 2> Adef = def_tensor(i, j)[0];
+    tensor_expr<double, 2> Adef = def_tensor(i, j)[42];
 
     A = Adef;
 
-    double error;
+    double error = 0.0;
 
-    /*auto test = make_computelet()
-                    .body([&](cpu_tensor_view<double, 2> A)
-                          {
-                              error = 0.0;
+    {
+        auto A_view = get_view<host_tensor_view<const double, 2>>(A).get();
 
-                              for (long int i = 0; i < N; ++i)
-                              {
-                                  for (long int j = 0; j < N; ++j)
-                                  {
-                                      double diff = A(i, j) - 0.0;
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                double diff = A_view(i, j) - 42.0;
 
-                                      error += diff * diff;
-                                  }
-                              }
-                          })
-                    .finalize();
-
-    execute(test, A);*/
-    A.when_ready().wait();
+                error += diff * diff;
+            }
+        }
+    }
 
     ASSERT_NEAR(error, 0.0, 1e-14);
 }
@@ -83,28 +72,21 @@ TEST(basic_expressions, complex_addition)
     tensor<std::complex<double>, 1> B(N);
     tensor<std::complex<double>, 1> C(N);
 
-    /*auto init_A = make_computelet()
-            .body([&](cpu_tensor_view<std::complex<double>, 1> A)
-                  {
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          A(i) = A2[i];
-                      }
-                  })
-            .finalize();
+    {
+        auto A_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<std::complex<double>, 1>>(A).get();
 
-    auto init_B = make_computelet()
-            .body([&](cpu_tensor_view<std::complex<double>, 1> B)
-                  {
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          B(i) = B2[i];
-                      }
-                  })
-            .finalize();
+        for (long int i = 0; i < N; ++i)
+        {
+            A_view(i) = A2[i];
+        }
 
-    execute(init_A, A);
-    execute(init_B, B);*/
+        auto B_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<std::complex<double>, 1>>(B).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            B_view(i) = B2[i];
+        }
+    }
 
     tensor_expr<std::complex<double>, 1> Cdef = def_tensor(i)[A(i) + B(i)];
 
@@ -115,24 +97,18 @@ TEST(basic_expressions, complex_addition)
         C2[i] = A2[i] + B2[i];
     }
 
-    double error;
+    double error = 0.0;
 
-    /*auto test = make_computelet()
-            .body([&](cpu_tensor_view<std::complex<double>, 1> C)
-                  {
-                      error = 0.0;
+    {
+        auto C_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<const std::complex<double>, 1>>(C).get();
 
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          std::complex<double> diff = C(i) - C2[i];
+        for (long int i = 0; i < N; ++i)
+        {
+            std::complex<double> diff = C_view(i) - C2[i];
 
-                          error += std::norm(diff);
-                      }
-                  })
-            .finalize();
-
-    execute(test, C);*/
-    C.when_ready().wait();
+            error += std::norm(diff);
+        }
+    }
 
     ASSERT_NEAR(error, 0.0, 1e-14);
 }
@@ -165,28 +141,21 @@ TEST(basic_expressions, complex_substraction)
     tensor<std::complex<double>, 1> B(N);
     tensor<std::complex<double>, 1> C(N);
 
-    /*auto init_A = make_computelet()
-            .body([&](cpu_tensor_view<std::complex<double>, 1> A)
-                  {
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          A(i) = A2[i];
-                      }
-                  })
-            .finalize();
+    {
+        auto A_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<std::complex<double>, 1>>(A).get();
 
-    auto init_B = make_computelet()
-            .body([&](cpu_tensor_view<std::complex<double>, 1> B)
-                  {
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          B(i) = B2[i];
-                      }
-                  })
-            .finalize();
+        for (long int i = 0; i < N; ++i)
+        {
+            A_view(i) = A2[i];
+        }
 
-    execute(init_A, A);
-    execute(init_B, B);*/
+        auto B_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<std::complex<double>, 1>>(B).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            B_view(i) = B2[i];
+        }
+    }
 
     tensor_expr<std::complex<double>, 1> Cdef = def_tensor(i)[A(i) - B(i)];
 
@@ -199,22 +168,16 @@ TEST(basic_expressions, complex_substraction)
 
     double error;
 
-    /*auto test = make_computelet()
-            .body([&](cpu_tensor_view<std::complex<double>, 1> C)
-                  {
-                      error = 0.0;
+    {
+        auto C_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<const std::complex<double>, 1>>(C).get();
 
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          std::complex<double> diff = C(i) - C2[i];
+        for (long int i = 0; i < N; ++i)
+        {
+            std::complex<double> diff = C_view(i) - C2[i];
 
-                          error += std::norm(diff);
-                      }
-                  })
-            .finalize();
-
-    execute(test, C);*/
-    C.when_ready().wait();
+            error += std::norm(diff);
+        }
+    }
 
     ASSERT_NEAR(error, 0.0, 1e-14);
 }
@@ -247,28 +210,21 @@ TEST(basic_expressions, complex_multiplication)
     tensor<std::complex<double>, 1> B(N);
     tensor<std::complex<double>, 1> C(N);
 
-    /*auto init_A = make_computelet()
-                      .body([&](cpu_tensor_view<std::complex<double>, 1> A)
-                            {
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    A(i) = A2[i];
-                                }
-                            })
-                      .finalize();
+    {
+        auto A_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<std::complex<double>, 1>>(A).get();
 
-    auto init_B = make_computelet()
-                      .body([&](cpu_tensor_view<std::complex<double>, 1> B)
-                            {
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    B(i) = B2[i];
-                                }
-                            })
-                      .finalize();
+        for (long int i = 0; i < N; ++i)
+        {
+            A_view(i) = A2[i];
+        }
 
-    execute(init_A, A);
-    execute(init_B, B);*/
+        auto B_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<std::complex<double>, 1>>(B).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            B_view(i) = B2[i];
+        }
+    }
 
     tensor_expr<std::complex<double>, 1> Cdef = def_tensor(i)[A(i) * B(i)];
 
@@ -281,22 +237,16 @@ TEST(basic_expressions, complex_multiplication)
 
     double error;
 
-    /*auto test = make_computelet()
-                    .body([&](cpu_tensor_view<std::complex<double>, 1> C)
-                          {
-                              error = 0.0;
+    {
+        auto C_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<const std::complex<double>, 1>>(C).get();
 
-                              for (long int i = 0; i < N; ++i)
-                              {
-                                  std::complex<double> diff = C(i) - C2[i];
+        for (long int i = 0; i < N; ++i)
+        {
+            std::complex<double> diff = C_view(i) - C2[i];
 
-                                  error += std::norm(diff);
-                              }
-                          })
-                    .finalize();
-
-    execute(test, C);*/
-    C.when_ready().wait();
+            error += std::norm(diff);
+        }
+    }
 
     ASSERT_NEAR(error, 0.0, 1e-14);
 }
@@ -329,28 +279,21 @@ TEST(basic_expressions, complex_division)
     tensor<std::complex<double>, 1> B(N);
     tensor<std::complex<double>, 1> C(N);
 
-    /*auto init_A = make_computelet()
-            .body([&](cpu_tensor_view<std::complex<double>, 1> A)
-                  {
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          A(i) = A2[i];
-                      }
-                  })
-            .finalize();
+    {
+        auto A_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<std::complex<double>, 1>>(A).get();
 
-    auto init_B = make_computelet()
-            .body([&](cpu_tensor_view<std::complex<double>, 1> B)
-                  {
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          B(i) = B2[i];
-                      }
-                  })
-            .finalize();
+        for (long int i = 0; i < N; ++i)
+        {
+            A_view(i) = A2[i];
+        }
 
-    execute(init_A, A);
-    execute(init_B, B);*/
+        auto B_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<std::complex<double>, 1>>(B).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            B_view(i) = B2[i];
+        }
+    }
 
     tensor_expr<std::complex<double>, 1> Cdef = def_tensor(i)[A(i) / B(i)];
 
@@ -363,22 +306,16 @@ TEST(basic_expressions, complex_division)
 
     double error;
 
-    /*auto test = make_computelet()
-            .body([&](cpu_tensor_view<std::complex<double>, 1> C)
-                  {
-                      error = 0.0;
+    {
+        auto C_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<const std::complex<double>, 1>>(C).get();
 
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          std::complex<double> diff = C(i) - C2[i];
+        for (long int i = 0; i < N; ++i)
+        {
+            std::complex<double> diff = C_view(i) - C2[i];
 
-                          error += std::norm(diff);
-                      }
-                  })
-            .finalize();
-
-    execute(test, C);*/
-    C.when_ready().wait();
+            error += std::norm(diff);
+        }
+    }
 
     ASSERT_NEAR(error, 0.0, 1e-14);
 }

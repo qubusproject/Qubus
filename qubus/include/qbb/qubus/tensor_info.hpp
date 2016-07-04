@@ -17,24 +17,27 @@ template <typename T, long int Rank>
 class tensor_info
 {
 public:
-    tensor_info(object_client data_)
-            : data_(std::move(data_))
+    tensor_info(object data_) : data_(std::move(data_))
     {
     }
 
-    hpx::shared_future<void> when_ready() const
+    hpx::future<void> when_ready()
     {
-        return data_.get_last_modification();
+        // Wait on all previous write operations by scheduling a read.
+        // We can safely discard the obtained access token since we will not access the object.
+
+        return data_.acquire_read_access();
     }
 
-    object_client get_object() const
+    object get_object() const
     {
         return data_;
     }
+
 private:
-    object_client data_;
+    object data_;
 };
 }
 }
 
-#endif //QBB_TENSOR_INFO_HPP
+#endif

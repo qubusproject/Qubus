@@ -36,7 +36,7 @@ public:
     {
     }
 
-    explicit index(const char* debug_name_) : info_(std::make_shared<index_info>(debug_name_))
+    explicit index(const char* debug_name_) : info_(std::make_shared<index_info>(debug_name_)), id_(new_here<id_type_server>())
     {
     }
 
@@ -106,17 +106,17 @@ public:
     }
 
     explicit multi_index(const char* debug_name_)
-    : info_(std::make_shared<multi_index_info>(debug_name_))
+    : info_(std::make_shared<multi_index_info>(debug_name_)), id_(new_here<id_type_server>())
     {
     }
 
     multi_index(std::array<index, Rank> element_indices_)
-    : info_(std::make_shared<multi_index_info>(std::move(element_indices_)))
+    : info_(std::make_shared<multi_index_info>(std::move(element_indices_))), id_(new_here<id_type_server>())
     {
     }
 
     multi_index(std::array<index, Rank> element_indices_, const char* debug_name_)
-    : info_(std::make_shared<multi_index_info>(std::move(element_indices_), debug_name_))
+    : info_(std::make_shared<multi_index_info>(std::move(element_indices_), debug_name_)), id_(new_here<id_type_server>())
     {
     }
 

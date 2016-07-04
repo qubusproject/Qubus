@@ -6,8 +6,8 @@
 #include <qbb/qubus/host_backend.hpp>
 
 #include <qbb/qubus/abi_info.hpp>
-#include <qbb/qubus/metadata_builder.hpp>
 #include <qbb/qubus/local_address_space.hpp>
+#include <qbb/qubus/object_materializer.hpp>
 
 #include <qbb/qubus/host_allocator.hpp>
 
@@ -16,8 +16,8 @@
 #include <qbb/qubus/backends/cpu_allocator.hpp>
 
 #include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/pattern/core.hpp>
 #include <qbb/qubus/pattern/IR.hpp>
+#include <qbb/qubus/pattern/core.hpp>
 
 #include <qbb/qubus/IR/type_inference.hpp>
 
@@ -28,26 +28,27 @@
 #include <hpx/async.hpp>
 
 #include <hpx/include/lcos.hpp>
+#include <hpx/include/threads.hpp>
 
 #include <qbb/qubus/hpx_utils.hpp>
 
 #include <boost/optional.hpp>
 #include <boost/signals2.hpp>
 
-#include <qbb/util/optional_ref.hpp>
-#include <qbb/util/make_unique.hpp>
 #include <qbb/util/assert.hpp>
+#include <qbb/util/make_unique.hpp>
+#include <qbb/util/optional_ref.hpp>
 #include <qbb/util/unused.hpp>
 
-#include <iostream>
-#include <memory>
-#include <map>
-#include <unordered_map>
-#include <mutex>
-#include <functional>
 #include <algorithm>
-#include <vector>
 #include <cstdlib>
+#include <functional>
+#include <iostream>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <unordered_map>
+#include <vector>
 
 namespace qbb
 {
@@ -142,7 +143,11 @@ public:
         }
         else
         {
-            auto compilation = underlying_compiler_.compile_computelet(c.code().get());
+            hpx::threads::executors::default_executor executor(hpx::threads::thread_stacksize_huge);
+
+            auto compilation = hpx::async(executor, [&c, this] {
+                                   return underlying_compiler_.compile_computelet(c.code().get());
+                               }).get();
 
             pos = compilation_cache_.emplace(c.get_id().get_gid(), std::move(compilation)).first;
 
@@ -156,51 +161,84 @@ private:
     mutable hpx::lcos::local::mutex cache_mutex_;
 };
 
-class cpu_vpu : public vpu_interface, public hpx::components::component_base<cpu_vpu>
+class cpu_vpu : public vpu
 {
 public:
-    cpu_vpu() = default;
-
-    cpu_vpu(host_address_space* address_space_, abi_info abi_)
-    : address_space_(address_space_), abi_(std::move(abi_))
+    cpu_vpu(host_address_space& address_space_, abi_info abi_)
+    : address_space_(&address_space_), abi_(std::move(abi_))
     {
     }
 
     virtual ~cpu_vpu() = default;
 
-    void execute(computelet c, execution_context ctx) const override
+    hpx::future<void> execute(computelet c, execution_context ctx) const override
     {
         const auto& compilation = compiler_.compile(c);
 
-        std::vector<address> task_args;
+        std::vector<hpx::future<token>> tokens;
 
-        std::vector<host_address_space::pin> pins;
-
-        host_address_translation_table address_translation_table;
-
-        for (const auto& arg : ctx.args())
+        for (auto& arg : ctx.args())
         {
-            auto pin = address_space_->resolve_object(arg).get().pin_object().get();
+            auto token = arg.acquire_read_access();
 
-            task_args.push_back(pin.addr());
-
-            address_translation_table.register_mapping(pin.addr(), pin.data().ptr());
-
-            pins.push_back(std::move(pin));
+            tokens.push_back(std::move(token));
         }
 
-        hpx::apply([
-            &compilation,
-            task_args = std::move(task_args),
-            pins = std::move(pins),
-            address_translation_table = std::move(address_translation_table)
-        ]
-                          {
-                              cpu_runtime runtime(address_translation_table.get_table(),
-                                                  address_translation_table.bucket_count());
+        for (auto& result : ctx.results())
+        {
+            auto token = result.acquire_write_access();
 
-                              compilation.execute(task_args, runtime);
-                          });
+            tokens.push_back(std::move(token));
+        }
+
+        hpx::future<std::vector<hpx::future<token>>> deps_ready = hpx::when_all(std::move(tokens));
+
+        hpx::shared_future<void> task_done =
+            hpx::dataflow([ this, &compilation, c, ctx](
+                              hpx::future<std::vector<hpx::future<token>>>) mutable {
+                std::vector<address> task_args;
+
+                std::vector<host_address_space::pin> pins;
+
+                host_address_translation_table address_translation_table;
+
+                for (auto& arg : ctx.args())
+                {
+                    auto arg_pins = materialize_object(arg, *address_space_).get();
+
+                    task_args.push_back(arg_pins.front().addr());
+
+                    for (auto&& pin : arg_pins)
+                    {
+                        pins.push_back(std::move(pin));
+                    }
+                }
+
+                for (auto& result : ctx.results())
+                {
+                    auto result_pins = materialize_object(result, *address_space_).get();
+
+                    task_args.push_back(result_pins.front().addr());
+
+                    for (auto&& pin : result_pins)
+                    {
+                        pins.push_back(std::move(pin));
+                    }
+                }
+
+                for (const auto& pin : pins)
+                {
+                    address_translation_table.register_mapping(pin.addr(), pin.data().ptr());
+                }
+
+                cpu_runtime runtime(address_translation_table.get_table(),
+                                    address_translation_table.bucket_count());
+
+                compilation.execute(task_args, runtime);
+            },
+                          std::move(deps_ready));
+
+        return hpx::make_ready_future();
     }
 
 private:
@@ -213,11 +251,10 @@ class cpu_backend final : public host_backend
 {
 public:
     cpu_backend(const abi_info& abi_)
-    : address_space_(std::make_unique<host_allocator>()),
-      compiler_(util::make_unique<cpu_compiler>())
+    : abi_(&abi_),
+      address_space_(std::make_unique<host_address_space>(std::make_unique<host_allocator>()))
     {
         // use hwloc to obtain informations over all local CPUs
-        vpus_.push_back(new_here<cpu_vpu>(&address_space_, abi_));
     }
 
     virtual ~cpu_backend() = default;
@@ -227,20 +264,23 @@ public:
         return "qubus.cpu";
     }
 
-    std::vector<vpu> vpus() const
+    std::vector<std::unique_ptr<vpu>> create_vpus() const override
     {
-        return vpus_;
+        std::vector<std::unique_ptr<vpu>> vpus;
+
+        vpus.push_back(std::make_unique<cpu_vpu>(*address_space_, *abi_));
+
+        return vpus;
     }
 
     host_address_space& get_host_address_space() override
     {
-        return address_space_;
+        return *address_space_;
     }
 
 private:
-    host_address_space address_space_;
-    std::unique_ptr<cpu_compiler> compiler_;
-    std::vector<vpu> vpus_;
+    const abi_info* abi_;
+    std::unique_ptr<host_address_space> address_space_;
 };
 
 extern "C" QBB_QUBUS_EXPORT unsigned int cpu_backend_get_backend_type()
@@ -258,15 +298,10 @@ std::once_flag cpu_backend_init_flag;
 
 extern "C" QBB_QUBUS_EXPORT backend* init_cpu_backend(const abi_info* abi)
 {
-    std::call_once(cpu_backend_init_flag, [&]
-                   {
-                       the_cpu_backend = util::make_unique<cpu_backend>(*abi);
-                   });
+    std::call_once(cpu_backend_init_flag,
+                   [&] { the_cpu_backend = util::make_unique<cpu_backend>(*abi); });
 
     return the_cpu_backend.get();
 }
 }
 }
-
-using cpu_vpu_server_type = hpx::components::component<qbb::qubus::cpu_vpu>;
-HPX_REGISTER_COMPONENT(cpu_vpu_server_type, qbb_qubus_cpu_vpu);

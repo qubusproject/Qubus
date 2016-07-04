@@ -7,21 +7,27 @@ namespace qbb
 namespace qubus
 {
 
-void aggregate_vpu::add_member_vpu(vpu new_member_vpu)
+aggregate_vpu::aggregate_vpu(std::unique_ptr<scheduler> scheduler_)
+: scheduler_(std::move(scheduler_))
 {
-    member_vpus_.push_back(std:: move(new_member_vpu));
 }
 
-void aggregate_vpu::execute(computelet c, execution_context ctx) const
+void aggregate_vpu::add_member_vpu(std::unique_ptr<vpu> new_member_vpu)
+{
+    member_vpus_.push_back(std:: move(new_member_vpu));
+    scheduler_->add_resource(*member_vpus_.back());
+}
+
+hpx::future<void> aggregate_vpu::execute(computelet c, execution_context ctx) const
 {
     if (member_vpus_.empty())
         throw 0;
 
-    member_vpus_.front().execute(std::move(c), std::move(ctx));
+    // For now just forward all tasks immediately.
+    scheduler_->schedule(std::move(c), std::move(ctx));
+
+    return hpx::make_ready_future();
 }
 
 }
 }
-
-using server_type = hpx::components::component<qbb::qubus::aggregate_vpu>;
-HPX_REGISTER_COMPONENT(server_type, qbb_qubus_aggregate_vpu);

@@ -12,9 +12,7 @@
 #include <hpx/runtime/serialization/serialize.hpp>
 #include <hpx/runtime/serialization/base_object.hpp>
 
-#include <hpx/runtime/serialization/vector.hpp>
-#include <hpx/runtime/serialization/string.hpp>
-#include <qbb/util/hpx/serialization/shared_ptr.hpp>
+#include <hpx/include/serialization.hpp>
 
 #include <memory>
 #include <typeinfo>
@@ -336,34 +334,6 @@ private:
     type real_type_;
 };
 
-class tensor
-{
-public:
-    tensor() = default;
-
-    explicit tensor(type value_type_) : value_type_{std::move(value_type_)}
-    {
-    }
-
-    const type& value_type() const
-    {
-        return value_type_;
-    }
-
-    bool is_primitive() const
-    {
-        return false;
-    }
-
-    template<typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
-    {
-        ar & value_type_;
-    }
-private:
-    type value_type_;
-};
-
 class array
 {
 public:
@@ -501,6 +471,11 @@ public:
         return members_.end();
     }
 
+    std::size_t member_count() const
+    {
+        return members_.size();
+    }
+
     bool is_primitive() const
     {
         return false;
@@ -563,10 +538,10 @@ struct is_type<types::array_slice> : std::true_type
 {
 };
 
-template <>
+/*template <>
 struct is_type<types::tensor> : std::true_type
 {
-};
+};*/
 
 template <>
 struct is_type<types::sparse_tensor> : std::true_type

@@ -19,30 +19,26 @@ TEST(multi_indices, simple_expr)
 
     tensor<double, 2> A(N, N);
 
-    tensor_expr<double, 2> Adef = def_tensor(ij)[0];
+    tensor_expr<double, 2> Adef = def_tensor(ij)[42];
 
     A = Adef;
 
-    double error;
+    double error = 0.0;
 
-    auto test = make_computelet()
-                    .body([&](cpu_tensor_view<double, 2> A)
-                          {
-                              error = 0.0;
+    {
+        auto A_view = get_view<host_tensor_view<const double, 2>>(A).get();
 
-                              for (long int i = 0; i < N; ++i)
-                              {
-                                  for (long int j = 0; j < N; ++j)
-                                  {
-                                      double diff = A(i, j) - 0.0;
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                double diff = A_view(i, j) - 42.0;
 
-                                      error += diff * diff;
-                                  }
-                              }
-                          })
-                    .finalize();
+                error += diff * diff;
+            }
+        }
+    }
 
-    execute(test, A);
     A.when_ready().wait();
 
     ASSERT_NEAR(error, 0.0, 1e-14);
@@ -76,20 +72,17 @@ TEST(multi_indices, index_splitting)
 
     tensor<double, 2> A(N, N);
 
-    auto init_A = make_computelet()
-            .body([&](cpu_tensor_view<double, 2> A)
-                  {
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          for (long int j = 0; j < N; ++j)
-                          {
-                                  A(i, j) = A2[i * N + j];
-                          }
-                      }
-                  })
-            .finalize();
+    {
+        auto A_view = get_view<host_tensor_view<double, 2>>(A).get();
 
-    execute(init_A, A);
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                A_view(i, j) = A2[i * N + j];
+            }
+        }
+    }
 
     tensor<double, 2> R(N, N);
 
@@ -97,26 +90,22 @@ TEST(multi_indices, index_splitting)
 
     R = Rdef;
 
-    double error;
+    double error = 0.0;
 
-    auto test = make_computelet()
-            .body([&](cpu_tensor_view<double, 2> R)
-                  {
-                      error = 0.0;
+    {
+        auto R_view = get_view<host_tensor_view<const double, 2>>(R).get();
 
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          for (long int j = 0; j < N; ++j)
-                          {
-                              double diff = R(i, j) - A2[i * N + j];
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                double diff = R_view(i, j) - A2[i * N + j];
 
-                              error += diff * diff;
-                          }
-                      }
-                  })
-            .finalize();
+                error += diff * diff;
+            }
+        }
+    }
 
-    execute(test, R);
     R.when_ready().wait();
 
     ASSERT_NEAR(error, 0.0, 1e-14);
@@ -228,23 +217,20 @@ TEST(multi_indices, multi_sum)
 
     tensor<double, 3> A(N, N, N);
 
-    auto init_A = make_computelet()
-                      .body([&](cpu_tensor_view<double, 3> A)
-                            {
-                                for (long int i = 0; i < N; ++i)
-                                {
-                                    for (long int j = 0; j < N; ++j)
-                                    {
-                                        for (long int k = 0; k < N; ++k)
-                                        {
-                                            A(i, j, k) = A2[i * N * N + j * N + k];
-                                        }
-                                    }
-                                }
-                            })
-                      .finalize();
+    {
+        auto A_view = get_view<host_tensor_view<double, 3>>(A).get();
 
-    execute(init_A, A);
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                for (long int k = 0; k < N; ++k)
+                {
+                    A_view(i, j, k) = A2[i * N * N + j * N + k];
+                }
+            }
+        }
+    }
 
     tensor<double, 1> R(N);
 
@@ -263,23 +249,19 @@ TEST(multi_indices, multi_sum)
         }
     }
 
-    double error;
+    double error = 0.0;
 
-    auto test = make_computelet()
-                    .body([&](cpu_tensor_view<double, 1> R)
-                          {
-                              error = 0.0;
+    {
+        auto R_view = get_view<host_tensor_view<const double, 1>>(R).get();
 
-                              for (long int i = 0; i < N; ++i)
-                              {
-                                  double diff = R(i) - R2[i];
+        for (long int i = 0; i < N; ++i)
+        {
+            double diff = R_view(i) - R2[i];
 
-                                  error += diff * diff;
-                              }
-                          })
-                    .finalize();
+            error += diff * diff;
+        }
+    }
 
-    execute(test, R);
     R.when_ready().wait();
 
     ASSERT_NEAR(error, 0.0, 1e-14);
@@ -318,23 +300,20 @@ TEST(multi_indices, multi_sum_index_splitting)
 
     tensor<double, 3> A(N, N, N);
 
-    auto init_A = make_computelet()
-            .body([&](cpu_tensor_view<double, 3> A)
-                  {
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          for (long int j = 0; j < N; ++j)
-                          {
-                              for (long int k = 0; k < N; ++k)
-                              {
-                                  A(i, j, k) = A2[i * N * N + j * N + k];
-                              }
-                          }
-                      }
-                  })
-            .finalize();
+    {
+        auto A_view = get_view<host_tensor_view<double, 3>>(A).get();
 
-    execute(init_A, A);
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                for (long int k = 0; k < N; ++k)
+                {
+                    A_view(i, j, k) = A2[i * N * N + j * N + k];
+                }
+            }
+        }
+    }
 
     tensor<double, 1> R(N);
 
@@ -353,23 +332,19 @@ TEST(multi_indices, multi_sum_index_splitting)
         }
     }
 
-    double error;
+    double error = 0.0;
 
-    auto test = make_computelet()
-            .body([&](cpu_tensor_view<double, 1> R)
-                  {
-                      error = 0.0;
+    {
+        auto R_view = get_view<host_tensor_view<const double, 1>>(R).get();
 
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          double diff = R(i) - R2[i];
+        for (long int i = 0; i < N; ++i)
+        {
+            double diff = R_view(i) - R2[i];
 
-                          error += diff * diff;
-                      }
-                  })
-            .finalize();
+            error += diff * diff;
+        }
+    }
 
-    execute(test, R);
     R.when_ready().wait();
 
     ASSERT_NEAR(error, 0.0, 1e-14);

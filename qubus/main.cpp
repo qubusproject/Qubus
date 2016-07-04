@@ -1,13 +1,15 @@
 #include <hpx/config.hpp>
 
 #include <iostream>
-#include <eigen3/Eigen/Core>
+//#include <eigen3/Eigen/Core>
 
 #include <qbb/qubus/qubus.hpp>
 
 #include <qbb/qubus/assembly_tensor.hpp>
 
 #include <hpx/hpx_init.hpp>
+#include <hpx/include/iostreams.hpp>
+#include <hpx/parallel/algorithms/for_loop.hpp>
 
 #include <memory>
 #include <cstring>
@@ -81,18 +83,121 @@ void print_vector(host_tensor_view<const double, 1> v)
 
 int hpx_main(int argc, char** argv)
 {
+    hpx::cout << "Init" << hpx::endl;
+
     qbb::qubus::init(argc, argv);
 
-    long int N = 10;
+    hpx::cout << "------------------------------------------------------" << hpx::endl;
 
+    auto num_localities = hpx::get_num_localities_sync();
+
+    long int N = 3000;
+
+    std::vector<tensor<double, 2>> matrices;
+    std::vector<tensor<double, 1>> vectors;
+    std::vector<tensor<double, 1>> results;
+
+    for (long int i = 0; i < num_localities; ++i)
+    {
+        matrices.emplace_back(N, N);
+    }
+
+    for (long int i = 0; i < num_localities; ++i)
+    {
+        vectors.emplace_back(N);
+    }
+
+    for (long int i = 0; i < num_localities; ++i)
+    {
+        results.emplace_back(N);
+    }
+
+    qbb::qubus::index i, j;
+
+    std::vector<tensor_expr<double, 1>> codes;
+
+    for (long int loc = 0; loc < num_localities; ++loc)
+    {
+        auto A = matrices[loc];
+        auto b = vectors[loc];
+
+        tensor_expr<double, 1> code = def_tensor(i)[sum(A(i, j) * b(j), j)];
+        codes.push_back(code);
+    }
+
+    for (long int loc = 0; loc < num_localities; ++loc)
+    {
+        results[loc] = codes[loc];
+    }
+
+    for (long int loc = 0; loc < num_localities; ++loc)
+    {
+        results[loc].when_ready().wait();
+    }
+
+    hpx::cout << "------------------------------------------------------" << hpx::endl;
+
+    auto start = std::chrono::high_resolution_clock::now();
+
+    for (long int k = 0; k < 1; ++k)
+    {
+        hpx::cout << "iteration " << k << hpx::endl;
+
+        std::vector<hpx::future<void>> futures;
+        futures.reserve(num_localities);
+
+        for (long int loc = 0; loc < num_localities; ++loc)
+        {
+            futures.push_back(hpx::async([&results, &codes, loc]
+                       {
+                           results[loc] = codes[loc];
+                       }));
+        }
+
+        hpx::cout << "end iteration " << k << hpx::endl;
+
+        hpx::wait_all(std::move(futures));
+    }
+
+    hpx::cout << "terminating!!!" << hpx::endl;
+
+    for (long int loc = 0; loc < num_localities; ++loc)
+    {
+        results[loc].when_ready().wait();
+        hpx::cout << "calculation " << loc << " terminated!!!" << hpx::endl;
+    }
+
+    auto end = std::chrono::high_resolution_clock::now();
+
+    auto duration = std::chrono::duration_cast<std::chrono::seconds>(end - start);
+
+    hpx::cout << duration.count() << " seconds" << hpx::endl;
+
+    hpx::cout << "finished!!!" << hpx::endl;
+
+    /*long int N = 10;
+     *
     tensor<double, 1> b(N);
     tensor<double, 1> rb(N);
 
     qbb::qubus::index i;
 
-    tensor_expr<double, 1> zero = def_tensor (i) [0];
+    tensor_expr<double, 1> one = def_tensor (i) [1];
 
-    b = zero;
+    b = one;
+
+    auto view = get_view<host_tensor_view<double, 1>>(b).get();
+
+    for (long int i = 0; i < 10; ++i)
+    {
+        std::cout << view(i) << std::endl;
+    }
+
+    std::vector<object_client> components;
+    type obj_type = types::double_();
+    object_client obj = hpx::new_<aggregate_object>(hpx::find_here(), obj_type, components);
+
+    auto aggregate = object_cast<aggregate_object_client>(obj);*/
 
     /*long int N = 1000;
 

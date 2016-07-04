@@ -5,7 +5,7 @@
 
 #include <qbb/qubus/local_runtime.hpp>
 
-#include <qbb/qubus/vpu.hpp>
+#include <qbb/qubus/aggregate_vpu.hpp>
 
 #include <qbb/qubus/computelet.hpp>
 #include <qbb/qubus/execution_context.hpp>
@@ -28,14 +28,14 @@ public:
     runtime_server();
     void execute(computelet c, execution_context ctx);
 
-    object_factory get_object_factory() const;
+    hpx::future<hpx::id_type> get_object_factory() const;
 
     HPX_DEFINE_COMPONENT_ACTION(runtime_server, execute, execute_action);
     HPX_DEFINE_COMPONENT_ACTION(runtime_server, get_object_factory, get_object_factory_action);
 private:
-    std::vector<local_runtime> local_runtimes_;
+    std::vector<local_runtime_reference> local_runtimes_;
     object_factory obj_factory_;
-    vpu global_vpu_;
+    std::unique_ptr<aggregate_vpu> global_vpu_;
 };
 
 class runtime : public hpx::components::client_base<runtime, runtime_server>
@@ -51,14 +51,13 @@ public:
 
     // plan register_user_defined_plan(user_defined_plan_t plan); Is this still necessary?
 
-    void execute(computelet c, execution_context ctx);
+    hpx::future<void> execute(computelet c, execution_context ctx);
 
     // const abi_info& abi();
 };
 
 void init(int argc, char** argv);
 runtime get_runtime();
-HPX_DEFINE_PLAIN_ACTION(get_runtime, get_runtime_action);
 
 template<typename... Args>
 void execute(const computelet& c, Args&&... args)

@@ -3,8 +3,8 @@
 
 #include <hpx/config.hpp>
 
-#include <qbb/qubus/local_runtime.hpp>
 #include <qbb/qubus/local_object_factory.hpp>
+#include <qbb/qubus/local_runtime.hpp>
 
 #include <qbb/qubus/abi_info.hpp>
 
@@ -12,14 +12,14 @@
 
 #include <qbb/qubus/IR/type.hpp>
 
-#include <qbb/util/integers.hpp>
 #include <qbb/util/handle.hpp>
+#include <qbb/util/integers.hpp>
 #include <qbb/util/unused.hpp>
 
 #include <hpx/include/components.hpp>
 
-#include <vector>
 #include <map>
+#include <vector>
 
 namespace qbb
 {
@@ -38,8 +38,8 @@ struct sparse_tensor_layout
     template <typename Archive>
     void serialize(Archive& ar, unsigned QBB_UNUSED(version))
     {
-        ar & num_chunks;
-        ar & nnz;
+        ar& num_chunks;
+        ar& nnz;
     }
 
     util::index_t num_chunks;
@@ -50,19 +50,18 @@ class object_factory_server : public hpx::components::component_base<object_fact
 {
 public:
     object_factory_server() = default;
-    object_factory_server(abi_info abi_, std::vector<local_runtime> local_runtimes_);
+    object_factory_server(abi_info abi_, std::vector<local_runtime_reference> local_runtimes_);
 
-    /*std::unique_ptr<local_array> create_array(type value_type, std::vector<util::index_t> shape);
-    std::unique_ptr<local_tensor> create_tensor(type value_type, std::vector<util::index_t> shape);
-    std::unique_ptr<struct_> create_struct(type struct_type,
-                                           std::vector<std::unique_ptr<object>> members);
+    hpx::future<hpx::id_type> create_array(type value_type, std::vector<util::index_t> shape);
 
-    std::unique_ptr<struct_> create_sparse_tensor(type value_type, std::vector<util::index_t> shape,
-                                                  const sparse_tensor_layout& layout);*/
-
-    object_client create_array(type value_type, std::vector<util::index_t> shape);
+    hpx::future<hpx::id_type> create_sparse_tensor(type value_type,
+                                                   std::vector<util::index_t> shape,
+                                                   const sparse_tensor_layout& layout);
 
     HPX_DEFINE_COMPONENT_ACTION(object_factory_server, create_array, create_array_action);
+    HPX_DEFINE_COMPONENT_ACTION(object_factory_server, create_sparse_tensor,
+                                create_sparse_tensor_action);
+
 private:
     abi_info abi_;
     std::vector<local_object_factory> local_factories_;
@@ -76,9 +75,10 @@ public:
     object_factory() = default;
     object_factory(hpx::future<hpx::id_type>&& id);
 
-    object_client create_array(type value_type, std::vector<util::index_t> shape);
+    object create_array(type value_type, std::vector<util::index_t> shape);
+    object create_sparse_tensor(type value_type, std::vector<util::index_t> shape,
+                                const sparse_tensor_layout& layout);
 };
-
 }
 }
 

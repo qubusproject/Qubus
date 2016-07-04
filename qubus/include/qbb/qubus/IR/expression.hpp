@@ -9,10 +9,9 @@
 #include <qbb/qubus/IR/expression_traits.hpp>
 #include <qbb/util/unused.hpp>
 
-#include <hpx/runtime/serialization/serialize.hpp>
+#include <hpx/include/serialization.hpp>
 #include <hpx/runtime/serialization/base_object.hpp>
 
-#include <qbb/util/hpx/serialization/shared_ptr.hpp>
 
 #include <memory>
 #include <vector>

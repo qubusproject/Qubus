@@ -3,6 +3,7 @@
 
 #include <qbb/qubus/tensor_expr_info.hpp>
 #include <qbb/qubus/tensor_info.hpp>
+#include <qbb/qubus/sparse_tensor.hpp>
 
 #include <qbb/qubus/indexed_tensor_expr_context.hpp>
 #include <qbb/qubus/index.hpp>
@@ -66,10 +67,10 @@ struct is_tensor<tensor_info<T, Rank>> : boost::mpl::true_
 {
 };
 
-/*template <>
-struct is_tensor<std::shared_ptr<struct_>> : boost::mpl::true_
+template <typename T, long int Rank>
+struct is_tensor<sparse_tensor_info<T, Rank>> : boost::mpl::true_
 {
-};*/
+};
 
 template <>
 struct is_tensor<tensor_expr_info> : boost::mpl::true_

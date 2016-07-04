@@ -42,9 +42,10 @@ add_library(qubus_ir SHARED ${qubus_pattern_header_files} ${qubus_ir_header_file
             ../../include/qbb/qubus/pattern/variable_scope.hpp)
 
 target_include_directories(qubus_ir PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
-target_compile_definitions(qubus_ir PUBLIC -DFUSION_MAX_VECTOR_SIZE=20)
 target_compile_options(qubus_ir PUBLIC -std=c++14)
-target_link_libraries(qubus_ir PUBLIC qbb_util)
+target_link_libraries(qubus_ir qbb_util)
+hpx_setup_target(qubus_ir)
+qubus_set_output_name(qubus_ir qubus_ir)
 
 set_property(TARGET qubus_ir PROPERTY VERSION ${QUBUS_VERSION})
 set_property(TARGET qubus_ir PROPERTY SOVERSION 0)

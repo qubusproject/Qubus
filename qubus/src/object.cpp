@@ -2,63 +2,102 @@
 
 #include <utility>
 
-HPX_DEFINE_GET_COMPONENT_TYPE(qbb::qubus::object);
+using server_type = hpx::components::component<qbb::qubus::object_server>;
+HPX_REGISTER_COMPONENT(server_type, qbb_qubus_object_server);
 
-using object_type_action = qbb::qubus::object::object_type_action;
-HPX_REGISTER_ACTION_DECLARATION(object_type_action);
-HPX_REGISTER_ACTION(object_type_action);
+using object_type_action = qbb::qubus::object_server::object_type_action;
+HPX_REGISTER_ACTION_DECLARATION(object_type_action, qubus_object_server_type_action);
+HPX_REGISTER_ACTION(object_type_action, qubus_object_server_type_action);
 
-using get_last_modification_action = qbb::qubus::object::get_last_modification_action;
-HPX_REGISTER_ACTION_DECLARATION(get_last_modification_action);
-HPX_REGISTER_ACTION(get_last_modification_action);
+using acquire_read_access_action = qbb::qubus::object_server::acquire_read_access_action;
+HPX_REGISTER_ACTION_DECLARATION(acquire_read_access_action, qubus_object_server_acquire_read_access_action);
+HPX_REGISTER_ACTION(acquire_read_access_action, qubus_object_server_acquire_read_access_action);
 
-using record_modification_action = qbb::qubus::object::record_modification_action;
-HPX_REGISTER_ACTION_DECLARATION(record_modification_action);
-HPX_REGISTER_ACTION(record_modification_action);
+using acquire_write_access_action = qbb::qubus::object_server::acquire_write_access_action;
+HPX_REGISTER_ACTION_DECLARATION(acquire_write_access_action, qubus_object_server_acquire_write_access_action);
+HPX_REGISTER_ACTION(acquire_write_access_action, qubus_object_server_acquire_write_access_action);
+
+using components_action = qbb::qubus::object_server::components_action;
+HPX_REGISTER_ACTION_DECLARATION(components_action, qubus_object_server_components_action);
+HPX_REGISTER_ACTION(components_action, qubus_object_server_components_action);
 
 namespace qbb
 {
 namespace qubus
 {
 
-basic_object::basic_object() : last_modification_(hpx::make_ready_future())
+object_server::object_server(type object_type_)
+: object_type_(std::move(object_type_))
 {
 }
 
-hpx::shared_future<void> basic_object::get_last_modification() const
+type object_server::object_type() const
 {
-    return last_modification_;
+    return object_type_;
 }
 
-void basic_object::record_modification(hpx::shared_future<void> modification)
-{
-    last_modification_ = modification;
-}
-
-object_client::object_client(hpx::future<hpx::id_type>&& id)
-: base_type(std::move(id))
-{
-}
-
-type object_client::object_type() const
-{
-    return hpx::async<object::object_type_action>(this->get_id()).get();
-}
-
-hpx::id_type object_client::id() const
+hpx::id_type object_server::id() const
 {
     return get_id();
 }
 
-hpx::shared_future<void> object_client::get_last_modification() const
+token object_server::acquire_read_access()
 {
-    return hpx::async<object::get_last_modification_action>(this->get_id());
+    return monitor_.acquire_read_access().get();
 }
 
-void object_client::record_modification(hpx::shared_future<void> f)
+token object_server::acquire_write_access()
 {
-    hpx::async<object::record_modification_action>(this->get_id(), std::move(f)).get();
+    return monitor_.acquire_write_access().get();
 }
 
+std::vector<object> object_server::components() const
+{
+    return components_;
+}
+
+void object_server::register_instance(local_address_space::handle data)
+{
+    data_ = std::move(data);
+}
+
+void object_server::add_component(const object& component)
+{
+    components_.push_back(component);
+}
+
+const object& object_server::operator()(long int index) const
+{
+    return components_.at(index);
+}
+
+object::object(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
+{
+}
+
+type object::object_type() const
+{
+    return hpx::async<object_server::object_type_action>(this->get_id()).get();
+}
+
+hpx::id_type object::id() const
+{
+    return get_id();
+}
+
+hpx::future<token> object::acquire_read_access()
+{
+    return hpx::async<object_server::acquire_read_access_action>(this->get_id()).then([] (hpx::future<hpx::id_type> id) { return token(std::move(id)); });
+}
+
+hpx::future<token> object::acquire_write_access()
+{
+    return hpx::async<object_server::acquire_write_access_action>(this->get_id()).then([] (hpx::future<hpx::id_type> id) { return token(std::move(id)); });
+}
+
+std::vector<object> object::components() const
+{
+    return hpx::async<object_server::components_action>(this->get_id()).get();
+}
 }
 }

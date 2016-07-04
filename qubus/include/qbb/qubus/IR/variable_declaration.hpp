@@ -9,7 +9,7 @@
 
 #include <qbb/util/handle.hpp>
 #include <qbb/util/unused.hpp>
-#include <qbb/util/hpx/serialization/shared_ptr.hpp>
+#include <hpx/include/serialization.hpp>
 
 #include <memory>
 #include <functional>

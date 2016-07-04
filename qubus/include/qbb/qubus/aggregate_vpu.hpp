@@ -1,25 +1,28 @@
 #ifndef QBB_QUBUS_AGGREGATE_VPU_HPP
 #define QBB_QUBUS_AGGREGATE_VPU_HPP
 
+#include <qbb/qubus/scheduler.hpp>
 #include <qbb/qubus/vpu.hpp>
 
-#include <hpx/include/components.hpp>
+#include <memory>
 
 namespace qbb
 {
 namespace qubus
 {
 
-class aggregate_vpu : public vpu_interface, public hpx::components::component_base<aggregate_vpu>
+class aggregate_vpu : public vpu
 {
 public:
+    explicit aggregate_vpu(std::unique_ptr<scheduler> scheduler_);
     virtual ~aggregate_vpu() = default;
 
-    void add_member_vpu(vpu new_member_vpu);
+    void add_member_vpu(std::unique_ptr<vpu> new_member_vpu);
 
-    void execute(computelet c, execution_context ctx) const override;
+    hpx::future<void> execute(computelet c, execution_context ctx) const override;
 private:
-    std::vector<vpu> member_vpus_;
+    std::vector<std::unique_ptr<vpu>> member_vpus_;
+    std::unique_ptr<scheduler> scheduler_;
 };
 
 }

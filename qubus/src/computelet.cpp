@@ -45,32 +45,5 @@ computelet make_computelet(function_declaration code)
     return hpx::new_<computelet_server>(hpx::find_here(), std::move(code));
 }
 
-computelet make_foreign_computelet(foreign_computelet computelet)
-{
-    std::vector<variable_declaration> params;
-
-    for (const auto& argument_type : computelet.argument_types())
-    {
-        params.emplace_back(argument_type);
-    }
-
-    variable_declaration result(computelet.result_type());
-
-    std::vector<expression> args;
-
-    for (const auto& param : params)
-    {
-        args.push_back(variable_ref_expr(param));
-    }
-
-    args.push_back(variable_ref_expr(result));
-
-    expression body = foreign_call_expr(computelet, args);
-
-    function_declaration decl("foreign_computelet", params, result, body);
-
-    return make_computelet(decl);
-}
-
 }
 }

@@ -3,7 +3,6 @@
 
 #include <hpx/config.hpp>
 
-#include <qbb/qubus/object.hpp>
 #include <qbb/qubus/address.hpp>
 
 #include <qbb/qubus/allocator.hpp>
@@ -29,10 +28,7 @@ namespace qbb
 namespace qubus
 {
 
-inline address make_address_from_id(const hpx::id_type &id)
-{
-    return address(id.get_msb(), id.get_lsb());
-}
+class object;
 
 class host_address_translation_table
 {
@@ -125,9 +121,9 @@ public:
 
     explicit address_space(std::unique_ptr<allocator> allocator_);
 
-    handle allocate_object_page(const object_client& obj, long int size, long int alignment);
-    hpx::future<handle> resolve_object(const object_client& obj);
-    handle try_resolve_object(const object_client& obj) const;
+    handle allocate_object_page(const object& obj, long int size, long int alignment);
+    hpx::future<handle> resolve_object(const object& obj);
+    handle try_resolve_object(const object& obj) const;
 
     const void* get_address_translation_table() const;
     std::size_t bucket_count() const;
@@ -158,12 +154,13 @@ class local_address_space
 {
 public:
     using handle = address_space::handle;
+    using pin = address_space::pin;
 
     explicit local_address_space(host_address_space& host_addr_space_);
 
-    handle allocate_object_page(const object_client& obj, long int size, long int alignment);
-    hpx::future<handle> resolve_object(const object_client& obj);
-    handle try_resolve_object(const object_client& obj) const;
+    handle allocate_object_page(const object& obj, long int size, long int alignment);
+    hpx::future<handle> resolve_object(const object& obj);
+    handle try_resolve_object(const object& obj) const;
 
 private:
     host_address_space* host_addr_space_;
