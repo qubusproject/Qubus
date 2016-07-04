@@ -336,7 +336,7 @@ private:
         pattern::variable<std::vector<variable_declaration>> indices;
 
         boost::optional<variable_declaration> the_sparse_tensor;
-        bool num_of_sparse_tensors = 0;
+        std::size_t num_of_sparse_tensors = 0;
 
         auto m = pattern::make_matcher<expression, void>().case_(
             subscription(pattern::sparse_tensor(var), bind_to(all_of(pattern::index()), indices)),
