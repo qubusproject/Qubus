@@ -9,7 +9,7 @@
 #include <vector>
 #include <memory>
 #include <stdexcept>
-
+#include <algorithm>
 
 namespace qbb
 {
@@ -45,7 +45,7 @@ public:
     template <typename... Args>
     std::pair<iterator, bool> emplace(Args&&... args)
     {
-        if (size() + 1 >= max_load_factor() * bucket_count())
+        if (size() + 1 >= std::max(std::size_t(max_load_factor() * bucket_count()), std::size_t(1)))
             resize_and_rehash();
 
         value_type value(std::forward<Args>(args)...);
@@ -66,6 +66,7 @@ public:
             else if(key_equal()(bucket.first, empty_key_))
             {
                 bucket = std::move(value);
+                ++num_of_used_buckets_;
 
                 return {buckets_.begin() + bucket_id, true};
             }
