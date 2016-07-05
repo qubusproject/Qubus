@@ -8,12 +8,26 @@ namespace qbb
 namespace qubus
 {
 template <typename T>
-struct is_expression : std::false_type
+class expression_base
+{
+protected:
+    ~expression_base() = default;
+};
+
+template <typename T>
+struct is_expression : std::is_base_of<expression_base<T>, T>
 {
 };
 
 template<typename T>
-struct is_type : std::false_type
+class type_base
+{
+protected:
+    ~type_base() = default;
+};
+
+template<typename T>
+struct is_type : std::is_base_of<type_base<T>, T>
 {
 };
 }

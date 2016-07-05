@@ -17,7 +17,7 @@ namespace qbb
 namespace qubus
 {
     
-class variable_ref_expr
+class variable_ref_expr : public expression_base<variable_ref_expr>
 {
 public:
     variable_ref_expr() = default;
@@ -44,11 +44,6 @@ private:
 
 bool operator==(const variable_ref_expr& lhs, const variable_ref_expr& rhs);
 bool operator!=(const variable_ref_expr& lhs, const variable_ref_expr& rhs);
-
-template<>
-struct is_expression<variable_ref_expr> : std::true_type
-{
-};
 
 }
 }

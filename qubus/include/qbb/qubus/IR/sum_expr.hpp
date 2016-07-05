@@ -18,7 +18,7 @@ namespace qbb
 namespace qubus
 {
 
-class sum_expr
+class sum_expr : public expression_base<sum_expr>
 {
 public:
     sum_expr() = default;
@@ -54,11 +54,6 @@ private:
 
 bool operator==(const sum_expr& lhs, const sum_expr& rhs);
 bool operator!=(const sum_expr& lhs, const sum_expr& rhs);
-
-template<>
-struct is_expression<sum_expr> : std::true_type
-{
-};
 
 }
 }

@@ -13,7 +13,7 @@ namespace qbb
 namespace qubus
 {
  
-class macro_expr
+class macro_expr : public expression_base<macro_expr>
 {
 public:
     macro_expr() = default;
@@ -43,11 +43,6 @@ private:
 
 bool operator==(const macro_expr& lhs, const macro_expr& rhs);
 bool operator!=(const macro_expr& lhs, const macro_expr& rhs);
-
-template<>
-struct is_expression<macro_expr> : std::true_type
-{
-};
 
 expression expand_macro(const macro_expr& macro, const std::vector<expression>& args);
     

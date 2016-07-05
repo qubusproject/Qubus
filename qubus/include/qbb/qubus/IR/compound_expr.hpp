@@ -14,7 +14,7 @@ namespace qbb
 namespace qubus
 {
  
-class compound_expr
+class compound_expr : public expression_base<compound_expr>
 {
 public:
     compound_expr() = default;
@@ -41,11 +41,6 @@ private:
 
 bool operator==(const compound_expr& lhs, const compound_expr& rhs);
 bool operator!=(const compound_expr& lhs, const compound_expr& rhs);
-
-template<>
-struct is_expression<compound_expr> : std::true_type
-{
-};
 
 }
 }

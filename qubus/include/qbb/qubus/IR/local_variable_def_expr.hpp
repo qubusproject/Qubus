@@ -13,7 +13,7 @@ namespace qbb
 namespace qubus
 {
 
-class local_variable_def_expr
+class local_variable_def_expr : public expression_base<local_variable_def_expr>
 {
 public:
     local_variable_def_expr() = default;
@@ -44,10 +44,6 @@ private:
 bool operator==(const local_variable_def_expr& lhs, const local_variable_def_expr& rhs);
 bool operator!=(const local_variable_def_expr& lhs, const local_variable_def_expr& rhs);
 
-template <>
-struct is_expression<local_variable_def_expr> : std::true_type
-{
-};
 }
 }
 

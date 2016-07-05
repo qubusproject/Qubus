@@ -18,7 +18,7 @@ enum class unary_op_tag
   negate,
   logical_not };
 
-class unary_operator_expr
+class unary_operator_expr : public expression_base<unary_operator_expr>
 {
 public:
     unary_operator_expr();
@@ -49,11 +49,6 @@ private:
 
 bool operator==(const unary_operator_expr& lhs, const unary_operator_expr& rhs);
 bool operator!=(const unary_operator_expr& lhs, const unary_operator_expr& rhs);
-
-template<>
-struct is_expression<unary_operator_expr> : std::true_type
-{
-};
 
 }
 }

@@ -13,7 +13,7 @@ namespace qbb
 namespace qubus
 {
 
-class construct_expr
+class construct_expr : public expression_base<construct_expr>
 {
 public:
     construct_expr() = default;
@@ -44,11 +44,6 @@ private:
 
 bool operator==(const construct_expr& lhs, const construct_expr& rhs);
 bool operator!=(const construct_expr& lhs, const construct_expr& rhs);
-
-template<>
-struct is_expression<construct_expr> : std::true_type
-{
-};
 
 }
 }

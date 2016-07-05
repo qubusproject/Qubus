@@ -14,7 +14,7 @@ namespace qbb
 namespace qubus
 {
 
-class member_access_expr
+class member_access_expr : public expression_base<member_access_expr>
 {
 public:
     member_access_expr() = default;
@@ -44,11 +44,6 @@ private:
 
 bool operator==(const member_access_expr& lhs, const member_access_expr& rhs);
 bool operator!=(const member_access_expr& lhs, const member_access_expr& rhs);
-
-template<>
-struct is_expression<member_access_expr> : std::true_type
-{
-};
 
 }
 }

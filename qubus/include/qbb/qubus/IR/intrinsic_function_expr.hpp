@@ -16,7 +16,7 @@ namespace qbb
 namespace qubus
 {
 
-class intrinsic_function_expr
+class intrinsic_function_expr : public expression_base<intrinsic_function_expr>
 {
 public:
     intrinsic_function_expr() = default;
@@ -47,11 +47,6 @@ private:
 
 bool operator==(const intrinsic_function_expr& lhs, const intrinsic_function_expr& rhs);
 bool operator!=(const intrinsic_function_expr& lhs, const intrinsic_function_expr& rhs);
-
-template<>
-struct is_expression<intrinsic_function_expr> : std::true_type
-{
-};
 
 }
 }
