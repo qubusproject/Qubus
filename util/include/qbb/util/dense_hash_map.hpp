@@ -122,7 +122,7 @@ public:
         }
         else
         {
-            return buckets_.end();
+            return invalid_iterator();
         }
     }
 
@@ -138,7 +138,7 @@ public:
         }
         else
         {
-            return buckets_.end();
+            return invalid_iterator();
         }
     }
 
@@ -199,6 +199,15 @@ public:
         return buckets_.data();
     }
 
+    iterator invalid_iterator()
+    {
+        return buckets_.end();
+    }
+
+    const_iterator invalid_iterator() const
+    {
+        return buckets_.end();
+    }
 private:
     void resize_and_rehash()
     {

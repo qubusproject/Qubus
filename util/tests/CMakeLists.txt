@@ -15,4 +15,5 @@ if(UTIL_BUILD_TESTS)
   find_package(GTest REQUIRED)
 
   util_add_simple_test(one_shot)
+  util_add_simple_test(dense_hash_map)
 endif()
