@@ -24,7 +24,12 @@ public:
     : ref_(&ref_)
     {
     }
-    
+
+    optional_ref(T* ref_)
+    : ref_(ref_)
+    {
+    }
+
     optional_ref(boost::optional<value_type>& ref_)
     : ref_(ref_ ? &ref_.get() : nullptr)
     {
