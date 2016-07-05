@@ -56,11 +56,23 @@ public:
     {
         auto tag = implementation_table_.register_type<T>();
 
-        self_ = std::make_shared<type_wrapper<T>>(value, tag);
+        self_ = std::make_unique<type_wrapper<T>>(value, tag);
     }
 
-    type(const type&) = default;
-    type(type&) = default;
+    type(const type& other)
+    : self_(other.self_->clone())
+    {
+    }
+
+    type& operator=(const type& other)
+    {
+        self_ = other.self_->clone();
+
+        return *this;
+    }
+
+    type(type&& other) = default;
+    type& operator=(type&& other) = default;
 
     bool is_primitive() const
     {
@@ -133,6 +145,8 @@ private:
         virtual std::type_index rtti() const = 0;
         virtual qbb::util::index_t tag() const = 0;
 
+        virtual std::unique_ptr<type_interface> clone() const = 0;
+
         template<typename Archive>
         void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
         {
@@ -175,6 +189,11 @@ private:
             return tag_;
         }
 
+        std::unique_ptr<type_interface> clone() const override final
+        {
+            return std::make_unique<type_wrapper<T>>(value_, tag_);
+        }
+
         template<typename Archive>
         void serialize(Archive& ar, unsigned QBB_UNUSED(version))
         {
@@ -190,7 +209,7 @@ private:
         qbb::util::index_t tag_;
     };
 
-    std::shared_ptr<type_interface> self_;
+    std::unique_ptr<type_interface> self_;
 
     static qbb::util::implementation_table implementation_table_;
 };

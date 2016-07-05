@@ -34,11 +34,23 @@ public:
     {
         auto tag = implementation_table_.register_type<T>();
 
-        self_ = std::make_shared<expression_wrapper<T>>(value, tag);
+        self_ = std::make_unique<expression_wrapper<T>>(value, tag);
     }
 
-    expression(const expression&) = default;
-    expression(expression&) = default;
+    expression(const expression& other)
+    : self_(other.self_->clone())
+    {
+    }
+
+    expression& operator=(const expression& other)
+    {
+        self_ = other.self_->clone();
+
+        return *this;
+    }
+
+    expression(expression&& other) = default;
+    expression& operator=(expression&& other) = default;
 
     annotation_map& annotations() const
     {
@@ -131,6 +143,8 @@ private:
         virtual std::type_index rtti() const = 0;
         virtual qbb::util::index_t tag() const = 0;
 
+        virtual std::unique_ptr<expression_interface> clone() const = 0;
+
         template<typename Archive>
         void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
         {
@@ -194,6 +208,11 @@ private:
             return tag_;
         }
 
+        std::unique_ptr<expression_interface> clone() const override final
+        {
+            return std::make_unique<expression_wrapper<T>>(value_, tag_);
+        }
+
         template<typename Archive>
         void serialize(Archive& ar, unsigned QBB_UNUSED(version))
         {
@@ -209,7 +228,7 @@ private:
         qbb::util::index_t tag_;
     };
 
-    std::shared_ptr<expression_interface> self_;
+    std::unique_ptr<expression_interface> self_;
 
     static qbb::util::implementation_table implementation_table_;
 };
