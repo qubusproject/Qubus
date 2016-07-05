@@ -15,7 +15,7 @@ namespace qbb
 namespace qubus
 {
 
-class if_expr
+class if_expr : public expression_base<if_expr>
 {
 public:
     if_expr() = default;
@@ -50,11 +50,6 @@ private:
 
 bool operator==(const if_expr& lhs, const if_expr& rhs);
 bool operator!=(const if_expr& lhs, const if_expr& rhs);
-
-template<>
-struct is_expression<if_expr> : std::true_type
-{
-};
 
 }
 }

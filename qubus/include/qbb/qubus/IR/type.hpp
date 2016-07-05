@@ -29,7 +29,7 @@ namespace qubus
 
 namespace types
 {
-class unknown
+class unknown : public type_base<unknown>
 {
 public:
     bool is_primitive() const
@@ -43,11 +43,6 @@ public:
     }
 };
 }
-
-template <>
-struct is_type<types::unknown> : std::true_type
-{
-};
 
 class type
 {
@@ -206,7 +201,7 @@ bool operator!=(const type& lhs, const type& rhs);
 namespace types
 {
 
-class double_
+class double_ : public type_base<double_>
 {
 public:
     bool is_primitive() const
@@ -220,7 +215,7 @@ public:
     }
 };
 
-class float_
+class float_ : public type_base<float_>
 {
 public:
     bool is_primitive() const
@@ -234,7 +229,7 @@ public:
     }
 };
 
-class integer
+class integer : public type_base<integer>
 {
 public:
     bool is_primitive() const
@@ -248,7 +243,7 @@ public:
     }
 };
 
-class bool_
+class bool_ : public type_base<bool_>
 {
 public:
     bool is_primitive() const
@@ -262,7 +257,7 @@ public:
     }
 };
 
-class index
+class index : public type_base<index>
 {
 public:
     bool is_primitive() const
@@ -278,7 +273,7 @@ public:
 
 constexpr long int dynamic_rank = -1;
 
-class multi_index
+class multi_index : public type_base<multi_index>
 {
 public:
     multi_index() = default;
@@ -306,7 +301,7 @@ private:
     long int rank_;
 };
 
-class complex
+class complex : public type_base<complex>
 {
 public:
     complex() = default;
@@ -334,7 +329,7 @@ private:
     type real_type_;
 };
 
-class array
+class array : public type_base<array>
 {
 public:
     array() = default;
@@ -362,7 +357,7 @@ private:
     type value_type_;
 };
 
-class array_slice
+class array_slice : public type_base<array_slice>
 {
 public:
     array_slice() = default;
@@ -390,7 +385,7 @@ private:
     type value_type_;
 };
 
-class sparse_tensor
+class sparse_tensor : public type_base<sparse_tensor>
 {
 public:
     sparse_tensor() = default;
@@ -418,7 +413,7 @@ private:
     type value_type_;
 };
 
-class struct_
+class struct_ : public type_base<struct_>
 {
 public:
     struct member
@@ -493,65 +488,6 @@ private:
 };
 }
 
-template <>
-struct is_type<types::double_> : std::true_type
-{
-};
-
-template <>
-struct is_type<types::float_> : std::true_type
-{
-};
-
-template <>
-struct is_type<types::integer> : std::true_type
-{
-};
-
-template <>
-struct is_type<types::bool_> : std::true_type
-{
-};
-
-template <>
-struct is_type<types::index> : std::true_type
-{
-};
-
-template <>
-struct is_type<types::multi_index> : std::true_type
-{
-};
-
-template <>
-struct is_type<types::complex> : std::true_type
-{
-};
-
-template <>
-struct is_type<types::array> : std::true_type
-{
-};
-
-template <>
-struct is_type<types::array_slice> : std::true_type
-{
-};
-
-/*template <>
-struct is_type<types::tensor> : std::true_type
-{
-};*/
-
-template <>
-struct is_type<types::sparse_tensor> : std::true_type
-{
-};
-
-template <>
-struct is_type<types::struct_> : std::true_type
-{
-};
 }
 }
 

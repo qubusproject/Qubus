@@ -13,7 +13,7 @@ namespace qbb
 namespace qubus
 {
 
-class type_conversion_expr
+class type_conversion_expr : public expression_base<type_conversion_expr>
 {
 public:
     type_conversion_expr() = default;
@@ -44,11 +44,6 @@ private:
 
 bool operator==(const type_conversion_expr& lhs, const type_conversion_expr& rhs);
 bool operator!=(const type_conversion_expr& lhs, const type_conversion_expr& rhs);
-
-template<>
-struct is_expression<type_conversion_expr> : std::true_type
-{
-};
 
 }
 }

@@ -15,7 +15,7 @@ namespace qbb
 namespace qubus
 {
  
-class double_literal_expr
+class double_literal_expr : public expression_base<double_literal_expr>
 {
     
 public:
@@ -44,12 +44,7 @@ private:
 bool operator==(const double_literal_expr& lhs, const double_literal_expr& rhs);
 bool operator!=(const double_literal_expr& lhs, const double_literal_expr& rhs);
 
-template<>
-struct is_expression<double_literal_expr> : std::true_type
-{
-};
-
-class float_literal_expr
+class float_literal_expr : public expression_base<float_literal_expr>
 {
     
 public:
@@ -78,12 +73,7 @@ private:
 bool operator==(const float_literal_expr& lhs, const float_literal_expr& rhs);
 bool operator!=(const float_literal_expr& lhs, const float_literal_expr& rhs);
 
-template<>
-struct is_expression<float_literal_expr> : std::true_type
-{
-};
-
-class integer_literal_expr
+class integer_literal_expr : public expression_base<integer_literal_expr>
 {
     
 public:
@@ -111,11 +101,6 @@ private:
 
 bool operator==(const integer_literal_expr& lhs, const integer_literal_expr& rhs);
 bool operator!=(const integer_literal_expr& lhs, const integer_literal_expr& rhs);
-
-template<>
-struct is_expression<integer_literal_expr> : std::true_type
-{
-};
 
 }
 }

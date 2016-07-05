@@ -31,7 +31,7 @@ enum class binary_op_tag
   logical_and,
   logical_or };
 
-class binary_operator_expr
+class binary_operator_expr : public expression_base<binary_operator_expr>
 {
 public:
     binary_operator_expr();
@@ -65,11 +65,6 @@ private:
 
 bool operator==(const binary_operator_expr& lhs, const binary_operator_expr& rhs);
 bool operator!=(const binary_operator_expr& lhs, const binary_operator_expr& rhs);
-
-template<>
-struct is_expression<binary_operator_expr> : std::true_type
-{
-};
 
 }
 }

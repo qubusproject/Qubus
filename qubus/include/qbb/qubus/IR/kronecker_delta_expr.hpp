@@ -14,7 +14,7 @@ namespace qbb
 namespace qubus
 {
 
-class kronecker_delta_expr
+class kronecker_delta_expr : public expression_base<kronecker_delta_expr>
 {
 public:
     kronecker_delta_expr() = default;
@@ -47,11 +47,6 @@ private:
 
 bool operator==(const kronecker_delta_expr& lhs, const kronecker_delta_expr& rhs);
 bool operator!=(const kronecker_delta_expr& lhs, const kronecker_delta_expr& rhs);
-
-template<>
-struct is_expression<kronecker_delta_expr> : std::true_type
-{
-};
 
 }
 }

@@ -20,7 +20,7 @@ namespace qbb
 namespace qubus
 {
 
-class foreign_call_expr
+class foreign_call_expr : public expression_base<foreign_call_expr>
 {
 public:
     foreign_call_expr() = default;
@@ -51,11 +51,6 @@ private:
 
 bool operator==(const foreign_call_expr& lhs, const foreign_call_expr& rhs);
 bool operator!=(const foreign_call_expr& lhs, const foreign_call_expr& rhs);
-
-template<>
-struct is_expression<foreign_call_expr> : std::true_type
-{
-};
 
 }
 }

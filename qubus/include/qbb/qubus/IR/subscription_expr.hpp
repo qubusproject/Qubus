@@ -14,7 +14,7 @@ namespace qbb
 namespace qubus
 {
 
-class subscription_expr
+class subscription_expr : public expression_base<subscription_expr>
 {
 public:
     subscription_expr() = default;
@@ -45,11 +45,6 @@ private:
 
 bool operator==(const subscription_expr& lhs, const subscription_expr& rhs);
 bool operator!=(const subscription_expr& lhs, const subscription_expr& rhs);
-
-template<>
-struct is_expression<subscription_expr> : std::true_type
-{
-};
 
 }
 }
