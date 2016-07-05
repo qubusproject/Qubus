@@ -1548,7 +1548,7 @@ expression isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx)
 
         symbol_table.erase(iterator.get_id().name());
 
-        return for_expr(idx_decl, lower_bound, upper_bound, increment, body);
+        return for_expr(idx_decl, std::move(lower_bound), std::move(upper_bound), std::move(increment), std::move(body));
     }
     case isl_ast_node_block:
     {
@@ -1559,7 +1559,7 @@ expression isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx)
             sub_exprs.emplace_back(isl_ast_to_kir(child, ctx));
         }
 
-        return compound_expr(sub_exprs);
+        return compound_expr(std::move(sub_exprs));
     }
     case isl_ast_node_user:
     {
@@ -1577,11 +1577,11 @@ expression isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx)
         {
             auto else_branch = isl_ast_to_kir(*else_block, ctx);
 
-            return if_expr(condition, then_branch, else_branch);
+            return if_expr(std::move(condition), std::move(then_branch), std::move(else_branch));
         }
         else
         {
-            return if_expr(condition, then_branch);
+            return if_expr(std::move(condition), std::move(then_branch));
         }
     };
     case isl_ast_node_mark:

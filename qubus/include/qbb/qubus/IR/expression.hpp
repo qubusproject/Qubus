@@ -34,7 +34,12 @@ public:
     {
         auto tag = implementation_table_.register_type<T>();
 
-        self_ = std::make_unique<expression_wrapper<T>>(value, tag);
+        self_ = std::make_unique<expression_wrapper<T>>(std::move(value), tag);
+    }
+
+    expression(expression& other)
+    : self_(other.self_ ? other.self_->clone() : nullptr)
+    {
     }
 
     expression(const expression& other)
@@ -164,7 +169,7 @@ private:
     public:
         expression_wrapper() = default;
 
-        explicit expression_wrapper(T value_, qbb::util::index_t tag_) : value_(value_), tag_(tag_)
+        explicit expression_wrapper(T value_, qbb::util::index_t tag_) : value_(std::move(value_)), tag_(tag_)
         {
         }
 
