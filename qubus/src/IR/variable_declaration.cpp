@@ -1,5 +1,9 @@
 #include <qbb/qubus/IR/variable_declaration.hpp>
 
+#include <qbb/util/assert.hpp>
+
+#include <utility>
+
 namespace qbb
 {
 namespace qubus
@@ -13,6 +17,7 @@ variable_declaration_info::variable_declaration_info()
 variable_declaration_info::variable_declaration_info(type var_type_, variable_intent intent_)
 : var_type_(var_type_), intent_(intent_)
 {
+    QBB_ASSERT(static_cast<bool>(this->var_type_), "Invalid variable type.");
 }
 
 const type& variable_declaration_info::var_type() const
@@ -36,7 +41,7 @@ annotation_map& variable_declaration_info::annotations()
 }
     
 variable_declaration::variable_declaration(type var_type_, variable_intent intent_)
-: info_(std::make_shared<variable_declaration_info>(var_type_, intent_))
+: info_(std::make_shared<variable_declaration_info>(std::move(var_type_), intent_))
 {
 }
 

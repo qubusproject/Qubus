@@ -38,13 +38,13 @@ public:
     }
 
     expression(const expression& other)
-    : self_(other.self_->clone())
+    : self_(other.self_ ? other.self_->clone() : nullptr)
     {
     }
 
     expression& operator=(const expression& other)
     {
-        self_ = other.self_->clone();
+        self_ = other.self_ ? other.self_->clone() : nullptr;
 
         return *this;
     }
@@ -105,6 +105,11 @@ public:
         {
             return nullptr;
         }
+    }
+
+    explicit operator bool() const
+    {
+        return static_cast<bool>(self_);
     }
 
     qbb::util::index_t tag() const

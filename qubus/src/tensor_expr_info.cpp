@@ -27,7 +27,7 @@ tensor_expr_info::tensor_expr_info(
 : result_type_(std::move(result_type_)), closure_(std::move(std::get<0>(ir_info))),
   args_(std::move(std::get<1>(ir_info)))
 {
-    variable_declaration result(result_type_);
+    variable_declaration result(this->result_type_);
 
     expression lhs = variable_ref_expr(result);
 
