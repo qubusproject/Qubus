@@ -140,7 +140,7 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
         manager.add(createLoopVersioningLICMPass());    // Do LoopVersioningLICM
         manager.add(createLICMPass());                  // Hoist loop invariants
 
-        manager.add(createLoopDistributePass());
+        manager.add(createLoopDistributePass(true));
     }
 #endif
 
