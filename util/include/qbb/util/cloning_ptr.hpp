@@ -15,6 +15,9 @@ template <typename T>
 class cloning_ptr
 {
 public:
+    using pointer = T*;
+    using element_type = T;
+
     cloning_ptr() = default;
 
     explicit cloning_ptr(T* ptr_) : ptr_(ptr_)
