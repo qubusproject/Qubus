@@ -5,20 +5,20 @@
 
 #include <qbb/qubus/IR/function_declaration.hpp>
 
-#include <qbb/qubus/jit/local_array_alias_analysis.hpp>
-#include <qbb/qubus/jit/llvm_environment.hpp>
-#include <qbb/qubus/jit/reference.hpp>
 #include <qbb/qubus/jit/alias_info.hpp>
+#include <qbb/qubus/jit/llvm_environment.hpp>
+#include <qbb/qubus/jit/local_array_alias_analysis.hpp>
+#include <qbb/qubus/jit/reference.hpp>
 
-#include <hpx/lcos/local/promise.hpp>
 #include <hpx/lcos/future.hpp>
+#include <hpx/lcos/local/promise.hpp>
 #include <hpx/lcos/wait_all.hpp>
 
-#include <boost/signals2.hpp>
 #include <boost/optional.hpp>
+#include <boost/signals2.hpp>
 
-#include <qbb/util/optional_ref.hpp>
 #include <qbb/util/handle.hpp>
+#include <qbb/util/optional_ref.hpp>
 
 #include <map>
 
@@ -58,7 +58,8 @@ public:
     code_region(const code_region&) = delete;
     code_region& operator=(const code_region&) = delete;
 
-    alias_info register_access(variable_declaration accessed_array, std::vector<expression> indices,
+    alias_info register_access(variable_declaration accessed_array,
+                               std::vector<std::reference_wrapper<expression>> indices,
                                reference data_ref);
 
 private:
@@ -70,7 +71,7 @@ private:
 class global_alias_info_query
 {
 public:
-    explicit global_alias_info_query(reference ref_) ;
+    explicit global_alias_info_query(reference ref_);
 
     global_alias_info_query(const global_alias_info_query&) = delete;
     global_alias_info_query& operator=(const global_alias_info_query&) = delete;
@@ -144,7 +145,6 @@ private:
 
     std::vector<hpx::lcos::future<void>> pending_tasks_;
 };
-
 }
 }
 }

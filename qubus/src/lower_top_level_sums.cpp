@@ -19,12 +19,12 @@ namespace qubus
 namespace
 {
 
-expression remove_top_level_sums(const expression& expr, std::vector<variable_declaration>& sum_indices)
+std::unique_ptr<expression> remove_top_level_sums(const expression& expr, std::vector<variable_declaration>& sum_indices)
 {
-    pattern::variable<expression> body;
+    pattern::variable<const expression&> body;
     pattern::variable<variable_declaration> index;
 
-    auto m = pattern::make_matcher<expression, expression>()
+    auto m = pattern::make_matcher<expression, std::unique_ptr<expression>>()
                  .case_(sum(body, index), [&]
                         {
                      sum_indices.push_back(index.get());
@@ -33,65 +33,63 @@ expression remove_top_level_sums(const expression& expr, std::vector<variable_de
                  })
                  .case_(body, [&]
                         {
-                     return body.get();
+                     return clone(body.get());
                  });
 
     return pattern::match(expr, m);
 }
 }
 
-expression lower_top_level_sums(const expression& expr)
+std::unique_ptr<expression> lower_top_level_sums(const expression& expr)
 {
-    pattern::variable<expression> a, b, c, d;
-    pattern::variable<sum_expr> s;
+    pattern::variable<const expression&> a, b, c, d;
+    pattern::variable<const sum_expr&> s;
     pattern::variable<variable_declaration> idx;
-    pattern::variable<std::vector<expression>> sub_exprs;
+    pattern::variable<std::vector<std::reference_wrapper<expression>>> sub_exprs;
     pattern::variable<binary_op_tag> tag;
 
     using pattern::_;
     
-    auto m = pattern::make_matcher<expression, expression>()
+    auto m = pattern::make_matcher<expression, std::unique_ptr<expression>>()
                  .case_(for_all(idx, b), [&]
                         {
-                     return for_all_expr(idx.get(), lower_top_level_sums(b.get()));
+                     return for_all(idx.get(), lower_top_level_sums(b.get()));
                  })
                  .case_(for_(idx, b, c, d), [&]
                         {
-                     return for_expr(idx.get(), b.get(), c.get(), lower_top_level_sums(d.get()));
+                     return for_(idx.get(), clone(b.get()), clone(c.get()), lower_top_level_sums(d.get()));
                  })
                  .case_(compound(sub_exprs), [&]
                         {
-                     std::vector<expression> new_sub_expressions;
+                     std::vector<std::unique_ptr<expression>> new_sub_expressions;
 
                      for (const auto& sub_expr : sub_exprs.get())
                      {
                          new_sub_expressions.push_back(lower_top_level_sums(sub_expr));
                      }
 
-                     return compound_expr(new_sub_expressions);
+                     return sequenced_tasks(std::move(new_sub_expressions));
                  })
-                 .case_(binary_operator(pattern::value(binary_op_tag::assign), a, bind_to(sum(_, _), s)), [&]
+                 .case_(assign(a, bind_to(sum(_, _), s)), [&]
                         {
                          std::vector<variable_declaration> sum_indices;
 
                          auto new_rhs = remove_top_level_sums(s.get(), sum_indices);
 
-                         auto initializer = binary_operator_expr(binary_op_tag::assign, a.get(),
-                                                                 double_literal_expr(0));
+                         auto initializer = assign(clone(a.get()),  double_literal(0));
 
-                         expression new_expr =
-                             binary_operator_expr(binary_op_tag::plus_assign, a.get(), new_rhs);
+                         std::unique_ptr<expression> new_expr = plus_assign(clone(a.get()), std::move(new_rhs));
 
                          for (const auto& sum_index : sum_indices | boost::adaptors::reversed)
                          {
-                             new_expr = for_all_expr(sum_index, new_expr);
+                             new_expr = for_all(sum_index, std::move(new_expr));
                          }
 
-                         return expression(compound_expr({std::move(initializer), std::move(new_expr)}));
+                         return sequenced_tasks(std::move(initializer), std::move(new_expr));
                  })
                  .case_(a, [&]
                  {
-                     return a.get();
+                     return clone(a.get());
                  });
 
     return pattern::match(expr, m);

@@ -1,6 +1,8 @@
 #ifndef QBB_UTIL_CLONING_PTR_HPP
 #define QBB_UTIL_CLONING_PTR_HPP
 
+#include <qbb/util/unused.hpp>
+
 #include <functional>
 #include <memory>
 #include <utility>
@@ -21,6 +23,10 @@ public:
     cloning_ptr() = default;
 
     explicit cloning_ptr(T* ptr_) : ptr_(ptr_)
+    {
+    }
+
+    cloning_ptr(std::unique_ptr<T>&& ptr_) : ptr_(std::move(ptr_))
     {
     }
 
@@ -90,14 +96,20 @@ public:
         return *ptr_;
     }
 
-    operator std::unique_ptr<T>() const
+    operator std::unique_ptr<T>() &&
     {
-        return std::unique_ptr<T>(ptr_ ? ptr_->clone() : nullptr);
+        return std::move(ptr_);
     }
 
     explicit operator bool() const
     {
         return static_cast<bool>(ptr_);
+    }
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & ptr_;
     }
 private:
     template <typename U>

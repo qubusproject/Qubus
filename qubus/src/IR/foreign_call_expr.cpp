@@ -9,8 +9,8 @@ namespace qbb
 namespace qubus
 {
 
-foreign_call_expr::foreign_call_expr(foreign_computelet computelet_, std::vector<expression> args_)
-: computelet_(std::move(computelet_)), args_(std::move(args_))
+foreign_call_expr::foreign_call_expr(foreign_computelet computelet_, std::vector<std::unique_ptr<expression>> args_)
+: computelet_(std::move(computelet_)), args_(take_over_children(args_))
 {
 }
 
@@ -24,29 +24,32 @@ const foreign_computelet& foreign_call_expr::computelet() const
     return computelet_;
 }
 
-const std::vector<expression>& foreign_call_expr::args() const
+foreign_call_expr* foreign_call_expr::clone() const
 {
-    return args_;
+    return new foreign_call_expr(computelet_, qbb::qubus::clone(args_));
 }
 
-std::vector<expression> foreign_call_expr::sub_expressions() const
+const expression& foreign_call_expr::child(std::size_t index) const
 {
-    return args_;
+    if (index < args_.size())
+    {
+        return *args_[index];
+    }
+    else
+    {
+        throw 0;
+    }
 }
 
-expression foreign_call_expr::substitute_subexpressions(const std::vector<expression>& subexprs) const
+std::size_t foreign_call_expr::arity() const
 {
-    return foreign_call_expr(computelet_, subexprs);
+    return args_.size();
 }
 
-annotation_map& foreign_call_expr::annotations() const
+std::unique_ptr<expression> foreign_call_expr::substitute_subexpressions(
+        std::vector<std::unique_ptr<expression>> new_children) const
 {
-    return annotations_;
-}
-
-annotation_map& foreign_call_expr::annotations()
-{
-    return annotations_;
+    return std::make_unique<foreign_call_expr>(computelet_, std::move(new_children));
 }
 
 bool operator==(const foreign_call_expr& QBB_UNUSED(lhs), const foreign_call_expr& QBB_UNUSED(rhs))

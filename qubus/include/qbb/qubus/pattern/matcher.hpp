@@ -154,17 +154,6 @@ private:
     std::unique_ptr<case_interface> self_;
 };
 
-template <typename T>
-T unwrap_case_result(T value)
-{
-    return value;
-}
-
-template <typename T>
-T unwrap_case_result(boost::optional<T> value)
-{
-    return *value;
-}
 }
 
 template <typename BaseType, typename ResultType>
@@ -189,7 +178,7 @@ public:
         {
             if (auto result = case_.try_match(value))
             {
-                return detail::unwrap_case_result(result);
+                return std::move(*result);
             }
             else
             {
@@ -206,7 +195,7 @@ public:
         {
             if (auto result = case_.try_match(value))
             {
-                return detail::unwrap_case_result(result);
+                return std::move(*result);
             }
             else
             {
@@ -251,8 +240,6 @@ public:
         {
             if (auto result = case_.try_match(value))
             {
-                detail::unwrap_case_result(result);
-
                 return;
             }
             else
@@ -270,7 +257,7 @@ public:
         {
             if (auto result = case_.try_match(value))
             {
-                return detail::unwrap_case_result(result);
+                return result;
             }
             else
             {

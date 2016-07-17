@@ -9,13 +9,13 @@ namespace qbb
 namespace qubus
 {
 
-binary_operator_expr::binary_operator_expr()
-: tag_(binary_op_tag::nop)
+binary_operator_expr::binary_operator_expr() : tag_(binary_op_tag::nop)
 {
 }
 
-binary_operator_expr::binary_operator_expr(binary_op_tag tag_, expression left_, expression right_)
-: tag_{tag_}, left_{std::move(left_)}, right_{std::move(right_)}
+binary_operator_expr::binary_operator_expr(binary_op_tag tag_, std::unique_ptr<expression> left_,
+                                           std::unique_ptr<expression> right_)
+: tag_{tag_}, left_{take_over_child(left_)}, right_{take_over_child(right_)}
 {
 }
 
@@ -24,36 +24,49 @@ binary_op_tag binary_operator_expr::tag() const
     return tag_;
 }
 
-expression binary_operator_expr::left() const
+const expression& binary_operator_expr::left() const
 {
-    return left_;
-}
-expression binary_operator_expr::right() const
-{
-    return right_;
+    return *left_;
 }
 
-std::vector<expression> binary_operator_expr::sub_expressions() const
+const expression& binary_operator_expr::right() const
 {
-    return {left_, right_};
+    return *right_;
 }
 
-expression
-binary_operator_expr::substitute_subexpressions(const std::vector<expression>& subexprs) const
+binary_operator_expr* binary_operator_expr::clone() const
 {
-    QBB_ASSERT(subexprs.size() == 2, "invalid number of subexpressions");
-
-    return binary_operator_expr(tag_, subexprs[0], subexprs[1]);
+    return new binary_operator_expr(tag_, qbb::qubus::clone(*left_), qbb::qubus::clone(*right_));
 }
 
-annotation_map& binary_operator_expr::annotations() const
+const expression& binary_operator_expr::child(std::size_t index) const
 {
-    return annotations_;
+    if (index == 0)
+    {
+        return *left_;
+    }
+    else if (index == 1)
+    {
+        return *right_;
+    }
+    else
+    {
+        throw 0;
+    }
 }
 
-annotation_map& binary_operator_expr::annotations()
+std::size_t binary_operator_expr::arity() const
 {
-    return annotations_;
+    return 2;
+}
+
+std::unique_ptr<expression> binary_operator_expr::substitute_subexpressions(
+    std::vector<std::unique_ptr<expression>> new_children) const
+{
+    if (new_children.size() != 2)
+        throw 0;
+
+    return std::make_unique<binary_operator_expr>(tag_, std::move(new_children[0]), std::move(new_children[1]));
 }
 
 bool operator==(const binary_operator_expr& lhs, const binary_operator_expr& rhs)

@@ -9,14 +9,14 @@ namespace qbb
 namespace qubus
 {
 
-member_access_expr::member_access_expr(expression object_, std::string member_name_)
-: object_(std::move(object_)), member_name_(std::move(member_name_))
+member_access_expr::member_access_expr(std::unique_ptr<expression> object_, std::string member_name_)
+: object_(take_over_child(object_)), member_name_(std::move(member_name_))
 {
 }
 
 const expression& member_access_expr::object() const
 {
-    return object_;
+    return *object_;
 }
 
 const std::string& member_access_expr::member_name() const
@@ -24,26 +24,35 @@ const std::string& member_access_expr::member_name() const
     return member_name_;
 }
 
-std::vector<expression> member_access_expr::sub_expressions() const
+member_access_expr* member_access_expr::clone() const
 {
-    return { object_ };
+    return new member_access_expr(qbb::qubus::clone(*object_), member_name_);
 }
 
-expression member_access_expr::substitute_subexpressions(const std::vector<expression>& subexprs) const
+const expression& member_access_expr::child(std::size_t index) const
 {
-    QBB_ASSERT(subexprs.size() == 1, "invalid number of subexpressions");
-
-    return member_access_expr(subexprs[0], member_name_);
+    if (index == 0)
+    {
+        return *object_;
+    }
+    else
+    {
+        throw 0;
+    }
 }
 
-annotation_map& member_access_expr::annotations() const
+std::size_t member_access_expr::arity() const
 {
-    return annotations_;
+    return 1;
 }
 
-annotation_map& member_access_expr::annotations()
+std::unique_ptr<expression> member_access_expr::substitute_subexpressions(
+        std::vector<std::unique_ptr<expression>> new_children) const
 {
-    return annotations_;
+    if (new_children.size() != 1)
+        throw 0;
+
+    return std::make_unique<member_access_expr>(std::move(new_children[0]), member_name_);
 }
 
 bool operator==(const member_access_expr& lhs, const member_access_expr& rhs)

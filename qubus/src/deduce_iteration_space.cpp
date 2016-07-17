@@ -10,8 +10,8 @@ namespace qbb
 namespace qubus
 {
 
-std::array<expression, 2> deduce_iteration_space(const variable_declaration& idx,
-                                                 const expression& expr)
+std::array<std::unique_ptr<expression>, 2> deduce_iteration_space(const variable_declaration& idx,
+                                                                  const expression& expr)
 {
     using pattern::value;
     using pattern::_;
@@ -21,33 +21,38 @@ std::array<expression, 2> deduce_iteration_space(const variable_declaration& idx
 
     pattern::variable<util::index_t> extent;
 
-    auto m = pattern::make_matcher<expression, std::array<expression, 2>>()
-                 .case_(subscription(tensor(decl), bind_to(any_of(index(value(idx))), index_pos)),
-                        [&]
-                        {
-                            expression lower_bound = integer_literal_expr(0);
+    auto m =
+        pattern::make_matcher<expression, std::array<std::unique_ptr<expression>, 2>>()
+            .case_(subscription(tensor(decl), bind_to(any_of(index(value(idx))), index_pos)),
+                   [&] {
+                       auto lower_bound = integer_literal(0);
 
-                            expression tensor = variable_ref_expr(decl.get());
-                            expression index_position = integer_literal_expr(index_pos.get());
-                            expression upper_bound =
-                                intrinsic_function_expr("extent", {tensor, index_position});
+                       auto tensor = var(decl.get());
+                       auto index_position = integer_literal(index_pos.get());
 
-                            return std::array<expression, 2>{{lower_bound, upper_bound}};
-                        })
-                 .case_(delta(extent, index(value(idx)), _) || delta(extent, _, index(value(idx))),
-                        [&]
-                        {
-                            expression lower_bound = integer_literal_expr(0);
-                            expression upper_bound = integer_literal_expr(extent.get());
+                       std::vector<std::unique_ptr<expression>> args;
+                       args.reserve(2);
+                       args.push_back(std::move(tensor));
+                       args.push_back(std::move(index_position));
 
-                            return std::array<expression, 2>{{lower_bound, upper_bound}};
-                        });
+                       auto upper_bound = intrinsic_function("extent", std::move(args));
+
+                       return std::array<std::unique_ptr<expression>, 2>{
+                           {std::move(lower_bound), std::move(upper_bound)}};
+                   })
+            .case_(delta(extent, index(value(idx)), _) || delta(extent, _, index(value(idx))), [&] {
+                auto lower_bound = integer_literal(0);
+                auto upper_bound = integer_literal(extent.get());
+
+                return std::array<std::unique_ptr<expression>, 2>{
+                    {std::move(lower_bound), std::move(upper_bound)}};
+            });
 
     auto result = pattern::search(expr, m);
 
     if (result)
     {
-        return *result;
+        return std::move(*result);
     }
     else
     {

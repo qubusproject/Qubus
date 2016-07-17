@@ -2,8 +2,8 @@
 
 #include <qbb/qubus/IR/deduce_expression_environment.hpp>
 
-#include <qbb/qubus/pattern/core.hpp>
 #include <qbb/qubus/pattern/IR.hpp>
+#include <qbb/qubus/pattern/core.hpp>
 
 #include <qbb/qubus/IR/qir.hpp>
 
@@ -23,9 +23,12 @@ namespace qubus
 
 namespace
 {
-expression substitite_env_vars(expression expr, const std::vector<parameter>& env_vars,
-                               std::vector<parameter>& substituion_vars)
+std::unique_ptr<expression> substitite_env_vars(const expression& expr,
+                                                const std::vector<parameter>& env_vars,
+                                                std::vector<parameter>& substituion_vars)
 {
+    std::unique_ptr<expression> new_expr = clone(expr);
+
     std::map<util::handle, variable_declaration> substitution_table;
 
     for (const auto& var : env_vars)
@@ -39,28 +42,28 @@ expression substitite_env_vars(expression expr, const std::vector<parameter>& en
 
     for (const auto& var : env_vars)
     {
-        auto m = pattern::make_matcher<expression, expression>().case_(
-            variable_ref(pattern::value(var.declaration())), [&]
-            {
+        auto m = pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
+            variable_ref(pattern::value(var.declaration())), [&] {
                 const auto& substitute_var = substitution_table.at(var.declaration().id());
 
-                return variable_ref_expr(substitute_var);
+                return std::make_unique<variable_ref_expr>(substitute_var);
             });
 
-        expr = pattern::substitute(expr, m);
+        new_expr = pattern::substitute(expr, m);
     }
 
-    return expr;
+    return new_expr;
 }
 }
 
-expression extract_expr_as_function(expression expr, const std::string& extracted_func_name)
+std::unique_ptr<expression> extract_expr_as_function(const expression& expr,
+                                                     const std::string& extracted_func_name)
 {
     auto expr_env = deduce_expression_environment(expr);
 
     std::vector<parameter> params;
 
-    expr = substitite_env_vars(expr, expr_env.parameters(), params);
+    auto body = substitite_env_vars(expr, expr_env.parameters(), params);
 
     QBB_ASSERT(params.size() == expr_env.parameters().size(), "");
 
@@ -81,31 +84,31 @@ expression extract_expr_as_function(expression expr, const std::string& extracte
 
     if (out_params.size() != 1)
     {
-        pretty_print(expr);
+        pretty_print(*body);
         throw 0; // Invalid number of out parameters.
     }
 
-    function_declaration extracted_function(extracted_func_name, in_params, out_params[0], expr);
+    function_declaration extracted_function(extracted_func_name, in_params, out_params[0], std::move(body));
 
-    std::vector<expression> args;
+    std::vector<std::unique_ptr<expression>> args;
 
-    boost::optional<expression> result;
+    std::unique_ptr<expression> result;
 
     for (const auto& param : expr_env.parameters())
     {
         if (param.intent() == variable_intent::in)
         {
-            args.push_back(variable_ref_expr(param.declaration()));
+            args.push_back(var(param.declaration()));
         }
         else if (param.intent() == variable_intent::out)
         {
-            result = variable_ref_expr(param.declaration());
+            result = var(param.declaration());
         }
     }
 
-    args.push_back(*result);
+    args.push_back(std::move(result));
 
-    return spawn_expr(extracted_function, args);
+    return spawn(std::move(extracted_function), std::move(args));
 }
 }
 }

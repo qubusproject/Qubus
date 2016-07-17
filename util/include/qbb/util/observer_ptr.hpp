@@ -22,8 +22,8 @@ public:
     {
     }
 
-    observer_ptr(const cloning_ptr<T>& other) = default;
-    observer_ptr(cloning_ptr<T>&& other) = default;
+    observer_ptr(const observer_ptr<T>& other) = default;
+    observer_ptr(observer_ptr<T>&& other) = default;
 
     template <typename U>
     observer_ptr(observer_ptr<U> other) : ptr_(other.ptr_)

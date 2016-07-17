@@ -15,6 +15,61 @@ namespace qbb
 namespace qubus
 {
 
+expression_cursor::expression_cursor(const expression& expr_) : expr_(&expr_)
+{
+}
+
+expression_cursor& expression_cursor::move_up()
+{
+    expr_ = expr_->parent();
+
+    return *this;
+}
+
+expression_cursor& expression_cursor::move_down(std::size_t index)
+{
+    if (index < expr_->arity())
+    {
+        expr_ = &expr_->child(index);
+    }
+    else
+    {
+        expr_ = nullptr;
+    }
+
+    return *this;
+}
+
+std::size_t expression_cursor::arity() const
+{
+    return expr_->arity();
+}
+
+expression_cursor::operator bool() const
+{
+    return expr_;
+}
+
+const expression& expression_cursor::operator*() const
+{
+    return *expr_;
+}
+
+const expression* expression_cursor::operator->() const
+{
+    return expr_;
+}
+
+bool operator==(const expression_cursor& lhs, const expression_cursor& rhs)
+{
+    return &*lhs == &*rhs;
+}
+
+bool operator!=(const expression_cursor& lhs, const expression_cursor& rhs)
+{
+    return !(lhs == rhs);
+}
+
 qbb::util::implementation_table expression::implementation_table_ = {};
 
 namespace
@@ -59,5 +114,37 @@ bool operator!=(const expression& lhs, const expression& rhs)
 {
     return !(lhs == rhs);
 }
+
+std::unique_ptr<expression> clone(const expression& expr)
+{
+    return std::unique_ptr<expression>(expr.clone());
+}
+
+std::vector<std::unique_ptr<expression>> clone(const std::vector<std::unique_ptr<expression>>& expressions)
+{
+    std::vector<std::unique_ptr<expression>> result;
+    result.reserve(expressions.size());
+
+    for (const auto& expression : expressions)
+    {
+        result.push_back(clone(*expression));
+    }
+
+    return result;
+}
+
+std::vector<std::unique_ptr<expression>> clone(const std::vector<std::reference_wrapper<expression>>& expressions)
+{
+    std::vector<std::unique_ptr<expression>> result;
+    result.reserve(expressions.size());
+
+    for (const auto& expression : expressions)
+    {
+        result.push_back(clone(expression));
+    }
+
+    return result;
+}
+
 }
 }

@@ -162,9 +162,9 @@ bool operator<(const index_expr &lhs, const index_expr &rhs)
 namespace
 {
 
-index_expr index_expr_to_isl_aff(const expression &expr)
+index_expr index_expr_to_isl_aff(const expression& expr)
 {
-    pattern::variable<expression> a, b;
+    pattern::variable<const expression&> a, b;
     pattern::variable<binary_op_tag> btag;
     pattern::variable<unary_op_tag> utag;
     pattern::variable<util::index_t> value;
@@ -220,14 +220,14 @@ index_expr index_expr_to_isl_aff(const expression &expr)
 struct local_array_access_info
 {
     local_array_access_info(variable_declaration accessed_array, reference data_ref,
-                            std::vector<expression> indices)
+                            std::vector<std::reference_wrapper<expression>> indices)
             : accessed_array(accessed_array), data_ref(data_ref), indices(indices)
     {
     }
 
     variable_declaration accessed_array;
     reference data_ref;
-    std::vector<expression> indices;
+    std::vector<std::reference_wrapper<expression>> indices;
 
     hpx::lcos::local::promise<llvm::MDNode *> alias_scope_promise;
     hpx::lcos::local::promise<llvm::MDNode *> noalias_set_promise;
@@ -336,7 +336,7 @@ bool never_reference_same_element(const std::vector<index_expr> &acc1,
 }
 }
 
-bool contains_loops(const expression &expr)
+bool contains_loops(const expression& expr)
 {
     using pattern::_;
 
@@ -348,7 +348,7 @@ bool contains_loops(const expression &expr)
     return !!pattern::search(expr, m);
 }
 
-std::vector<index_expr> index_expr_from_expression(const std::vector<expression> &indices)
+std::vector<index_expr> index_expr_from_expression(const std::vector<std::reference_wrapper<expression>> &indices)
 {
     std::vector<index_expr> result;
 
@@ -375,7 +375,7 @@ public:
     local_array_access_alias_analysis_impl &
             operator=(const local_array_access_alias_analysis_impl &) = delete;
 
-    alias_info query(variable_declaration accessed_array, std::vector<expression> indices,
+    alias_info query(variable_declaration accessed_array, std::vector<std::reference_wrapper<expression>> indices,
                      reference data_ref);
 
 private:
@@ -392,7 +392,7 @@ local_array_access_alias_analysis_impl::~local_array_access_alias_analysis_impl(
 }
 
 alias_info local_array_access_alias_analysis_impl::query(variable_declaration accessed_array,
-                                                         std::vector<expression> indices,
+                                                         std::vector<std::reference_wrapper<expression>> indices,
                                                          reference data_ref)
 {
     local_array_access_info info(accessed_array, data_ref, indices);
@@ -450,7 +450,7 @@ local_array_access_alias_analysis::~local_array_access_alias_analysis() = defaul
 
 alias_info local_array_access_alias_analysis::query(variable_declaration accessed_array,
 
-                                                    std::vector<expression> indices,
+                                                    std::vector<std::reference_wrapper<expression>> indices,
                                                     reference data_ref)
 {
     return impl_->query(std::move(accessed_array), std::move(indices), std::move(data_ref));

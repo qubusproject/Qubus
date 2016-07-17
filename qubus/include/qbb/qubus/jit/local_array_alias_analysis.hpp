@@ -53,7 +53,7 @@ bool operator==(const index_expr& lhs, const index_expr& rhs);
 bool operator!=(const index_expr& lhs, const index_expr& rhs);
 bool operator<(const index_expr& lhs, const index_expr& rhs);
 
-std::vector<index_expr> index_expr_from_expression(const std::vector<expression>& indices);
+std::vector<index_expr> index_expr_from_expression(const std::vector<std::reference_wrapper<expression>>& indices);
 bool contains_loops(const expression& expr);
 
 class local_array_access_alias_analysis_impl;
@@ -69,7 +69,7 @@ public:
 
     local_array_access_alias_analysis &operator=(const local_array_access_alias_analysis &) = delete;
 
-    alias_info query(variable_declaration accessed_array, std::vector<expression> indices,
+    alias_info query(variable_declaration accessed_array, std::vector<std::reference_wrapper<expression>> indices,
                      reference data_ref);
 
 private:

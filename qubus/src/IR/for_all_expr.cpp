@@ -9,26 +9,30 @@ namespace qbb
 namespace qubus
 {
 
-for_all_expr::for_all_expr(variable_declaration loop_index_, expression body_)
-: loop_indices_{std::move(loop_index_)}, body_(std::move(body_))
+for_all_expr::for_all_expr(variable_declaration loop_index_, std::unique_ptr<expression> body_)
+: loop_indices_{std::move(loop_index_)}, body_(take_over_child(body_))
 {
 }
 
-for_all_expr::for_all_expr(std::vector<variable_declaration> loop_indices_, expression body_)
-: loop_indices_(std::move(loop_indices_)), body_(std::move(body_))
+for_all_expr::for_all_expr(std::vector<variable_declaration> loop_indices_,
+                           std::unique_ptr<expression> body_)
+: loop_indices_(std::move(loop_indices_)), body_(take_over_child(body_))
 {
-    QBB_ASSERT(this->loop_indices_.size() > 0, "A for all loops needs to declare at least one index.");
+    QBB_ASSERT(this->loop_indices_.size() > 0,
+               "A for all loops needs to declare at least one index.");
 }
 
-for_all_expr::for_all_expr(std::vector<variable_declaration> loop_indices_, variable_declaration alias_, expression body_)
-: loop_indices_(std::move(loop_indices_)), alias_(std::move(alias_)), body_(std::move(body_))
+for_all_expr::for_all_expr(std::vector<variable_declaration> loop_indices_,
+                           variable_declaration alias_, std::unique_ptr<expression> body_)
+: loop_indices_(std::move(loop_indices_)), alias_(std::move(alias_)), body_(take_over_child(body_))
 {
-    QBB_ASSERT(this->loop_indices_.size() > 0, "A for all loops needs to declare at least one index.");
+    QBB_ASSERT(this->loop_indices_.size() > 0,
+               "A for all loops needs to declare at least one index.");
 }
 
-expression for_all_expr::body() const
+const expression& for_all_expr::body() const
 {
-    return body_;
+    return *body_;
 }
 
 const std::vector<variable_declaration>& for_all_expr::loop_indices() const
@@ -41,33 +45,42 @@ const boost::optional<variable_declaration>& for_all_expr::alias() const
     return alias_;
 }
 
-std::vector<expression> for_all_expr::sub_expressions() const
+for_all_expr* for_all_expr::clone() const
 {
-    return {body_};
-}
-
-expression for_all_expr::substitute_subexpressions(const std::vector<expression>& subexprs) const
-{
-    QBB_ASSERT(subexprs.size() == 1, "invalid number of subexpressions");
-
-    if (alias())
+    if (alias_)
     {
-        return for_all_expr(loop_indices_, *alias(), subexprs[0]);
+        return new for_all_expr(loop_indices_, *alias_, qbb::qubus::clone(*body_));
     }
     else
     {
-        return for_all_expr(loop_indices_, subexprs[0]);
+        return new for_all_expr(loop_indices_, qbb::qubus::clone(*body_));
     }
 }
 
-annotation_map& for_all_expr::annotations() const
+const expression& for_all_expr::child(std::size_t index) const
 {
-    return annotations_;
+    return *body_;
 }
 
-annotation_map& for_all_expr::annotations()
+std::size_t for_all_expr::arity() const
 {
-    return annotations_;
+    return 1;
+}
+
+std::unique_ptr<expression> for_all_expr::substitute_subexpressions(
+        std::vector<std::unique_ptr<expression>> new_children) const
+{
+    if (new_children.size() != 1)
+        throw 0;
+
+    if (alias_)
+    {
+        return std::make_unique<for_all_expr>(loop_indices_, *alias_, std::move(new_children[0]));
+    }
+    else
+    {
+        return std::make_unique<for_all_expr>(loop_indices_, std::move(new_children[0]));
+    }
 }
 
 bool operator==(const for_all_expr& lhs, const for_all_expr& rhs)
@@ -79,6 +92,5 @@ bool operator!=(const for_all_expr& lhs, const for_all_expr& rhs)
 {
     return !(lhs == rhs);
 }
-
 }
 }

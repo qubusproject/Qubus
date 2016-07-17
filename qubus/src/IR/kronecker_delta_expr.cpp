@@ -9,8 +9,11 @@ namespace qbb
 namespace qubus
 {
 
-kronecker_delta_expr::kronecker_delta_expr(util::index_t extent_, expression first_index_, expression second_index_)
-: extent_{std::move(extent_)}, first_index_(std::move(first_index_)), second_index_(std::move(second_index_))
+kronecker_delta_expr::kronecker_delta_expr(util::index_t extent_,
+                                           std::unique_ptr<expression> first_index_,
+                                           std::unique_ptr<expression> second_index_)
+: extent_{std::move(extent_)}, first_index_(take_over_child(first_index_)),
+  second_index_(take_over_child(second_index_))
 {
 }
 
@@ -21,35 +24,49 @@ util::index_t kronecker_delta_expr::extent() const
 
 const expression& kronecker_delta_expr::first_index() const
 {
-    return first_index_;
+    return *first_index_;
 }
 
 const expression& kronecker_delta_expr::second_index() const
 {
-    return second_index_;
+    return *second_index_;
 }
 
-std::vector<expression> kronecker_delta_expr::sub_expressions() const
+kronecker_delta_expr* kronecker_delta_expr::clone() const
 {
-    return { first_index_, second_index_ };
+    return new kronecker_delta_expr(extent_, qbb::qubus::clone(*first_index_),
+                                    qbb::qubus::clone(*second_index_));
 }
 
-expression
-kronecker_delta_expr::substitute_subexpressions(const std::vector<expression>& subexprs) const
+const expression& kronecker_delta_expr::child(std::size_t index) const
 {
-    QBB_ASSERT(subexprs.size() == 2, "invalid number of subexpressions");
-
-    return kronecker_delta_expr(extent(), subexprs[0], subexprs[1]);
+    if (index == 0)
+    {
+        return *first_index_;
+    }
+    else if (index == 1)
+    {
+        return *second_index_;
+    }
+    else
+    {
+        throw 0;
+    }
 }
 
-annotation_map& kronecker_delta_expr::annotations() const
+std::size_t kronecker_delta_expr::arity() const
 {
-    return annotations_;
+    return 2;
 }
 
-annotation_map& kronecker_delta_expr::annotations()
+std::unique_ptr<expression> kronecker_delta_expr::substitute_subexpressions(
+    std::vector<std::unique_ptr<expression>> new_children) const
 {
-    return annotations_;
+    if (new_children.size() != 2)
+        throw 0;
+
+    return std::make_unique<kronecker_delta_expr>(extent_, std::move(new_children[0]),
+                                                  std::move(new_children[1]));
 }
 
 bool operator==(const kronecker_delta_expr& lhs, const kronecker_delta_expr& rhs)

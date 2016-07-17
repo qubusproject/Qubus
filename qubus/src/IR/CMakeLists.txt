@@ -14,15 +14,16 @@ foreach(file_name IN LISTS qubus_ir_header_file_names)
 endforeach()
 
 set(qubus_ir_source_files annotations.cpp binary_operator_expr.cpp compound_expr.cpp
-                          expression.cpp for_all_expr.cpp for_expr.cpp
+                          for_all_expr.cpp for_expr.cpp
                           intrinsic_function_expr.cpp intrinsic_function_table.cpp
-                          literal_expr.cpp pretty_printer.cpp subscription_expr.cpp
+                          literal_expr.cpp subscription_expr.cpp
                           sum_expr.cpp type.cpp
-                          type_conversion_expr.cpp type_inference.cpp unary_operator_expr.cpp
+                          type_conversion_expr.cpp unary_operator_expr.cpp
                           variable_ref_expr.cpp variable_declaration.cpp
                           function_declaration.cpp macro_expr.cpp spawn_expr.cpp
-                          local_variable_def_expr.cpp deduce_expression_environment.cpp construct_expr.cpp
-                          if_expr.cpp kronecker_delta_expr.cpp member_access_expr.cpp foreign_call_expr.cpp)
+                          local_variable_def_expr.cpp construct_expr.cpp
+                          if_expr.cpp kronecker_delta_expr.cpp member_access_expr.cpp foreign_call_expr.cpp expression.cpp
+                          pretty_printer.cpp type_inference.cpp deduce_expression_environment.cpp)
         
 set(qubus_pattern_header_file_names any.hpp binary_operator.hpp bind_to.hpp compound.hpp core.hpp
                                     for.hpp for_all.hpp index.hpp intrinsic_function.hpp IR.hpp

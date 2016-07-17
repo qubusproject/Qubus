@@ -7,6 +7,7 @@
 #include <qbb/qubus/pattern/any.hpp>
 
 #include <utility>
+#include <functional>
 
 namespace qbb
 {
@@ -24,7 +25,7 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<type_conversion_expr>* var = nullptr) const
+    bool match(const BaseType& value, const variable<const type_conversion_expr&>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<type_conversion_expr>())
         {

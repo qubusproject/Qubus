@@ -54,7 +54,7 @@ struct deduce_key<ParamsHead>
     template <typename Head>
     static std::array<index_t, 1> call_impl(std::true_type, const Head& head)
     {
-        return {{head.tag()}};
+        return {{head.type_tag()}};
     }
 
     template <typename Head>
@@ -79,9 +79,9 @@ struct deduce_key<ParamsHead, ParamsTail...>
 
     template <typename Head, typename... Tail>
     static auto call_impl(std::true_type, const Head& head, const Tail&... tail)
-        -> decltype(concat(head.tag(), deduce_key<ParamsTail...>::call(tail...)))
+        -> decltype(concat(head.type_tag(), deduce_key<ParamsTail...>::call(tail...)))
     {
-        return concat(head.tag(), deduce_key<ParamsTail...>::call(tail...));
+        return concat(head.type_tag(), deduce_key<ParamsTail...>::call(tail...));
     }
 
     template <typename Head, typename... Tail>

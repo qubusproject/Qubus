@@ -52,7 +52,7 @@ public:
         return self_->rtti();
     }
 
-    qbb::util::index_t tag() const
+    qbb::util::index_t type_tag() const
     {
         return self_->tag();
     }

@@ -7,53 +7,58 @@ namespace qbb
 namespace qubus
 {
 
-subscription_expr::subscription_expr(expression indexed_expr_, std::vector<expression> indices_)
-: indexed_expr_{std::move(indexed_expr_)}, indices_(std::move(indices_))
+subscription_expr::subscription_expr(std::unique_ptr<expression> indexed_expr_, std::vector<std::unique_ptr<expression>> indices_)
+: indexed_expr_{take_over_child(indexed_expr_)}, indices_(take_over_children(indices_))
 {
 }
 
-expression subscription_expr::indexed_expr() const
+const expression& subscription_expr::indexed_expr() const
 {
-    return indexed_expr_;
+    return *indexed_expr_;
 }
 
-const std::vector<expression>& subscription_expr::indices() const
+subscription_expr* subscription_expr::clone() const
 {
-    return indices_;
+    return new subscription_expr(qbb::qubus::clone(*indexed_expr_), qbb::qubus::clone(indices_));
 }
 
-std::vector<expression> subscription_expr::sub_expressions() const
+const expression& subscription_expr::child(std::size_t index) const
 {
-    std::vector<expression> sub_exprs;
-    sub_exprs.reserve(indices_.size() + 1);
-    
-    sub_exprs.push_back(indexed_expr_);
-
-    sub_exprs.insert(sub_exprs.end(), indices_.begin(), indices_.end());
-    
-    return sub_exprs;
-}
-
-expression subscription_expr::substitute_subexpressions(const std::vector<expression>& subexprs) const
-{
-    std::vector<expression> new_indices;
-    
-    for(std::size_t i = 1; i < subexprs.size(); ++i)
+    if (index == 0)
     {
-        new_indices.emplace_back(subexprs[i]);
+        return *indexed_expr_;
     }
-    
-    return subscription_expr(subexprs[0], new_indices);
+    else if (index - 1 < indices_.size())
+    {
+        return *indices_[index - 1];
+    }
+    else
+    {
+        throw 0;
+    }
 }
 
-annotation_map& subscription_expr::annotations() const
+std::size_t subscription_expr::arity() const
 {
-    return annotations_;
+    return indices_.size() + 1;
 }
-    
-annotation_map& subscription_expr::annotations()
+
+std::unique_ptr<expression> subscription_expr::substitute_subexpressions(
+        std::vector<std::unique_ptr<expression>> new_children) const
 {
-    return annotations_;
+    if (new_children.size() < 1)
+        throw 0;
+
+    std::vector<std::unique_ptr<expression>> indices;
+    indices.reserve(new_children.size() - 1);
+
+    auto number_of_indices = new_children.size();
+    for (std::size_t i = 1; i < number_of_indices; ++i)
+    {
+        indices.push_back(std::move(new_children[i]));
+    }
+
+    return std::make_unique<subscription_expr>(std::move(new_children[0]), std::move(indices));
 }
 
 bool operator==(const subscription_expr& lhs, const subscription_expr& rhs)

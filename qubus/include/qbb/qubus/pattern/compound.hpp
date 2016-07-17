@@ -7,6 +7,7 @@
 #include <qbb/qubus/pattern/sequence.hpp>
 
 #include <utility>
+#include <functional>
 
 namespace qbb
 {
@@ -24,7 +25,7 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<compound_expr>* var = nullptr) const
+    bool match(const BaseType& value, const variable<const compound_expr&>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<compound_expr>())
         {
@@ -61,6 +62,19 @@ auto compound_n(Body... body)
 {
     return compound(sequence(body...));
 }
+
+template <typename Tasks>
+compound_pattern<Tasks> sequenced_tasks(Tasks tasks)
+{
+    return compound_pattern<Tasks>(tasks);
+}
+
+template <typename... Tasks>
+auto sequenced_tasks_n(Tasks... tasks)
+{
+    return compound(sequence(tasks...));
+}
+
 }
 }
 }

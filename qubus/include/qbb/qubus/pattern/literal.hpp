@@ -6,6 +6,7 @@
 #include <qbb/qubus/pattern/variable.hpp>
 
 #include <utility>
+#include <functional>
 
 namespace qbb
 {
@@ -22,7 +23,7 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<double_literal_expr>* var = nullptr) const
+    bool match(const BaseType& value, const variable<const double_literal_expr&>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<double_literal_expr>())
         {
@@ -57,7 +58,7 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<float_literal_expr>* var = nullptr) const
+    bool match(const BaseType& value, const variable<const float_literal_expr&>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<float_literal_expr>())
         {
@@ -92,7 +93,7 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<integer_literal_expr>* var = nullptr) const
+    bool match(const BaseType& value, const variable<const integer_literal_expr&>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<integer_literal_expr>())
         {

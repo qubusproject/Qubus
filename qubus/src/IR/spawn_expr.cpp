@@ -7,8 +7,8 @@ namespace qbb
 namespace qubus
 {
 
-spawn_expr::spawn_expr(function_declaration spawned_plan_, std::vector<expression> arguments_)
-: spawned_plan_(std::move(spawned_plan_)), arguments_(std::move(arguments_))
+spawn_expr::spawn_expr(function_declaration spawned_plan_, std::vector<std::unique_ptr<expression>> arguments_)
+: spawned_plan_(std::move(spawned_plan_)), arguments_(take_over_children(arguments_))
 {
 }
 
@@ -17,29 +17,32 @@ const function_declaration& spawn_expr::spawned_plan() const
     return spawned_plan_;
 }
 
-const std::vector<expression>& spawn_expr::arguments() const
+spawn_expr* spawn_expr::clone() const
 {
-    return arguments_;
+    return new spawn_expr(spawned_plan_, qbb::qubus::clone(arguments_));
 }
 
-std::vector<expression> spawn_expr::sub_expressions() const
+const expression& spawn_expr::child(std::size_t index) const
 {
-    return arguments_;
+    if (index < arguments_.size())
+    {
+        return *arguments_[index];
+    }
+    else
+    {
+        throw 0;
+    }
 }
 
-expression spawn_expr::substitute_subexpressions(const std::vector<expression>& subexprs) const
+std::size_t spawn_expr::arity() const
 {
-    return spawn_expr(spawned_plan_, subexprs);
+    return arguments_.size();
 }
 
-annotation_map& spawn_expr::annotations() const
+std::unique_ptr<expression> spawn_expr::substitute_subexpressions(
+        std::vector<std::unique_ptr<expression>> new_children) const
 {
-    return annotations_;
-}
-
-annotation_map& spawn_expr::annotations()
-{
-    return annotations_;
+    return std::make_unique<spawn_expr>(spawned_plan_, std::move(new_children));
 }
 
 bool operator==(const spawn_expr& lhs, const spawn_expr& rhs)

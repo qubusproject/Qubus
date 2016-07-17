@@ -7,15 +7,9 @@ namespace qbb
 {
 namespace qubus
 {
-template <typename T>
-class expression_base
-{
-protected:
-    ~expression_base() = default;
-};
 
 template <typename T>
-struct is_expression : std::is_base_of<expression_base<T>, T>
+struct is_expression : std::true_type
 {
 };
 

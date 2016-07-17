@@ -14,7 +14,7 @@ namespace qubus
 
 namespace
 {
-expression make_implicit_conversions_explicit(expression expr)
+std::unique_ptr<expression> make_implicit_conversions_explicit(const expression& expr)
 {
     // TODO: add implicit conversions for intrinsic functions
 
@@ -22,12 +22,12 @@ expression make_implicit_conversions_explicit(expression expr)
 
     pattern::variable<binary_op_tag> btag;
     pattern::variable<unary_op_tag> utag;
-    pattern::variable<expression> current_expr, a, b;
+    pattern::variable<const expression&> a, b;
     pattern::variable<type> t;
 
-    auto m = pattern::make_matcher<expression, expression>()
-                 .case_(bind_to(binary_operator(btag, a, b), current_expr),
-                        [&]
+    auto m = pattern::make_matcher<expression, std::unique_ptr<expression>>()
+                 .case_(binary_operator(btag, a, b),
+                        [&] (const expression& self) -> std::unique_ptr<expression>
                         {
                             switch (btag.get())
                             {
@@ -36,59 +36,59 @@ expression make_implicit_conversions_explicit(expression expr)
                                 case binary_op_tag::less:
                                 case binary_op_tag::greater_equal:
                                 case binary_op_tag::greater:
-                                    return current_expr.get();
+                                    return clone(self);
                                 default:
                                 {
-                                    auto result_type = typeof_(current_expr.get());
+                                    auto result_type = typeof_(self);
                                     auto lhs_type = typeof_(a.get());
                                     auto rhs_type = typeof_(b.get());
 
-                                    auto new_lhs = [&]
+                                    auto new_lhs = [&] () -> std::unique_ptr<expression>
                                     {
                                         if (lhs_type != result_type)
                                         {
-                                            return expression(type_conversion_expr(result_type, a.get()));
+                                            return type_conversion(result_type, clone(a.get()));
                                         }
                                         else
                                         {
-                                            return a.get();
+                                            return clone(a.get());
                                         }
                                     }();
 
-                                    auto new_rhs = [&]
+                                    auto new_rhs = [&] () -> std::unique_ptr<expression>
                                     {
                                         if (rhs_type != result_type)
                                         {
-                                            return expression(type_conversion_expr(result_type, b.get()));
+                                            return type_conversion(result_type, clone(b.get()));
                                         }
                                         else
                                         {
-                                            return b.get();
+                                            return clone(b.get());
                                         }
                                     }();
 
-                                    return expression(binary_operator_expr(btag.get(), new_lhs, new_rhs));
+                                    return binary_operator(btag.get(), std::move(new_lhs), std::move(new_rhs));
                                 }
                             }
                         })
-                 .case_(bind_to(unary_operator(utag, a), current_expr), [&]
+                 .case_(unary_operator(utag, a), [&] (const expression& self) -> std::unique_ptr<expression>
                         {
-                            auto result_type = typeof_(current_expr.get());
+                            auto result_type = typeof_(self);
                             auto arg_type = typeof_(a.get());
 
-                            auto new_arg = [&]
+                            auto new_arg = [&] () -> std::unique_ptr<expression>
                             {
                                 if (result_type != arg_type)
                                 {
-                                    return expression(type_conversion_expr(result_type, a.get()));
+                                    return type_conversion(result_type, clone(a.get()));
                                 }
                                 else
                                 {
-                                    return a.get();
+                                    return clone(a.get());
                                 }
                             }();
 
-                            return unary_operator_expr(utag.get(), new_arg);
+                            return unary_operator(utag.get(), std::move(new_arg));
                         });
 
     return pattern::substitute(expr, m);

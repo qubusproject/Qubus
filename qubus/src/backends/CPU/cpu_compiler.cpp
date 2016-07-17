@@ -275,7 +275,8 @@ public:
 
     std::unique_ptr<cpu_plan> compile_computelet(function_declaration computelet)
     {
-        computelet = optimize_loops(computelet);
+        // Don't enable this line! The loop optimizer is broken.
+        //computelet = optimize_loops(computelet);
 
         computelet = make_implicit_conversions_explicit(computelet);
 

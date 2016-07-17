@@ -8,6 +8,7 @@
 #include <qbb/qubus/pattern/core.hpp>
 
 #include <utility>
+#include <functional>
 
 namespace qbb
 {
@@ -24,7 +25,7 @@ public:
     {
     }
 
-    bool match(const expression& value, const variable<expression>* var = nullptr) const
+    bool match(const expression& value, const variable<std::reference_wrapper<const expression>>* var = nullptr) const
     {
         //TODO: Refactor this code after we have added a version of search with result type void.
         auto m = make_matcher<expression, bool>().case_(protect(pattern_), []

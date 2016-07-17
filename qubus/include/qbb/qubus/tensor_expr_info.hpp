@@ -29,8 +29,6 @@ public:
     const std::vector<object>& args() const;
 
 private:
-    type result_type_;
-    tensor_expr_closure closure_;
     std::vector<object> args_;
 
     computelet stored_computelet_;

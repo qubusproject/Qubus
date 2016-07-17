@@ -1,100 +1,93 @@
-#ifndef QBB_QUBUS_EXPRESSION_HPP
-#define QBB_QUBUS_EXPRESSION_HPP
+#ifndef QUBUS_EXPRESSION_HPP
+#define QUBUS_EXPRESSION_HPP
 
 #include <hpx/config.hpp>
 
-#include <qbb/util/multi_method.hpp>
 #include <qbb/qubus/IR/annotations.hpp>
 
-#include <qbb/qubus/IR/expression_traits.hpp>
-#include <qbb/util/unused.hpp>
+#include <qbb/util/multi_method.hpp>
 
 #include <hpx/include/serialization.hpp>
-#include <hpx/runtime/serialization/base_object.hpp>
 
+#include <boost/range/adaptor/transformed.hpp>
+#include <boost/range/any_range.hpp>
+#include <boost/range/irange.hpp>
 
-#include <memory>
-#include <vector>
-#include <typeinfo>
-#include <typeindex>
 #include <utility>
-#include <type_traits>
+#include <vector>
 
 namespace qbb
 {
 namespace qubus
 {
+
+class expression;
+
+class expression_cursor
+{
+public:
+    expression_cursor() = default;
+
+    expression_cursor(const expression& expr_);
+
+    expression_cursor& move_up();
+    expression_cursor& move_down(std::size_t index);
+
+    std::size_t arity() const;
+
+    explicit operator bool() const;
+
+    const expression& operator*() const;
+    const expression* operator->() const;
+
+private:
+    const expression* expr_ = nullptr;
+};
+
+bool operator==(const expression_cursor& lhs, const expression_cursor& rhs);
+bool operator!=(const expression_cursor& lhs, const expression_cursor& rhs);
+
 class expression
 {
 public:
+    using cursor_type = expression_cursor;
+
     expression() = default;
+    virtual ~expression() = default;
 
-    template <typename T, typename Enabler = typename std::enable_if<is_expression<T>::value>::type>
-    expression(T value)
+    expression(const expression& other) = delete;
+    expression& operator=(const expression& other) = delete;
+
+    expression(expression&& other) = delete;
+    expression& operator=(expression&& other) = delete;
+
+    cursor_type cursor() const
     {
-        auto tag = implementation_table_.register_type<T>();
-
-        self_ = std::make_unique<expression_wrapper<T>>(std::move(value), tag);
+        return cursor_type(*this);
     }
 
-    expression(expression& other)
-    : self_(other.self_ ? other.self_->clone() : nullptr)
-    {
-    }
+    virtual const expression* parent() const = 0;
+    virtual void set_parent(expression& parent) = 0;
 
-    expression(const expression& other)
-    : self_(other.self_ ? other.self_->clone() : nullptr)
-    {
-    }
+    virtual const expression& child(std::size_t index) const = 0;
+    virtual std::size_t arity() const = 0;
 
-    expression& operator=(const expression& other)
-    {
-        self_ = other.self_ ? other.self_->clone() : nullptr;
+    virtual boost::any_range<const expression&, boost::forward_traversal_tag>
+    sub_expressions() const = 0;
 
-        return *this;
-    }
+    virtual std::unique_ptr<expression>
+    substitute_subexpressions(std::vector<std::unique_ptr<expression>> new_children) const = 0;
 
-    expression(expression&& other) = default;
-    expression& operator=(expression&& other) = default;
+    virtual expression* clone() const = 0;
 
-    annotation_map& annotations() const
-    {
-        return self_->annotations();
-    }
-
-    annotation_map& annotations()
-    {
-        return self_->annotations();
-    }
-
-    std::vector<expression> sub_expressions() const
-    {
-        return self_->sub_expressions();
-    }
-
-    expression substitute_subexpressions(const std::vector<expression>& new_subexprs) const
-    {
-        return self_->substitute_subexpressions(new_subexprs);
-    }
-
-    std::type_index rtti() const
-    {
-        return self_->rtti();
-    }
+    virtual annotation_map& annotations() const = 0;
 
     template <typename T>
-    T as() const
+    const T& as() const
     {
         using value_type = typename std::decay<T>::type;
 
-        if (self_->rtti() == typeid(value_type))
-        {
-            return static_cast<expression_wrapper<value_type>*>(self_.get())->get();
-        }
-        else
-        {
-            throw std::bad_cast();
-        }
+        return dynamic_cast<const value_type&>(*this);
     }
 
     template <typename T>
@@ -102,24 +95,14 @@ public:
     {
         using value_type = typename std::decay<T>::type;
 
-        if (self_->rtti() == typeid(value_type))
+        if (auto casted_ptr = dynamic_cast<const value_type*>(this))
         {
-            return &static_cast<expression_wrapper<value_type>*>(self_.get())->get();
+            return casted_ptr;
         }
         else
         {
             return nullptr;
         }
-    }
-
-    explicit operator bool() const
-    {
-        return static_cast<bool>(self_);
-    }
-
-    qbb::util::index_t tag() const
-    {
-        return self_->tag();
     }
 
     static const qbb::util::implementation_table& get_implementation_table()
@@ -132,120 +115,102 @@ public:
         return implementation_table_.number_of_implementations();
     }
 
+    virtual qbb::util::index_t type_tag() const = 0;
+
     template<typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
     {
-        ar & self_;
     }
-private:
-    class expression_interface
-    {
-    public:
-        virtual ~expression_interface() = default;
 
-        virtual annotation_map& annotations() const = 0;
-        virtual annotation_map& annotations() = 0;
-
-        virtual std::vector<expression> sub_expressions() const = 0;
-        virtual expression
-        substitute_subexpressions(const std::vector<expression>& new_subexprs) const = 0;
-
-        virtual std::type_index rtti() const = 0;
-        virtual qbb::util::index_t tag() const = 0;
-
-        virtual std::unique_ptr<expression_interface> clone() const = 0;
-
-        template<typename Archive>
-        void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
-        {
-        }
-
-        HPX_SERIALIZATION_POLYMORPHIC_ABSTRACT(expression_interface);
-    };
-
-    template <typename T>
-    class expression_wrapper : public expression_interface
-    {
-    public:
-        expression_wrapper() = default;
-
-        explicit expression_wrapper(T value_, qbb::util::index_t tag_) : value_(std::move(value_)), tag_(tag_)
-        {
-        }
-
-        virtual ~expression_wrapper()
-        {
-        }
-
-        annotation_map& annotations() const override final
-        {
-            return value_.annotations();
-        }
-
-        annotation_map& annotations() override final
-        {
-            return value_.annotations();
-        }
-
-        std::vector<expression> sub_expressions() const override final
-        {
-            return value_.sub_expressions();
-        }
-
-        expression
-        substitute_subexpressions(const std::vector<expression>& new_subexprs) const override final
-        {
-            return value_.substitute_subexpressions(new_subexprs);
-        }
-
-        const T& get() const
-        {
-            return value_;
-        }
-
-        T& get()
-        {
-            return value_;
-        }
-
-        std::type_index rtti() const override final
-        {
-            return typeid(T);
-        }
-
-        qbb::util::index_t tag() const override final
-        {
-            return tag_;
-        }
-
-        std::unique_ptr<expression_interface> clone() const override final
-        {
-            return std::make_unique<expression_wrapper<T>>(value_, tag_);
-        }
-
-        template<typename Archive>
-        void serialize(Archive& ar, unsigned QBB_UNUSED(version))
-        {
-            ar & hpx::serialization::base_object<expression_interface>(*this);
-
-            ar & value_;
-            ar & tag_;
-        }
-
-        HPX_SERIALIZATION_POLYMORPHIC_TEMPLATE(expression_wrapper);
-    private:
-        T value_;
-        qbb::util::index_t tag_;
-    };
-
-    std::unique_ptr<expression_interface> self_;
-
+    HPX_SERIALIZATION_POLYMORPHIC_ABSTRACT(expression);
+protected:
     static qbb::util::implementation_table implementation_table_;
 };
 
 bool operator==(const expression& lhs, const expression& rhs);
 bool operator!=(const expression& lhs, const expression& rhs);
 
+std::unique_ptr<expression> clone(const expression& expr);
+std::vector<std::unique_ptr<expression>> clone(const std::vector<std::unique_ptr<expression>>& expressions);
+std::vector<std::unique_ptr<expression>> clone(const std::vector<std::reference_wrapper<expression>>& expressions);
+
+template <typename Expression>
+class expression_base : public expression
+{
+public:
+    expression_base()
+    {
+        tag_ = implementation_table_.register_type<Expression>();
+    }
+
+    virtual ~expression_base() = default;
+
+    const expression* parent() const override final
+    {
+        return parent_;
+    }
+
+    void set_parent(expression& parent) override final
+    {
+        parent_ = &parent;
+    }
+
+    boost::any_range<const expression&, boost::forward_traversal_tag> sub_expressions() const
+    {
+        return boost::irange<std::size_t>(0, arity()) |
+               boost::adaptors::transformed(
+                   [this](std::size_t index) -> decltype(auto) { return child(index); });
+    }
+
+    qbb::util::index_t type_tag() const override final
+    {
+        return tag_;
+    }
+
+    annotation_map& annotations() const override final
+    {
+        return annotations_;
+    }
+protected:
+    template <typename ChildExpression>
+    std::unique_ptr<ChildExpression>&& take_over_child(std::unique_ptr<ChildExpression>& child)
+    {
+        child->set_parent(*this);
+
+        return std::move(child);
+    }
+
+    template <typename ChildExpression>
+    std::unique_ptr<ChildExpression>&& take_over_child(std::unique_ptr<ChildExpression>&& child)
+    {
+        child->set_parent(*this);
+
+        return std::move(child);
+    }
+
+    template <typename ChildExpression>
+    std::vector<std::unique_ptr<ChildExpression>>&&
+    take_over_children(std::vector<std::unique_ptr<ChildExpression>>& children)
+    {
+        for (const auto& child : children)
+        {
+            child->set_parent(*this);
+        }
+
+        return std::move(children);
+    }
+private:
+    qbb::util::index_t tag_;
+    expression* parent_ = nullptr;
+
+    mutable annotation_map annotations_;
+};
+
+template <typename Expression>
+std::unique_ptr<Expression> clone(const expression_base<Expression>& expr)
+{
+    return std::unique_ptr<Expression>(static_cast<const Expression&>(expr).clone());
+}
 }
 }
 

@@ -67,7 +67,7 @@ public:
         return ref_;
     }
     
-    operator boost::optional<value_type>() const
+    explicit operator boost::optional<value_type>() const
     {
         if(ref_)
         {
@@ -81,6 +81,30 @@ public:
 private:
     T* ref_;
 };
+
+template<typename T>
+bool operator==(const optional_ref<T>& lhs, const optional_ref<T>& rhs)
+{
+    if (!lhs && !rhs)
+    {
+        return true;
+    }
+    else if (lhs && rhs && *lhs == *rhs)
+    {
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+template<typename T>
+bool operator!=(const optional_ref<T>& lhs, const optional_ref<T>& rhs)
+{
+    return !(lhs == rhs);
+}
+
 
 }
 }

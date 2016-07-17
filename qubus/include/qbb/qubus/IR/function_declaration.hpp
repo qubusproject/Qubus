@@ -28,7 +28,7 @@ class function_declaration_info
 public:
     function_declaration_info() = default;
     explicit function_declaration_info(std::string name_, std::vector<variable_declaration> params_,
-                                       variable_declaration result_, expression body_);
+                                       variable_declaration result_, std::unique_ptr<expression> body_);
 
     function_declaration_info(const function_declaration_info&) = delete;
     function_declaration_info& operator=(const function_declaration_info&) = delete;
@@ -41,7 +41,7 @@ public:
 
     const expression& body() const;
 
-    void substitute_body(expression body);
+    void substitute_body(std::unique_ptr<expression> body);
 
     annotation_map& annotations() const;
 
@@ -59,7 +59,7 @@ private:
     std::string name_;
     std::vector<variable_declaration> params_;
     variable_declaration result_;
-    expression body_;
+    std::unique_ptr<expression> body_;
 
     mutable annotation_map annotations_;
 };
@@ -70,17 +70,15 @@ class function_declaration
 public:
     function_declaration() = default;
     function_declaration(std::string name_, std::vector<variable_declaration> params_,
-                         variable_declaration result_, expression body_);
+                         variable_declaration result_, std::unique_ptr<expression> body_);
 
     const std::string& name() const;
     const std::vector<variable_declaration>& params() const;
     const variable_declaration& result() const;
     
-    void substitute_body(expression body);
+    void substitute_body(std::unique_ptr<expression> body);
 
     const expression& body() const;
-
-    std::vector<expression> sub_expressions() const;
 
     util::handle id() const;
 

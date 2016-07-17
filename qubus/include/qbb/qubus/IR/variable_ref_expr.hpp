@@ -1,9 +1,10 @@
 #ifndef QBB_QUBUS_VARIABLE_REF_EXPR_HPP
 #define QBB_QUBUS_VARIABLE_REF_EXPR_HPP
 
+#include <hpx/config.hpp>
+
+#include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/variable_declaration.hpp>
-#include <qbb/qubus/IR/annotations.hpp>
-#include <qbb/qubus/IR/expression_traits.hpp>
 
 #include <qbb/util/hash.hpp>
 #include <qbb/util/unused.hpp>
@@ -22,20 +23,27 @@ class variable_ref_expr : public expression_base<variable_ref_expr>
 public:
     variable_ref_expr() = default;
     explicit variable_ref_expr(variable_declaration declaration_);
+
+    virtual ~variable_ref_expr() = default;
     
     const variable_declaration& declaration() const;
-    
-    std::vector<expression> sub_expressions() const;
-    expression substitute_subexpressions(const std::vector<expression>& subexprs) const;
-    
-    annotation_map& annotations() const;
-    annotation_map& annotations();
+
+    variable_ref_expr* clone() const override final;
+
+    const expression& child(std::size_t index) const override final;
+
+    std::size_t arity() const override final;
+
+    std::unique_ptr<expression> substitute_subexpressions(
+            std::vector<std::unique_ptr<expression>> new_children) const override final;
 
     template <typename Archive>
     void serialize(Archive& ar, unsigned QBB_UNUSED(version))
     {
         ar & declaration_;
     }
+
+    HPX_SERIALIZATION_POLYMORPHIC(variable_ref_expr);
 private:
     variable_declaration declaration_;
     
@@ -44,6 +52,16 @@ private:
 
 bool operator==(const variable_ref_expr& lhs, const variable_ref_expr& rhs);
 bool operator!=(const variable_ref_expr& lhs, const variable_ref_expr& rhs);
+
+inline std::unique_ptr<variable_ref_expr> variable_ref(variable_declaration var)
+{
+    return std::make_unique<variable_ref_expr>(std::move(var));
+}
+
+inline std::unique_ptr<variable_ref_expr> var(variable_declaration var)
+{
+    return variable_ref(std::move(var));
+}
 
 }
 }

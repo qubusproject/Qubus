@@ -7,34 +7,30 @@ namespace qbb
 namespace qubus
 {
 
-compound_expr::compound_expr(std::vector<expression> body_)
-: body_(std::move(body_))
+compound_expr::compound_expr(std::vector<std::unique_ptr<expression>> body_)
+: body_(take_over_children(body_))
 {
-}
-    
-const std::vector<expression>& compound_expr::body() const
-{
-    return body_;
 }
 
-std::vector<expression> compound_expr::sub_expressions() const
+compound_expr* compound_expr::clone() const
 {
-    return body();
+    return new compound_expr(qbb::qubus::clone(body_));
 }
 
-expression compound_expr::substitute_subexpressions(const std::vector<expression>& subexprs) const
+const expression& compound_expr::child(std::size_t index) const
 {
-    return compound_expr(subexprs);
+    return *body_.at(index);
 }
 
-annotation_map& compound_expr::annotations() const
+std::size_t compound_expr::arity() const
 {
-    return annotations_;
+    return body_.size();
 }
-    
-annotation_map& compound_expr::annotations()
+
+std::unique_ptr<expression> compound_expr::substitute_subexpressions(
+        std::vector<std::unique_ptr<expression>> new_children) const
 {
-    return annotations_;
+    return std::make_unique<compound_expr>(std::move(new_children));
 }
 
 bool operator==(const compound_expr& lhs, const compound_expr& rhs)
@@ -46,6 +42,5 @@ bool operator!=(const compound_expr& lhs, const compound_expr& rhs)
 {
     return !(lhs == rhs);
 }
-
 }
 }
