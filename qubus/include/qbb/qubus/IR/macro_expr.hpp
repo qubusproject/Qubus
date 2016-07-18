@@ -1,9 +1,10 @@
 #ifndef QBB_QUBUS_MACRO_EXPR_HPP
 #define QBB_QUBUS_MACRO_EXPR_HPP
 
+#include <hpx/config.hpp>
+
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/variable_declaration.hpp>
-#include <qbb/qubus/IR/expression_traits.hpp>
 #include <qbb/util/unused.hpp>
 
 #include <vector>
@@ -17,16 +18,21 @@ class macro_expr : public expression_base<macro_expr>
 {
 public:
     macro_expr() = default;
-    macro_expr(std::vector<variable_declaration> params_, expression body_);
+    macro_expr(std::vector<variable_declaration> params_, std::unique_ptr<expression> body_);
+
+    virtual ~macro_expr() = default;
     
     const std::vector<variable_declaration>& params() const;
     const expression& body() const;
-    
-    std::vector<expression> sub_expressions() const;
-    expression substitute_subexpressions(const std::vector<expression>& subexprs) const;
-    
-    annotation_map& annotations() const;
-    annotation_map& annotations();
+
+    macro_expr* clone() const override final;
+
+    const expression& child(std::size_t index) const override final;
+
+    std::size_t arity() const override final;
+
+    std::unique_ptr<expression> substitute_subexpressions(
+            std::vector<std::unique_ptr<expression>> new_children) const override final;
 
     template <typename Archive>
     void serialize(Archive& ar, unsigned QBB_UNUSED(version))
@@ -34,17 +40,22 @@ public:
         ar & params_;
         ar & body_;
     }
+
+    HPX_SERIALIZATION_POLYMORPHIC(macro_expr);
 private:
     std::vector<variable_declaration> params_;
-    expression body_;
-    
-    mutable annotation_map annotations_;
+    std::unique_ptr<expression> body_;
 };
 
 bool operator==(const macro_expr& lhs, const macro_expr& rhs);
 bool operator!=(const macro_expr& lhs, const macro_expr& rhs);
 
-expression expand_macro(const macro_expr& macro, const std::vector<expression>& args);
+inline std::unique_ptr<macro_expr> make_macro(std::vector<variable_declaration> params, std::unique_ptr<expression> body)
+{
+    return std::make_unique<macro_expr>(std::move(params), std::move(body));
+}
+
+std::unique_ptr<expression> expand_macro(const macro_expr& macro, std::vector<std::unique_ptr<expression>> args);
     
 }
 }

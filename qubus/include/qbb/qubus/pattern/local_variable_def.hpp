@@ -7,6 +7,7 @@
 #include <qbb/qubus/pattern/sequence.hpp>
 
 #include <utility>
+#include <functional>
 
 namespace qbb
 {
@@ -25,7 +26,7 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<local_variable_def_expr>* var = nullptr) const
+    bool match(const BaseType& value, const variable<const local_variable_def_expr&>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<local_variable_def_expr>())
         {

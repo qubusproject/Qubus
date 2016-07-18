@@ -21,7 +21,7 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<BaseType>* var = nullptr) const
+    bool match(BaseType&& value, const variable<BaseType>* var = nullptr) const
     {
         if (lhs_.match(value) || rhs_.match(value))
         {

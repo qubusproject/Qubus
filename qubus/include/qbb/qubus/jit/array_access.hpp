@@ -24,9 +24,9 @@ namespace jit
 class compiler;
 
 reference emit_tensor_access(const variable_declaration& tensor,
-                             const std::vector<expression>& indices, compiler& comp);
+                             const std::vector<std::reference_wrapper<const expression>>& indices, compiler& comp);
 
-reference emit_tensor_access(const expression& tensor, const std::vector<expression>& indices,
+reference emit_tensor_access(const expression& tensor, const std::vector<std::reference_wrapper<const expression>>& indices,
                              compiler& comp);
 
 reference emit_array_slice_access(const reference& slice, const std::vector<llvm::Value*>& indices,

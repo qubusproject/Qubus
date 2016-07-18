@@ -33,7 +33,7 @@ code_region::code_region(util::handle token_, const expression& QBB_UNUSED(expr_
 }
 
 alias_info code_region::register_access(variable_declaration accessed_array,
-                                        std::vector<expression> indices, reference data_ref)
+                                        std::vector<std::reference_wrapper<expression>> indices, reference data_ref)
 {
     return laa_alias_analysis_.query(accessed_array, indices, data_ref);
 }

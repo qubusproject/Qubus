@@ -17,27 +17,28 @@ double double_literal_expr::value() const
     return value_;
 }
 
-std::vector<expression> double_literal_expr::sub_expressions() const
+double_literal_expr* double_literal_expr::clone() const
 {
-    return {};
+    return new double_literal_expr(value_);
 }
 
-expression double_literal_expr::substitute_subexpressions(
-    const std::vector<expression>& QBB_UNUSED_RELEASE(subexprs)) const
+const expression& double_literal_expr::child(std::size_t QBB_UNUSED(index)) const
 {
-    QBB_ASSERT(subexprs.size() == 0, "invalid number of subexpressions");
-
-    return double_literal_expr(value_);
+    throw 0;
 }
 
-annotation_map& double_literal_expr::annotations() const
+std::size_t double_literal_expr::arity() const
 {
-    return annotations_;
+    return 0;
 }
 
-annotation_map& double_literal_expr::annotations()
+std::unique_ptr<expression> double_literal_expr::substitute_subexpressions(
+        std::vector<std::unique_ptr<expression>> new_children) const
 {
-    return annotations_;
+    if (new_children.size() != 0)
+        throw 0;
+
+    return std::make_unique<double_literal_expr>(value_);
 }
 
 bool operator==(const double_literal_expr& lhs, const double_literal_expr& rhs)
@@ -59,27 +60,28 @@ float float_literal_expr::value() const
     return value_;
 }
 
-std::vector<expression> float_literal_expr::sub_expressions() const
+float_literal_expr* float_literal_expr::clone() const
 {
-    return {};
+    return new float_literal_expr(value_);
 }
 
-expression float_literal_expr::substitute_subexpressions(
-    const std::vector<expression>& QBB_UNUSED_RELEASE(subexprs)) const
+const expression& float_literal_expr::child(std::size_t QBB_UNUSED(index)) const
 {
-    QBB_ASSERT(subexprs.size() == 0, "invalid number of subexpressions");
-
-    return float_literal_expr(value_);
+    throw 0;
 }
 
-annotation_map& float_literal_expr::annotations() const
+std::size_t float_literal_expr::arity() const
 {
-    return annotations_;
+    return 0;
 }
 
-annotation_map& float_literal_expr::annotations()
+std::unique_ptr<expression> float_literal_expr::substitute_subexpressions(
+        std::vector<std::unique_ptr<expression>> new_children) const
 {
-    return annotations_;
+    if (new_children.size() != 0)
+        throw 0;
+
+    return std::make_unique<float_literal_expr>(value_);
 }
 
 bool operator==(const float_literal_expr& lhs, const float_literal_expr& rhs)
@@ -101,27 +103,28 @@ qbb::util::index_t integer_literal_expr::value() const
     return value_;
 }
 
-std::vector<expression> integer_literal_expr::sub_expressions() const
+integer_literal_expr* integer_literal_expr::clone() const
 {
-    return {};
+    return new integer_literal_expr(value_);
 }
 
-expression integer_literal_expr::substitute_subexpressions(
-    const std::vector<expression>& QBB_UNUSED_RELEASE(subexprs)) const
+const expression& integer_literal_expr::child(std::size_t QBB_UNUSED(index)) const
 {
-    QBB_ASSERT(subexprs.size() == 0, "invalid number of subexpressions");
-
-    return integer_literal_expr(value_);
+    throw 0;
 }
 
-annotation_map& integer_literal_expr::annotations() const
+std::size_t integer_literal_expr::arity() const
 {
-    return annotations_;
+    return 0;
 }
 
-annotation_map& integer_literal_expr::annotations()
+std::unique_ptr<expression> integer_literal_expr::substitute_subexpressions(
+        std::vector<std::unique_ptr<expression>> new_children) const
 {
-    return annotations_;
+    if (new_children.size() != 0)
+        throw 0;
+
+    return std::make_unique<integer_literal_expr>(value_);
 }
 
 bool operator==(const integer_literal_expr& lhs, const integer_literal_expr& rhs)

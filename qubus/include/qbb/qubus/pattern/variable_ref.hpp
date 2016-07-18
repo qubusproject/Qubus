@@ -6,6 +6,7 @@
 #include <qbb/qubus/pattern/any.hpp>
 
 #include <utility>
+#include <functional>
 
 namespace qbb
 {
@@ -24,7 +25,7 @@ public:
     }
     
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<variable_ref_expr>* var = nullptr) const
+    bool match(const BaseType& value, const variable<const variable_ref_expr&>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<variable_ref_expr>())
         {
@@ -59,6 +60,17 @@ variable_ref_pattern<Declaration> variable_ref(Declaration declaration)
 inline variable_ref_pattern<any> variable_ref()
 {
     return variable_ref_pattern<any>(_);
+}
+
+template <typename Declaration>
+variable_ref_pattern<Declaration> var(Declaration declaration)
+{
+    return variable_ref_pattern<Declaration>(declaration);
+}
+
+inline variable_ref_pattern<any> var()
+{
+    return var(_);
 }
 
 }

@@ -10,8 +10,8 @@ namespace qubus
 {
 
 local_variable_def_expr::local_variable_def_expr(variable_declaration decl_,
-                                                 expression initializer_)
-: decl_(std::move(decl_)), initializer_(std::move(initializer_))
+                                                 std::unique_ptr<expression> initializer_)
+: decl_(std::move(decl_)), initializer_(take_over_child(initializer_))
 {
 }
 
@@ -22,30 +22,38 @@ const variable_declaration& local_variable_def_expr::decl() const
 
 const expression& local_variable_def_expr::initializer() const
 {
-    return initializer_;
+    return *initializer_;
 }
 
-std::vector<expression> local_variable_def_expr::sub_expressions() const
+local_variable_def_expr* local_variable_def_expr::clone() const
 {
-    return {initializer_};
+    return new local_variable_def_expr(decl_, qbb::qubus::clone(*initializer_));
 }
 
-expression
-local_variable_def_expr::substitute_subexpressions(const std::vector<expression>& subexprs) const
+const expression& local_variable_def_expr::child(std::size_t index) const
 {
-    QBB_ASSERT(subexprs.size() == 1, "invalid number of subexpressions");
-
-    return local_variable_def_expr(decl_, subexprs[0]);
+    if (index == 0)
+    {
+        return *initializer_;
+    }
+    else
+    {
+        throw 0;
+    }
 }
 
-annotation_map& local_variable_def_expr::annotations() const
+std::size_t local_variable_def_expr::arity() const
 {
-    return annotations_;
+    return 1;
 }
 
-annotation_map& local_variable_def_expr::annotations()
+std::unique_ptr<expression> local_variable_def_expr::substitute_subexpressions(
+        std::vector<std::unique_ptr<expression>> new_children) const
 {
-    return annotations_;
+    if (new_children.size() != 1)
+        throw 0;
+
+    return std::make_unique<local_variable_def_expr>(decl_, std::move(new_children[0]));
 }
 
 bool operator==(const local_variable_def_expr& lhs, const local_variable_def_expr& rhs)

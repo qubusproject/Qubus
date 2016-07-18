@@ -4,13 +4,14 @@
 #include <qbb/qubus/IR/expression.hpp>
 
 #include <string>
+#include <memory>
 
 namespace qbb
 {
 namespace qubus
 {
 
-expression extract_expr_as_function(expression expr, const std::string& extracted_func_name);
+std::unique_ptr<expression> extract_expr_as_function(const expression& expr, const std::string& extracted_func_name);
 
 }
 }

@@ -34,9 +34,9 @@ reference compile(const expression& expr, compiler& comp)
 
     pattern::variable<binary_op_tag> btag;
     pattern::variable<unary_op_tag> utag;
-    pattern::variable<expression> a, b, c, d;
-    pattern::variable<boost::optional<expression>> opt_expr;
-    pattern::variable<std::vector<expression>> expressions;
+    pattern::variable<const expression&> a, b, c, d;
+    pattern::variable<util::optional_ref<const expression>> opt_expr;
+    pattern::variable<std::vector<std::reference_wrapper<const expression>>> expressions;
 
     pattern::variable<variable_declaration> idx;
     pattern::variable<variable_declaration> var;
@@ -522,7 +522,7 @@ reference compile(const expression& expr, compiler& comp)
                                         for (const auto& arg : args)
                                         {
                                             extents.push_back(
-                                                arg.as<integer_literal_expr>().value());
+                                                arg.get().as<integer_literal_expr>().value());
                                         }
                                     }
                                     catch (const std::bad_cast&)

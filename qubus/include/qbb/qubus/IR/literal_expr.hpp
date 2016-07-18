@@ -3,7 +3,6 @@
 
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/annotations.hpp>
-#include <qbb/qubus/IR/expression_traits.hpp>
 
 #include <qbb/util/integers.hpp>
 #include <qbb/util/unused.hpp>
@@ -21,20 +20,27 @@ class double_literal_expr : public expression_base<double_literal_expr>
 public:
     double_literal_expr() = default;
     explicit double_literal_expr(double value_);
+
+    virtual ~double_literal_expr() = default;
     
     double value() const;
-    
-    std::vector<expression> sub_expressions() const;
-    expression substitute_subexpressions(const std::vector<expression>& subexprs) const;
-    
-    annotation_map& annotations() const;
-    annotation_map& annotations();
+
+    double_literal_expr* clone() const override final;
+
+    const expression& child(std::size_t index) const override final;
+
+    std::size_t arity() const override final;
+
+    std::unique_ptr<expression> substitute_subexpressions(
+            std::vector<std::unique_ptr<expression>> new_children) const override final;
 
     template <typename Archive>
     void serialize(Archive& ar, unsigned QBB_UNUSED(version))
     {
         ar & value_;
     }
+
+    HPX_SERIALIZATION_POLYMORPHIC(double_literal_expr);
 private:
     double value_;
     
@@ -44,26 +50,43 @@ private:
 bool operator==(const double_literal_expr& lhs, const double_literal_expr& rhs);
 bool operator!=(const double_literal_expr& lhs, const double_literal_expr& rhs);
 
+inline std::unique_ptr<double_literal_expr> double_literal(double value)
+{
+    return std::make_unique<double_literal_expr>(value);
+}
+
+inline std::unique_ptr<double_literal_expr> lit(double value)
+{
+    return double_literal(value);
+}
+
 class float_literal_expr : public expression_base<float_literal_expr>
 {
     
 public:
     float_literal_expr() = default;
     explicit float_literal_expr(float value_);
+
+    virtual ~float_literal_expr() = default;
     
     float value() const;
-    
-    std::vector<expression> sub_expressions() const;
-    expression substitute_subexpressions(const std::vector<expression>& subexprs) const;
-    
-    annotation_map& annotations() const;
-    annotation_map& annotations();
+
+    float_literal_expr* clone() const override final;
+
+    const expression& child(std::size_t index) const override final;
+
+    std::size_t arity() const override final;
+
+    std::unique_ptr<expression> substitute_subexpressions(
+            std::vector<std::unique_ptr<expression>> new_children) const override final;
 
     template <typename Archive>
     void serialize(Archive& ar, unsigned QBB_UNUSED(version))
     {
         ar & value_;
     }
+
+    HPX_SERIALIZATION_POLYMORPHIC(float_literal_expr);
 private:
     float value_;
     
@@ -73,34 +96,59 @@ private:
 bool operator==(const float_literal_expr& lhs, const float_literal_expr& rhs);
 bool operator!=(const float_literal_expr& lhs, const float_literal_expr& rhs);
 
+inline std::unique_ptr<float_literal_expr> float_literal(float value)
+{
+    return std::make_unique<float_literal_expr>(value);
+}
+
+inline std::unique_ptr<float_literal_expr> lit(float value)
+{
+    return float_literal(value);
+}
+
 class integer_literal_expr : public expression_base<integer_literal_expr>
 {
     
 public:
     integer_literal_expr() = default;
     explicit integer_literal_expr(qbb::util::index_t value_);
+
+    virtual ~integer_literal_expr() = default;
     
     qbb::util::index_t value() const;
-    
-    std::vector<expression> sub_expressions() const;
-    expression substitute_subexpressions(const std::vector<expression>& subexprs) const;
-    
-    annotation_map& annotations() const;
-    annotation_map& annotations();
+
+    integer_literal_expr* clone() const override final;
+
+    const expression& child(std::size_t index) const override final;
+
+    std::size_t arity() const override final;
+
+    std::unique_ptr<expression> substitute_subexpressions(
+            std::vector<std::unique_ptr<expression>> new_children) const override final;
 
     template <typename Archive>
     void serialize(Archive& ar, unsigned QBB_UNUSED(version))
     {
         ar & value_;
     }
+
+    HPX_SERIALIZATION_POLYMORPHIC(integer_literal_expr);
 private:
     qbb::util::index_t value_;
-    
-    mutable annotation_map annotations_;
 };
 
 bool operator==(const integer_literal_expr& lhs, const integer_literal_expr& rhs);
 bool operator!=(const integer_literal_expr& lhs, const integer_literal_expr& rhs);
+
+inline std::unique_ptr<integer_literal_expr> integer_literal(qbb::util::index_t value)
+{
+    return std::make_unique<integer_literal_expr>(value);
+}
+
+inline std::unique_ptr<integer_literal_expr> lit(qbb::util::index_t value)
+{
+    return integer_literal(value);
+}
 
 }
 }

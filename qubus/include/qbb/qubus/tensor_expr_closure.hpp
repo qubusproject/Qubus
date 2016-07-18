@@ -35,14 +35,14 @@ struct index_info
 
 struct tensor_expr_closure
 {
-    tensor_expr_closure(std::vector<index_info> free_indices, std::vector<variable_declaration> params, expression rhs)
+    tensor_expr_closure(std::vector<index_info> free_indices, std::vector<variable_declaration> params, std::unique_ptr<expression> rhs)
     : free_indices(std::move(free_indices)), params(std::move(params)), rhs(std::move(rhs))
     {
     }
     
     std::vector<index_info> free_indices;
     std::vector<variable_declaration> params;
-    expression rhs;
+    std::unique_ptr<expression> rhs;
 };
 }
 }

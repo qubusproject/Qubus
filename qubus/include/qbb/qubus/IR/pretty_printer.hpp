@@ -1,6 +1,8 @@
 #ifndef QBB_QUBUS_PRETTY_PRINTER_HPP
 #define QBB_QUBUS_PRETTY_PRINTER_HPP
 
+#include <hpx/config.hpp>
+
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/function_declaration.hpp>
 #include <qbb/qubus/IR/type.hpp>

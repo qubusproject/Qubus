@@ -7,8 +7,8 @@ namespace qbb
 namespace qubus
 {
 
-construct_expr::construct_expr(type result_type_, std::vector<expression> parameters_)
-        : result_type_{std::move(result_type_)}, parameters_(std::move(parameters_))
+construct_expr::construct_expr(type result_type_, std::vector<std::unique_ptr<expression>> parameters_)
+        : result_type_{std::move(result_type_)}, parameters_(take_over_children(parameters_))
 {
 }
 
@@ -17,41 +17,32 @@ const type& construct_expr::result_type() const
     return result_type_;
 }
 
-const std::vector<expression>& construct_expr::parameters() const
+construct_expr* construct_expr::clone() const
 {
-    return parameters_;
+    return new construct_expr(result_type_, qbb::qubus::clone(parameters_));
 }
 
-std::vector<expression> construct_expr::sub_expressions() const
+const expression& construct_expr::child(std::size_t index) const
 {
-    std::vector<expression> sub_exprs;
-    sub_exprs.reserve(parameters_.size());
-
-    sub_exprs.insert(sub_exprs.end(), parameters_.begin(), parameters_.end());
-
-    return sub_exprs;
-}
-
-expression construct_expr::substitute_subexpressions(const std::vector<expression>& subexprs) const
-{
-    std::vector<expression> new_paramters;
-
-    for(std::size_t i = 0; i < subexprs.size(); ++i)
+    if (index < parameters_.size())
     {
-        new_paramters.emplace_back(subexprs[i]);
+        return *parameters_[0];
     }
-
-    return construct_expr(result_type_, new_paramters);
+    else
+    {
+        throw 0;
+    }
 }
 
-annotation_map& construct_expr::annotations() const
+std::size_t construct_expr::arity() const
 {
-    return annotations_;
+    return parameters_.size();
 }
 
-annotation_map& construct_expr::annotations()
+std::unique_ptr<expression> construct_expr::substitute_subexpressions(
+        std::vector<std::unique_ptr<expression>> new_children) const
 {
-    return annotations_;
+    return std::make_unique<construct_expr>(result_type_, std::move(new_children));
 }
 
 bool operator==(const construct_expr& lhs, const construct_expr& rhs)

@@ -1,6 +1,8 @@
 #ifndef QBB_QUBUS_ANNOTATIONS_HPP
 #define QBB_QUBUS_ANNOTATIONS_HPP
 
+#include <qbb/util/assert.hpp>
+
 #include <boost/any.hpp>
 
 #include <map>
@@ -27,12 +29,16 @@ public:
     template<typename T>
     const T as() const
     {
+        QBB_ASSERT(has_value(), "Annotation has no value.");
+
         return boost::any_cast<T>(*value_);
     }
     
     template<typename T>
     T as()
     {
+        QBB_ASSERT(has_value(), "Annotation has no value.");
+
         return boost::any_cast<T>(*value_);
     }
     

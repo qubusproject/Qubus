@@ -9,7 +9,7 @@ namespace qbb
 namespace qubus
 {
    
-expression fold_kronecker_deltas(expression expr);
+std::unique_ptr<expression> fold_kronecker_deltas(const expression& expr);
 
 function_declaration fold_kronecker_deltas(function_declaration decl);
 

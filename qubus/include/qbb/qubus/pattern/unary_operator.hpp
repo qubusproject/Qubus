@@ -5,8 +5,10 @@
 
 #include <qbb/qubus/pattern/variable.hpp>
 #include <qbb/qubus/pattern/any.hpp>
+#include <qbb/qubus/pattern/value.hpp>
 
 #include <utility>
+#include <functional>
 
 namespace qbb
 {
@@ -24,7 +26,7 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<unary_operator_expr>* var = nullptr) const
+    bool match(const BaseType& value, const variable<const unary_operator_expr&>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<unary_operator_expr>())
         {
@@ -62,10 +64,35 @@ unary_operator_pattern<Tag, Arg> unary_operator(Tag tag, Arg arg)
 }
 
 template <typename Arg>
-unary_operator_pattern<any, Arg> binary_operator(Arg arg)
+unary_operator_pattern<any, Arg> unary_operator(Arg arg)
 {
     return unary_operator_pattern<any, Arg>(_, arg);
 }
+
+template<typename Arg>
+auto nop(Arg arg)
+{
+    return unary_operator(value(unary_op_tag::nop), arg);
+}
+
+template<typename Arg>
+auto operator+(Arg arg)
+{
+    return unary_operator(value(unary_op_tag::plus), arg);
+}
+
+template<typename Arg>
+auto operator-(Arg arg)
+{
+    return unary_operator(value(unary_op_tag::negate), arg);
+}
+
+template<typename Arg>
+auto logical_not(Arg arg)
+{
+    return unary_operator(value(unary_op_tag::logical_not), arg);
+}
+
 }
 }
 }

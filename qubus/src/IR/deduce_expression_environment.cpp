@@ -31,10 +31,10 @@ void extract_expression_parameter(const expression& expr,
     using pattern::value;
 
     pattern::variable<variable_declaration> var;
-    pattern::variable<expression> scope;
+    pattern::variable<std::reference_wrapper<const expression>> scope;
 
-    pattern::variable<expression> a, b;
-    pattern::variable<std::vector<expression>> exprs;
+    pattern::variable<std::reference_wrapper<const expression>> a, b;
+    pattern::variable<std::vector<std::reference_wrapper<const expression>>> exprs;
 
     auto m =
         pattern::make_matcher<expression, void>()

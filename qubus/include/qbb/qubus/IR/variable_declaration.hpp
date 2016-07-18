@@ -4,7 +4,6 @@
 #include <hpx/config.hpp>
 
 #include <qbb/qubus/IR/type.hpp>
-#include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/annotations.hpp>
 
 #include <qbb/util/handle.hpp>

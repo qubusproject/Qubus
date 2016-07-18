@@ -9,6 +9,7 @@
 #include <qbb/qubus/pattern/core.hpp>
 
 #include <utility>
+#include <functional>
 
 namespace qbb
 {
@@ -26,7 +27,7 @@ public:
     {
     }
 
-    bool match(const expression& value, const variable<expression>* var = nullptr) const
+    bool match(const expression& value, const variable<std::reference_wrapper<const expression>>* var = nullptr) const
     {
         auto p = for_all(decl_, scope_) || for_(decl_, _, _, _, scope_) || sum(scope_, decl_);
 

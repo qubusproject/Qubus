@@ -21,55 +21,60 @@ namespace qubus
 namespace
 {
 
-std::vector<expression>
-expand_multi_index(expression expr,
-                   std::map<util::handle, std::vector<expression>>& multi_index_map)
+std::vector<std::unique_ptr<expression>>
+expand_multi_index(const expression& expr,
+                   const std::map<util::handle, std::vector<std::unique_ptr<expression>>>& multi_index_map)
 {
     using pattern::_;
 
     pattern::variable<variable_declaration> decl;
 
-    auto m = pattern::make_matcher<expression, std::vector<expression>>()
+    auto m = pattern::make_matcher<expression, std::vector<std::unique_ptr<expression>>>()
                  .case_(multi_index(decl),
                         [&]
                         {
-                            return multi_index_map.at(decl.get().id());
+                            return clone(multi_index_map.at(decl.get().id()));
                         })
                  .case_(_, [&](const expression& self)
                         {
-                            return std::vector<expression>{self};
+                            std::vector<std::unique_ptr<expression>> indices;
+                            indices.push_back(clone(self));
+
+                            return indices;
                         });
 
     return pattern::match(expr, m);
 }
 
-expression expand_multi_indices(expression expr)
+std::unique_ptr<expression> expand_multi_indices(const expression& expr)
 {
-    std::map<util::handle, std::vector<expression>> multi_index_map;
+    std::map<util::handle, std::vector<std::unique_ptr<expression>>> multi_index_map;
 
-    pattern::variable<std::vector<expression>> indices;
-    pattern::variable<expression> tensor;
+    pattern::variable<std::vector<std::reference_wrapper<expression>>> indices;
+    pattern::variable<const expression&> tensor;
 
     pattern::variable<std::vector<variable_declaration>> index_decls;
     pattern::variable<variable_declaration> alias;
 
-    pattern::variable<expression> body, a, b;
+    pattern::variable<const expression&> body, a, b;
 
-    auto m = pattern::make_matcher<expression, expression>()
+    auto m = pattern::make_matcher<expression, std::unique_ptr<expression>>()
                  .case_(subscription(tensor, indices),
                         [&]
                         {
-                            std::vector<expression> new_indices;
+                            std::vector<std::unique_ptr<expression>> new_indices;
 
                             for (const auto& index : indices.get())
                             {
                                 auto expanded_indices = expand_multi_index(index, multi_index_map);
 
-                                new_indices.insert(new_indices.end(), expanded_indices.begin(),
-                                                   expanded_indices.end());
+                                for (auto&& index : std::move(expanded_indices))
+                                {
+                                    new_indices.push_back(std::move(index));
+                                }
                             }
 
-                            return subscription_expr(tensor.get(), new_indices);
+                            return subscription(clone(tensor.get()), std::move(new_indices));
                         })
 //                 TODO: Reenable the code below after implementing tuples. They are needed to handle the extent.
 //                 .case_(delta(a, b),
@@ -107,29 +112,29 @@ expression expand_multi_indices(expression expr)
                  .case_(for_all_multi(index_decls, alias, body),
                         [&]
                         {
-                            expression result = body.get();
+                            std::unique_ptr<expression> result = clone(body.get());
 
-                            std::vector<expression> element_indices;
+                            std::vector<std::unique_ptr<expression>> element_indices;
 
                             for (const auto& decl : index_decls.get())
                             {
-                                element_indices.emplace_back(variable_ref_expr(decl));
+                                element_indices.emplace_back(var(decl));
 
-                                result = for_all_expr(decl, result);
+                                result = for_all(decl, std::move(result));
                             }
 
-                            multi_index_map[alias.get().id()] = element_indices;
+                            multi_index_map[alias.get().id()] = std::move(element_indices);
 
                             return result;
                         })
                  .case_(for_all_multi(index_decls, body),
                         [&]
                         {
-                            expression result = body.get();
+                            std::unique_ptr<expression> result = clone(body.get());
 
                             for (const auto& decl : index_decls.get())
                             {
-                                result = for_all_expr(decl, result);
+                                result = for_all(decl, std::move(result));
                             }
 
                             return result;
@@ -137,28 +142,28 @@ expression expand_multi_indices(expression expr)
                  .case_(sum_multi(body, index_decls, alias),
                         [&]
                         {
-                            expression result = body.get();
+                            std::unique_ptr<expression> result = clone(body.get());
 
-                            std::vector<expression> element_indices;
+                            std::vector<std::unique_ptr<expression>> element_indices;
 
                             for (const auto& decl : index_decls.get())
                             {
-                                element_indices.emplace_back(variable_ref_expr(decl));
+                                element_indices.emplace_back(var(decl));
 
-                                result = sum_expr(decl, result);
+                                result = sum(decl, std::move(result));
                             }
 
-                            multi_index_map[alias.get().id()] = element_indices;
+                            multi_index_map[alias.get().id()] = std::move(element_indices);
 
                             return result;
                         })
                  .case_(sum_multi(body, index_decls), [&]
                         {
-                            expression result = body.get();
+                            std::unique_ptr<expression> result = clone(body.get());
 
                             for (const auto& decl : index_decls.get())
                             {
-                                result = sum_expr(decl, result);
+                                result = sum(decl, std::move(result));
                             }
 
                             return result;
@@ -172,7 +177,7 @@ function_declaration expand_multi_indices(function_declaration decl)
 {
     auto new_body = expand_multi_indices(decl.body());
 
-    return function_declaration(decl.name(), decl.params(), decl.result(), new_body);
+    return function_declaration(decl.name(), decl.params(), decl.result(), std::move(new_body));
 }
 }
 }

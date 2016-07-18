@@ -7,8 +7,9 @@ namespace qbb
 namespace qubus
 {
 
-intrinsic_function_expr::intrinsic_function_expr(std::string name_, std::vector<expression> args_)
-: name_{std::move(name_)}, args_(std::move(args_))
+intrinsic_function_expr::intrinsic_function_expr(std::string name_,
+                                                 std::vector<std::unique_ptr<expression>> args_)
+: name_{std::move(name_)}, args_(take_over_children(args_))
 {
 }
 
@@ -17,29 +18,25 @@ const std::string& intrinsic_function_expr::name() const
     return name_;
 }
 
-const std::vector<expression>& intrinsic_function_expr::args() const
+intrinsic_function_expr* intrinsic_function_expr::clone() const
 {
-    return args_;
+    return new intrinsic_function_expr(name_, qbb::qubus::clone(args_));
 }
 
-std::vector<expression> intrinsic_function_expr::sub_expressions() const
+const expression& intrinsic_function_expr::child(std::size_t index) const
 {
-    return args_;
+    return *args_.at(index);
 }
 
-expression intrinsic_function_expr::substitute_subexpressions(const std::vector<expression>& subexprs) const
+std::size_t intrinsic_function_expr::arity() const
 {
-    return intrinsic_function_expr(name_, subexprs);
+    return args_.size();
 }
 
-annotation_map& intrinsic_function_expr::annotations() const
+std::unique_ptr<expression> intrinsic_function_expr::substitute_subexpressions(
+        std::vector<std::unique_ptr<expression>> new_children) const
 {
-    return annotations_;
-}
-    
-annotation_map& intrinsic_function_expr::annotations()
-{
-    return annotations_;
+    return std::make_unique<intrinsic_function_expr>(name_, std::move(new_children));
 }
 
 bool operator==(const intrinsic_function_expr& lhs, const intrinsic_function_expr& rhs)
@@ -51,6 +48,5 @@ bool operator!=(const intrinsic_function_expr& lhs, const intrinsic_function_exp
 {
     return !(lhs == rhs);
 }
-
 }
 }

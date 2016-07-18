@@ -19,6 +19,7 @@
 #include <mutex>
 #include <map>
 #include <vector>
+#include <functional>
 
 namespace qbb
 {
@@ -173,14 +174,14 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 {
     using pattern::_;
 
-    pattern::variable<expression> a, b, c, d;
-    pattern::variable<boost::optional<expression>> opt_expr;
+    pattern::variable<std::reference_wrapper<const expression>> a, b, c, d;
+    pattern::variable<util::optional_ref<const expression>> opt_expr;
     pattern::variable<binary_op_tag> btag;
     pattern::variable<unary_op_tag> utag;
 
-    pattern::variable<std::vector<expression>> indices;
-    pattern::variable<std::vector<expression>> subexprs;
-    pattern::variable<std::vector<expression>> args;
+    pattern::variable<std::vector<std::reference_wrapper<const expression>>> indices;
+    pattern::variable<std::vector<std::reference_wrapper<const expression>>> subexprs;
+    pattern::variable<std::vector<std::reference_wrapper<const expression>>> args;
     pattern::variable<std::string> id;
 
     pattern::variable<double> dval;
@@ -654,7 +655,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
     }
     catch (...)
     {
-        std::cout << expr.rtti().name() << std::endl;
+        throw 0;
     }
 }
 }

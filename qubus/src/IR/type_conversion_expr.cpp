@@ -9,8 +9,8 @@ namespace qbb
 namespace qubus
 {
 
-type_conversion_expr::type_conversion_expr(class type target_type_, expression arg_)
-: target_type_{std::move(target_type_)}, arg_{std::move(arg_)}
+type_conversion_expr::type_conversion_expr(class type target_type_, std::unique_ptr<expression> arg_)
+: target_type_{std::move(target_type_)}, arg_{take_over_child(arg_)}
 {
 }
 
@@ -19,31 +19,40 @@ class type type_conversion_expr::target_type() const
     return target_type_;
 }
 
-expression type_conversion_expr::arg() const
+const expression& type_conversion_expr::arg() const
 {
-    return arg_;
+    return *arg_;
 }
 
-std::vector<expression> type_conversion_expr::sub_expressions() const
+type_conversion_expr* type_conversion_expr::clone() const
 {
-    return {arg_};
+    return new type_conversion_expr(target_type_, qbb::qubus::clone(*arg_));
 }
 
-expression type_conversion_expr::substitute_subexpressions(const std::vector<expression>& subexprs) const
+const expression& type_conversion_expr::child(std::size_t index) const
 {
-    QBB_ASSERT(subexprs.size() == 1, "invalid number of subexpressions");
-    
-    return type_conversion_expr(target_type_, subexprs[0]);
+    if (index == 0)
+    {
+        return *arg_;
+    }
+    else
+    {
+        throw 0;
+    }
 }
 
-annotation_map& type_conversion_expr::annotations() const
+std::size_t type_conversion_expr::arity() const
 {
-    return annotations_;
+    return 1;
 }
-    
-annotation_map& type_conversion_expr::annotations()
+
+std::unique_ptr<expression> type_conversion_expr::substitute_subexpressions(
+        std::vector<std::unique_ptr<expression>> new_children) const
 {
-    return annotations_;
+    if (new_children.size() != 1)
+        throw 0;
+
+    return std::make_unique<type_conversion_expr>(target_type_, std::move(new_children[0]));
 }
 
 bool operator==(const type_conversion_expr& lhs, const type_conversion_expr& rhs)

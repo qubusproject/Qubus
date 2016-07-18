@@ -1,10 +1,10 @@
 #include <qbb/qubus/jit/array_access.hpp>
 
-#include <qbb/qubus/jit/load_store.hpp>
 #include <qbb/qubus/jit/compiler.hpp>
+#include <qbb/qubus/jit/load_store.hpp>
 
-#include <qbb/qubus/pattern/core.hpp>
 #include <qbb/qubus/pattern/IR.hpp>
+#include <qbb/qubus/pattern/core.hpp>
 
 #include <qbb/qubus/IR/qir.hpp>
 #include <qbb/qubus/IR/type_inference.hpp>
@@ -73,55 +73,45 @@ reference emit_array_access(const reference& data, const reference& shape,
     return reference(accessed_element, data.origin(), data_value_type);
 }
 
-expression reassociate_index_expression(expression expr)
+std::unique_ptr<expression> reassociate_index_expression(const expression& expr)
 {
     using pattern::_;
 
     util::index_t constant_term = 0;
 
-    std::function<expression(expression)> collect_constant_terms = [&](expression expr)
-    {
-        pattern::variable<expression> lhs, rhs;
-        pattern::variable<util::index_t> value;
+    std::function<std::unique_ptr<expression>(const expression&)> collect_constant_terms =
+        [&](const expression& expr) {
+            pattern::variable<const expression &> lhs, rhs;
+            pattern::variable<util::index_t> value;
 
-        auto m = pattern::matcher<expression, expression>()
-                     .case_(binary_operator(pattern::value(binary_op_tag::plus),
-                                            integer_literal(value), rhs),
-                            [&]
-                            {
-                                constant_term += value.get();
+            auto m = pattern::matcher<expression, std::unique_ptr<expression>>()
+                         .case_(integer_literal(value) + rhs,
+                                [&] {
+                                    constant_term += value.get();
 
-                                return collect_constant_terms(rhs.get());
-                            })
-                     .case_(binary_operator(pattern::value(binary_op_tag::plus), lhs,
-                                            integer_literal(value)),
-                            [&]
-                            {
-                                constant_term += value.get();
+                                    return collect_constant_terms(rhs.get());
+                                })
+                         .case_(lhs + integer_literal(value),
+                                [&] {
+                                    constant_term += value.get();
 
-                                return collect_constant_terms(lhs.get());
-                            })
-                     .case_(binary_operator(pattern::value(binary_op_tag::plus), lhs, rhs),
-                            [&]
-                            {
-                                return binary_operator_expr(binary_op_tag::plus,
-                                                            collect_constant_terms(lhs.get()),
-                                                            collect_constant_terms(rhs.get()));
-                            })
-                     .case_(_, [&](const expression& self)
-                            {
-                                return self;
-                            });
+                                    return collect_constant_terms(lhs.get());
+                                })
+                         .case_(lhs + rhs,
+                                [&] {
+                                    return collect_constant_terms(lhs.get()) +
+                                           collect_constant_terms(rhs.get());
+                                })
+                         .case_(_, [&](const expression& self) { return clone(self); });
 
-        return pattern::match(expr, m);
-    };
+            return pattern::match(expr, m);
+        };
 
     auto simplified_expr = collect_constant_terms(expr);
 
     if (constant_term != 0)
     {
-        return binary_operator_expr(binary_op_tag::plus, simplified_expr,
-                                    integer_literal_expr(constant_term));
+        return std::move(simplified_expr) + lit(constant_term);
     }
     else
     {
@@ -134,15 +124,8 @@ type value_type(const type& array_type)
     pattern::variable<type> value_type;
 
     auto m = pattern::make_matcher<type, type>()
-                 .case_(array_t(value_type),
-                        [&]
-                        {
-                            return value_type.get();
-                        })
-                 .case_(array_slice_t(value_type), [&]
-                        {
-                            return value_type.get();
-                        });
+                 .case_(array_t(value_type), [&] { return value_type.get(); })
+                 .case_(array_slice_t(value_type), [&] { return value_type.get(); });
 
     // TODO: Error handling
     return pattern::match(array_type, m);
@@ -164,26 +147,29 @@ std::vector<llvm::Value*> permute_indices(const std::vector<llvm::Value*>& indic
 }
 
 reference emit_tensor_access(const variable_declaration& tensor,
-                             const std::vector<expression>& indices, compiler& comp)
+                             const std::vector<std::reference_wrapper<const expression>>& indices,
+                             compiler& comp)
 {
     auto& env = comp.get_module().env();
     auto& ctx = comp.get_module().ctx();
 
-    expression linearized_index = integer_literal_expr(0);
+    std::unique_ptr<expression> linearized_index = integer_literal(0);
 
     for (std::size_t i = 0; i < indices.size(); ++i)
     {
-        auto extent =
-            intrinsic_function_expr("extent", {variable_ref_expr(tensor), integer_literal_expr(i)});
+        std::vector<std::unique_ptr<expression>> args;
+        args.reserve(2);
+        args.push_back(var(tensor));
+        args.push_back(integer_literal(i));
 
-        linearized_index = binary_operator_expr(
-            binary_op_tag::plus,
-            binary_operator_expr(binary_op_tag::multiplies, extent, linearized_index), indices[i]);
+        auto extent = intrinsic_function("extent", std::move(args));
+
+        linearized_index = std::move(extent) * std::move(linearized_index) + clone(indices[i]);
     }
 
-    linearized_index = reassociate_index_expression(std::move(linearized_index));
+    linearized_index = reassociate_index_expression(*linearized_index);
 
-    auto linearized_index_ = comp.compile(linearized_index);
+    auto linearized_index_ = comp.compile(*linearized_index);
 
     auto tensor_ = ctx.symbol_table().at(tensor.id());
 
@@ -212,26 +198,30 @@ reference emit_tensor_access(const variable_declaration& tensor,
     return data_ref;
 }
 
-reference emit_tensor_access(const expression& tensor, const std::vector<expression>& indices,
+reference emit_tensor_access(const expression& tensor,
+                             const std::vector<std::reference_wrapper<const expression>>& indices,
                              compiler& comp)
 {
     auto& env = comp.get_module().env();
     auto& ctx = comp.get_module().ctx();
 
-    expression linearized_index = integer_literal_expr(0);
+    std::unique_ptr<expression> linearized_index = integer_literal(0);
 
     for (std::size_t i = 0; i < indices.size(); ++i)
     {
-        auto extent = intrinsic_function_expr("extent", {tensor, integer_literal_expr(i)});
+        std::vector<std::unique_ptr<expression>> args;
+        args.reserve(2);
+        args.push_back(clone(tensor));
+        args.push_back(integer_literal(i));
 
-        linearized_index = binary_operator_expr(
-            binary_op_tag::plus,
-            binary_operator_expr(binary_op_tag::multiplies, extent, linearized_index), indices[i]);
+        auto extent = intrinsic_function("extent", std::move(args));
+
+        linearized_index = std::move(extent) * std::move(linearized_index) + clone(indices[i]);
     }
 
-    linearized_index = reassociate_index_expression(std::move(linearized_index));
+    linearized_index = reassociate_index_expression(*linearized_index);
 
-    auto linearized_index_ = comp.compile(linearized_index);
+    auto linearized_index_ = comp.compile(*linearized_index);
 
     auto tensor_ = comp.compile(tensor);
 

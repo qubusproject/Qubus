@@ -23,7 +23,7 @@ inline boost::optional<typename Matcher::result_type> search(const expression& e
     
     if(result)
     {
-        return *result;
+        return std::move(*result);
     }
     else
     {

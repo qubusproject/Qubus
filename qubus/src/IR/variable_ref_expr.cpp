@@ -17,27 +17,28 @@ const variable_declaration& variable_ref_expr::declaration() const
     return declaration_;
 }
 
-std::vector<expression> variable_ref_expr::sub_expressions() const
+variable_ref_expr* variable_ref_expr::clone() const
 {
-    return {};
+    return new variable_ref_expr(declaration_);
 }
 
-expression variable_ref_expr::substitute_subexpressions(
-    const std::vector<expression>& QBB_UNUSED_RELEASE(subexprs)) const
+const expression& variable_ref_expr::child(std::size_t QBB_UNUSED(index)) const
 {
-    QBB_ASSERT(subexprs.size() == 0, "invalid number of subexpressions");
-
-    return variable_ref_expr(declaration_);
+    throw 0;
 }
 
-annotation_map& variable_ref_expr::annotations() const
+std::size_t variable_ref_expr::arity() const
 {
-    return annotations_;
+    return 0;
 }
 
-annotation_map& variable_ref_expr::annotations()
+std::unique_ptr<expression> variable_ref_expr::substitute_subexpressions(
+        std::vector<std::unique_ptr<expression>> new_children) const
 {
-    return annotations_;
+    if (new_children.size() != 0)
+        throw 0;
+
+    return std::make_unique<variable_ref_expr>(declaration_);
 }
 
 bool operator==(const variable_ref_expr& lhs, const variable_ref_expr& rhs)

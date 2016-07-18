@@ -7,37 +7,38 @@
 #include <qbb/qubus/IR/extract.hpp>
 
 #include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/pattern/core.hpp>
 #include <qbb/qubus/pattern/IR.hpp>
+#include <qbb/qubus/pattern/core.hpp>
 
-#include <qbb/qubus/isl/context.hpp>
-#include <qbb/qubus/isl/set.hpp>
-#include <qbb/qubus/isl/map.hpp>
-#include <qbb/qubus/isl/pw_multi_aff.hpp>
-#include <qbb/qubus/isl/constraint.hpp>
-#include <qbb/qubus/isl/multi_union_pw_affine_expr.hpp>
-#include <qbb/qubus/isl/flow.hpp>
-#include <qbb/qubus/isl/schedule.hpp>
 #include <qbb/qubus/isl/ast_builder.hpp>
+#include <qbb/qubus/isl/constraint.hpp>
+#include <qbb/qubus/isl/context.hpp>
+#include <qbb/qubus/isl/flow.hpp>
+#include <qbb/qubus/isl/map.hpp>
+#include <qbb/qubus/isl/multi_union_pw_affine_expr.hpp>
+#include <qbb/qubus/isl/pw_multi_aff.hpp>
+#include <qbb/qubus/isl/schedule.hpp>
+#include <qbb/qubus/isl/set.hpp>
 
-#include <qbb/util/unique_name_generator.hpp>
 #include <qbb/util/integers.hpp>
 #include <qbb/util/numeric/bisection.hpp>
 #include <qbb/util/numeric/polynomial.hpp>
+#include <qbb/util/unique_name_generator.hpp>
 #include <qbb/util/unused.hpp>
+#include <qbb/util/cloning_ptr.hpp>
 
-#include <boost/variant.hpp>
-#include <boost/range/algorithm.hpp>
 #include <boost/algorithm/string/predicate.hpp>
+#include <boost/range/algorithm.hpp>
+#include <boost/variant.hpp>
 
-#include <vector>
+#include <cassert>
 #include <map>
 #include <string>
 #include <tuple>
-#include <cassert>
+#include <vector>
 
-#include <qbb/qubus/IR/pretty_printer.hpp>
 #include <iostream>
+#include <qbb/qubus/IR/pretty_printer.hpp>
 #include <qbb/qubus/isl/printer.hpp>
 
 namespace qbb
@@ -52,30 +53,31 @@ isl::context isl_ctx;
 
 struct array_substitution
 {
-    array_substitution(variable_declaration parent, macro_expr substitution)
+    array_substitution(variable_declaration parent, std::unique_ptr<macro_expr> substitution)
     : parent(std::move(parent)), substitution(std::move(substitution))
     {
     }
 
     variable_declaration parent;
-    macro_expr substitution;
+    std::unique_ptr<macro_expr> substitution;
 };
 
 struct ast_converter_context
 {
-    explicit ast_converter_context(std::map<std::string, expression> symbol_table)
+    explicit ast_converter_context(std::map<std::string, std::unique_ptr<expression>> symbol_table)
     : symbol_table(std::move(symbol_table)), array_subs_scopes(1)
     {
     }
 
-    std::map<std::string, expression> symbol_table;
+    std::map<std::string, std::unique_ptr<expression>> symbol_table;
     std::vector<array_substitution> array_substitutions;
     std::vector<std::vector<variable_declaration>> array_subs_scopes;
 };
 
-expression isl_ast_expr_to_kir(const isl::ast_expr& expr, ast_converter_context& ctx);
+std::unique_ptr<expression> isl_ast_expr_to_kir(const isl::ast_expr& expr,
+                                                ast_converter_context& ctx);
 
-expression isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx);
+std::unique_ptr<expression> isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx);
 
 isl::union_map pad_schedule_map(isl::union_map schedule_map)
 {
@@ -108,10 +110,11 @@ struct scop
 {
     scop(isl::union_set domain, isl::set QBB_UNUSED(param_constraints), isl::union_map schedule,
          isl::union_map write_accesses, isl::union_map read_accesses,
-         std::map<std::string, expression> symbol_table,
+         std::map<std::string, std::unique_ptr<expression>> symbol_table,
          std::map<std::string, variable_declaration> tensor_table)
-    : schedule(isl::schedule::from_domain(domain)), write_accesses(write_accesses),
-      read_accesses(read_accesses), symbol_table(symbol_table), tensor_table(tensor_table)
+    : schedule(isl::schedule::from_domain(domain)), write_accesses(std::move(write_accesses)),
+      read_accesses(std::move(read_accesses)), symbol_table(std::move(symbol_table)),
+      tensor_table(std::move(tensor_table))
     {
         auto part_sched =
             isl::multi_union_pw_affine_expr::from_union_map(pad_schedule_map(schedule));
@@ -123,7 +126,7 @@ struct scop
         this->schedule = get_schedule(new_);
     }
 
-    std::string add_symbol(const std::string& id, expression expr)
+    std::string add_symbol(const std::string& id, std::unique_ptr<expression> expr)
     {
         std::string unique_id = id;
 
@@ -138,7 +141,7 @@ struct scop
             iter = symbol_table.find(unique_id);
         }
 
-        symbol_table.emplace(unique_id, expr);
+        symbol_table.emplace(unique_id, std::move(expr));
 
         return unique_id;
     }
@@ -148,7 +151,7 @@ struct scop
     isl::union_map write_accesses;
     isl::union_map read_accesses;
 
-    std::map<std::string, expression> symbol_table;
+    std::map<std::string, std::unique_ptr<expression>> symbol_table;
     std::map<std::string, variable_declaration> tensor_table;
 };
 
@@ -213,11 +216,11 @@ public:
         }
     }
 
-    std::string add_symbol(expression expr)
+    std::string add_symbol(std::unique_ptr<expression> expr)
     {
         std::string id = get_new_symbol();
 
-        symbol_table.emplace(id, expr);
+        symbol_table.emplace(id, std::move(expr));
 
         return id;
     }
@@ -233,7 +236,7 @@ public:
         param_constraints = intersect_params(param_constraints, constraint);
     }
 
-    scop build_scop() const
+    scop build_scop()
     {
         std::map<std::string, variable_declaration> reverse_tensor_table;
 
@@ -242,8 +245,9 @@ public:
             reverse_tensor_table.emplace(entry.second, entry.first);
         }
 
-        return scop(domain, param_constraints, schedule, write_accesses, read_accesses,
-                    symbol_table, reverse_tensor_table);
+        return scop(std::move(domain), std::move(param_constraints), std::move(schedule),
+                    std::move(write_accesses), std::move(read_accesses), std::move(symbol_table),
+                    std::move(reverse_tensor_table));
     }
 
 private:
@@ -260,7 +264,7 @@ private:
     isl::union_map write_accesses;
     isl::union_map read_accesses;
 
-    std::map<std::string, expression> symbol_table;
+    std::map<std::string, std::unique_ptr<expression>> symbol_table;
 
     mutable std::map<variable_declaration, std::string> tensor_table;
     mutable std::map<util::handle, std::string> index_table;
@@ -273,32 +277,26 @@ using bound = boost::variant<util::index_t, std::string>;
 bound extract_bound(const expression& expr, scop_info& ctx)
 {
     pattern::variable<util::index_t> value;
-    pattern::variable<expression> a;
+    pattern::variable<const expression&> a;
 
     auto m = pattern::make_matcher<expression, bound>()
-                 .case_(integer_literal(value),
-                        [&]
-                        {
-                            return bound(value.get());
-                        })
-                 .case_(a, [&]
-                        {
-                            auto name = ctx.add_symbol(a.get());
+                 .case_(integer_literal(value), [&] { return bound(value.get()); })
+                 .case_(a, [&] {
+                     auto name = ctx.add_symbol(clone(a.get()));
 
-                            isl::space s(isl_ctx, 1);
-                            s.set_dim_name(isl_dim_param, 0, name);
+                     isl::space s(isl_ctx, 1);
+                     s.set_dim_name(isl_dim_param, 0, name);
 
-                            auto param_constraint = isl::basic_set::universe(s);
+                     auto param_constraint = isl::basic_set::universe(s);
 
-                            auto c =
-                                isl::constraint::inequality(s).set_coefficient(isl_dim_param, 0, 1);
+                     auto c = isl::constraint::inequality(s).set_coefficient(isl_dim_param, 0, 1);
 
-                            param_constraint.add_constraint(c);
+                     param_constraint.add_constraint(c);
 
-                            ctx.add_param_constraint(param_constraint);
+                     ctx.add_param_constraint(param_constraint);
 
-                            return bound(name);
-                        });
+                     return bound(name);
+                 });
 
     return pattern::match(expr, m);
 }
@@ -413,10 +411,8 @@ private:
 
 bool is_scop(const expression& expr)
 {
-    auto m = pattern::make_matcher<expression, bool>().case_(pattern::sparse_tensor(), []
-                                                             {
-                                                                 return true;
-                                                             });
+    auto m = pattern::make_matcher<expression, bool>().case_(pattern::sparse_tensor(),
+                                                             [] { return true; });
 
     auto result = pattern::search(expr, m);
 
@@ -426,14 +422,13 @@ bool is_scop(const expression& expr)
 isl::union_map analyze_accesses(const expression& expr, const isl::set& domain, scop_info& ctx)
 {
     pattern::variable<variable_declaration> decl;
-    pattern::variable<std::vector<expression>> indices;
+    pattern::variable<std::vector<std::reference_wrapper<expression>>> indices;
 
     isl::space no_access_space(isl_ctx, 0, 0);
     isl::union_map accesses = isl::union_map::empty(no_access_space);
 
-    auto m = pattern::make_matcher<expression, void>().case_(
-        subscription(tensor(decl), indices), [&]
-        {
+    auto m =
+        pattern::make_matcher<expression, void>().case_(subscription(tensor(decl), indices), [&] {
             auto tensor_name = ctx.map_tensor_to_name(decl.get());
 
             auto number_of_indices = indices.get().size();
@@ -448,7 +443,7 @@ isl::union_map analyze_accesses(const expression& expr, const isl::set& domain, 
 
             for (std::size_t i = 0; i < number_of_indices; ++i)
             {
-                auto decl = indices.get()[i].as<variable_ref_expr>().declaration();
+                auto decl = indices.get()[i].get().as<variable_ref_expr>().declaration();
 
                 const auto& idx_name = ctx.map_index_to_name(decl.id());
 
@@ -469,27 +464,25 @@ isl::union_map analyze_accesses(const expression& expr, const isl::set& domain, 
 
 void analyze_tensor_accesses(const expression& expr, const isl::set& domain, scop_info& ctx)
 {
-    pattern::variable<expression> lhs, rhs;
+    pattern::variable<const expression &> lhs, rhs;
 
     auto m = pattern::make_matcher<expression, void>()
                  .case_(binary_operator(pattern::value(binary_op_tag::assign), lhs, rhs),
-                        [&]
-                        {
+                        [&] {
                             auto write_accesses = analyze_accesses(lhs.get(), domain, ctx);
                             auto read_accesses = analyze_accesses(rhs.get(), domain, ctx);
 
                             ctx.add_write_accesses(write_accesses);
                             ctx.add_read_accesses(read_accesses);
                         })
-                 .case_(binary_operator(pattern::value(binary_op_tag::plus_assign), lhs, rhs), [&]
-                        {
-                            auto readwrite_accesses = analyze_accesses(lhs.get(), domain, ctx);
-                            auto read_accesses = analyze_accesses(rhs.get(), domain, ctx);
+                 .case_(binary_operator(pattern::value(binary_op_tag::plus_assign), lhs, rhs), [&] {
+                     auto readwrite_accesses = analyze_accesses(lhs.get(), domain, ctx);
+                     auto read_accesses = analyze_accesses(rhs.get(), domain, ctx);
 
-                            ctx.add_write_accesses(readwrite_accesses);
-                            ctx.add_read_accesses(read_accesses);
-                            ctx.add_read_accesses(readwrite_accesses);
-                        });
+                     ctx.add_write_accesses(readwrite_accesses);
+                     ctx.add_read_accesses(read_accesses);
+                     ctx.add_read_accesses(readwrite_accesses);
+                 });
 
     pattern::for_each(expr, m);
 }
@@ -498,89 +491,84 @@ void analyze_scop_(const expression& expr, scop_info& info, scop_ctx ctx)
 {
     using pattern::_;
 
-    pattern::variable<expression> a, b, c;
+    pattern::variable<const expression &> a, b, c;
     pattern::variable<variable_declaration> idx;
 
-    pattern::variable<std::vector<expression>> subexprs;
+    pattern::variable<std::vector<std::reference_wrapper<expression>>> subexprs;
 
-    auto m =
-        pattern::make_matcher<expression, void>()
-            .case_(for_(idx, a, b, c),
-                   [&]
-                   {
-                       auto lower_bound = extract_bound(a.get(), info);
-                       auto upper_bound = extract_bound(b.get(), info);
+    auto m = pattern::make_matcher<expression, void>()
+                 .case_(for_(idx, a, b, c),
+                        [&] {
+                            auto lower_bound = extract_bound(a.get(), info);
+                            auto upper_bound = extract_bound(b.get(), info);
 
-                       std::string idx_name = info.map_index_to_name(idx.get().id());
-                       ctx.indices.push_back(idx.get());
+                            std::string idx_name = info.map_index_to_name(idx.get().id());
+                            ctx.indices.push_back(idx.get());
 
-                       auto local_domain = boost::apply_visitor(local_domain_builder(idx_name),
-                                                                lower_bound, upper_bound);
+                            auto local_domain = boost::apply_visitor(local_domain_builder(idx_name),
+                                                                     lower_bound, upper_bound);
 
-                       // add dimension to the global iteration space
-                       ctx.domain = flat_product(ctx.domain, local_domain);
+                            // add dimension to the global iteration space
+                            ctx.domain = flat_product(ctx.domain, local_domain);
 
-                       // add a zero to the scatter index
-                       ctx.scatter_index.push_back(0);
+                            // add a zero to the scatter index
+                            ctx.scatter_index.push_back(0);
 
-                       // analyze loop body
-                       analyze_scop_(c.get(), info, ctx);
-                   })
-            .case_(compound(subexprs),
-                   [&]
-                   {
-                       for (const auto& sub_expr : subexprs.get())
-                       {
-                           analyze_scop_(sub_expr, info, ctx);
-                           ++ctx.scatter_index.back();
-                       }
-                   })
-            .case_(
-                a, [&]
-                {
-                    // we entered the loop body
+                            // analyze loop body
+                            analyze_scop_(c.get(), info, ctx);
+                        })
+                 .case_(compound(subexprs),
+                        [&] {
+                            for (const auto& sub_expr : subexprs.get())
+                            {
+                                analyze_scop_(sub_expr, info, ctx);
+                                ++ctx.scatter_index.back();
+                            }
+                        })
+                 .case_(a, [&] {
+                     // we entered the loop body
 
-                    isl::set domain = ctx.domain;
+                     isl::set domain = ctx.domain;
 
-                    auto name = info.add_symbol(macro_expr(ctx.indices, a.get()));
+                     auto name = info.add_symbol(make_macro(ctx.indices, clone(a.get())));
 
-                    domain.set_tuple_name(name);
+                     domain.set_tuple_name(name);
 
-                    long int number_of_indices = domain.get_space().dim(isl_dim_set);
-                    long int number_of_dimensions = 2 * number_of_indices + 1;
+                     long int number_of_indices = domain.get_space().dim(isl_dim_set);
+                     long int number_of_dimensions = 2 * number_of_indices + 1;
 
-                    assert(number_of_indices + 1 == util::to_uindex(ctx.scatter_index.size()));
+                     assert(number_of_indices + 1 == util::to_uindex(ctx.scatter_index.size()));
 
-                    isl::set scattering_domain =
-                        isl::set::universe(drop_all_dims(domain.get_space(), isl_dim_param));
+                     isl::set scattering_domain =
+                         isl::set::universe(drop_all_dims(domain.get_space(), isl_dim_param));
 
-                    isl::space scattering_range_space(isl_ctx, 0, number_of_dimensions);
-                    scattering_range_space.set_tuple_name(isl_dim_set, "scattering");
+                     isl::space scattering_range_space(isl_ctx, 0, number_of_dimensions);
+                     scattering_range_space.set_tuple_name(isl_dim_set, "scattering");
 
-                    isl::set scattering_range = isl::set::universe(scattering_range_space);
+                     isl::set scattering_range = isl::set::universe(scattering_range_space);
 
-                    isl::map scattering =
-                        make_map_from_domain_and_range(scattering_domain, scattering_range);
+                     isl::map scattering =
+                         make_map_from_domain_and_range(scattering_domain, scattering_range);
 
-                    scattering.add_constraint(isl::constraint::equality(scattering.get_space())
-                                                  .set_coefficient(isl_dim_out, 0, 1)
-                                                  .set_constant(-ctx.scatter_index[0]));
-                    for (long int i = 0; i < number_of_indices; ++i)
-                    {
-                        scattering.add_constraint(isl::constraint::equality(scattering.get_space())
-                                                      .set_coefficient(isl_dim_out, 2 * i + 2, 1)
-                                                      .set_constant(-ctx.scatter_index[i + 1]));
-                        scattering.add_constraint(isl::constraint::equality(scattering.get_space())
-                                                      .set_coefficient(isl_dim_out, 2 * i + 1, 1)
-                                                      .set_coefficient(isl_dim_in, i, -1));
-                    }
+                     scattering.add_constraint(isl::constraint::equality(scattering.get_space())
+                                                   .set_coefficient(isl_dim_out, 0, 1)
+                                                   .set_constant(-ctx.scatter_index[0]));
+                     for (long int i = 0; i < number_of_indices; ++i)
+                     {
+                         scattering.add_constraint(isl::constraint::equality(scattering.get_space())
+                                                       .set_coefficient(isl_dim_out, 2 * i + 2, 1)
+                                                       .set_constant(-ctx.scatter_index[i + 1]));
+                         scattering.add_constraint(isl::constraint::equality(scattering.get_space())
+                                                       .set_coefficient(isl_dim_out, 2 * i + 1, 1)
+                                                       .set_coefficient(isl_dim_in, i, -1));
+                     }
 
-                    analyze_tensor_accesses(a.get(), domain, info);
+                     analyze_tensor_accesses(a.get(), domain, info);
 
-                    info.add_partial_schedule(domain, scattering);
+                     info.add_partial_schedule(domain, scattering);
 
-                    // TODO: add a symbol for the loop body
-                });
+                     // TODO: add a symbol for the loop body
+                 });
 
     pattern::match(expr, m);
 }
@@ -837,11 +825,9 @@ std::vector<array_tile> deduce_tiles(isl::schedule_node node, const scop& s)
     {
         auto local_writes_schedules = local_write_schedule.get_maps();
 
-        auto iter = boost::find_if(local_writes_schedules, [&](const isl::map& value)
-                                   {
-                                       return value.get_tuple_name(isl_dim_out) ==
-                                              schedule.get_tuple_name(isl_dim_out);
-                                   });
+        auto iter = boost::find_if(local_writes_schedules, [&](const isl::map& value) {
+            return value.get_tuple_name(isl_dim_out) == schedule.get_tuple_name(isl_dim_out);
+        });
 
         if (iter == local_writes_schedules.end())
             throw 0;
@@ -859,11 +845,9 @@ std::vector<array_tile> deduce_tiles(isl::schedule_node node, const scop& s)
     {
         auto local_read_schedules = local_read_schedule.get_maps();
 
-        auto iter = boost::find_if(local_read_schedules, [&](const isl::map& value)
-                                   {
-                                       return value.get_tuple_name(isl_dim_out) ==
-                                              schedule.get_tuple_name(isl_dim_out);
-                                   });
+        auto iter = boost::find_if(local_read_schedules, [&](const isl::map& value) {
+            return value.get_tuple_name(isl_dim_out) == schedule.get_tuple_name(isl_dim_out);
+        });
 
         if (iter == local_read_schedules.end())
             throw 0;
@@ -911,18 +895,22 @@ isl::schedule_node create_cache_copy(const array_tile& tile, variable_declaratio
         params.emplace_back(types::integer());
     }
 
-    auto local_symbol_table = s.symbol_table;
+    std::map<std::string, std::unique_ptr<expression>> local_symbol_table;
+
+    for (const auto& symbol : s.symbol_table)
+    {
+        local_symbol_table.emplace(symbol.first, clone(*symbol.second));
+    }
 
     for (int i = 0; i < tile.access_schedule.dim(isl_dim_in); ++i)
     {
         local_symbol_table.emplace(tile.access_schedule.get_dim_name(isl_dim_in, i),
-                                   variable_ref_expr(params[i]));
+                                   var(params[i]));
     }
 
     for (int i = map.dim(isl_dim_in); i < dim; ++i)
     {
-        local_symbol_table.emplace("c" + std::to_string(i - map.dim(isl_dim_in)),
-                                   variable_ref_expr(params[i]));
+        local_symbol_table.emplace("c" + std::to_string(i - map.dim(isl_dim_in)), var(params[i]));
     }
 
     isl::set dom = tile.access_schedule.range();
@@ -940,29 +928,28 @@ isl::schedule_node create_cache_copy(const array_tile& tile, variable_declaratio
     auto scratch_access =
         builder2.build_access_from_pw_multi_aff(isl::pw_multi_aff::from_map(access2));
 
-    local_symbol_table.emplace(dom.get_tuple_name(), variable_ref_expr(tile.parent));
-    local_symbol_table.emplace(access2.get_tuple_name(isl_dim_out), variable_ref_expr(cache_decl));
+    local_symbol_table.emplace(dom.get_tuple_name(), var(tile.parent));
+    local_symbol_table.emplace(access2.get_tuple_name(isl_dim_out), var(cache_decl));
 
-    ast_converter_context ctx(local_symbol_table);
+    ast_converter_context ctx(std::move(local_symbol_table));
 
     auto global_access = isl_ast_expr_to_kir(parent_access, ctx);
     auto local_access = isl_ast_expr_to_kir(scratch_access, ctx);
 
-    auto copy_code = [&]
-    {
+    auto copy_code = [&] {
         if (direction == cache_copy_direction::mem_to_cache)
         {
-            auto lhs = local_access;
-            auto rhs = global_access;
+            auto lhs = std::move(local_access);
+            auto rhs = std::move(global_access);
 
-            return binary_operator_expr(binary_op_tag::assign, lhs, rhs);
+            return assign(std::move(lhs), std::move(rhs));
         }
         else if (direction == cache_copy_direction::cache_to_mem)
         {
-            auto lhs = global_access;
-            auto rhs = local_access;
+            auto lhs = std::move(global_access);
+            auto rhs = std::move(local_access);
 
-            return binary_operator_expr(binary_op_tag::assign, lhs, rhs);
+            return assign(std::move(lhs), std::move(rhs));
         }
         else
         {
@@ -970,7 +957,7 @@ isl::schedule_node create_cache_copy(const array_tile& tile, variable_declaratio
         }
     }();
 
-    auto copy_id = s.add_symbol("copy", macro_expr(params, copy_code));
+    auto copy_id = s.add_symbol("copy", make_macro(params, std::move(copy_code)));
 
     m.set_tuple_name(isl_dim_out, copy_id);
     m.set_tuple_name(isl_dim_in, map.get_tuple_name(isl_dim_out));
@@ -1024,13 +1011,13 @@ isl::schedule_node create_cache_copy(const array_tile& tile, variable_declaratio
 
 struct cache_info
 {
-    cache_info(variable_declaration parent, macro_expr substitution)
+    cache_info(variable_declaration parent, std::unique_ptr<macro_expr> substitution)
     : parent(std::move(parent)), substitution(std::move(substitution))
     {
     }
 
     variable_declaration parent;
-    macro_expr substitution;
+    util::cloning_ptr<macro_expr> substitution;
 };
 
 isl::schedule_node create_caches(isl::schedule_node band_to_tile, bool unroll_loops, scop& s)
@@ -1063,7 +1050,7 @@ isl::schedule_node create_caches(isl::schedule_node band_to_tile, bool unroll_lo
 
         variable_declaration cache_decl(tile.parent.var_type());
 
-        std::vector<expression> constr_args;
+        std::vector<std::unique_ptr<expression>> constr_args;
 
         for (const auto& extent : tile.shape)
         {
@@ -1074,16 +1061,21 @@ isl::schedule_node create_caches(isl::schedule_node band_to_tile, bool unroll_lo
             constr_args.push_back(isl_ast_expr_to_kir(expr, ctx));
         }
 
-        auto local_symbol_table = s.symbol_table;
+        std::map<std::string, std::unique_ptr<expression>> local_symbol_table;
+
+        for (const auto& symbol : s.symbol_table)
+        {
+            local_symbol_table.emplace(symbol.first, clone(*symbol.second));
+        }
 
         for (int i = 0; i < outer_dim; ++i)
         {
             local_symbol_table.emplace(tile.access_schedule.get_dim_name(isl_dim_in, i),
-                                       variable_ref_expr(constr_params[i]));
+                                       var(constr_params[i]));
         }
 
-        expression cache_constr_code = local_variable_def_expr(
-            cache_decl, construct_expr(tile.parent.var_type(), constr_args));
+        std::unique_ptr<expression> cache_constr_code = local_variable_def(
+            cache_decl, construct(tile.parent.var_type(), std::move(constr_args)));
 
         isl::ast_builder transform_builder(tile.layout_transform.domain());
 
@@ -1100,24 +1092,27 @@ isl::schedule_node create_caches(isl::schedule_node band_to_tile, bool unroll_lo
 
             inner_indices.push_back(inner_index);
 
-            local_symbol_table.emplace("c" + std::to_string(i), variable_ref_expr(inner_index));
+            local_symbol_table.emplace("c" + std::to_string(i), var(inner_index));
         }
 
         local_symbol_table.emplace(tile.layout_transform.get_tuple_name(isl_dim_out),
-                                   variable_ref_expr(cache_decl));
+                                   var(cache_decl));
 
-        ast_converter_context ctx(local_symbol_table);
+        ast_converter_context ctx(std::move(local_symbol_table));
 
         auto transform_code = isl_ast_expr_to_kir(transform_ast, ctx);
 
-        auto substitution = macro_expr(constr_params, macro_expr(inner_indices, transform_code));
+        auto substitution =
+            make_macro(constr_params, make_macro(inner_indices, std::move(transform_code)));
 
-        cache_info info(tile.parent, substitution);
+        cache_info info(tile.parent, std::move(substitution));
 
-        expression cache_constructor_code = macro_expr(constr_params, cache_constr_code);
-        cache_constructor_code.annotations().add("qubus.cache_info", annotation(info));
+        std::unique_ptr<expression> cache_constructor_code =
+            make_macro(constr_params, std::move(cache_constr_code));
+        cache_constructor_code->annotations().add("qubus.cache_info", annotation(std::move(info)));
 
-        auto cache_constr_id = s.add_symbol("qubus.construct_cache", cache_constructor_code);
+        auto cache_constr_id =
+            s.add_symbol("qubus.construct_cache", std::move(cache_constructor_code));
 
         isl::basic_map cache_constr_map =
             isl::basic_map::identity(isl::space(isl_ctx, 0, outer_dim, outer_dim));
@@ -1302,28 +1297,27 @@ scop optimize_scop(scop s)
 
     isl::schedule sched(sched_constraints);
 
-    s.schedule = map_schedule_node(sched, [&](isl::schedule_node node)
-                                   {
-                                       return optimize_schedule_node(node, s);
-                                   });
+    s.schedule = map_schedule_node(
+        sched, [&](isl::schedule_node node) { return optimize_schedule_node(node, s); });
 
     // s.schedule.dump();
 
     return s;
 }
 
-expression isl_ast_expr_to_kir(const isl::ast_expr& expr, ast_converter_context& ctx)
+std::unique_ptr<expression> isl_ast_expr_to_kir(const isl::ast_expr& expr,
+                                                ast_converter_context& ctx)
 {
     using pattern::_;
 
-    const auto symbol_table = ctx.symbol_table;
+    const auto& symbol_table = ctx.symbol_table;
 
     switch (expr.type())
     {
     case isl_ast_expr_id:
-        return symbol_table.at(expr.get_id().name());
+        return clone(*symbol_table.at(expr.get_id().name()));
     case isl_ast_expr_int:
-        return integer_literal_expr(expr.get_value().as_integer());
+        return integer_literal(expr.get_value().as_integer());
     case isl_ast_expr_op:
         switch (expr.get_op_type())
         {
@@ -1331,7 +1325,7 @@ expression isl_ast_expr_to_kir(const isl::ast_expr& expr, ast_converter_context&
         {
             // TODO: assert that the left-most child is an id
 
-            std::vector<expression> indices;
+            std::vector<std::unique_ptr<expression>> indices;
 
             for (int i = 1; i < expr.arg_count(); ++i)
             {
@@ -1341,39 +1335,42 @@ expression isl_ast_expr_to_kir(const isl::ast_expr& expr, ast_converter_context&
             try
             {
                 auto id = expr.get_arg(0).get_id().name();
-                auto macro = symbol_table.at(id).as<macro_expr>();
+                auto& macro = symbol_table.at(id)->as<macro_expr>();
 
                 if (boost::starts_with(id, "qubus.construct_cache"))
                 {
-                    auto cinfo = macro.annotations().lookup("qubus.cache_info").as<cache_info>();
+                    const auto& cinfo =
+                        macro.annotations().lookup("qubus.cache_info").as<const cache_info&>();
 
-                    auto substitution = expand_macro(cinfo.substitution, indices).as<macro_expr>();
+                    auto substitution = std::unique_ptr<macro_expr>(static_cast<macro_expr*>(
+                        expand_macro(*cinfo.substitution, clone(indices)).release()));
 
-                    ctx.array_substitutions.emplace_back(cinfo.parent, substitution);
+                    ctx.array_substitutions.emplace_back(cinfo.parent, std::move(substitution));
                     ctx.array_subs_scopes.back().push_back(cinfo.parent);
                 }
 
                 if (boost::starts_with(id, "copy"))
                 {
-                    return expand_macro(macro, indices);
+                    return expand_macro(macro, clone(indices));
                 }
                 else
                 {
-                    auto code = expand_macro(macro, indices);
+                    auto code = expand_macro(macro, clone(indices));
 
-                    pattern::variable<std::vector<expression>> indices;
+                    pattern::variable<std::vector<std::reference_wrapper<expression>>> indices;
 
                     for (const auto& substitution : ctx.array_substitutions)
                     {
-                        auto m = pattern::make_matcher<expression, expression>().case_(
-                            subscription(variable_ref(pattern::value(substitution.parent)),
-                                         indices),
-                            [&]
-                            {
-                                return expand_macro(substitution.substitution, indices.get());
-                            });
+                        auto m =
+                            pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
+                                subscription(variable_ref(pattern::value(substitution.parent)),
+                                             indices),
+                                [&] {
+                                    return expand_macro(*substitution.substitution,
+                                                        clone(indices.get()));
+                                });
 
-                        code = pattern::substitute(code, m);
+                        code = pattern::substitute(*code, m);
                     }
 
                     return code;
@@ -1385,87 +1382,90 @@ expression isl_ast_expr_to_kir(const isl::ast_expr& expr, ast_converter_context&
             }
         }
         case isl_ast_op_add:
-            return binary_operator_expr(binary_op_tag::plus,
-                                        isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                        isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+            return isl_ast_expr_to_kir(expr.get_arg(0), ctx) +
+                   isl_ast_expr_to_kir(expr.get_arg(1), ctx);
         case isl_ast_op_sub:
-            return binary_operator_expr(binary_op_tag::minus,
-                                        isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                        isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+            return isl_ast_expr_to_kir(expr.get_arg(0), ctx) -
+                   isl_ast_expr_to_kir(expr.get_arg(1), ctx);
         case isl_ast_op_mul:
-            return binary_operator_expr(binary_op_tag::multiplies,
-                                        isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                        isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+            return isl_ast_expr_to_kir(expr.get_arg(0), ctx) *
+                   isl_ast_expr_to_kir(expr.get_arg(1), ctx);
         case isl_ast_op_div:
-            return binary_operator_expr(binary_op_tag::divides,
-                                        isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                        isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+            return isl_ast_expr_to_kir(expr.get_arg(0), ctx) /
+                   isl_ast_expr_to_kir(expr.get_arg(1), ctx);
         case isl_ast_op_fdiv_q:
-            return binary_operator_expr(binary_op_tag::div_floor,
-                                        isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                        isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+            return div_floor(isl_ast_expr_to_kir(expr.get_arg(0), ctx),
+                             isl_ast_expr_to_kir(expr.get_arg(1), ctx));
         case isl_ast_op_pdiv_q:
-            return binary_operator_expr(binary_op_tag::divides,
-                                        isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                        isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+            return isl_ast_expr_to_kir(expr.get_arg(0), ctx) /
+                   isl_ast_expr_to_kir(expr.get_arg(1), ctx);
         case isl_ast_op_pdiv_r:
-            return binary_operator_expr(binary_op_tag::modulus,
-                                        isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                        isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+            return isl_ast_expr_to_kir(expr.get_arg(0), ctx) %
+                   isl_ast_expr_to_kir(expr.get_arg(1), ctx);
         case isl_ast_op_minus:
-            return unary_operator_expr(unary_op_tag::negate,
-                                       isl_ast_expr_to_kir(expr.get_arg(0), ctx));
+            return -isl_ast_expr_to_kir(expr.get_arg(0), ctx);
         case isl_ast_op_min:
-            return intrinsic_function_expr("min", {isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                                   isl_ast_expr_to_kir(expr.get_arg(1), ctx)});
+        {
+            std::vector<std::unique_ptr<expression>> args;
+            args.reserve(2);
+            args.push_back(isl_ast_expr_to_kir(expr.get_arg(0), ctx));
+            args.push_back(isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+
+            return intrinsic_function("min", std::move(args));
+        }
         case isl_ast_op_max:
-            return intrinsic_function_expr("max", {isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                                   isl_ast_expr_to_kir(expr.get_arg(1), ctx)});
+        {
+            std::vector<std::unique_ptr<expression>> args;
+            args.reserve(2);
+            args.push_back(isl_ast_expr_to_kir(expr.get_arg(0), ctx));
+            args.push_back(isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+
+            return intrinsic_function("max", std::move(args));
+        }
         case isl_ast_op_cond:
         case isl_ast_op_select:
-            return intrinsic_function_expr("select", {isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                                      isl_ast_expr_to_kir(expr.get_arg(1), ctx),
-                                                      isl_ast_expr_to_kir(expr.get_arg(2), ctx)});
+        {
+            std::vector<std::unique_ptr<expression>> args;
+            args.reserve(3);
+            args.push_back(isl_ast_expr_to_kir(expr.get_arg(0), ctx));
+            args.push_back(isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+            args.push_back(isl_ast_expr_to_kir(expr.get_arg(2), ctx));
+
+            return intrinsic_function("select", std::move(args));
+        }
         case isl_ast_op_eq:
-            return binary_operator_expr(binary_op_tag::equal_to,
-                                        isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                        isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+            return equal_to(isl_ast_expr_to_kir(expr.get_arg(0), ctx),
+                            isl_ast_expr_to_kir(expr.get_arg(1), ctx));
         case isl_ast_op_le:
-            return binary_operator_expr(binary_op_tag::less_equal,
-                                        isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                        isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+            return less_equal(isl_ast_expr_to_kir(expr.get_arg(0), ctx),
+                              isl_ast_expr_to_kir(expr.get_arg(1), ctx));
         case isl_ast_op_lt:
-            return binary_operator_expr(binary_op_tag::less,
-                                        isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                        isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+            return less(isl_ast_expr_to_kir(expr.get_arg(0), ctx),
+                        isl_ast_expr_to_kir(expr.get_arg(1), ctx));
         case isl_ast_op_ge:
-            return binary_operator_expr(binary_op_tag::greater_equal,
-                                        isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                        isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+            return greater_equal(isl_ast_expr_to_kir(expr.get_arg(0), ctx),
+                                 isl_ast_expr_to_kir(expr.get_arg(1), ctx));
         case isl_ast_op_gt:
-            return binary_operator_expr(binary_op_tag::greater,
-                                        isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                        isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+            return greater(isl_ast_expr_to_kir(expr.get_arg(0), ctx),
+                           isl_ast_expr_to_kir(expr.get_arg(1), ctx));
         case isl_ast_op_and:
-            return binary_operator_expr(binary_op_tag::logical_and,
-                                        isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                        isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+            return logical_and(isl_ast_expr_to_kir(expr.get_arg(0), ctx),
+                               isl_ast_expr_to_kir(expr.get_arg(1), ctx));
         case isl_ast_op_or:
-            return binary_operator_expr(binary_op_tag::logical_or,
-                                        isl_ast_expr_to_kir(expr.get_arg(0), ctx),
-                                        isl_ast_expr_to_kir(expr.get_arg(1), ctx));
+            return logical_or(isl_ast_expr_to_kir(expr.get_arg(0), ctx),
+                              isl_ast_expr_to_kir(expr.get_arg(1), ctx));
         case isl_ast_op_access:
         {
             auto array = isl_ast_expr_to_kir(expr.get_arg(0), ctx);
 
-            std::vector<expression> indices;
+            std::vector<std::unique_ptr<expression>> indices;
 
             auto argc = expr.arg_count();
 
             for (int i = 1; i < argc; ++i)
                 indices.push_back(isl_ast_expr_to_kir(expr.get_arg(i), ctx));
 
-            return subscription_expr(array, indices);
+            return subscription(std::move(array), std::move(indices));
         }
         default:
             throw 0; // TODO: unknown op type
@@ -1475,7 +1475,7 @@ expression isl_ast_expr_to_kir(const isl::ast_expr& expr, ast_converter_context&
     }
 }
 
-expression isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx)
+std::unique_ptr<expression> isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx)
 {
     // static long int current_extracted_fn_id = 0;
 
@@ -1498,15 +1498,14 @@ expression isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx)
         // TODO: add new index to the lookup table
         variable_declaration idx_decl(types::integer{});
 
-        symbol_table.emplace(iterator.get_id().name(), variable_ref_expr(idx_decl));
+        symbol_table.emplace(iterator.get_id().name(), var(idx_decl));
 
         auto lower_bound = isl_ast_expr_to_kir(root.for_get_init(), ctx);
         auto increment = isl_ast_expr_to_kir(root.for_get_inc(), ctx);
 
         auto cond = root.for_get_cond();
 
-        auto upper_bound = [&]
-        {
+        auto upper_bound = [&] {
             // Assume that the cond is of the form
             // i </<= expr
             // where i is the current iterator.
@@ -1519,8 +1518,7 @@ expression isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx)
             {
                 auto rhs = isl_ast_expr_to_kir(cond.get_arg(1), ctx);
 
-                return expression(
-                    binary_operator_expr(binary_op_tag::plus, rhs, integer_literal_expr(1)));
+                return std::unique_ptr<expression>(std::move(rhs) + integer_literal(1));
             }
             case isl_ast_op_lt:
                 return isl_ast_expr_to_kir(cond.get_arg(1), ctx);
@@ -1532,12 +1530,10 @@ expression isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx)
         auto body = isl_ast_to_kir(root.for_get_body(), ctx);
 
         auto iter = std::remove_if(ctx.array_substitutions.begin(), ctx.array_substitutions.end(),
-                                   [&](const array_substitution& value)
-                                   {
+                                   [&](const array_substitution& value) {
                                        return std::any_of(ctx.array_subs_scopes.back().begin(),
                                                           ctx.array_subs_scopes.back().end(),
-                                                          [&](const variable_declaration& decl)
-                                                          {
+                                                          [&](const variable_declaration& decl) {
                                                               return value.parent == decl;
                                                           });
                                    });
@@ -1548,18 +1544,19 @@ expression isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx)
 
         symbol_table.erase(iterator.get_id().name());
 
-        return for_expr(idx_decl, lower_bound, upper_bound, increment, body);
+        return for_(std::move(idx_decl), std::move(lower_bound), std::move(upper_bound),
+                    std::move(increment), std::move(body));
     }
     case isl_ast_node_block:
     {
-        std::vector<expression> sub_exprs;
+        std::vector<std::unique_ptr<expression>> sub_exprs;
 
         for (const auto& child : root.block_get_children())
         {
             sub_exprs.emplace_back(isl_ast_to_kir(child, ctx));
         }
 
-        return compound_expr(sub_exprs);
+        return sequenced_tasks(std::move(sub_exprs));
     }
     case isl_ast_node_user:
     {
@@ -1577,11 +1574,11 @@ expression isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx)
         {
             auto else_branch = isl_ast_to_kir(*else_block, ctx);
 
-            return if_expr(condition, then_branch, else_branch);
+            return if_(std::move(condition), std::move(then_branch), std::move(else_branch));
         }
         else
         {
-            return if_expr(condition, then_branch);
+            return if_(std::move(condition), std::move(then_branch));
         }
     };
     case isl_ast_node_mark:
@@ -1604,7 +1601,7 @@ expression isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx)
     }
 }
 
-expression generate_code_from_scop(const scop& s)
+std::unique_ptr<expression> generate_code_from_scop(const scop& s)
 {
     /*auto constr_map1 = isl::union_map(isl_ctx, "[A, C] -> { [i0, i1, i2, i3] -> [0,i0, i1, i2, i3]
     : i0 + 300 < A and i1 + 300 < C }");
@@ -1673,24 +1670,30 @@ expression generate_code_from_scop(const scop& s)
 
     // printer.print(ast);
 
-    ast_converter_context ctx(s.symbol_table);
+    std::map<std::string, std::unique_ptr<expression>> symbol_table;
+    for (const auto& symbol : s.symbol_table)
+    {
+        symbol_table.emplace(symbol.first, clone(*symbol.second));
+    }
+
+    ast_converter_context ctx(std::move(symbol_table));
 
     return isl_ast_to_kir(ast, ctx);
 }
 
-expression detect_and_optimize_scops(expression expr)
+std::unique_ptr<expression> detect_and_optimize_scops(const expression& expr)
 {
     if (is_scop(expr))
     {
-        expr = lower_abstract_indices(expr);
+        auto lowered_expr = lower_abstract_indices(expr);
 
-        auto optimized_scop = optimize_scop(analyze_scop(expr));
+        auto optimized_scop = optimize_scop(analyze_scop(*lowered_expr));
 
         return generate_code_from_scop(optimized_scop);
     }
     else
     {
-        return expr;
+        return clone(expr);
     }
 }
 }

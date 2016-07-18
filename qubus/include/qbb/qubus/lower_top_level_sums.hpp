@@ -9,7 +9,7 @@ namespace qbb
 namespace qubus
 {
  
-expression lower_top_level_sums(const expression& expr);
+std::unique_ptr<expression> lower_top_level_sums(const expression& expr);
 function_declaration lower_top_level_sums(function_declaration decl);
     
 }

@@ -7,24 +7,24 @@
 #include <qbb/qubus/object.hpp>
 #include <qbb/qubus/tensor_expr_closure.hpp>
 
-#include <qbb/util/make_unique.hpp>
 #include <qbb/util/integer_sequence.hpp>
-#include <qbb/util/unused.hpp>
+#include <qbb/util/make_unique.hpp>
 #include <qbb/util/optional_ref.hpp>
+#include <qbb/util/unused.hpp>
 
 #include <boost/optional.hpp>
 #include <boost/range/adaptor/map.hpp>
 #include <boost/range/adaptor/reversed.hpp>
-#include <boost/range/algorithm/sort.hpp>
 #include <boost/range/algorithm/set_algorithm.hpp>
+#include <boost/range/algorithm/sort.hpp>
 
-#include <memory>
-#include <functional>
-#include <deque>
-#include <utility>
-#include <tuple>
-#include <iterator>
 #include <algorithm>
+#include <deque>
+#include <functional>
+#include <iterator>
+#include <memory>
+#include <tuple>
+#include <utility>
 #include <vector>
 
 namespace qbb
@@ -161,14 +161,13 @@ struct emit_plus_node : proto::transform<emit_plus_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
         {
-            return binary_operator_expr(binary_op_tag::plus,
-                                        Evaluator()(proto::left(expr), state, data),
-                                        Evaluator()(proto::right(expr), state, data));
+            return Evaluator()(proto::left(expr), state, data) +
+                   Evaluator()(proto::right(expr), state, data);
         }
     };
 };
@@ -179,14 +178,13 @@ struct emit_minus_node : proto::transform<emit_minus_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
         {
-            return binary_operator_expr(binary_op_tag::minus,
-                                        Evaluator()(proto::left(expr), state, data),
-                                        Evaluator()(proto::right(expr), state, data));
+            return Evaluator()(proto::left(expr), state, data) -
+                   Evaluator()(proto::right(expr), state, data);
         }
     };
 };
@@ -197,14 +195,13 @@ struct emit_multiplies_node : proto::transform<emit_multiplies_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
         {
-            return binary_operator_expr(binary_op_tag::multiplies,
-                                        Evaluator()(proto::left(expr), state, data),
-                                        Evaluator()(proto::right(expr), state, data));
+            return Evaluator()(proto::left(expr), state, data) *
+                   Evaluator()(proto::right(expr), state, data);
         }
     };
 };
@@ -215,14 +212,13 @@ struct emit_divides_node : proto::transform<emit_divides_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
         {
-            return binary_operator_expr(binary_op_tag::divides,
-                                        Evaluator()(proto::left(expr), state, data),
-                                        Evaluator()(proto::right(expr), state, data));
+            return Evaluator()(proto::left(expr), state, data) /
+                   Evaluator()(proto::right(expr), state, data);
         }
     };
 };
@@ -233,14 +229,13 @@ struct emit_equal_to_node : proto::transform<emit_equal_to_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
         {
-            return binary_operator_expr(binary_op_tag::equal_to,
-                                        Evaluator()(proto::left(expr), state, data),
-                                        Evaluator()(proto::right(expr), state, data));
+            return equal_to(Evaluator()(proto::left(expr), state, data),
+                            Evaluator()(proto::right(expr), state, data));
         }
     };
 };
@@ -251,14 +246,13 @@ struct emit_not_equal_to_node : proto::transform<emit_not_equal_to_node<Evaluato
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
         {
-            return binary_operator_expr(binary_op_tag::not_equal_to,
-                                        Evaluator()(proto::left(expr), state, data),
-                                        Evaluator()(proto::right(expr), state, data));
+            return not_equal_to(Evaluator()(proto::left(expr), state, data),
+                                Evaluator()(proto::right(expr), state, data));
         }
     };
 };
@@ -269,14 +263,13 @@ struct emit_less_node : proto::transform<emit_less_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
         {
-            return binary_operator_expr(binary_op_tag::less,
-                                        Evaluator()(proto::left(expr), state, data),
-                                        Evaluator()(proto::right(expr), state, data));
+            return less(Evaluator()(proto::left(expr), state, data),
+                        Evaluator()(proto::right(expr), state, data));
         }
     };
 };
@@ -287,14 +280,13 @@ struct emit_greater_node : proto::transform<emit_greater_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
         {
-            return binary_operator_expr(binary_op_tag::greater,
-                                        Evaluator()(proto::left(expr), state, data),
-                                        Evaluator()(proto::right(expr), state, data));
+            return greater(Evaluator()(proto::left(expr), state, data),
+                           Evaluator()(proto::right(expr), state, data));
         }
     };
 };
@@ -305,14 +297,13 @@ struct emit_less_equal_node : proto::transform<emit_less_equal_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
         {
-            return binary_operator_expr(binary_op_tag::less_equal,
-                                        Evaluator()(proto::left(expr), state, data),
-                                        Evaluator()(proto::right(expr), state, data));
+            return less_equal(Evaluator()(proto::left(expr), state, data),
+                              Evaluator()(proto::right(expr), state, data));
         }
     };
 };
@@ -323,14 +314,13 @@ struct emit_greater_equal_node : proto::transform<emit_greater_equal_node<Evalua
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
         {
-            return binary_operator_expr(binary_op_tag::greater_equal,
-                                        Evaluator()(proto::left(expr), state, data),
-                                        Evaluator()(proto::right(expr), state, data));
+            return greater_equal(Evaluator()(proto::left(expr), state, data),
+                                 Evaluator()(proto::right(expr), state, data));
         }
     };
 };
@@ -341,14 +331,13 @@ struct emit_logical_and_node : proto::transform<emit_logical_and_node<Evaluator>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
         {
-            return binary_operator_expr(binary_op_tag::logical_and,
-                                        Evaluator()(proto::left(expr), state, data),
-                                        Evaluator()(proto::right(expr), state, data));
+            return logical_and(Evaluator()(proto::left(expr), state, data),
+                               Evaluator()(proto::right(expr), state, data));
         }
     };
 };
@@ -359,14 +348,13 @@ struct emit_logical_or_node : proto::transform<emit_logical_or_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
         {
-            return binary_operator_expr(binary_op_tag::logical_or,
-                                        Evaluator()(proto::left(expr), state, data),
-                                        Evaluator()(proto::right(expr), state, data));
+            return logical_or(Evaluator()(proto::left(expr), state, data),
+                              Evaluator()(proto::right(expr), state, data));
         }
     };
 };
@@ -377,13 +365,12 @@ struct emit_unary_plus_node : proto::transform<emit_unary_plus_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
         {
-            return unary_operator_expr(unary_op_tag::plus,
-                                       Evaluator()(proto::child_c<0>(expr), state, data));
+            return +Evaluator()(proto::child_c<0>(expr), state, data);
         }
     };
 };
@@ -394,13 +381,12 @@ struct emit_negate_node : proto::transform<emit_negate_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
         {
-            return unary_operator_expr(unary_op_tag::negate,
-                                       Evaluator()(proto::child_c<0>(expr), state, data));
+            return -Evaluator()(proto::child_c<0>(expr), state, data);
         }
     };
 };
@@ -411,13 +397,12 @@ struct emit_logical_not_node : proto::transform<emit_logical_not_node<Evaluator>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
         {
-            return unary_operator_expr(unary_op_tag::logical_not,
-                                       Evaluator()(proto::child_c<0>(expr), state, data));
+            return logical_not(Evaluator()(proto::child_c<0>(expr), state, data));
         }
     };
 };
@@ -428,7 +413,7 @@ struct emit_sum_node : proto::transform<emit_sum_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
@@ -462,7 +447,7 @@ struct emit_sum_node : proto::transform<emit_sum_node<Evaluator>>
 
             context.index_table().leave_scope();
 
-            return sum_expr(index_decl, body_expr);
+            return sum(std::move(index_decl), std::move(body_expr));
         }
 
         template <long int N, typename Body>
@@ -506,7 +491,7 @@ struct emit_sum_node : proto::transform<emit_sum_node<Evaluator>>
 
             context.index_table().leave_scope();
 
-            return sum_expr(indices, alias_decl, body_expr);
+            return sum(std::move(indices), std::move(alias_decl), std::move(body_expr));
         }
     };
 };
@@ -517,7 +502,7 @@ struct emit_index_node : proto::transform<emit_index_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr,
                                typename impl::state_param QBB_UNUSED(state),
@@ -527,9 +512,7 @@ struct emit_index_node : proto::transform<emit_index_node<Evaluator>>
 
             if (auto decl = context.index_table().lookup(id(proto::value(expr))))
             {
-                variable_ref_expr index_ref(decl.get());
-
-                return index_ref;
+                return var(decl.get());
             }
             else
             {
@@ -545,10 +528,11 @@ namespace detail
 
 template <typename Evaluator, typename Expr, typename State, typename Data, std::size_t Front,
           std::size_t... Indices>
-inline std::vector<expression> emit_indices(const Expr& expr, const State& state, const Data& data,
-                                            util::index_sequence<Front, Indices...>)
+inline std::vector<std::unique_ptr<expression>>
+emit_indices(const Expr& expr, const State& state, const Data& data,
+             util::index_sequence<Front, Indices...>)
 {
-    std::vector<expression> indices;
+    std::vector<std::unique_ptr<expression>> indices;
 
     auto QBB_UNUSED(dummy) = {
         (indices.push_back(Evaluator()(proto::child_c<Indices>(expr), state, data)), 0)...};
@@ -563,7 +547,7 @@ struct emit_tensor_node : proto::transform<emit_tensor_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
@@ -572,22 +556,21 @@ struct emit_tensor_node : proto::transform<emit_tensor_node<Evaluator>>
 
             auto& symbol_table = state.get().variable_table();
 
-            boost::optional<variable_declaration> tensor_decl =
-                symbol_table.lookup(obj.get_object().id().get_gid());
+            auto tensor_decl = symbol_table.lookup(obj.get_object().id().get_gid());
 
             if (!tensor_decl)
             {
                 throw 0;
             }
 
-            auto tensor_expr = variable_ref_expr(tensor_decl.get());
+            auto tensor_expr = var(tensor_decl.get());
 
             constexpr std::size_t arity = proto::arity_of<Expr>::value;
 
             auto indices = detail::emit_indices<Evaluator>(expr, state, data,
                                                            util::make_index_sequence<arity>());
 
-            return subscription_expr(tensor_expr, std::move(indices));
+            return subscription(std::move(tensor_expr), std::move(indices));
         }
     };
 };
@@ -598,7 +581,7 @@ struct emit_delta_node : proto::transform<emit_delta_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
@@ -608,7 +591,8 @@ struct emit_delta_node : proto::transform<emit_delta_node<Evaluator>>
             auto first_index = Evaluator()(proto::child_c<1>(expr), state, data);
             auto second_index = Evaluator()(proto::child_c<2>(expr), state, data);
 
-            return kronecker_delta_expr(extent, first_index, second_index);
+            return kronecker_delta(std::move(extent), std::move(first_index),
+                                   std::move(second_index));
         }
     };
 };
@@ -619,13 +603,13 @@ struct emit_literal_node : proto::transform<emit_literal_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr,
                                typename impl::state_param QBB_UNUSED(state),
                                typename impl::data_param QBB_UNUSED(data)) const
         {
-            return double_literal_expr(proto::value(expr));
+            return double_literal(proto::value(expr));
         }
     };
 };
@@ -634,10 +618,10 @@ namespace detail
 {
 
 template <typename Evaluator, typename Expr, typename State, typename Data, std::size_t... Indices>
-inline std::vector<expression> emit_args(const Expr& expr, const State& state, const Data& data,
-                                         util::index_sequence<Indices...>)
+inline std::vector<std::unique_ptr<expression>>
+emit_args(const Expr& expr, const State& state, const Data& data, util::index_sequence<Indices...>)
 {
-    std::vector<expression> args;
+    std::vector<std::unique_ptr<expression>> args;
 
     auto dummy = {(args.push_back(Evaluator()(proto::child_c<Indices>(expr), state, data)), 0)...};
 
@@ -680,7 +664,7 @@ struct emit_function_node : proto::transform<emit_function_node<Evaluator>>
     template <typename Expr, typename State, typename Data>
     struct impl : proto::transform_impl<Expr, State, Data>
     {
-        using result_type = expression;
+        using result_type = std::unique_ptr<expression>;
 
         result_type operator()(typename impl::expr_param expr, typename impl::state_param state,
                                typename impl::data_param data) const
@@ -692,7 +676,7 @@ struct emit_function_node : proto::transform<emit_function_node<Evaluator>>
 
             const char* name = detail::function_tag_to_name(typename proto::tag_of<Expr>::type{});
 
-            return intrinsic_function_expr(name, std::move(args));
+            return intrinsic_function(std::move(name), std::move(args));
         }
     };
 };
@@ -822,11 +806,11 @@ struct data_handle : proto::callable
 };
 
 struct deduce_variables
-    : proto::or_<
-          proto::when<indexed_dense_tensor, add_variable(proto::_data, data_handle(proto::_child0))>,
-          proto::when<proto::nary_expr<proto::_, proto::vararg<proto::_>>,
-                      proto::fold<proto::_, proto::_data, deduce_variables(proto::_)>>,
-          proto::when<proto::_, proto::_data>>
+    : proto::or_<proto::when<indexed_dense_tensor,
+                             add_variable(proto::_data, data_handle(proto::_child0))>,
+                 proto::when<proto::nary_expr<proto::_, proto::vararg<proto::_>>,
+                             proto::fold<proto::_, proto::_data, deduce_variables(proto::_)>>,
+                 proto::when<proto::_, proto::_data>>
 {
 };
 
@@ -864,9 +848,11 @@ std::tuple<tensor_expr_closure, std::vector<object>> emit_ast(const Expr& expr)
         params.push_back(decl);
     }
 
-    expression rhs = emit_AST()(proto::right(expr), std::ref(ctx));
+    auto rhs = emit_AST()(proto::right(expr), std::ref(ctx));
 
-    return std::make_tuple(tensor_expr_closure(free_indices, params, rhs), param_objs);
+    return std::make_tuple(
+        tensor_expr_closure(std::move(free_indices), std::move(params), std::move(rhs)),
+        std::move(param_objs));
 }
 }
 }

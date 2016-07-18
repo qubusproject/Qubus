@@ -135,11 +135,11 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
 
                                                   return result;
                                               })
-                                       .case_(bind_to(pattern::float_t || pattern::double_t, subtype),
-                                              [&]
+                                       .case_(pattern::float_t || pattern::double_t,
+                                              [&] (const type& self)
                                               {
                                                   return builder.CreateSIToFP(
-                                                          arg_value, env.map_qubus_type(subtype.get()));
+                                                          arg_value, env.map_qubus_type(self));
                                               })
                                        .case_(pattern::integer_t, [&]
                                        {

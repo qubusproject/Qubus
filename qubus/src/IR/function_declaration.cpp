@@ -11,7 +11,7 @@ namespace qubus
 
 function_declaration_info::function_declaration_info(std::string name_,
                                                      std::vector<variable_declaration> params_,
-                                                     variable_declaration result_, expression body_)
+                                                     variable_declaration result_, std::unique_ptr<expression> body_)
 : name_(std::move(name_)), params_(std::move(params_)), result_(std::move(result_)),
   body_(std::move(body_))
 {
@@ -34,10 +34,10 @@ const variable_declaration& function_declaration_info::result() const
 
 const expression& function_declaration_info::body() const
 {
-    return body_;
+    return *body_;
 }
 
-void function_declaration_info::substitute_body(expression body)
+void function_declaration_info::substitute_body(std::unique_ptr<expression> body)
 {
     body_ = std::move(body);
 }
@@ -54,7 +54,7 @@ annotation_map& function_declaration_info::annotations()
 
 function_declaration::function_declaration(std::string name_,
                                            std::vector<variable_declaration> params_,
-                                           variable_declaration result_, expression body_)
+                                           variable_declaration result_, std::unique_ptr<expression> body_)
 : info_(std::make_shared<function_declaration_info>(std::move(name_), std::move(params_),
                                                     std::move(result_), std::move(body_)))
 {
@@ -80,7 +80,7 @@ const expression& function_declaration::body() const
     return info_->body();
 }
 
-void function_declaration::substitute_body(expression body)
+void function_declaration::substitute_body(std::unique_ptr<expression> body)
 {
     info_->substitute_body(std::move(body));
 }
