@@ -19,6 +19,8 @@ namespace qbb
 {
 namespace qubus
 {
+namespace qtl
+{
 
 namespace proto = boost::proto;
 
@@ -44,6 +46,7 @@ struct tensor_expr_
         {}
 };
 
+}
 }
 }
 

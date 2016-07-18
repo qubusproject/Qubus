@@ -8,10 +8,13 @@ namespace qbb
 {
 namespace qubus
 {
+namespace qtl
+{
 
 std::unique_ptr<expression> lower_abstract_indices(const expression& expr);
 function_declaration lower_abstract_indices(function_declaration decl);
 
+}
 }   
 }
 

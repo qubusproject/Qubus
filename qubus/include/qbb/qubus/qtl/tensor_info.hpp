@@ -13,7 +13,9 @@ namespace qbb
 {
 namespace qubus
 {
-template <typename T, long int Rank>
+namespace qtl
+{
+template<typename T, long int Rank>
 class tensor_info
 {
 public:
@@ -37,6 +39,7 @@ public:
 private:
     object data_;
 };
+}
 }
 }
 

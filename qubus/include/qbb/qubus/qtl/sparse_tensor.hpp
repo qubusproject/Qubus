@@ -6,10 +6,10 @@
 #include <qbb/qubus/get_view.hpp>
 #include <qbb/qubus/host_object_views.hpp>
 
-#include <qbb/qubus/indexed_tensor_expr_context.hpp>
+#include <qbb/qubus/qtl/indexed_tensor_expr_context.hpp>
 
-#include <qbb/qubus/assembly_tensor.hpp>
 #include <qbb/qubus/object_factory.hpp>
+#include <qbb/qubus/qtl/assembly_tensor.hpp>
 
 #include <qbb/qubus/host_object_views.hpp>
 #include <qbb/qubus/object_materializer.hpp>
@@ -25,6 +25,8 @@
 namespace qbb
 {
 namespace qubus
+{
+namespace qtl
 {
 
 template <typename T, long int Rank>
@@ -177,6 +179,7 @@ public:
         return boost::proto::value(*this).get_object();
     }
 };
+}
 }
 }
 

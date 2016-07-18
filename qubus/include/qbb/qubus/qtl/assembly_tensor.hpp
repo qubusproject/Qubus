@@ -15,6 +15,8 @@ namespace qbb
 {
 namespace qubus
 {
+namespace qtl
+{
 
 namespace detail
 {
@@ -34,8 +36,6 @@ struct array_hasher
     }
 };
 
-namespace detail
-{
 template<typename T, long unsigned int Rank>
 std::array<T, Rank - 1> discard_last_dimension(const std::array<T, Rank>& indices)
 {
@@ -47,7 +47,6 @@ std::array<T, Rank - 1> discard_last_dimension(const std::array<T, Rank>& indice
     }
 
     return leading_indices;
-}
 }
 
 template <typename T, typename IndexType, long int Rank>
@@ -174,6 +173,7 @@ private:
     detail::assembly_index<T, Rank> index_;
     std::array<util::index_t, Rank> shape_;
 };
+}
 }
 }
 

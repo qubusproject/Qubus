@@ -1,5 +1,7 @@
 #include <qbb/qubus/qubus.hpp>
 
+#include <qbb/qubus/qtl/all.hpp>
+
 #include <hpx/hpx_init.hpp>
 
 #include <qbb/util/unused.hpp>
@@ -12,10 +14,11 @@
 TEST(multi_indices, simple_expr)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = 100;
 
-    qbb::qubus::multi_index<2> ij("ij");
+    multi_index<2> ij("ij");
 
     tensor<double, 2> A(N, N);
 
@@ -47,12 +50,13 @@ TEST(multi_indices, simple_expr)
 TEST(multi_indices, index_splitting)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = 100;
 
-    qbb::qubus::index i("i");
-    qbb::qubus::index j("j");
-    qbb::qubus::multi_index<2> ij({i, j}, "ij");
+    qtl::index i("i");
+    qtl::index j("j");
+    multi_index<2> ij({i, j}, "ij");
 
     std::random_device rd;
 
@@ -189,11 +193,12 @@ TEST(multi_indices, index_splitting)
 TEST(multi_indices, multi_sum)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = 100;
 
-    qbb::qubus::multi_index<2> ij("ij");
-    qbb::qubus::index k("k");
+    multi_index<2> ij("ij");
+    qtl::index k("k");
 
     std::random_device rd;
 
@@ -270,13 +275,14 @@ TEST(multi_indices, multi_sum)
 TEST(multi_indices, multi_sum_index_splitting)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = 100;
 
-    qbb::qubus::index i("i");
-    qbb::qubus::index j("j");
-    qbb::qubus::multi_index<2> ij({i, j}, "ij");
-    qbb::qubus::index k("k");
+    qtl::index i("i");
+    qtl::index j("j");
+    multi_index<2> ij({i, j}, "ij");
+    qtl::index k("k");
 
     std::random_device rd;
 

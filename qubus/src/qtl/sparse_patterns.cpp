@@ -1,6 +1,6 @@
-#include <qbb/qubus/sparse_patterns.hpp>
+#include <qbb/qubus/qtl/sparse_patterns.hpp>
 
-#include <qbb/qubus/deduce_iteration_space.hpp>
+#include <qbb/qubus/qtl/deduce_iteration_space.hpp>
 
 #include <qbb/qubus/pattern/IR.hpp>
 #include <qbb/qubus/pattern/core.hpp>
@@ -16,6 +16,8 @@
 namespace qbb
 {
 namespace qubus
+{
+namespace qtl
 {
 
 namespace
@@ -387,6 +389,7 @@ function_declaration optimize_sparse_patterns(function_declaration decl)
     decl.substitute_body(std::move(new_body));
 
     return decl;
+}
 }
 }
 }

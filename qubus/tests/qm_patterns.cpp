@@ -1,5 +1,7 @@
 #include <qbb/qubus/qubus.hpp>
 
+#include <qbb/qubus/qtl/all.hpp>
+
 #include <hpx/hpx_init.hpp>
 
 #include <qbb/util/unused.hpp>
@@ -13,6 +15,7 @@
 TEST(qm_patterns, commutator)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = 100;
 
@@ -35,9 +38,9 @@ TEST(qm_patterns, commutator)
         }
     }
 
-    qbb::qubus::index i("i");
-    qbb::qubus::index j("j");
-    qbb::qubus::index k("k");
+    qtl::index i("i");
+    qtl::index j("j");
+    qtl::index k("k");
 
     tensor<std::complex<double>, 2> A(N, N);
     tensor<std::complex<double>, 2> B(N, N);

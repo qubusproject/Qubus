@@ -1,12 +1,12 @@
 #ifndef QBB_QUBUS_TENSOR_EXPR_INFO_HPP
 #define QBB_QUBUS_TENSOR_EXPR_INFO_HPP
 
-#include <qbb/qubus/object.hpp>
 #include <qbb/qubus/computelet.hpp>
+#include <qbb/qubus/object.hpp>
 
 #include <qbb/qubus/IR/type.hpp>
 
-#include <qbb/qubus/tensor_expr_closure.hpp>
+#include <qbb/qubus/qtl/tensor_expr_closure.hpp>
 
 #include <boost/optional.hpp>
 
@@ -16,6 +16,8 @@
 namespace qbb
 {
 namespace qubus
+{
+namespace qtl
 {
 
 class tensor_expr_info
@@ -33,6 +35,7 @@ private:
 
     computelet stored_computelet_;
 };
+}
 }
 }
 

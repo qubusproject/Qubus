@@ -1,12 +1,12 @@
 #ifndef QUBUS_GRAMMAR_HPP
 #define QUBUS_GRAMMAR_HPP
 
-#include <qbb/qubus/tensor_expr_info.hpp>
-#include <qbb/qubus/tensor_info.hpp>
-#include <qbb/qubus/sparse_tensor.hpp>
+#include <qbb/qubus/qtl/tensor_expr_info.hpp>
+#include <qbb/qubus/qtl/tensor_info.hpp>
+#include <qbb/qubus/qtl/sparse_tensor.hpp>
 
-#include <qbb/qubus/indexed_tensor_expr_context.hpp>
-#include <qbb/qubus/index.hpp>
+#include <qbb/qubus/qtl/indexed_tensor_expr_context.hpp>
+#include <qbb/qubus/qtl/index.hpp>
 
 #include <qbb/util/handle.hpp>
 #include <qbb/qubus/IR/type.hpp>
@@ -20,6 +20,8 @@
 namespace qbb
 {
 namespace qubus
+{
+namespace qtl
 {
 
 namespace proto = boost::proto;
@@ -371,6 +373,7 @@ struct tensor_def
     : proto::subscript<def_tensor_<proto::vararg<proto::_>>, indexed_tensor_expr_grammar>
 {
 };
+}
 }
 }
 

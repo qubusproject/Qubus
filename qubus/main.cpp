@@ -5,7 +5,7 @@
 
 #include <qbb/qubus/qubus.hpp>
 
-#include <qbb/qubus/assembly_tensor.hpp>
+#include <qbb/qubus/qtl/all.hpp>
 
 #include <hpx/hpx_init.hpp>
 #include <hpx/include/iostreams.hpp>
@@ -87,6 +87,8 @@ int hpx_main(int argc, char** argv)
 
     qbb::qubus::init(argc, argv);
 
+    using namespace qbb::qubus::qtl;
+
     hpx::cout << "------------------------------------------------------" << hpx::endl;
 
     auto num_localities = hpx::get_num_localities_sync();
@@ -112,7 +114,7 @@ int hpx_main(int argc, char** argv)
         results.emplace_back(N);
     }
 
-    qbb::qubus::index i, j;
+    qtl::index i, j;
 
     std::vector<tensor_expr<double, 1>> codes;
 

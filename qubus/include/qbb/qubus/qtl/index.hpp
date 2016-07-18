@@ -15,6 +15,8 @@ namespace qbb
 {
 namespace qubus
 {
+namespace qtl
+{
 
 class id_type_server : public hpx::components::component_base<id_type_server>
 {
@@ -203,6 +205,7 @@ template <long int Rank>
 inline hpx::naming::gid_type id(const multi_index<Rank>& value)
 {
     return value.id();
+}
 }
 }
 }

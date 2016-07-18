@@ -1,9 +1,6 @@
-//  Copyright (c) 2012-2014 Christopher Hinz
-//
-//  Distributed under the Boost Software License, Version 1.0. (See accompanying
-//  file LICENSE_1_0.txt or copy at http://www.boost.org/LICENSE_1_0.txt)
-
 #include <qbb/qubus/qubus.hpp>
+
+#include <qbb/qubus/qtl/all.hpp>
 
 #include <hpx/hpx_init.hpp>
 
@@ -18,6 +15,7 @@
 TEST(contractions, simple_contraction)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = 100;
 
@@ -40,9 +38,9 @@ TEST(contractions, simple_contraction)
         }
     }
 
-    qbb::qubus::index i("i");
-    qbb::qubus::index j("j");
-    qbb::qubus::index k("k");
+    qtl::index i("i");
+    qtl::index j("j");
+    qtl::index k("k");
 
     tensor<double, 2> A(N, N);
     tensor<double, 2> B(N, N);
@@ -109,6 +107,7 @@ TEST(contractions, simple_contraction)
 TEST(contractions, complex_matrix_multiplication)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = 100;
 
@@ -131,9 +130,9 @@ TEST(contractions, complex_matrix_multiplication)
         }
     }
 
-    qbb::qubus::index i("i");
-    qbb::qubus::index j("j");
-    qbb::qubus::index k("k");
+    qtl::index i("i");
+    qtl::index j("j");
+    qtl::index k("k");
 
     tensor<std::complex<double>, 2> A(N, N);
     tensor<std::complex<double>, 2> B(N, N);
@@ -201,6 +200,7 @@ TEST(contractions, complex_matrix_multiplication)
 TEST(contractions, reduction_to_r1)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = 100;
 
@@ -223,9 +223,9 @@ TEST(contractions, reduction_to_r1)
         }
     }
 
-    qbb::qubus::index i("i");
-    qbb::qubus::index j("j");
-    qbb::qubus::index k("k");
+    qtl::index i("i");
+    qtl::index j("j");
+    qtl::index k("k");
 
     tensor<double, 2> A(N, N);
     tensor<double, 2> B(N, N);
@@ -289,6 +289,7 @@ TEST(contractions, reduction_to_r1)
 TEST(contractions, matrix_vector_product)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = 100;
 
@@ -311,8 +312,8 @@ TEST(contractions, matrix_vector_product)
         B2[i] = dist(gen);
     }
 
-    qbb::qubus::index i("i");
-    qbb::qubus::index j("j");
+    qtl::index i("i");
+    qtl::index j("j");
 
     tensor<double, 2> A(N, N);
     tensor<double, 1> B(N);
@@ -368,6 +369,7 @@ TEST(contractions, matrix_vector_product)
 TEST(contractions, basis_change_r2)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = 100;
 
@@ -390,10 +392,10 @@ TEST(contractions, basis_change_r2)
         }
     }
 
-    qbb::qubus::index i("i");
-    qbb::qubus::index j("j");
-    qbb::qubus::index k("k");
-    qbb::qubus::index l("l");
+    qtl::index i("i");
+    qtl::index j("j");
+    qtl::index k("k");
+    qtl::index l("l");
 
     tensor<double, 2> A(N, N);
     tensor<double, 2> B(N, N);

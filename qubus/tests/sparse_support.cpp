@@ -1,5 +1,7 @@
 #include <qbb/qubus/qubus.hpp>
 
+#include <qbb/qubus/qtl/all.hpp>
+
 #include <hpx/hpx_init.hpp>
 
 #include <qbb/util/unused.hpp>
@@ -19,6 +21,7 @@ INSTANTIATE_TEST_CASE_P(base_extents, sparse_support,
 TEST_P(sparse_support, sparse_matrix_vector_product)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = GetParam();
 
@@ -41,8 +44,8 @@ TEST_P(sparse_support, sparse_matrix_vector_product)
         B2[i] = dist(gen);
     }
 
-    qbb::qubus::index i("i");
-    qbb::qubus::index j("j");
+    qtl::index i("i");
+    qtl::index j("j");
 
     assembly_tensor<double, 2> A_assemb(N, N);
 
@@ -105,6 +108,7 @@ TEST_P(sparse_support, sparse_matrix_vector_product)
 TEST_P(sparse_support, sparse_matrix_matrix_product)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = GetParam();
 
@@ -127,9 +131,9 @@ TEST_P(sparse_support, sparse_matrix_matrix_product)
         }
     }
 
-    qbb::qubus::index i("i");
-    qbb::qubus::index j("j");
-    qbb::qubus::index k("k");
+    qtl::index i("i");
+    qtl::index j("j");
+    qtl::index k("k");
 
     assembly_tensor<double, 2> A_assemb(N, N);
 

@@ -3,9 +3,9 @@
 
 #include <qbb/qubus/IR/qir.hpp>
 
-#include <qbb/qubus/grammar.hpp>
 #include <qbb/qubus/object.hpp>
-#include <qbb/qubus/tensor_expr_closure.hpp>
+#include <qbb/qubus/qtl/grammar.hpp>
+#include <qbb/qubus/qtl/tensor_expr_closure.hpp>
 
 #include <qbb/util/integer_sequence.hpp>
 #include <qbb/util/make_unique.hpp>
@@ -30,6 +30,8 @@
 namespace qbb
 {
 namespace qubus
+{
+namespace qtl
 {
 
 class name_scope
@@ -853,6 +855,7 @@ std::tuple<tensor_expr_closure, std::vector<object>> emit_ast(const Expr& expr)
     return std::make_tuple(
         tensor_expr_closure(std::move(free_indices), std::move(params), std::move(rhs)),
         std::move(param_objs));
+}
 }
 }
 }

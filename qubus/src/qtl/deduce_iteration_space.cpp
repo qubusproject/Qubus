@@ -1,4 +1,4 @@
-#include <qbb/qubus/deduce_iteration_space.hpp>
+#include <qbb/qubus/qtl/deduce_iteration_space.hpp>
 
 #include <qbb/qubus/pattern/IR.hpp>
 #include <qbb/qubus/pattern/core.hpp>
@@ -8,6 +8,8 @@
 namespace qbb
 {
 namespace qubus
+{
+namespace qtl
 {
 
 std::array<std::unique_ptr<expression>, 2> deduce_iteration_space(const variable_declaration& idx,
@@ -23,7 +25,8 @@ std::array<std::unique_ptr<expression>, 2> deduce_iteration_space(const variable
 
     auto m =
         pattern::make_matcher<expression, std::array<std::unique_ptr<expression>, 2>>()
-            .case_(subscription(tensor(decl), bind_to(any_of(index(value(idx))), index_pos)),
+            .case_(subscription(tensor(decl),
+                                bind_to(any_of(index(value(idx))), index_pos)),
                    [&] {
                        auto lower_bound = integer_literal(0);
 
@@ -58,6 +61,7 @@ std::array<std::unique_ptr<expression>, 2> deduce_iteration_space(const variable
     {
         throw 0;
     }
+}
 }
 }
 }

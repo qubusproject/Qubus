@@ -8,10 +8,13 @@ namespace qbb
 {
 namespace qubus
 {
+namespace qtl
+{
 
 std::unique_ptr<expression> optimize_sparse_patterns(const expression& expr);
 function_declaration optimize_sparse_patterns(function_declaration decl);
 
+}
 }
 }
 

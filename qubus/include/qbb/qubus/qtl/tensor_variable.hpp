@@ -3,33 +3,34 @@
 
 #include <qbb/qubus/local_runtime.hpp>
 
-#include <qbb/util/handle.hpp>
 #include <qbb/qubus/IR/type.hpp>
+#include <qbb/util/handle.hpp>
 #include <qbb/util/integers.hpp>
 
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/execution_context.hpp>
 
-#include <qbb/qubus/indexed_tensor_expr_context.hpp>
-#include <qbb/qubus/grammar.hpp>
-#include <qbb/qubus/IR_emitter.hpp>
+#include <qbb/qubus/qtl/IR_emitter.hpp>
+#include <qbb/qubus/qtl/grammar.hpp>
+#include <qbb/qubus/qtl/indexed_tensor_expr_context.hpp>
 
 #include <qbb/qubus/get_view.hpp>
 
 #include <qbb/qubus/associated_qubus_type.hpp>
 
 #include <memory>
-#include <vector>
 #include <utility>
+#include <vector>
 
 namespace qbb
 {
 namespace qubus
 {
-
+namespace qtl
+{
 template <typename T, long int Rank>
 class tensor;
-    
+
 template <typename T, long int Rank>
 class tensor_expr : public tensor_expr_<typename boost::proto::terminal<tensor_expr_info>::type>
 {
@@ -40,9 +41,8 @@ public:
           tensor_expr_info(types::array(associated_qubus_type<T>::get()), emit_ast(expr))))
     {
     }
-    
-    tensor_expr(const tensor<T, Rank>& var)
-    : tensor_expr(tensor_to_expr(var))
+
+    tensor_expr(const tensor<T, Rank>& var) : tensor_expr(tensor_to_expr(var))
     {
     }
 
@@ -55,19 +55,18 @@ public:
     {
         return proto::value(*this).args();
     }
-    
+
 private:
     static auto tensor_to_expr(const tensor<T, Rank>& var)
     {
         multi_index<Rank> I("I");
-        
-        return def_tensor(I) [ var(I) ];
+
+        return def_tensor(I)[var(I)];
     }
 };
 
 template <typename T, long int Rank>
-class tensor
-    : public tensor_expr_<typename boost::proto::terminal<tensor_info<T, Rank>>::type>
+class tensor : public tensor_expr_<typename boost::proto::terminal<tensor_info<T, Rank>>::type>
 {
 public:
     using value_type = T;
@@ -75,7 +74,7 @@ public:
     template <typename... SizeTypes>
     explicit tensor(SizeTypes... sizes_)
     : tensor::proto_derived_expr(tensor::proto_base_expr::make(
-            tensor_info<T, Rank>(get_runtime().get_object_factory().create_array(
+          tensor_info<T, Rank>(get_runtime().get_object_factory().create_array(
               associated_qubus_type<T>::get(), {util::to_uindex(sizes_)...}))))
     {
     }
@@ -85,12 +84,12 @@ public:
         const auto& args = tensor_expr.args();
 
         execution_context ctx;
-        
+
         for (const auto& arg : args)
         {
             ctx.push_back_arg(arg);
         }
-        
+
         ctx.push_back_result(get_object());
 
         auto c = tensor_expr.stored_computelet();
@@ -117,10 +116,11 @@ auto get_view(const tensor<T, Rank>& value)
     return get_view<View>(value.get_object());
 }
 
-template<typename T, long int Rank>
+template <typename T, long int Rank>
 std::ostream& operator<<(std::ostream& os, const tensor_info<T, Rank>&)
 {
     return os << "tensor ( Rank = " << Rank << " )";
+}
 }
 }
 }

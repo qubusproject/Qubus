@@ -8,10 +8,14 @@ namespace qbb
 {
 namespace qubus
 {
- 
-std::unique_ptr<expression> lower_top_level_sums(const expression& expr);
+namespace qtl
+{
+
+std::unique_ptr<expression> lower_top_level_sums(const expression &expr);
+
 function_declaration lower_top_level_sums(function_declaration decl);
-    
+
+}
 }
 }
 
