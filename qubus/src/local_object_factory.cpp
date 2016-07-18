@@ -7,6 +7,7 @@
 
 #include <qbb/util/integers.hpp>
 #include <qbb/util/assert.hpp>
+#include <qbb/util/unused.hpp>
 
 #include <utility>
 #include <type_traits>
@@ -91,7 +92,7 @@ hpx::future<hpx::id_type> local_object_factory_server::create_struct(type struct
     {
         static_assert(std::is_trivially_destructible<address>::value, "Object component not trivially destructible.");
 
-        auto pos = new (data) address(make_address_from_id(member.id()));
+        auto QBB_UNUSED(pos) = new (data) address(make_address_from_id(member.id()));
 
         QBB_ASSERT(pos == data, "Object component is not constructed at the expected position.");
 

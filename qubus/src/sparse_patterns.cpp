@@ -370,7 +370,7 @@ std::unique_ptr<expression> lower_sparse_contraction(const expression& expr)
     tasks.push_back(std::move(vectorizable_part));
     tasks.push_back(std::move(remainder_part));
 
-    auto new_code = sequenced_tasks(std::move(tasks));
+    std::unique_ptr<expression> new_code = sequenced_tasks(std::move(tasks));
 
     return new_code;
 }

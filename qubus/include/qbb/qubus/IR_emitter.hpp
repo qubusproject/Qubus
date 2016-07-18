@@ -537,7 +537,7 @@ emit_indices(const Expr& expr, const State& state, const Data& data,
     auto QBB_UNUSED(dummy) = {
         (indices.push_back(Evaluator()(proto::child_c<Indices>(expr), state, data)), 0)...};
 
-    return std::move(indices);
+    return indices;
 }
 }
 
@@ -625,7 +625,7 @@ emit_args(const Expr& expr, const State& state, const Data& data, util::index_se
 
     auto dummy = {(args.push_back(Evaluator()(proto::child_c<Indices>(expr), state, data)), 0)...};
 
-    return std::move(args);
+    return args;
 }
 
 inline constexpr const char* function_tag_to_name(tag::exp)

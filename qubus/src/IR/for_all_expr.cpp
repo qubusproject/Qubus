@@ -59,7 +59,14 @@ for_all_expr* for_all_expr::clone() const
 
 const expression& for_all_expr::child(std::size_t index) const
 {
-    return *body_;
+    if (index == 0)
+    {
+        return *body_;
+    }
+    else
+    {
+        throw 0;
+    }
 }
 
 std::size_t for_all_expr::arity() const

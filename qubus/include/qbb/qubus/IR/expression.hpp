@@ -155,7 +155,7 @@ public:
         parent_ = &parent;
     }
 
-    boost::any_range<const expression&, boost::forward_traversal_tag> sub_expressions() const
+    boost::any_range<const expression&, boost::forward_traversal_tag> sub_expressions() const override final
     {
         return boost::irange<std::size_t>(0, arity()) |
                boost::adaptors::transformed(

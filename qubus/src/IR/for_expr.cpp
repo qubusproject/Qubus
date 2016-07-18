@@ -13,8 +13,8 @@ namespace qubus
 
 for_expr::for_expr(variable_declaration loop_index_, std::unique_ptr<expression> lower_bound_,
                    std::unique_ptr<expression> upper_bound_, std::unique_ptr<expression> body_)
-: for_expr(std::move(loop_index_), take_over_child(lower_bound_), take_over_child(upper_bound_),
-           take_over_child(std::make_unique<integer_literal_expr>(1)), take_over_child(body_))
+: for_expr(std::move(loop_index_), std::move(lower_bound_), std::move(upper_bound_),
+           integer_literal(1), std::move(body_))
 {
 }
 
