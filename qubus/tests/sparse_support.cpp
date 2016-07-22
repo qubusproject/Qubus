@@ -44,9 +44,6 @@ TEST_P(sparse_support, sparse_matrix_vector_product)
         B2[i] = dist(gen);
     }
 
-    qtl::index i("i");
-    qtl::index j("j");
-
     assembly_tensor<double, 2> A_assemb(N, N);
 
     long int N_nonzero = N * N * 0.1;
@@ -68,7 +65,10 @@ TEST_P(sparse_support, sparse_matrix_vector_product)
     tensor<double, 1> B(N);
     tensor<double, 1> C(N);
 
-    tensor_expr<double, 1> Cdef = def_tensor(i)[sum(A(i, j) * B(j), j)];
+    tensor_expr<double, 1> Cdef = [A, B](qtl::index i) {
+        qtl::index j;
+        return sum(j, A(i, j) * B(j));
+    };
 
     {
         auto B_view = get_view<host_tensor_view<double, 1>>(B).get();
@@ -131,10 +131,6 @@ TEST_P(sparse_support, sparse_matrix_matrix_product)
         }
     }
 
-    qtl::index i("i");
-    qtl::index j("j");
-    qtl::index k("k");
-
     assembly_tensor<double, 2> A_assemb(N, N);
 
     long int N_nonzero = N * N * 0.1;
@@ -168,7 +164,10 @@ TEST_P(sparse_support, sparse_matrix_matrix_product)
         }
     }
 
-    tensor_expr<double, 2> Cdef = def_tensor(i, k)[sum(A(i, j) * B(j, k), j)];
+    tensor_expr<double, 2> Cdef = [A, B](qtl::index i, qtl::index k) {
+        qtl::index j;
+        return sum(j, A(i, j) * B(j, k));
+    };
 
     C = Cdef;
 

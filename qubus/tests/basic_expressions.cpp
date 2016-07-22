@@ -6,9 +6,9 @@
 
 #include <qbb/util/unused.hpp>
 
-#include <vector>
-#include <random>
 #include <complex>
+#include <random>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -19,12 +19,9 @@ TEST(basic_expressions, constant_expr)
 
     long int N = 100;
 
-    qtl::index i("i");
-    qtl::index j("j");
-
     tensor<double, 2> A(N, N);
 
-    tensor_expr<double, 2> Adef = def_tensor(i, j)[42];
+    tensor_expr<double, 2> Adef = [](qtl::index i, qtl::index j) { return 42; };
 
     A = Adef;
 
@@ -92,7 +89,7 @@ TEST(basic_expressions, complex_addition)
         }
     }
 
-    tensor_expr<std::complex<double>, 1> Cdef = def_tensor(i)[A(i) + B(i)];
+    tensor_expr<std::complex<double>, 1> Cdef = [A, B](qtl::index i) { return A(i) + B(i); };
 
     C = Cdef;
 
@@ -116,6 +113,7 @@ TEST(basic_expressions, complex_addition)
 
     ASSERT_NEAR(error, 0.0, 1e-14);
 }
+
 
 TEST(basic_expressions, complex_substraction)
 {
@@ -162,7 +160,7 @@ TEST(basic_expressions, complex_substraction)
         }
     }
 
-    tensor_expr<std::complex<double>, 1> Cdef = def_tensor(i)[A(i) - B(i)];
+    tensor_expr<std::complex<double>, 1> Cdef = [A, B](qtl::index i) { return A(i) - B(i); };
 
     C = Cdef;
 
@@ -232,7 +230,7 @@ TEST(basic_expressions, complex_multiplication)
         }
     }
 
-    tensor_expr<std::complex<double>, 1> Cdef = def_tensor(i)[A(i) * B(i)];
+    tensor_expr<std::complex<double>, 1> Cdef = [A, B](qtl::index i) { return A(i) * B(i); };
 
     C = Cdef;
 
@@ -302,7 +300,7 @@ TEST(basic_expressions, complex_division)
         }
     }
 
-    tensor_expr<std::complex<double>, 1> Cdef = def_tensor(i)[A(i) / B(i)];
+    tensor_expr<std::complex<double>, 1> Cdef = [A, B](qtl::index i) { return A(i) / B(i); };
 
     C = Cdef;
 

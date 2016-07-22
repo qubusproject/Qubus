@@ -8,11 +8,12 @@ endforeach()
 
 set(qubus_qtl_source_files deduce_iteration_space.cpp index.cpp kronecker_delta_folding_pass.cpp
                            lower_abstract_indices.cpp lower_top_level_sums.cpp multi_index_handling.cpp
-                           sparse_patterns.cpp tensor_expr_info.cpp)
+                           sparse_patterns.cpp)
 
 add_library(qubus_qtl SHARED ${qubus_qtl_header_files} ${qubus_qtl_source_files})
 
-target_include_directories(qubus_qtl PUBLIC ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
+target_include_directories(qubus_qtl PUBLIC $<BUILD_INTERFACE:${QBB_EXTERNAL_DIR}/boost/hana/include>
+                                            ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 target_compile_options(qubus_qtl PUBLIC -std=c++14)
 target_link_libraries(qubus_qtl qubus qubus_ir qbb_util)
 target_link_libraries(qubus_qtl ${Boost_LIBRARIES} wall)

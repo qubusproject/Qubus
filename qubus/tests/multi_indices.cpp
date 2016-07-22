@@ -6,8 +6,8 @@
 
 #include <qbb/util/unused.hpp>
 
-#include <vector>
 #include <random>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -18,11 +18,9 @@ TEST(multi_indices, simple_expr)
 
     long int N = 100;
 
-    multi_index<2> ij("ij");
-
     tensor<double, 2> A(N, N);
 
-    tensor_expr<double, 2> Adef = def_tensor(ij)[42];
+    tensor_expr<double, 2> Adef = [](multi_index<2> ij) { return 42; };
 
     A = Adef;
 
@@ -54,10 +52,6 @@ TEST(multi_indices, index_splitting)
 
     long int N = 100;
 
-    qtl::index i("i");
-    qtl::index j("j");
-    multi_index<2> ij({i, j}, "ij");
-
     std::random_device rd;
 
     std::mt19937 gen(rd());
@@ -70,7 +64,7 @@ TEST(multi_indices, index_splitting)
     {
         for (long int j = 0; j < N; ++j)
         {
-                A2[i * N + j] = dist(gen);
+            A2[i * N + j] = dist(gen);
         }
     }
 
@@ -90,7 +84,12 @@ TEST(multi_indices, index_splitting)
 
     tensor<double, 2> R(N, N);
 
-    tensor_expr<double, 2> Rdef = def_tensor(ij)[A(i, j)];
+    tensor_expr<double, 2> Rdef = [A](multi_index<2> ij) {
+        qtl::index i = ij[0];
+        qtl::index j = ij[1];
+
+        return A(i, j);
+    };
 
     R = Rdef;
 
@@ -197,9 +196,6 @@ TEST(multi_indices, multi_sum)
 
     long int N = 100;
 
-    multi_index<2> ij("ij");
-    qtl::index k("k");
-
     std::random_device rd;
 
     std::mt19937 gen(rd());
@@ -239,7 +235,10 @@ TEST(multi_indices, multi_sum)
 
     tensor<double, 1> R(N);
 
-    tensor_expr<double, 1> Rdef = def_tensor(k)[sum(A(ij, k), ij)];
+    tensor_expr<double, 1> Rdef = [A](qtl::index k) {
+        multi_index<2> ij;
+        return sum(ij, A(ij, k));
+    };
 
     R = Rdef;
 
@@ -279,11 +278,6 @@ TEST(multi_indices, multi_sum_index_splitting)
 
     long int N = 100;
 
-    qtl::index i("i");
-    qtl::index j("j");
-    multi_index<2> ij({i, j}, "ij");
-    qtl::index k("k");
-
     std::random_device rd;
 
     std::mt19937 gen(rd());
@@ -323,7 +317,13 @@ TEST(multi_indices, multi_sum_index_splitting)
 
     tensor<double, 1> R(N);
 
-    tensor_expr<double, 1> Rdef = def_tensor(k)[sum(A(i, j, k), ij)];
+    tensor_expr<double, 1> Rdef = [A](qtl::index k) {
+        qtl::index i;
+        qtl::index j;
+        multi_index<2> ij({i, j});
+
+        return sum(ij, A(i, j, k));
+    };
 
     R = Rdef;
 

@@ -11,12 +11,12 @@
 #include <hpx/include/iostreams.hpp>
 #include <hpx/parallel/algorithms/for_loop.hpp>
 
-#include <memory>
 #include <cstring>
+#include <functional>
+#include <memory>
+#include <numeric>
 #include <utility>
 #include <vector>
-#include <functional>
-#include <numeric>
 
 #include <random>
 
@@ -114,8 +114,6 @@ int hpx_main(int argc, char** argv)
         results.emplace_back(N);
     }
 
-    qtl::index i, j;
-
     std::vector<tensor_expr<double, 1>> codes;
 
     for (long int loc = 0; loc < num_localities; ++loc)
@@ -123,7 +121,12 @@ int hpx_main(int argc, char** argv)
         auto A = matrices[loc];
         auto b = vectors[loc];
 
-        tensor_expr<double, 1> code = def_tensor(i)[sum(A(i, j) * b(j), j)];
+        tensor_expr<double, 1> code = [A, b](qtl::index i) {
+            qtl::index j;
+
+            return sum(j, A(i, j) * b(j));
+        };
+
         codes.push_back(code);
     }
 
@@ -150,10 +153,7 @@ int hpx_main(int argc, char** argv)
 
         for (long int loc = 0; loc < num_localities; ++loc)
         {
-            futures.push_back(hpx::async([&results, &codes, loc]
-                       {
-                           results[loc] = codes[loc];
-                       }));
+            futures.push_back(hpx::async([&results, &codes, loc] { results[loc] = codes[loc]; }));
         }
 
         hpx::cout << "end iteration " << k << hpx::endl;

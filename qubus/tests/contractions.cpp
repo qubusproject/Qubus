@@ -6,9 +6,9 @@
 
 #include <qbb/util/unused.hpp>
 
-#include <vector>
-#include <random>
 #include <complex>
+#include <random>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -38,10 +38,6 @@ TEST(contractions, simple_contraction)
         }
     }
 
-    qtl::index i("i");
-    qtl::index j("j");
-    qtl::index k("k");
-
     tensor<double, 2> A(N, N);
     tensor<double, 2> B(N, N);
     tensor<double, 2> C(N, N);
@@ -68,7 +64,10 @@ TEST(contractions, simple_contraction)
         }
     }
 
-    tensor_expr<double, 2> Cdef = def_tensor(i, j)[sum(A(i, k) * B(j, k), k)];
+    tensor_expr<double, 2> Cdef = [A, B](qtl::index i, qtl::index j) {
+        qtl::index k;
+        return sum(k, A(i, k) * B(j, k));
+    };
 
     C = Cdef;
 
@@ -130,17 +129,12 @@ TEST(contractions, complex_matrix_multiplication)
         }
     }
 
-    qtl::index i("i");
-    qtl::index j("j");
-    qtl::index k("k");
-
     tensor<std::complex<double>, 2> A(N, N);
     tensor<std::complex<double>, 2> B(N, N);
     tensor<std::complex<double>, 2> C(N, N);
 
     {
         auto A_view = get_view<host_tensor_view<std::complex<double>, 2>>(A).get();
-
 
         for (long int i = 0; i < N; ++i)
         {
@@ -161,7 +155,10 @@ TEST(contractions, complex_matrix_multiplication)
         }
     }
 
-    tensor_expr<std::complex<double>, 2> Cdef = def_tensor(i, j)[sum(A(i, k) * B(k, j), k)];
+    tensor_expr<std::complex<double>, 2> Cdef = [A, B](qtl::index i, qtl::index j) {
+        qtl::index k;
+        return sum(k, A(i, k) * B(k, j));
+    };
 
     C = Cdef;
 
@@ -223,10 +220,6 @@ TEST(contractions, reduction_to_r1)
         }
     }
 
-    qtl::index i("i");
-    qtl::index j("j");
-    qtl::index k("k");
-
     tensor<double, 2> A(N, N);
     tensor<double, 2> B(N, N);
     tensor<double, 1> C(N);
@@ -253,7 +246,10 @@ TEST(contractions, reduction_to_r1)
         }
     }
 
-    tensor_expr<double, 1> Cdef = def_tensor(i)[sum(sum(A(i, k) * B(j, k), k), j)];
+    tensor_expr<double, 1> Cdef = [A, B](qtl::index i) {
+        qtl::index j, k;
+        return sum(j, sum(k, A(i, k) * B(j, k)));
+    };
 
     C = Cdef;
 
@@ -294,7 +290,7 @@ TEST(contractions, matrix_vector_product)
     long int N = 100;
 
     std::vector<double> A2(N * N);
-    std::vector<double> B2(N );
+    std::vector<double> B2(N);
     std::vector<double> C2(N);
 
     std::random_device rd;
@@ -311,9 +307,6 @@ TEST(contractions, matrix_vector_product)
         }
         B2[i] = dist(gen);
     }
-
-    qtl::index i("i");
-    qtl::index j("j");
 
     tensor<double, 2> A(N, N);
     tensor<double, 1> B(N);
@@ -338,7 +331,10 @@ TEST(contractions, matrix_vector_product)
         }
     }
 
-    tensor_expr<double, 1> Cdef = def_tensor(i)[sum(A(i, j) * B(j), j)];
+    tensor_expr<double, 1> Cdef = [A, B](qtl::index i) {
+        qtl::index j;
+        return sum(j, A(i, j) * B(j));
+    };
 
     C = Cdef;
 
@@ -423,7 +419,10 @@ TEST(contractions, basis_change_r2)
         }
     }
 
-    tensor_expr<double, 2> Cdef = def_tensor(i, j)[sum(sum(A(i, k) * B(k, l) * A(l, j), k), l)];
+    tensor_expr<double, 2> Cdef = [A, B](qtl::index i, qtl::index j) {
+        qtl::index k, l;
+        return sum(l, sum(k, A(i, k) * B(k, l) * A(l, j)));
+    };
 
     C = Cdef;
 

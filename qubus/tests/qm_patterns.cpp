@@ -6,9 +6,9 @@
 
 #include <qbb/util/unused.hpp>
 
-#include <vector>
-#include <random>
 #include <complex>
+#include <random>
+#include <vector>
 
 #include <gtest/gtest.h>
 
@@ -38,10 +38,6 @@ TEST(qm_patterns, commutator)
         }
     }
 
-    qtl::index i("i");
-    qtl::index j("j");
-    qtl::index k("k");
-
     tensor<std::complex<double>, 2> A(N, N);
     tensor<std::complex<double>, 2> B(N, N);
     tensor<std::complex<double>, 2> C(N, N);
@@ -68,8 +64,10 @@ TEST(qm_patterns, commutator)
         }
     }
 
-    tensor_expr<std::complex<double>, 2> Cdef =
-        def_tensor(i, j)[sum(A(i, k) * B(k, j) - B(i, k) * A(k, j), k)];
+    tensor_expr<std::complex<double>, 2> Cdef = [A, B](qtl::index i, qtl::index j) {
+        qtl::index k;
+        return sum(k, A(i, k) * B(k, j) - B(i, k) * A(k, j));
+    };
 
     C = Cdef;
 
