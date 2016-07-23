@@ -219,7 +219,7 @@ template <typename FirstIndex, typename SecondIndex>
 auto translate_ast(kronecker_delta<FirstIndex, SecondIndex> node, ast_context& ctx)
 {
     auto first_index = translate_ast(node.first_index(), ctx);
-    auto second_index = translate_ast(node.first_index(), ctx);
+    auto second_index = translate_ast(node.second_index(), ctx);
 
     return qbb::qubus::kronecker_delta(node.extent(), std::move(first_index), std::move(second_index));
 }
