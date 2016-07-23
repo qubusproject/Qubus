@@ -363,7 +363,6 @@ public:
     auto operator()(Indices... indices) const
     {
         static_assert(are_all_indices<Indices...>(), "Expecting indices.");
-        static_assert(sizeof...(indices) == Rank, "Wrong number of indices.");
 
         return subscripted_tensor<tensor<T, Rank>, Indices...>(*this, indices...);
     }
