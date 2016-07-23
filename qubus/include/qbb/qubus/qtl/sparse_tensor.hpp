@@ -181,19 +181,7 @@ struct associated_qubus_type<qtl::ast::sparse_tensor<T, Rank>>
 {
     static type get()
     {
-        auto value_type = associated_qubus_type<T>::get();
-
-        auto sell_tensor_type = types::struct_(
-            "sell_tensor", {types::struct_::member(types::array(value_type), "val"),
-                            types::struct_::member(types::array(types::integer()), "col"),
-                            types::struct_::member(types::array(types::integer()), "cs"),
-                            types::struct_::member(types::array(types::integer()), "cl")});
-
-        auto sparse_tensor_type = types::struct_(
-            "sparse_tensor", {types::struct_::member(sell_tensor_type, "data"),
-                              types::struct_::member(types::array(types::integer()), "shape")});
-
-        return sparse_tensor_type;
+        return sparse_tensor(associated_qubus_type<T>::get());
     }
 };
 }

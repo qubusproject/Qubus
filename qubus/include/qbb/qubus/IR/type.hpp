@@ -409,34 +409,6 @@ private:
     type value_type_;
 };
 
-class sparse_tensor : public type_base<sparse_tensor>
-{
-public:
-    sparse_tensor() = default;
-
-    explicit sparse_tensor(type value_type_) : value_type_{std::move(value_type_)}
-    {
-    }
-
-    const type& value_type() const
-    {
-        return value_type_;
-    }
-
-    bool is_primitive() const
-    {
-        return false;
-    }
-
-    template<typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
-    {
-        ar & value_type_;
-    }
-private:
-    type value_type_;
-};
-
 class struct_ : public type_base<struct_>
 {
 public:
@@ -510,6 +482,8 @@ private:
     std::string id_;
     std::vector<member> members_;
 };
+
+type sparse_tensor(type value_type);
 }
 
 }

@@ -60,11 +60,6 @@ bool type_eq_array_slice(const types::array_slice& lhs, const types::array_slice
     return lhs.value_type() == rhs.value_type();
 }
 
-bool type_eq_sparse_tensor(const types::sparse_tensor& lhs, const types::sparse_tensor& rhs)
-{
-    return lhs.value_type() == rhs.value_type();
-}
-
 bool type_eq_struct(const types::struct_& lhs, const types::struct_& rhs)
 {
     return lhs.id() == rhs.id();
@@ -85,7 +80,6 @@ void init_type_eq()
     type_eq.add_specialization(type_eq_complex);
     type_eq.add_specialization(type_eq_array);
     type_eq.add_specialization(type_eq_array_slice);
-    type_eq.add_specialization(type_eq_sparse_tensor);
     type_eq.add_specialization(type_eq_struct);
 
     type_eq.set_fallback(type_eq_default);
@@ -143,6 +137,22 @@ std::size_t struct_::member_index(const std::string& id) const
         throw 0;
     }
 }
+
+type sparse_tensor(type value_type)
+{
+    auto sell_tensor_type = types::struct_(
+            "sell_tensor", {types::struct_::member(types::array(value_type), "val"),
+                            types::struct_::member(types::array(types::integer()), "col"),
+                            types::struct_::member(types::array(types::integer()), "cs"),
+                            types::struct_::member(types::array(types::integer()), "cl")});
+
+    auto sparse_tensor_type = types::struct_(
+            "sparse_tensor", {types::struct_::member(sell_tensor_type, "data"),
+                              types::struct_::member(types::array(types::integer()), "shape")});
+
+    return sparse_tensor_type;
+}
+
 }
 }
 }
@@ -188,22 +198,12 @@ std::size_t hash<qbb::qubus::type>::operator()(const qbb::qubus::type& value) co
 
                        return seed;
                    })
-            .case_(pattern::sparse_tensor_t(t),
-                   [&]
-                   {
-                       std::size_t seed = 0;
-
-                       qbb::util::hash_combine(seed, std::type_index(typeid(types::sparse_tensor)));
-                       qbb::util::hash_combine(seed, t.get());
-
-                       return seed;
-                   })
             .case_(pattern::array_t(t),
                    [&]
                    {
                        std::size_t seed = 0;
 
-                       qbb::util::hash_combine(seed, std::type_index(typeid(types::sparse_tensor)));
+                       qbb::util::hash_combine(seed, std::type_index(typeid(types::array)));
                        qbb::util::hash_combine(seed, t.get());
 
                        return seed;
