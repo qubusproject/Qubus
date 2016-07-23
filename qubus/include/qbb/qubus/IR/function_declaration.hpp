@@ -39,6 +39,8 @@ public:
 
     const variable_declaration& result() const;
 
+    std::size_t arity() const;
+
     const expression& body() const;
 
     void substitute_body(std::unique_ptr<expression> body);
@@ -75,6 +77,8 @@ public:
     const std::string& name() const;
     const std::vector<variable_declaration>& params() const;
     const variable_declaration& result() const;
+
+    std::size_t arity() const;
     
     void substitute_body(std::unique_ptr<expression> body);
 

@@ -55,41 +55,41 @@ namespace qtl
 namespace ast
 {
 
-template<typename T, long int Rank>
+template <typename T, long int Rank>
 class tensor;
 
 namespace detail
 {
 
-template<typename Literal>
+template <typename Literal>
 auto wrap_literals(Literal value) ->
-typename std::enable_if<std::is_arithmetic<Literal>::value, literal<Literal>>::type
+    typename std::enable_if<std::is_arithmetic<Literal>::value, literal<Literal>>::type
 {
     return literal<Literal>(std::move(value));
 }
 
-template<typename T>
+template <typename T>
 auto wrap_literals(T value) -> typename std::enable_if<!std::is_arithmetic<T>::value, T>::type
 {
     return value;
 }
 
-template<typename Kernel>
+template <typename Kernel>
 struct get_kernel_arg_type_t
 {
-    template<typename Index>
+    template <typename Index>
     constexpr auto operator()(Index index) const
     {
         return boost::hana::type_c<util::arg_type<Kernel, Index::value>>;
     }
 };
 
-template<typename Kernel>
+template <typename Kernel>
 constexpr auto get_kernel_arg_type = get_kernel_arg_type_t<Kernel>{};
 
 struct instantiate_t
 {
-    template<typename Type>
+    template <typename Type>
     auto operator()(Type type) const
     {
         using value_type = typename Type::type;
@@ -100,14 +100,14 @@ struct instantiate_t
 
 constexpr auto instantiate = instantiate_t{};
 
-template<typename Kernel>
+template <typename Kernel>
 constexpr auto instantiate_kernel_args()
 {
     constexpr std::size_t kernel_arity = util::function_traits<Kernel>::arity;
 
     constexpr auto index_types = boost::hana::transform(
-            boost::hana::to_tuple(boost::hana::range_c<std::size_t, 0, kernel_arity>),
-            get_kernel_arg_type<Kernel>);
+        boost::hana::to_tuple(boost::hana::range_c<std::size_t, 0, kernel_arity>),
+        get_kernel_arg_type<Kernel>);
 
     return boost::hana::transform(index_types, instantiate);
 }
@@ -123,7 +123,7 @@ struct index_info
     }
 
     index_info(std::vector<variable_declaration> indices, variable_declaration alias)
-            : indices(std::move(indices)), alias(std::move(alias))
+    : indices(std::move(indices)), alias(std::move(alias))
     {
     }
 
@@ -134,12 +134,13 @@ struct index_info
 class translate_kernel_arg
 {
 public:
-    translate_kernel_arg(std::vector<index_info> &indices_, ast_context &ctx_)
-            : indices_(indices_), ctx_(ctx_)
+    translate_kernel_arg(std::vector<index_info>& indices_,
+                         std::vector<variable_declaration>& params_, ast_context& ctx_)
+    : indices_(indices_), params_(params_), ctx_(ctx_)
     {
     }
 
-    void operator()(const index &idx) const
+    void operator()(const index& idx) const
     {
         variable_declaration index_var{types::index()};
 
@@ -148,8 +149,8 @@ public:
         indices_.get().push_back(index_info(index_var));
     }
 
-    template<long int Rank>
-    void operator()(const multi_index<Rank> &idx) const
+    template <long int Rank>
+    void operator()(const multi_index<Rank>& idx) const
     {
         variable_declaration multi_index_var{types::multi_index()};
 
@@ -169,19 +170,52 @@ public:
         indices_.get().push_back(index_info(std::move(indices), std::move(multi_index_var)));
     }
 
+    template <typename T>
+    void operator()(const variable<T>& tensor) const
+    {
+        variable_declaration tensor_var(associated_qubus_type<T>::get());
+
+        ctx_.get().symbol_table.add_symbol(tensor.id(), tensor_var);
+
+        params_.get().push_back(std::move(tensor_var));
+    }
+
 private:
     std::reference_wrapper<std::vector<index_info>> indices_;
+    std::reference_wrapper<std::vector<variable_declaration>> params_;
     std::reference_wrapper<ast_context> ctx_;
 };
-
 }
 
-template<typename T, long int Rank>
+class closure
+{
+public:
+    closure(computelet stored_computelet_, std::vector<object> args_)
+    : stored_computelet_(std::move(stored_computelet_)), args_(std::move(args_))
+    {
+    }
+
+    computelet stored_computelet() const
+    {
+        return stored_computelet_;
+    }
+
+    const std::vector<object>& args() const
+    {
+        return args_;
+    }
+
+private:
+    computelet stored_computelet_;
+    std::vector<object> args_;
+};
+
+template <typename T, long int Rank>
 class tensor_expr
 {
 public:
-    template<typename Kernel>
-    tensor_expr(const Kernel &kernel)
+    template <typename Kernel>
+    tensor_expr(const Kernel& kernel)
     {
         auto kernel_args = detail::instantiate_kernel_args<Kernel>();
 
@@ -190,16 +224,17 @@ public:
         auto result_type = types::array(associated_qubus_type<T>::get());
 
         std::vector<detail::index_info> indices;
+        std::vector<variable_declaration> params;
 
         ast_context ctx;
 
-        boost::hana::for_each(kernel_args, detail::translate_kernel_arg(indices, ctx));
+        boost::hana::for_each(kernel_args, detail::translate_kernel_arg(indices, params, ctx));
 
         auto rhs = translate_ast(ast, ctx);
 
         std::vector<std::unique_ptr<expression>> subscripts;
 
-        for (const auto &idx : indices)
+        for (const auto& idx : indices)
         {
             if (idx.alias)
             {
@@ -220,7 +255,7 @@ public:
 
         std::unique_ptr<expression> expr = assign(std::move(lhs), std::move(rhs));
 
-        for (const auto &idx : indices | boost::adaptors::reversed)
+        for (const auto& idx : indices | boost::adaptors::reversed)
         {
             if (idx.alias)
             {
@@ -235,9 +270,7 @@ public:
             }
         }
 
-        std::vector<variable_declaration> params;
-
-        for (const auto &variable_object : ctx.object_table)
+        for (const auto& variable_object : ctx.object_table)
         {
             params.push_back(variable_object.first);
             args_.push_back(variable_object.second);
@@ -258,68 +291,79 @@ public:
         stored_computelet_ = make_computelet(std::move(entry));
     }
 
-    tensor_expr(const tensor<T, Rank> &var) : tensor_expr(tensor_to_expr(var))
+    tensor_expr(const tensor<T, Rank>& var) : tensor_expr(tensor_to_expr(var))
     {
     }
 
-    computelet stored_computelet() const
+    operator closure() const
     {
-        return stored_computelet_;
+        if (args_.size() != stored_computelet_.code().get().arity())
+            throw 0;
+
+        return closure(stored_computelet_, args_);
     }
 
-    const std::vector<object> &args() const
+    template <typename... Args>
+    closure operator()(const Args&... args) const
     {
-        return args_;
+        std::vector<object> full_args = {args.get_object()...};
+
+        if (full_args.size() != stored_computelet_.code().get().arity())
+            throw 0;
+
+        full_args.insert(full_args.end(), args_.begin(), args_.end());
+
+        return closure(stored_computelet_, std::move(full_args));
     }
 
 private:
-    static auto tensor_to_expr(const tensor<T, Rank> &var)
+    static auto tensor_to_expr(const tensor<T, Rank>& var)
     {
-        return [var](multi_index<Rank> I)
-        { return var(I); };
+        return [var](multi_index<Rank> I) { return var(I); };
     }
 
     std::vector<object> args_;
     computelet stored_computelet_;
 };
 
-template<typename T, long int Rank>
+template <typename T, long int Rank>
 class tensor
 {
 public:
     using value_type = T;
 
-    template<typename... SizeTypes>
+    template <typename... SizeTypes>
     explicit tensor(SizeTypes... sizes_)
-            : data_(get_runtime().get_object_factory().create_array(associated_qubus_type<T>::get(),
-                                                                    {util::to_uindex(sizes_)...}))
+    : data_(get_runtime().get_object_factory().create_array(associated_qubus_type<T>::get(),
+                                                            {util::to_uindex(sizes_)...}))
     {
     }
 
-    tensor<T, Rank> &operator=(const tensor_expr<T, Rank> &tensor_expr)
+    tensor<T, Rank>& operator=(closure c)
     {
-        const auto &args = tensor_expr.args();
+        const auto& args = c.args();
 
         execution_context ctx;
 
-        for (const auto &arg : args)
+        for (const auto& arg : args)
         {
             ctx.push_back_arg(arg);
         }
 
         ctx.push_back_result(get_object());
 
-        auto c = tensor_expr.stored_computelet();
+        auto complet = c.stored_computelet();
 
-        get_runtime().execute(c, std::move(ctx)).get();
+        get_runtime().execute(complet, std::move(ctx)).get();
 
         return *this;
     }
 
-    template<typename... Indices>
+    template <typename... Indices>
     auto operator()(Indices... indices) const
     {
         static_assert(are_all_indices<Indices...>(), "Expecting indices.");
+        static_assert(sizeof...(indices) == Rank, "Wrong number of indices.");
 
         return subscripted_tensor<tensor<T, Rank>, Indices...>(*this, indices...);
     }
@@ -338,22 +382,30 @@ private:
     object data_;
 };
 
-template<typename View, typename T, long int Rank>
-auto get_view(const tensor<T, Rank> &value)
+template <typename View, typename T, long int Rank>
+auto get_view(const tensor<T, Rank>& value)
 {
     return get_view<View>(value.get_object());
 }
 }
 
-template<typename T, long int Rank>
+template <typename T, long int Rank>
 using tensor_expr = ast::tensor_expr<T, Rank>;
 
-template<typename T, long int Rank>
+template <typename T, long int Rank>
 using tensor = ast::tensor<T, Rank>;
 
 using ast::get_view;
-
 }
+
+template <typename T, long int Rank>
+struct associated_qubus_type<qtl::ast::tensor<T, Rank>>
+{
+    static type get()
+    {
+        return types::array(associated_qubus_type<T>::get());
+    }
+};
 }
 }
 

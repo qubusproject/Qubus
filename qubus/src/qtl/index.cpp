@@ -17,6 +17,7 @@ namespace ast
 id_type::id_type(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
 {
 }
+
 }
 }
 }

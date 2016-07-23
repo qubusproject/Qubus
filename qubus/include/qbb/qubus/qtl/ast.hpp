@@ -42,6 +42,37 @@ private:
 };
 
 template <typename Tensor, typename... Indices>
+class subscripted_tensor;
+
+template <typename T>
+class variable
+{
+public:
+    variable() : id_(new_here<id_type_server>())
+    {
+    }
+
+    template <typename... Indices>
+    auto operator()(Indices... indices) const
+    {
+        return subscripted_tensor<variable<T>, Indices...>(*this, std::move(indices)...);
+    }
+
+    hpx::naming::gid_type id() const
+    {
+        return id_.get_id().get_gid();
+    }
+
+private:
+    id_type id_;
+};
+
+template <typename T>
+struct is_term<variable<T>> : std::true_type
+{
+};
+
+template <typename Tensor, typename... Indices>
 class subscripted_tensor
 {
 public:
@@ -61,22 +92,24 @@ public:
     }
 
 private:
-    std::reference_wrapper<const Tensor> tensor_;
+    template<typename T>
+    struct storage_type
+    {
+        using type = std::reference_wrapper<const T>;
+    };
+
+    template<typename T>
+    struct storage_type<variable<T>>
+    {
+        using type = variable<T>;
+    };
+
+    typename storage_type<Tensor>::type tensor_;
     boost::hana::tuple<Indices...> indices_;
 };
 
 template <typename Tensor, typename... Indices>
 struct is_term<subscripted_tensor<Tensor, Indices...>> : std::true_type
-{
-};
-
-template <typename T>
-class placeholder
-{
-};
-
-template <typename T>
-struct is_term<placeholder<T>> : std::true_type
 {
 };
 
@@ -291,6 +324,9 @@ auto delta(util::index_t extent, FirstIndex first_index, SecondIndex second_inde
                                                     std::move(second_index));
 }
 }
+
+template <typename T>
+using variable = ast::variable<T>;
 }
 }
 }

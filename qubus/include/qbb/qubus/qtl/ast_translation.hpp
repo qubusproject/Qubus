@@ -183,6 +183,19 @@ auto translate_ast(const multi_index<Rank>& idx, ast_context& ctx)
     }
 }
 
+template <typename T>
+auto translate_ast(const variable<T>& tensor, ast_context& ctx)
+{
+    if (auto tensor_var = ctx.symbol_table.lookup(tensor.id()))
+    {
+        return var(*tensor_var);
+    }
+    else
+    {
+        throw 0;
+    }
+}
+
 template <typename Tensor>
 auto translate_ast(const Tensor& tensor, ast_context& ctx)
 {

@@ -29,11 +29,11 @@ namespace qtl
 {
 namespace ast
 {
-template<typename T, long int Rank>
+template <typename T, long int Rank>
 class sparse_tensor
 {
 public:
-    sparse_tensor(assembly_tensor<T, Rank> &&data)
+    sparse_tensor(assembly_tensor<T, Rank>&& data)
     {
         if (Rank == 1)
         {
@@ -44,12 +44,12 @@ public:
         {
             util::index_t block_width = 4;
 
-            const auto &shape = data.shape();
+            const auto& shape = data.shape();
 
             auto shape_ = std::vector<util::index_t>(shape.begin(), shape.end());
 
             auto outer_shape =
-                    util::make_array<util::index_t, Rank - 2>(shape.begin(), shape.end() - 2);
+                util::make_array<util::index_t, Rank - 2>(shape.begin(), shape.end() - 2);
 
             util::index_t innermost_dense_extent = shape[shape.size() - 2];
 
@@ -57,7 +57,7 @@ public:
 
             auto outer_space = util::make_index_space_from_shape(outer_shape);
 
-            for (const auto &offset : outer_space)
+            for (const auto& offset : outer_space)
             {
                 for (util::index_t i = 0; i < innermost_dense_extent; i += block_width)
                 {
@@ -67,11 +67,11 @@ public:
                          ii < std::min(i + block_width, innermost_dense_extent); ++ii)
                     {
                         max_depth = std::max(
-                                max_depth,
-                                util::to_uindex(
-                                        data.root()
-                                                .data()(product(offset, util::offset<util::index_t, 1>(ii)))
-                                                .size()));
+                            max_depth,
+                            util::to_uindex(
+                                data.root()
+                                    .data()(product(offset, util::offset<util::index_t, 1>(ii)))
+                                    .size()));
                     }
 
                     padded_nnz += max_depth * block_width;
@@ -79,7 +79,7 @@ public:
             }
 
             util::index_t num_chuncks =
-                    outer_space.cardinality() * innermost_dense_extent / block_width;
+                outer_space.cardinality() * innermost_dense_extent / block_width;
 
             if ((outer_space.cardinality() * innermost_dense_extent) % block_width != 0)
             {
@@ -89,14 +89,14 @@ public:
             sparse_tensor_layout layout(num_chuncks, padded_nnz);
 
             auto sparse_tensor_object = get_runtime().get_object_factory().create_sparse_tensor(
-                    types::double_(), shape_, layout);
+                types::double_(), shape_, layout);
 
             auto sparse_tensor_view =
-                    get_view<mutable_cpu_sparse_tensor_view<T, Rank>>(sparse_tensor_object).get();
+                get_view<mutable_cpu_sparse_tensor_view<T, Rank>>(sparse_tensor_object).get();
 
             util::index_t cs = 0;
 
-            for (const auto &offset : outer_space)
+            for (const auto& offset : outer_space)
             {
                 util::index_t linearized_offset = linearize(offset, outer_space);
 
@@ -108,11 +108,11 @@ public:
                          ii < std::min(i + block_width, innermost_dense_extent); ++ii)
                     {
                         max_depth = std::max(
-                                max_depth,
-                                util::to_uindex(
-                                        data.root()
-                                                .data()(product(offset, util::offset<util::index_t, 1>(ii)))
-                                                .size()));
+                            max_depth,
+                            util::to_uindex(
+                                data.root()
+                                    .data()(product(offset, util::offset<util::index_t, 1>(ii)))
+                                    .size()));
                     }
 
                     sparse_tensor_view.cl()((linearized_offset * innermost_dense_extent + i) /
@@ -124,13 +124,13 @@ public:
                          ii < std::min(i + block_width, innermost_dense_extent); ++ii)
                     {
                         util::index_t j = 0;
-                        for (const auto &index_value : data.root().data()(
-                                product(offset, util::offset<util::index_t, 1>(ii))))
+                        for (const auto& index_value : data.root().data()(
+                                 product(offset, util::offset<util::index_t, 1>(ii))))
                         {
                             sparse_tensor_view.values()(cs + block_width * j + (ii - i)) =
-                                    index_value.second;
+                                index_value.second;
                             sparse_tensor_view.col()(cs + block_width * j + (ii - i)) =
-                                    index_value.first;
+                                index_value.first;
                             j++;
                         }
 
@@ -154,10 +154,11 @@ public:
         }
     }
 
-    template<typename... Indices>
+    template <typename... Indices>
     auto operator()(Indices... indices) const
     {
         static_assert(are_all_indices<Indices...>(), "Expecting indices.");
+        static_assert(sizeof...(indices) == Rank, "Wrong number of indices.");
 
         return subscripted_tensor<sparse_tensor<T, Rank>, Indices...>(*this, indices...);
     }
@@ -172,10 +173,30 @@ private:
 };
 }
 
-template<typename T, long int Rank>
+template <typename T, long int Rank>
 using sparse_tensor = ast::sparse_tensor<T, Rank>;
-
 }
+
+template <typename T, long int Rank>
+struct associated_qubus_type<qtl::ast::sparse_tensor<T, Rank>>
+{
+    static type get()
+    {
+        auto value_type = associated_qubus_type<T>::get();
+
+        auto sell_tensor_type = types::struct_(
+            "sell_tensor", {types::struct_::member(types::array(value_type), "val"),
+                            types::struct_::member(types::array(types::integer()), "col"),
+                            types::struct_::member(types::array(types::integer()), "cs"),
+                            types::struct_::member(types::array(types::integer()), "cl")});
+
+        auto sparse_tensor_type = types::struct_(
+            "sparse_tensor", {types::struct_::member(sell_tensor_type, "data"),
+                              types::struct_::member(types::array(types::integer()), "shape")});
+
+        return sparse_tensor_type;
+    }
+};
 }
 }
 

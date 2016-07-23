@@ -67,8 +67,6 @@ TEST(basic_expressions, complex_addition)
         B2[i] = std::complex<double>(dist(gen), dist(gen));
     }
 
-    qtl::index i("i");
-
     tensor<std::complex<double>, 1> A(N);
     tensor<std::complex<double>, 1> B(N);
     tensor<std::complex<double>, 1> C(N);
@@ -138,8 +136,6 @@ TEST(basic_expressions, complex_substraction)
         B2[i] = std::complex<double>(dist(gen), dist(gen));
     }
 
-    qtl::index i("i");
-
     tensor<std::complex<double>, 1> A(N);
     tensor<std::complex<double>, 1> B(N);
     tensor<std::complex<double>, 1> C(N);
@@ -208,8 +204,6 @@ TEST(basic_expressions, complex_multiplication)
         B2[i] = std::complex<double>(dist(gen), dist(gen));
     }
 
-    qtl::index i("i");
-
     tensor<std::complex<double>, 1> A(N);
     tensor<std::complex<double>, 1> B(N);
     tensor<std::complex<double>, 1> C(N);
@@ -277,8 +271,6 @@ TEST(basic_expressions, complex_division)
         A2[i] = std::complex<double>(dist(gen), dist(gen));
         B2[i] = std::complex<double>(dist(gen), dist(gen));
     }
-
-    qtl::index i("i");
 
     tensor<std::complex<double>, 1> A(N);
     tensor<std::complex<double>, 1> B(N);
