@@ -325,7 +325,7 @@ struct object_view_traits<mutable_cpu_sparse_tensor_view<T, Rank>>
 
     static type associated_type()
     {
-        return sparse_tensor(associated_qubus_type<T>::get());
+        return types::sparse_tensor(associated_qubus_type<T>::get());
     }
 };
 }

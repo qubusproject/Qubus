@@ -181,7 +181,7 @@ struct associated_qubus_type<qtl::ast::sparse_tensor<T, Rank>>
 {
     static type get()
     {
-        return sparse_tensor(associated_qubus_type<T>::get());
+        return types::sparse_tensor(associated_qubus_type<T>::get());
     }
 };
 }
