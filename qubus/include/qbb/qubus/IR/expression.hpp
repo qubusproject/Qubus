@@ -117,12 +117,13 @@ public:
 
     virtual qbb::util::index_t type_tag() const = 0;
 
-    template<typename Archive>
+    template <typename Archive>
     void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
     {
     }
 
     HPX_SERIALIZATION_POLYMORPHIC_ABSTRACT(expression);
+
 protected:
     static qbb::util::implementation_table implementation_table_;
 };
@@ -131,8 +132,10 @@ bool operator==(const expression& lhs, const expression& rhs);
 bool operator!=(const expression& lhs, const expression& rhs);
 
 std::unique_ptr<expression> clone(const expression& expr);
-std::vector<std::unique_ptr<expression>> clone(const std::vector<std::unique_ptr<expression>>& expressions);
-std::vector<std::unique_ptr<expression>> clone(const std::vector<std::reference_wrapper<expression>>& expressions);
+std::vector<std::unique_ptr<expression>>
+clone(const std::vector<std::unique_ptr<expression>>& expressions);
+std::vector<std::unique_ptr<expression>>
+clone(const std::vector<std::reference_wrapper<expression>>& expressions);
 
 template <typename Expression>
 class expression_base : public expression
@@ -155,7 +158,8 @@ public:
         parent_ = &parent;
     }
 
-    boost::any_range<const expression&, boost::forward_traversal_tag> sub_expressions() const override final
+    boost::any_range<const expression&, boost::forward_traversal_tag>
+    sub_expressions() const override final
     {
         return boost::irange<std::size_t>(0, arity()) |
                boost::adaptors::transformed(
@@ -171,6 +175,7 @@ public:
     {
         return annotations_;
     }
+
 protected:
     template <typename ChildExpression>
     std::unique_ptr<ChildExpression>&& take_over_child(std::unique_ptr<ChildExpression>& child)
@@ -199,6 +204,7 @@ protected:
 
         return std::move(children);
     }
+
 private:
     qbb::util::index_t tag_;
     expression* parent_ = nullptr;
@@ -211,6 +217,10 @@ std::unique_ptr<Expression> clone(const expression_base<Expression>& expr)
 {
     return std::unique_ptr<Expression>(static_cast<const Expression&>(expr).clone());
 }
+
+extern qbb::util::multi_method<bool(const qbb::util::virtual_<expression>&,
+                                    const qbb::util::virtual_<expression>&)>
+    equal;
 }
 }
 

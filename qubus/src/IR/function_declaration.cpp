@@ -32,6 +32,11 @@ const variable_declaration& function_declaration_info::result() const
     return result_;
 }
 
+std::size_t function_declaration_info::arity() const
+{
+    return params_.size();
+}
+
 const expression& function_declaration_info::body() const
 {
     return *body_;
@@ -73,6 +78,11 @@ const std::vector<variable_declaration>& function_declaration::params() const
 const variable_declaration& function_declaration::result() const
 {
     return info_->result();
+}
+
+std::size_t function_declaration::arity() const
+{
+    return info_->arity();
 }
 
 const expression& function_declaration::body() const

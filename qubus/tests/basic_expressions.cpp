@@ -1,27 +1,27 @@
 #include <qbb/qubus/qubus.hpp>
 
+#include <qbb/qubus/qtl/all.hpp>
+
 #include <hpx/hpx_init.hpp>
 
 #include <qbb/util/unused.hpp>
 
-#include <vector>
-#include <random>
 #include <complex>
+#include <random>
+#include <vector>
 
 #include <gtest/gtest.h>
 
 TEST(basic_expressions, constant_expr)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = 100;
 
-    qbb::qubus::index i("i");
-    qbb::qubus::index j("j");
-
     tensor<double, 2> A(N, N);
 
-    tensor_expr<double, 2> Adef = def_tensor(i, j)[42];
+    tensor_expr<double, 2> Adef = [](qtl::index i, qtl::index j) { return 42; };
 
     A = Adef;
 
@@ -47,6 +47,7 @@ TEST(basic_expressions, constant_expr)
 TEST(basic_expressions, complex_addition)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = 100;
 
@@ -66,21 +67,19 @@ TEST(basic_expressions, complex_addition)
         B2[i] = std::complex<double>(dist(gen), dist(gen));
     }
 
-    qbb::qubus::index i("i");
-
     tensor<std::complex<double>, 1> A(N);
     tensor<std::complex<double>, 1> B(N);
     tensor<std::complex<double>, 1> C(N);
 
     {
-        auto A_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<std::complex<double>, 1>>(A).get();
+        auto A_view = get_view<host_tensor_view<std::complex<double>, 1>>(A).get();
 
         for (long int i = 0; i < N; ++i)
         {
             A_view(i) = A2[i];
         }
 
-        auto B_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<std::complex<double>, 1>>(B).get();
+        auto B_view = get_view<host_tensor_view<std::complex<double>, 1>>(B).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -88,7 +87,7 @@ TEST(basic_expressions, complex_addition)
         }
     }
 
-    tensor_expr<std::complex<double>, 1> Cdef = def_tensor(i)[A(i) + B(i)];
+    tensor_expr<std::complex<double>, 1> Cdef = [A, B](qtl::index i) { return A(i) + B(i); };
 
     C = Cdef;
 
@@ -100,7 +99,7 @@ TEST(basic_expressions, complex_addition)
     double error = 0.0;
 
     {
-        auto C_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<const std::complex<double>, 1>>(C).get();
+        auto C_view = get_view<host_tensor_view<const std::complex<double>, 1>>(C).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -113,9 +112,11 @@ TEST(basic_expressions, complex_addition)
     ASSERT_NEAR(error, 0.0, 1e-14);
 }
 
+
 TEST(basic_expressions, complex_substraction)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = 100;
 
@@ -135,21 +136,19 @@ TEST(basic_expressions, complex_substraction)
         B2[i] = std::complex<double>(dist(gen), dist(gen));
     }
 
-    qbb::qubus::index i("i");
-
     tensor<std::complex<double>, 1> A(N);
     tensor<std::complex<double>, 1> B(N);
     tensor<std::complex<double>, 1> C(N);
 
     {
-        auto A_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<std::complex<double>, 1>>(A).get();
+        auto A_view = get_view<host_tensor_view<std::complex<double>, 1>>(A).get();
 
         for (long int i = 0; i < N; ++i)
         {
             A_view(i) = A2[i];
         }
 
-        auto B_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<std::complex<double>, 1>>(B).get();
+        auto B_view = get_view<host_tensor_view<std::complex<double>, 1>>(B).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -157,7 +156,7 @@ TEST(basic_expressions, complex_substraction)
         }
     }
 
-    tensor_expr<std::complex<double>, 1> Cdef = def_tensor(i)[A(i) - B(i)];
+    tensor_expr<std::complex<double>, 1> Cdef = [A, B](qtl::index i) { return A(i) - B(i); };
 
     C = Cdef;
 
@@ -169,7 +168,7 @@ TEST(basic_expressions, complex_substraction)
     double error = 0.0;
 
     {
-        auto C_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<const std::complex<double>, 1>>(C).get();
+        auto C_view = get_view<host_tensor_view<const std::complex<double>, 1>>(C).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -185,6 +184,7 @@ TEST(basic_expressions, complex_substraction)
 TEST(basic_expressions, complex_multiplication)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = 100;
 
@@ -204,21 +204,19 @@ TEST(basic_expressions, complex_multiplication)
         B2[i] = std::complex<double>(dist(gen), dist(gen));
     }
 
-    qbb::qubus::index i("i");
-
     tensor<std::complex<double>, 1> A(N);
     tensor<std::complex<double>, 1> B(N);
     tensor<std::complex<double>, 1> C(N);
 
     {
-        auto A_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<std::complex<double>, 1>>(A).get();
+        auto A_view =get_view<host_tensor_view<std::complex<double>, 1>>(A).get();
 
         for (long int i = 0; i < N; ++i)
         {
             A_view(i) = A2[i];
         }
 
-        auto B_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<std::complex<double>, 1>>(B).get();
+        auto B_view = get_view<host_tensor_view<std::complex<double>, 1>>(B).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -226,7 +224,7 @@ TEST(basic_expressions, complex_multiplication)
         }
     }
 
-    tensor_expr<std::complex<double>, 1> Cdef = def_tensor(i)[A(i) * B(i)];
+    tensor_expr<std::complex<double>, 1> Cdef = [A, B](qtl::index i) { return A(i) * B(i); };
 
     C = Cdef;
 
@@ -238,7 +236,7 @@ TEST(basic_expressions, complex_multiplication)
     double error = 0.0;
 
     {
-        auto C_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<const std::complex<double>, 1>>(C).get();
+        auto C_view = get_view<host_tensor_view<const std::complex<double>, 1>>(C).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -254,6 +252,7 @@ TEST(basic_expressions, complex_multiplication)
 TEST(basic_expressions, complex_division)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = 100;
 
@@ -273,21 +272,19 @@ TEST(basic_expressions, complex_division)
         B2[i] = std::complex<double>(dist(gen), dist(gen));
     }
 
-    qbb::qubus::index i("i");
-
     tensor<std::complex<double>, 1> A(N);
     tensor<std::complex<double>, 1> B(N);
     tensor<std::complex<double>, 1> C(N);
 
     {
-        auto A_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<std::complex<double>, 1>>(A).get();
+        auto A_view = get_view<host_tensor_view<std::complex<double>, 1>>(A).get();
 
         for (long int i = 0; i < N; ++i)
         {
             A_view(i) = A2[i];
         }
 
-        auto B_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<std::complex<double>, 1>>(B).get();
+        auto B_view = get_view<host_tensor_view<std::complex<double>, 1>>(B).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -295,7 +292,7 @@ TEST(basic_expressions, complex_division)
         }
     }
 
-    tensor_expr<std::complex<double>, 1> Cdef = def_tensor(i)[A(i) / B(i)];
+    tensor_expr<std::complex<double>, 1> Cdef = [A, B](qtl::index i) { return A(i) / B(i); };
 
     C = Cdef;
 
@@ -307,7 +304,7 @@ TEST(basic_expressions, complex_division)
     double error = 0.0;
 
     {
-        auto C_view = qbb::qubus::get_view<qbb::qubus::host_tensor_view<const std::complex<double>, 1>>(C).get();
+        auto C_view = get_view<host_tensor_view<const std::complex<double>, 1>>(C).get();
 
         for (long int i = 0; i < N; ++i)
         {

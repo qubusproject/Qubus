@@ -1,18 +1,21 @@
 #include <qbb/qubus/qubus.hpp>
 
+#include <qbb/qubus/qtl/all.hpp>
+
 #include <hpx/hpx_init.hpp>
 
 #include <qbb/util/unused.hpp>
 
-#include <vector>
-#include <random>
 #include <complex>
+#include <random>
+#include <vector>
 
 #include <gtest/gtest.h>
 
 TEST(qm_patterns, commutator)
 {
     using namespace qbb::qubus;
+    using namespace qtl;
 
     long int N = 100;
 
@@ -34,10 +37,6 @@ TEST(qm_patterns, commutator)
             B2[i * N + j] = std::complex<double>(dist(gen), dist(gen));
         }
     }
-
-    qbb::qubus::index i("i");
-    qbb::qubus::index j("j");
-    qbb::qubus::index k("k");
 
     tensor<std::complex<double>, 2> A(N, N);
     tensor<std::complex<double>, 2> B(N, N);
@@ -65,8 +64,10 @@ TEST(qm_patterns, commutator)
         }
     }
 
-    tensor_expr<std::complex<double>, 2> Cdef =
-        def_tensor(i, j)[sum(A(i, k) * B(k, j) - B(i, k) * A(k, j), k)];
+    tensor_expr<std::complex<double>, 2> Cdef = [A, B](qtl::index i, qtl::index j) {
+        qtl::index k;
+        return sum(k, A(i, k) * B(k, j) - B(i, k) * A(k, j));
+    };
 
     C = Cdef;
 

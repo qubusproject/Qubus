@@ -11,11 +11,8 @@ add_subdirectory(isl)
 add_subdirectory(jit)
 add_subdirectory(backends)
 
-set(qubus_header_file_names allocator.hpp lower_abstract_indices.hpp
-                            generic_ptr.hpp grammar.hpp index.hpp indexed_tensor_expr_context.hpp
-                            IR_emitter.hpp loop_optimizer.hpp
-                            lower_top_level_sums.hpp
-                            memory_block.hpp object.hpp tensor_variable.hpp)
+set(qubus_header_file_names allocator.hpp generic_ptr.hpp loop_optimizer.hpp
+                            memory_block.hpp object.hpp)
 
 set(qubus_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/../include/qbb/qubus/)
 
@@ -23,22 +20,20 @@ foreach(file_name IN LISTS qubus_header_file_names)
     list(APPEND qubus_header_files ${qubus_include_dir}/${file_name})
 endforeach()
 
-set(qubus_source_files allocator.cpp lower_abstract_indices.cpp
-                       loop_optimizer.cpp lower_top_level_sums.cpp deduce_iteration_space.cpp
+set(qubus_source_files allocator.cpp loop_optimizer.cpp
                        local_runtime.cpp backend_registry.cpp local_address_space.cpp evicting_allocator.cpp
                        abi_info.cpp logging.cpp object_factory.cpp object_materializer.cpp
                        make_implicit_conversions_explicit.cpp scheduler.cpp object.cpp
-                       tensor_expr_info.cpp multi_index_handling.cpp kronecker_delta_folding_pass.cpp sparse_patterns.cpp
                        runtime.cpp computelet.cpp host_allocator.cpp
                        local_object_factory.cpp vpu.cpp aggregate_vpu.cpp
-                       index.cpp architecture_identifier.cpp object_monitor.cpp token.cpp)
+                       architecture_identifier.cpp object_monitor.cpp token.cpp)
 
 add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 
 target_include_directories(qubus PUBLIC ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 target_include_directories(qubus PUBLIC $<BUILD_INTERFACE:${QBB_EXTERNAL_DIR}/boost/dll/include>)
 target_compile_options(qubus PUBLIC -std=c++14)
-target_link_libraries(qubus qubus_ir qubus_isl qbb_util hpx)
+target_link_libraries(qubus qubus_ir qubus_isl qbb_util)
 target_link_libraries(qubus ${Boost_LIBRARIES} qubus_cpu_backend dl wall)
 target_compile_definitions(qubus PUBLIC -DBOOST_LOG_DYN_LINK)
 add_dependencies(qubus qubus_cpu_backend)
@@ -57,3 +52,5 @@ install(TARGETS qubus EXPORT qubus-targets
                       INCLUDES DESTINATION include
                       LIBRARY DESTINATION lib
                       ARCHIVE DESTINATION lib)
+
+add_subdirectory(qtl)

@@ -1,3 +1,4 @@
+#if 0
 #include <qbb/qubus/loop_optimizer.hpp>
 
 #include <qbb/qubus/lower_abstract_indices.hpp>
@@ -1708,3 +1709,17 @@ function_declaration optimize_loops(function_declaration decl)
 }
 }
 }
+#else
+#include <qbb/qubus/loop_optimizer.hpp>
+
+namespace qbb
+{
+namespace qubus
+{
+function_declaration optimize_loops(function_declaration decl)
+{
+    throw 0;
+}
+}
+}
+#endif

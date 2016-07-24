@@ -6,6 +6,8 @@
 #include <qbb/qubus/pattern/core.hpp>
 #include <qbb/qubus/pattern/IR.hpp>
 
+#include <qbb/qubus/qtl/pattern/all.hpp>
+
 #include <qbb/util/multi_method.hpp>
 #include <qbb/util/unique_name_generator.hpp>
 #include <qbb/util/handle.hpp>
@@ -212,7 +214,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << " " << translate_unary_op_tag(utag.get());
                        print(a.get(), ctx, print_types);
                    })
-            .case_(sum_multi(a, index_decls, decl),
+            .case_(qtl::pattern::sum_multi(a, index_decls, decl),
                    [&]
                    {
                        std::cout << "sum(";
@@ -267,7 +269,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
                        std::cout << ")";
                    })
-            .case_(sum_multi(a, index_decls),
+            .case_(qtl::pattern::sum_multi(a, index_decls),
                    [&]
                    {
                        std::cout << "sum(";
@@ -363,7 +365,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                            std::cout << " \n";
                        }
                    })
-            .case_(delta(a, b),
+            .case_(qtl::pattern::delta(a, b),
                    [&]
                    {
                        std::cout << "delta[";
@@ -445,7 +447,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        print(d.get(), ctx, print_types);
                        std::cout << "\n}";
                    })
-            .case_(for_all_multi(index_decls, decl, b),
+            .case_(qtl::pattern::for_all_multi(index_decls, decl, b),
                    [&]
                    {
                        std::cout << "for all ";
@@ -498,7 +500,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        print(b.get(), ctx, print_types);
                        std::cout << "\n}";
                    })
-            .case_(for_all_multi(index_decls, b),
+            .case_(qtl::pattern::for_all_multi(index_decls, b),
                    [&]
                    {
                        std::cout << "for all ";

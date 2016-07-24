@@ -1,5 +1,7 @@
 #include <qbb/qubus/qubus.hpp>
 
+#include <qbb/qubus/qtl/all.hpp>
+
 #include <hpx/hpx_init.hpp>
 
 #include <qbb/util/unused.hpp>
@@ -12,10 +14,10 @@
 
 TEST(index_semantic, basic_index_semantic)
 {
-using namespace qbb;
+using namespace qbb::qubus;
 
-qubus::index i, j;
-qubus::index k = i; // k is an alias of i.
+qtl::index i, j;
+qtl::index k = i; // k is an alias of i.
 
 // Test this.
 EXPECT_EQ(i, k);
