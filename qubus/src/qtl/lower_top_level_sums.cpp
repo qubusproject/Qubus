@@ -5,6 +5,8 @@
 #include <qbb/qubus/pattern/IR.hpp>
 #include <qbb/qubus/pattern/core.hpp>
 
+#include <qbb/qubus/qtl/pattern/all.hpp>
+
 #include <boost/range/adaptor/reversed.hpp>
 
 #include <mutex>
@@ -24,10 +26,13 @@ namespace
 std::unique_ptr<expression> remove_top_level_sums(const expression& expr,
                                                   std::vector<variable_declaration>& sum_indices)
 {
-    pattern::variable<const expression&> body;
-    pattern::variable<variable_declaration> index;
+    using qubus::pattern::variable;
+    using pattern::sum;
 
-    auto m = pattern::make_matcher<expression, std::unique_ptr<expression>>()
+    variable<const expression&> body;
+    variable<variable_declaration> index;
+
+    auto m = qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>()
                  .case_(sum(body, index),
                         [&] {
                             sum_indices.push_back(index.get());
@@ -36,22 +41,25 @@ std::unique_ptr<expression> remove_top_level_sums(const expression& expr,
                         })
                  .case_(body, [&] { return clone(body.get()); });
 
-    return pattern::match(expr, m);
+    return qubus::pattern::match(expr, m);
 }
 }
 
 std::unique_ptr<expression> lower_top_level_sums(const expression& expr)
 {
-    pattern::variable<const expression &> a, b, c, d;
-    pattern::variable<const sum_expr&> s;
-    pattern::variable<variable_declaration> idx;
-    pattern::variable<std::vector<std::reference_wrapper<expression>>> sub_exprs;
-    pattern::variable<binary_op_tag> tag;
+    using qubus::pattern::variable;
+    using pattern::sum;
 
-    using pattern::_;
+    variable<const expression &> a, b, c, d;
+    variable<const sum_expr&> s;
+    variable<variable_declaration> idx;
+    variable<std::vector<std::reference_wrapper<expression>>> sub_exprs;
+    variable<binary_op_tag> tag;
 
-    auto m = pattern::make_matcher<expression, std::unique_ptr<expression>>()
-                 .case_(for_all(idx, b),
+    using qubus::pattern::_;
+
+    auto m = qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>()
+                 .case_(pattern::for_all(idx, b),
                         [&] { return for_all(idx.get(), lower_top_level_sums(b.get())); })
                  .case_(for_(idx, b, c, d),
                         [&] {
@@ -89,7 +97,7 @@ std::unique_ptr<expression> lower_top_level_sums(const expression& expr)
                         })
                  .case_(a, [&] { return clone(a.get()); });
 
-    return pattern::match(expr, m);
+    return qubus::pattern::match(expr, m);
 }
 
 function_declaration lower_top_level_sums(function_declaration decl)

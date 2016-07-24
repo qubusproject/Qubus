@@ -5,6 +5,8 @@
 #include <qbb/qubus/pattern/IR.hpp>
 #include <qbb/qubus/pattern/core.hpp>
 
+#include <qbb/qubus/qtl/pattern/all.hpp>
+
 #include <boost/optional.hpp>
 #include <boost/range/combine.hpp>
 
@@ -27,12 +29,14 @@ std::vector<std::unique_ptr<expression>> expand_multi_index(
     const expression& expr,
     const std::map<util::handle, std::vector<std::unique_ptr<expression>>>& multi_index_map)
 {
-    using pattern::_;
+    using qubus::pattern::_;
+    using qubus::pattern::variable;
+    using pattern::multi_index;
 
-    pattern::variable<variable_declaration> decl;
+    variable<variable_declaration> decl;
 
     auto m =
-        pattern::make_matcher<expression, std::vector<std::unique_ptr<expression>>>()
+        qubus::pattern::make_matcher<expression, std::vector<std::unique_ptr<expression>>>()
             .case_(multi_index(decl), [&] { return clone(multi_index_map.at(decl.get().id())); })
             .case_(_, [&](const expression& self) {
                 std::vector<std::unique_ptr<expression>> indices;
@@ -41,23 +45,27 @@ std::vector<std::unique_ptr<expression>> expand_multi_index(
                 return indices;
             });
 
-    return pattern::match(expr, m);
+    return qubus::pattern::match(expr, m);
 }
 
 std::unique_ptr<expression> expand_multi_indices(const expression& expr)
 {
+    using qubus::pattern::variable;
+    using pattern::for_all_multi;
+    using pattern::sum_multi;
+
     std::map<util::handle, std::vector<std::unique_ptr<expression>>> multi_index_map;
 
-    pattern::variable<std::vector<std::reference_wrapper<expression>>> indices;
-    pattern::variable<const expression&> tensor;
+    variable<std::vector<std::reference_wrapper<expression>>> indices;
+    variable<const expression&> tensor;
 
-    pattern::variable<std::vector<variable_declaration>> index_decls;
-    pattern::variable<variable_declaration> alias;
+    variable<std::vector<variable_declaration>> index_decls;
+    variable<variable_declaration> alias;
 
-    pattern::variable<const expression &> body, a, b;
+    variable<const expression &> body, a, b;
 
     auto m =
-        pattern::make_matcher<expression, std::unique_ptr<expression>>()
+    qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>()
             .case_(subscription(tensor, indices),
                    [&] {
                        std::vector<std::unique_ptr<expression>> new_indices;
@@ -170,7 +178,7 @@ std::unique_ptr<expression> expand_multi_indices(const expression& expr)
                 return result;
             });
 
-    return pattern::substitute(expr, m);
+    return qubus::pattern::substitute(expr, m);
 }
 }
 

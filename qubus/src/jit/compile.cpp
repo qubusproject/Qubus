@@ -306,7 +306,7 @@ reference compile(const expression& expr, compiler& comp)
 
                        return result_ref;
                    })
-            .case_(delta(a, b),
+            .case_(intrinsic_function_n(pattern::value("delta"), a, b),
                    [&]
                    {
                        // TODO: Test if a and b are integers.

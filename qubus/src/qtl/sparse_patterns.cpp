@@ -5,6 +5,8 @@
 #include <qbb/qubus/pattern/IR.hpp>
 #include <qbb/qubus/pattern/core.hpp>
 
+#include <qbb/qubus/qtl/pattern/all.hpp>
+
 #include <qbb/util/observer_ptr.hpp>
 
 #include <boost/optional.hpp>
@@ -31,17 +33,18 @@ bool contains(Iterator first, Iterator last, const T& value)
 
 std::unique_ptr<expression> generate_init_part(const expression& lhs)
 {
-    using pattern::_;
+    using qubus::pattern::_;
+    using qubus::pattern::variable;
+    using pattern::index;
 
-    pattern::variable<variable_declaration> var;
-    pattern::variable<std::vector<variable_declaration>> indices;
+    variable<variable_declaration> var;
+    variable<std::vector<variable_declaration>> indices;
 
-    auto m = pattern::make_matcher<expression, void>().case_(
-        pattern::protect(
-            subscription(variable_ref(var), bind_to(all_of(pattern::index()), indices))),
+    auto m = qubus::pattern::make_matcher<expression, void>().case_(
+        qubus::pattern::protect(subscription(variable_ref(var), bind_to(all_of(index()), indices))),
         [&] {});
 
-    pattern::match(lhs, m);
+    qubus::pattern::match(lhs, m);
 
     std::vector<variable_declaration> init_indices;
     std::vector<std::unique_ptr<expression>> init_index_refs;
@@ -77,9 +80,11 @@ std::unique_ptr<expression> generate_computational_part(
     const std::vector<variable_declaration>& dense_indices,
     const std::vector<variable_declaration>& sparse_indices, computational_part_kind kind)
 {
-    using pattern::_;
+    using qubus::pattern::_;
+    using qubus::pattern::variable;
+    using pattern::index;
 
-    pattern::variable<variable_declaration> idx;
+    variable<variable_declaration> idx;
 
     auto data = member_access(var(the_sparse_tensor), "data");
 
@@ -167,11 +172,11 @@ std::unique_ptr<expression> generate_computational_part(
 
     // pattern::variable<expression_old> lhs, rhs;
 
-    auto m3 = pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
-        subscription(pattern::sparse_tensor(pattern::value(the_sparse_tensor)), _),
+    auto m3 = qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
+        subscription(pattern::sparse_tensor(qubus::pattern::value(the_sparse_tensor)), _),
         [&] { return subscription(std::move(val), clone(*sparse_idx)); });
 
-    current_expr = pattern::substitute(*current_expr, m3);
+    current_expr = qubus::pattern::substitute(*current_expr, m3);
 
     auto sparse_index = subscription(std::move(col), clone(*sparse_idx));
     auto innermost_dense_index = var(i) + var(ii);
@@ -179,10 +184,10 @@ std::unique_ptr<expression> generate_computational_part(
     index_map.emplace(*(sparse_indices.end() - 2), std::move(innermost_dense_index));
     index_map.emplace(*(sparse_indices.end() - 1), std::move(sparse_index));
 
-    auto m4 = pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
+    auto m4 = qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
         index(idx), [&] { return clone(*index_map.at(idx.get())); });
 
-    current_expr = pattern::substitute(*current_expr, m4);
+    current_expr = qubus::pattern::substitute(*current_expr, m4);
 
     std::vector<std::unique_ptr<expression>> macro_args;
     macro_args.reserve(1);
@@ -241,18 +246,21 @@ private:
 
     std::reference_wrapper<const expression> collect_outer_indices(const expression& expr)
     {
-        pattern::variable<variable_declaration> idx;
-        pattern::variable<const expression&> body;
+        using qubus::pattern::variable;
+        using pattern::for_all;
+
+        variable<variable_declaration> idx;
+        variable<const expression&> body;
 
         std::reference_wrapper<const expression> current_expr = expr;
 
-        auto m = pattern::make_matcher<expression, void>().case_(for_all(idx, body), [&, this] {
+        auto m = qubus::pattern::make_matcher<expression, void>().case_(for_all(idx, body), [&, this] {
             current_expr = body.get();
 
             dense_indices.push_back(idx.get());
         });
 
-        pattern::for_each(expr, m);
+        qubus::pattern::for_each(expr, m);
 
         return current_expr;
     }
@@ -260,13 +268,15 @@ private:
     boost::optional<std::reference_wrapper<const expression>>
     decompose_definition(const expression& tensor_def)
     {
-        pattern::variable<const expression &> lhs, rhs;
+        using qubus::pattern::variable;
 
-        auto m = pattern::make_matcher<expression, void>().case_(
-            binary_operator(pattern::value(binary_op_tag::assign), lhs, protect(rhs)),
+        variable<const expression &> lhs, rhs;
+
+        auto m = qubus::pattern::make_matcher<expression, void>().case_(
+            binary_operator(qubus::pattern::value(binary_op_tag::assign), lhs, protect(rhs)),
             [&, this] { this->lhs.reset(&lhs.get()); });
 
-        auto result = pattern::try_match(tensor_def, m);
+        auto result = qubus::pattern::try_match(tensor_def, m);
 
         if (result)
         {
@@ -281,14 +291,17 @@ private:
     boost::optional<std::reference_wrapper<const expression>>
     collect_top_level_contractions(const expression& rhs)
     {
-        pattern::variable<variable_declaration> idx;
-        pattern::variable<const expression&> body;
+        using qubus::pattern::variable;
+        using pattern::sum;
+
+        variable<variable_declaration> idx;
+        variable<const expression&> body;
 
         std::reference_wrapper<const expression> current_expr = rhs;
 
         bool contains_contractions = false;
 
-        auto m = pattern::make_matcher<expression, void>().case_(sum(body, idx), [&, this] {
+        auto m = qubus::pattern::make_matcher<expression, void>().case_(sum(body, idx), [&, this] {
             current_expr = body.get();
 
             dense_indices.push_back(idx.get());
@@ -296,7 +309,7 @@ private:
             contains_contractions = true;
         });
 
-        pattern::for_each(rhs, m);
+        qubus::pattern::for_each(rhs, m);
 
         if (contains_contractions)
         {
@@ -310,13 +323,15 @@ private:
 
     bool extract_sparse_tensor(const expression& body)
     {
-        pattern::variable<variable_declaration> var;
-        pattern::variable<std::vector<variable_declaration>> indices;
+        using qubus::pattern::variable;
+
+        variable<variable_declaration> var;
+        variable<std::vector<variable_declaration>> indices;
 
         boost::optional<variable_declaration> the_sparse_tensor;
         std::size_t num_of_sparse_tensors = 0;
 
-        auto m = pattern::make_matcher<expression, void>().case_(
+        auto m = qubus::pattern::make_matcher<expression, void>().case_(
             subscription(pattern::sparse_tensor(var), bind_to(all_of(pattern::index()), indices)),
             [&, this] {
                 ++num_of_sparse_tensors;
@@ -331,7 +346,7 @@ private:
                 }
             });
 
-        pattern::for_each(body, m);
+        qubus::pattern::for_each(body, m);
 
         if (the_sparse_tensor && num_of_sparse_tensors == 1)
         {

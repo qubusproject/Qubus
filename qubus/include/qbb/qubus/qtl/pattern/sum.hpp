@@ -1,17 +1,19 @@
-#ifndef QBB_QUBUS_PATTERN_SUM_HPP
-#define QBB_QUBUS_PATTERN_SUM_HPP
+#ifndef QBB_QUBUS_QTL_PATTERN_SUM_HPP
+#define QBB_QUBUS_QTL_PATTERN_SUM_HPP
 
-#include <qbb/qubus/IR/sum_expr.hpp>
+#include <qbb/qubus/qtl/IR/sum_expr.hpp>
 
-#include <qbb/qubus/pattern/variable.hpp>
 #include <qbb/qubus/pattern/sequence.hpp>
+#include <qbb/qubus/pattern/variable.hpp>
 
-#include <utility>
 #include <functional>
+#include <utility>
 
 namespace qbb
 {
 namespace qubus
+{
+namespace qtl
 {
 namespace pattern
 {
@@ -26,7 +28,7 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<const sum_expr&>* var = nullptr) const
+    bool match(const BaseType& value, const qubus::pattern::variable<const sum_expr&>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<sum_expr>())
         {
@@ -68,7 +70,8 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<std::reference_wrapper<const sum_expr>>* var = nullptr) const
+    bool match(const BaseType& value,
+               const qubus::pattern::variable<std::reference_wrapper<const sum_expr>>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<sum_expr>())
         {
@@ -124,6 +127,7 @@ template <typename Body, typename Index>
 auto sum(Body body, Index index)
 {
     return sum_multi(body, sequence(index));
+}
 }
 }
 }

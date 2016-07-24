@@ -5,6 +5,8 @@
 #include <qbb/qubus/pattern/core.hpp>
 #include <qbb/qubus/pattern/substitute.hpp>
 
+#include <qbb/qubus/qtl/pattern/all.hpp>
+
 #include <qbb/qubus/qtl/deduce_iteration_space.hpp>
 
 #include <qbb/util/handle.hpp>
@@ -26,15 +28,18 @@ namespace
 
 std::unique_ptr<expression> lower_abstract_indices_impl(const expression& expr)
 {
-    using pattern::_;
+    using qubus::pattern::_;
+    using qubus::pattern::variable;
+    using pattern::for_all;
+    using pattern::index;
 
-    pattern::variable<variable_declaration> decl;
-    pattern::variable<const expression&> body;
+    variable<variable_declaration> decl;
+    variable<const expression&> body;
 
-    auto m = pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
+    auto m = qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
         for_all(decl, body), [&]() -> std::unique_ptr<expression> {
 
-            using pattern::value;
+            using qubus::pattern::value;
 
             auto bounds = deduce_iteration_space(decl.get(), body.get());
 
@@ -45,22 +50,44 @@ std::unique_ptr<expression> lower_abstract_indices_impl(const expression& expr)
             loop_index.annotations().add("qubus.debug.name",
                                          decl.get().annotations().lookup("qubus.debug.name"));
 
-            auto m2 = pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
+            auto m2 = qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
                 index(protect(decl)), [&] { return var(loop_index); });
 
-            auto new_body = pattern::substitute(body.get(), m2);
+            auto new_body = qubus::pattern::substitute(body.get(), m2);
 
             return for_(std::move(loop_index), std::move(lower_bound), std::move(upper_bound),
                         std::move(new_body));
         });
 
-    return pattern::substitute(expr, m);
+    return qubus::pattern::substitute(expr, m);
+}
+
+std::unique_ptr<expression> fixup_kronecker_deltas(const expression& expr)
+{
+    using qubus::pattern::variable;
+    using pattern::delta;
+
+    variable<const expression &> i, j;
+
+    auto m = qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
+        delta(i, j), [&] {
+            std::vector<std::unique_ptr<expression>> args;
+            args.reserve(2);
+            args.push_back(clone(i.get()));
+            args.push_back(clone(j.get()));
+
+            return intrinsic_function("delta", std::move(args));
+        });
+
+    return qubus::pattern::substitute(expr, m);
 }
 }
 
 std::unique_ptr<expression> lower_abstract_indices(const expression& expr)
 {
-    return lower_abstract_indices_impl(expr);
+    auto lowered_expr = lower_abstract_indices_impl(expr);
+
+    return fixup_kronecker_deltas(*lowered_expr);
 }
 
 function_declaration lower_abstract_indices(function_declaration decl)

@@ -3,6 +3,8 @@
 #include <qbb/qubus/pattern/IR.hpp>
 #include <qbb/qubus/pattern/core.hpp>
 
+#include <qbb/qubus/qtl/pattern/all.hpp>
+
 #include <cstddef>
 
 namespace qbb
@@ -15,18 +17,20 @@ namespace qtl
 std::array<std::unique_ptr<expression>, 2> deduce_iteration_space(const variable_declaration& idx,
                                                                   const expression& expr)
 {
-    using pattern::value;
-    using pattern::_;
+    using qubus::pattern::value;
+    using qubus::pattern::_;
+    using qubus::pattern::variable;
+    using pattern::tensor;
+    using pattern::index;
 
-    pattern::variable<variable_declaration> decl;
-    pattern::variable<std::size_t> index_pos;
+    variable<variable_declaration> decl;
+    variable<std::size_t> index_pos;
 
-    pattern::variable<util::index_t> extent;
+    variable<util::index_t> extent;
 
     auto m =
-        pattern::make_matcher<expression, std::array<std::unique_ptr<expression>, 2>>()
-            .case_(subscription(tensor(decl),
-                                bind_to(any_of(index(value(idx))), index_pos)),
+        qubus::pattern::make_matcher<expression, std::array<std::unique_ptr<expression>, 2>>()
+            .case_(subscription(tensor(decl), bind_to(any_of(index(value(idx))), index_pos)),
                    [&] {
                        auto lower_bound = integer_literal(0);
 
@@ -51,7 +55,7 @@ std::array<std::unique_ptr<expression>, 2> deduce_iteration_space(const variable
                     {std::move(lower_bound), std::move(upper_bound)}};
             });
 
-    auto result = pattern::search(expr, m);
+    auto result = qubus::pattern::search(expr, m);
 
     if (result)
     {

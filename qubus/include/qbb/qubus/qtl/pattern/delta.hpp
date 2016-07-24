@@ -1,17 +1,19 @@
-#ifndef QBB_QUBUS_PATTERN_DELTA_HPP
-#define QBB_QUBUS_PATTERN_DELTA_HPP
+#ifndef QBB_QUBUS_QTL_PATTERN_DELTA_HPP
+#define QBB_QUBUS_QTL_PATTERN_DELTA_HPP
 
-#include <qbb/qubus/IR/kronecker_delta_expr.hpp>
+#include <qbb/qubus/qtl/IR/kronecker_delta_expr.hpp>
 
-#include <qbb/qubus/pattern/variable.hpp>
 #include <qbb/qubus/pattern/any.hpp>
+#include <qbb/qubus/pattern/variable.hpp>
 
-#include <utility>
 #include <functional>
+#include <utility>
 
 namespace qbb
 {
 namespace qubus
+{
+namespace qtl
 {
 namespace pattern
 {
@@ -26,7 +28,8 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<const kronecker_delta_expr&>* var = nullptr) const
+    bool match(const BaseType& value,
+               const qubus::pattern::variable<const kronecker_delta_expr&>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<kronecker_delta_expr>())
         {
@@ -72,7 +75,10 @@ delta(Extent extent, FirstIndex first_index, SecondIndex second_index)
 template <typename FirstIndex, typename SecondIndex>
 auto delta(FirstIndex first_index, SecondIndex second_index)
 {
+    using qubus::pattern::_;
+
     return delta(_, first_index, second_index);
+}
 }
 }
 }

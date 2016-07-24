@@ -1,17 +1,19 @@
-#ifndef QBB_QUBUS_PATTERN_FOR_ALL_HPP
-#define QBB_QUBUS_PATTERN_FOR_ALL_HPP
+#ifndef QBB_QUBUS_QTL_PATTERN_FOR_ALL_HPP
+#define QBB_QUBUS_QTL_PATTERN_FOR_ALL_HPP
 
-#include <qbb/qubus/IR/for_all_expr.hpp>
+#include <qbb/qubus/qtl/IR/for_all_expr.hpp>
 
-#include <qbb/qubus/pattern/variable.hpp>
 #include <qbb/qubus/pattern/sequence.hpp>
+#include <qbb/qubus/pattern/variable.hpp>
 
-#include <utility>
 #include <functional>
+#include <utility>
 
 namespace qbb
 {
 namespace qubus
+{
+namespace qtl
 {
 namespace pattern
 {
@@ -26,7 +28,7 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<const for_all_expr&>* var = nullptr) const
+    bool match(const BaseType& value, const qubus::pattern::variable<const for_all_expr&>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<for_all_expr>())
         {
@@ -68,7 +70,8 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<std::reference_wrapper<const for_all_expr>>* var = nullptr) const
+    bool match(const BaseType& value,
+               const qubus::pattern::variable<std::reference_wrapper<const for_all_expr>>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<for_all_expr>())
         {
@@ -115,7 +118,8 @@ for_all_pattern<Indices, Body> for_all_multi(Indices indices, Body body)
 }
 
 template <typename Indices, typename Alias, typename Body>
-for_all_with_alias_pattern<Indices, Alias, Body> for_all_multi(Indices indices, Alias alias, Body body)
+for_all_with_alias_pattern<Indices, Alias, Body> for_all_multi(Indices indices, Alias alias,
+                                                               Body body)
 {
     return for_all_with_alias_pattern<Indices, Alias, Body>(indices, alias, body);
 }
@@ -123,7 +127,8 @@ for_all_with_alias_pattern<Indices, Alias, Body> for_all_multi(Indices indices, 
 template <typename Index, typename Body>
 auto for_all(Index index, Body body)
 {
-    return for_all_multi(sequence(index), body);
+    return for_all_multi(qubus::pattern::sequence(index), body);
+}
 }
 }
 }

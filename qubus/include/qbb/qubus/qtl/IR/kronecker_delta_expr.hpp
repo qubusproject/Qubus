@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_KRONECKER_DELTA_HPP
-#define QBB_QUBUS_KRONECKER_DELTA_HPP
+#ifndef QBB_QUBUS_QTL_KRONECKER_DELTA_HPP
+#define QBB_QUBUS_QTL_KRONECKER_DELTA_HPP
 
 #include <qbb/qubus/IR/expression.hpp>
 
@@ -11,6 +11,8 @@
 namespace qbb
 {
 namespace qubus
+{
+namespace qtl
 {
 
 class kronecker_delta_expr : public expression_base<kronecker_delta_expr>
@@ -60,6 +62,7 @@ kronecker_delta(util::index_t extent, std::unique_ptr<expression> first_index,
 {
     return std::make_unique<kronecker_delta_expr>(std::move(extent), std::move(first_index),
                                                   std::move(second_index));
+}
 }
 }
 }

@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_FOR_ALL_EXPR_HPP
-#define QBB_QUBUS_FOR_ALL_EXPR_HPP
+#ifndef QBB_QUBUS_QTL_FOR_ALL_EXPR_HPP
+#define QBB_QUBUS_QTL_FOR_ALL_EXPR_HPP
 
 #include <hpx/config.hpp>
 
@@ -17,6 +17,8 @@
 namespace qbb
 {
 namespace qubus
+{
+namespace qtl
 {
 
 class for_all_expr : public expression_base<for_all_expr>
@@ -62,6 +64,7 @@ private:
 };
 
 bool operator==(const for_all_expr& lhs, const for_all_expr& rhs);
+
 bool operator!=(const for_all_expr& lhs, const for_all_expr& rhs);
 
 inline std::unique_ptr<for_all_expr> for_all(variable_declaration loop_index,
@@ -82,6 +85,7 @@ inline std::unique_ptr<for_all_expr> for_all(std::vector<variable_declaration> l
 {
     return std::make_unique<for_all_expr>(std::move(loop_indices), std::move(alias),
                                           std::move(body));
+}
 }
 }
 }

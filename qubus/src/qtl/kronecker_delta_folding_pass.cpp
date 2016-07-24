@@ -4,6 +4,8 @@
 #include <qbb/qubus/pattern/IR.hpp>
 #include <qbb/qubus/pattern/core.hpp>
 
+#include <qbb/qubus/qtl/pattern/all.hpp>
+
 #include <boost/optional.hpp>
 
 #include <algorithm>
@@ -35,15 +37,19 @@ struct collect_bubbles_context
 
 void collect_bubbles(const expression& expr, collect_bubbles_context& ctx)
 {
-    using pattern::value;
-    using pattern::_;
+    using qubus::pattern::value;
+    using qubus::pattern::_;
+    using qubus::pattern::variable;
+    using pattern::sum_multi;
+    using pattern::delta;
+    using pattern::index;
 
-    pattern::variable<const expression &> a, b;
-    pattern::variable<variable_declaration> i, j;
-    pattern::variable<std::vector<variable_declaration>> indices;
+    variable<const expression &> a, b;
+    variable<variable_declaration> i, j;
+    variable<std::vector<variable_declaration>> indices;
 
     auto m =
-        pattern::make_matcher<expression, void>()
+        qubus::pattern::make_matcher<expression, void>()
             .case_(sum_multi(a, indices),
                    [&] {
                        collect_bubbles(a.get(), ctx);
@@ -94,7 +100,7 @@ void collect_bubbles(const expression& expr, collect_bubbles_context& ctx)
                 }
             });
 
-    pattern::try_match(expr, m);
+    qubus::pattern::try_match(expr, m);
 }
 
 boost::optional<variable_declaration>
@@ -117,33 +123,41 @@ contains_bubble_with_index(const variable_declaration& index, const std::vector<
 
 std::unique_ptr<expression> eliminate_trivial_deltas(const expression& expr)
 {
-    pattern::variable<variable_declaration> i;
+    using qubus::pattern::variable;
+    using pattern::delta;
+    using pattern::index;
 
-    auto m3 = pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
+    variable<variable_declaration> i;
+
+    auto m3 = qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
         delta(index(i), index(i)), [&] { return integer_literal(1); });
 
-    return pattern::substitute(expr, m3);
+    return qubus::pattern::substitute(expr, m3);
 }
 
 std::unique_ptr<expression> substitute_index(const expression& expr,
                                              const variable_declaration& idx,
                                              const variable_declaration& other_idx)
 {
-    using pattern::value;
+    using qubus::pattern::value;
+    using pattern::index;
 
-    auto m2 = pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
+    auto m2 = qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
         index(value(idx)), [&] { return var(other_idx); });
 
-    return pattern::substitute(expr, m2);
+    return qubus::pattern::substitute(expr, m2);
 }
 }
 
 std::unique_ptr<expression> fold_kronecker_deltas(const expression& expr)
 {
-    pattern::variable<const expression&> body;
-    pattern::variable<std::vector<variable_declaration>> indices;
+    using qubus::pattern::variable;
+    using pattern::sum_multi;
 
-    auto m = pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
+    variable<const expression&> body;
+    variable<std::vector<variable_declaration>> indices;
+
+    auto m = qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
         sum_multi(body, indices), [&]() -> std::unique_ptr<expression> {
             std::unique_ptr<expression> new_body = clone(body.get());
 
@@ -177,7 +191,7 @@ std::unique_ptr<expression> fold_kronecker_deltas(const expression& expr)
             }
         });
 
-    return pattern::substitute(expr, m);
+    return qubus::pattern::substitute(expr, m);
 }
 
 function_declaration fold_kronecker_deltas(function_declaration decl)

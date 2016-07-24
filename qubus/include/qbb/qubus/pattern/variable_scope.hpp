@@ -3,9 +3,7 @@
 
 #include <qbb/qubus/IR/expression.hpp>
 
-#include <qbb/qubus/pattern/for_all.hpp>
 #include <qbb/qubus/pattern/for.hpp>
-#include <qbb/qubus/pattern/sum.hpp>
 #include <qbb/qubus/pattern/core.hpp>
 
 #include <utility>
@@ -29,7 +27,7 @@ public:
 
     bool match(const expression& value, const variable<std::reference_wrapper<const expression>>* var = nullptr) const
     {
-        auto p = for_all(decl_, scope_) || for_(decl_, _, _, _, scope_) || sum(scope_, decl_);
+        auto p = for_(decl_, _, _, _, scope_);
 
         if (p.match(value))
         {

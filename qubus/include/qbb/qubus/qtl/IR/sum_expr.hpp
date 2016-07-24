@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_SUM_EXPR_HPP
-#define QBB_QUBUS_SUM_EXPR_HPP
+#ifndef QBB_QUBUS_QTL_SUM_EXPR_HPP
+#define QBB_QUBUS_QTL_SUM_EXPR_HPP
 
 #include <hpx/config.hpp>
 
@@ -17,6 +17,8 @@
 namespace qbb
 {
 namespace qubus
+{
+namespace qtl
 {
 
 class sum_expr : public expression_base<sum_expr>
@@ -73,8 +75,7 @@ inline std::unique_ptr<sum_expr> sum(variable_declaration contraction_index,
 inline std::unique_ptr<sum_expr> sum(std::vector<variable_declaration> contraction_indices,
                                      std::unique_ptr<expression> body)
 {
-    return std::make_unique<sum_expr>(std::move(contraction_indices),
-                                      std::move(body));
+    return std::make_unique<sum_expr>(std::move(contraction_indices), std::move(body));
 }
 
 inline std::unique_ptr<sum_expr> sum(std::vector<variable_declaration> contraction_indices,
@@ -82,6 +83,7 @@ inline std::unique_ptr<sum_expr> sum(std::vector<variable_declaration> contracti
 {
     return std::make_unique<sum_expr>(std::move(contraction_indices), std::move(alias),
                                       std::move(body));
+}
 }
 }
 }

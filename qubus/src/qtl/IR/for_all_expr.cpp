@@ -1,4 +1,4 @@
-#include <qbb/qubus/IR/for_all_expr.hpp>
+#include <qbb/qubus/qtl/IR/for_all_expr.hpp>
 
 #include <qbb/util/assert.hpp>
 
@@ -7,6 +7,8 @@
 namespace qbb
 {
 namespace qubus
+{
+namespace qtl
 {
 
 for_all_expr::for_all_expr(variable_declaration loop_index_, std::unique_ptr<expression> body_)
@@ -74,8 +76,8 @@ std::size_t for_all_expr::arity() const
     return 1;
 }
 
-std::unique_ptr<expression> for_all_expr::substitute_subexpressions(
-        std::vector<std::unique_ptr<expression>> new_children) const
+std::unique_ptr<expression>
+for_all_expr::substitute_subexpressions(std::vector<std::unique_ptr<expression>> new_children) const
 {
     if (new_children.size() != 1)
         throw 0;
@@ -98,6 +100,10 @@ bool operator==(const for_all_expr& lhs, const for_all_expr& rhs)
 bool operator!=(const for_all_expr& lhs, const for_all_expr& rhs)
 {
     return !(lhs == rhs);
+}
+
+QBB_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(equal, std::equal_to<for_all_expr>(), for_all_expr_equal);
+
 }
 }
 }

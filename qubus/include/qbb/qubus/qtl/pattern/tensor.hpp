@@ -1,18 +1,20 @@
-#ifndef QBB_QUBUS_PATTERN_TENSOR_HPP
-#define QBB_QUBUS_PATTERN_TENSOR_HPP
+#ifndef QBB_QUBUS_QTL_PATTERN_TENSOR_HPP
+#define QBB_QUBUS_QTL_PATTERN_TENSOR_HPP
 
-#include <qbb/qubus/IR/variable_ref_expr.hpp>
-#include <qbb/qubus/pattern/variable.hpp>
-#include <qbb/qubus/pattern/any.hpp>
 #include <qbb/qubus/IR/type.hpp>
+#include <qbb/qubus/IR/variable_ref_expr.hpp>
+#include <qbb/qubus/pattern/any.hpp>
 #include <qbb/qubus/pattern/type.hpp>
+#include <qbb/qubus/pattern/variable.hpp>
 
-#include <utility>
 #include <functional>
+#include <utility>
 
 namespace qbb
 {
 namespace qubus
+{
+namespace qtl
 {
 namespace pattern
 {
@@ -26,7 +28,7 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<const variable_ref_expr&>* var = nullptr) const
+    bool match(const BaseType& value, const qubus::pattern::variable<const variable_ref_expr&>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<variable_ref_expr>())
         {
@@ -61,23 +63,29 @@ private:
 template <typename Declaration>
 auto tensor(Declaration declaration)
 {
+    using qubus::pattern::_;
+
     return tensor_pattern<Declaration, decltype(array_t(_))>(declaration, array_t(_));
 }
 
 inline auto tensor()
 {
-    return tensor(_);
+    return tensor(qubus::pattern::_);
 }
 
 template <typename Declaration>
 auto sparse_tensor(Declaration declaration)
 {
-    return tensor_pattern<Declaration, decltype(sparse_tensor_t(_))>(declaration, sparse_tensor_t(_));
+    using qubus::pattern::_;
+
+    return tensor_pattern<Declaration, decltype(sparse_tensor_t(_))>(declaration,
+                                                                     sparse_tensor_t(_));
 }
 
 inline auto sparse_tensor()
 {
-    return sparse_tensor(_);
+    return sparse_tensor(qubus::pattern::_);
+}
 }
 }
 }

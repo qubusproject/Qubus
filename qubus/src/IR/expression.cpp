@@ -5,8 +5,6 @@
 #include <qbb/qubus/pattern/core.hpp>
 #include <qbb/qubus/pattern/IR.hpp>
 
-#include <qbb/util/multi_method.hpp>
-
 #include <mutex>
 #include <functional>
 
@@ -72,11 +70,11 @@ bool operator!=(const expression_cursor& lhs, const expression_cursor& rhs)
 
 qbb::util::implementation_table expression::implementation_table_ = {};
 
-namespace
-{
-
 qbb::util::multi_method<bool(const qbb::util::virtual_<expression>&,
                              const qbb::util::virtual_<expression>&)> equal = {};
+
+namespace
+{
 
 void init_equal()
 {
@@ -86,11 +84,9 @@ void init_equal()
     equal.add_specialization(std::equal_to<double_literal_expr>());
     equal.add_specialization(std::equal_to<integer_literal_expr>());
     equal.add_specialization(std::equal_to<compound_expr>());
-    equal.add_specialization(std::equal_to<for_all_expr>());
     equal.add_specialization(std::equal_to<for_expr>());
     equal.add_specialization(std::equal_to<intrinsic_function_expr>());
     equal.add_specialization(std::equal_to<subscription_expr>());
-    equal.add_specialization(std::equal_to<sum_expr>());
     equal.add_specialization(std::equal_to<type_conversion_expr>());
     equal.add_specialization(std::equal_to<variable_ref_expr>());
 

@@ -1,19 +1,21 @@
-#ifndef QBB_QUBUS_PATTERN_INDEX_HPP
-#define QBB_QUBUS_PATTERN_INDEX_HPP
+#ifndef QBB_QUBUS_QTL_PATTERN_INDEX_HPP
+#define QBB_QUBUS_QTL_PATTERN_INDEX_HPP
 
-#include <qbb/qubus/IR/variable_ref_expr.hpp>
+#include <qbb/qubus/IR/type.hpp>
 #include <qbb/qubus/IR/variable_declaration.hpp>
-#include <qbb/qubus/pattern/variable.hpp>
+#include <qbb/qubus/IR/variable_ref_expr.hpp>
 #include <qbb/qubus/pattern/any.hpp>
 #include <qbb/qubus/pattern/type.hpp>
-#include <qbb/qubus/IR/type.hpp>
+#include <qbb/qubus/pattern/variable.hpp>
 
-#include <utility>
 #include <functional>
+#include <utility>
 
 namespace qbb
 {
 namespace qubus
+{
+namespace qtl
 {
 namespace pattern
 {
@@ -26,7 +28,7 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<variable_declaration>* var = nullptr) const
+    bool match(const BaseType& value, const qubus::pattern::variable<variable_declaration>* var = nullptr) const
     {
         if (auto concret_value = value.template try_as<variable_ref_expr>())
         {
@@ -51,6 +53,7 @@ public:
     {
         declaration_.reset();
     }
+
 private:
     Declaration declaration_;
 };
@@ -61,9 +64,9 @@ index_pattern<Declaration> index(Declaration declaration)
     return index_pattern<Declaration>(declaration);
 }
 
-inline index_pattern<any> index()
+inline auto index()
 {
-    return index_pattern<any>(_);
+    return index_pattern<qubus::pattern::any>(qubus::pattern::_);
 }
 
 template <typename Declaration>
@@ -75,8 +78,10 @@ public:
     }
 
     template <typename BaseType>
-    bool match(const BaseType& value, const variable<const variable_ref_expr&>* var = nullptr) const
+    bool match(const BaseType& value, const qubus::pattern::variable<const variable_ref_expr&>* var = nullptr) const
     {
+        using qubus::pattern::_;
+
         if (auto concret_value = value.template try_as<variable_ref_expr>())
         {
             if (multi_index_t(_).match(concret_value->declaration().var_type()))
@@ -100,6 +105,7 @@ public:
     {
         declaration_.reset();
     }
+
 private:
     Declaration declaration_;
 };
@@ -110,9 +116,10 @@ multi_index_pattern<Declaration> multi_index(Declaration declaration)
     return multi_index_pattern<Declaration>(declaration);
 }
 
-inline multi_index_pattern<any> multi_index()
+inline auto multi_index()
 {
-    return multi_index_pattern<any>(_);
+    return multi_index_pattern<qubus::pattern::any>(qubus::pattern::_);
+}
 }
 }
 }

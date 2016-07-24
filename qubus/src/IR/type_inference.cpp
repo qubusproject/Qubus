@@ -4,6 +4,8 @@
 #include <qbb/qubus/pattern/core.hpp>
 #include <qbb/qubus/pattern/IR.hpp>
 
+#include <qbb/qubus/qtl/IR/all.hpp>
+
 #include <qbb/util/multi_method.hpp>
 #include <qbb/util/assert.hpp>
 #include <qbb/util/unused.hpp>
@@ -202,14 +204,14 @@ type infer_type_unary_op_expr(const unary_operator_expr& expr)
     return arg_type;
 }
 
-type infer_type_sum_expr(const sum_expr& expr)
+type infer_type_sum_expr(const qtl::sum_expr& expr)
 {
     type body_type = typeof_(expr.body());
 
     return body_type;
 }
 
-type infer_type_for_all_expr(const for_all_expr&)
+type infer_type_for_all_expr(const qtl::for_all_expr&)
 {
     return types::unknown{};
 }
@@ -308,7 +310,7 @@ type infer_type_construct_expr(const construct_expr& expr)
     return expr.result_type();
 }
 
-type infer_type_kronecker_delta_expr(const kronecker_delta_expr& QBB_UNUSED(expr))
+type infer_type_kronecker_delta_expr(const qtl::kronecker_delta_expr& QBB_UNUSED(expr))
 {
     return types::integer();
 }

@@ -1,4 +1,4 @@
-#include <qbb/qubus/IR/kronecker_delta_expr.hpp>
+#include <qbb/qubus/qtl/IR/kronecker_delta_expr.hpp>
 
 #include <qbb/util/assert.hpp>
 
@@ -7,6 +7,8 @@
 namespace qbb
 {
 namespace qubus
+{
+namespace qtl
 {
 
 kronecker_delta_expr::kronecker_delta_expr(util::index_t extent_,
@@ -78,6 +80,10 @@ bool operator==(const kronecker_delta_expr& lhs, const kronecker_delta_expr& rhs
 bool operator!=(const kronecker_delta_expr& lhs, const kronecker_delta_expr& rhs)
 {
     return !(lhs == rhs);
+}
+
+QBB_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(equal, std::equal_to<kronecker_delta_expr>(), kronecker_delta_expr_equal);
+
 }
 }
 }

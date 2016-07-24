@@ -1,4 +1,4 @@
-#include <qbb/qubus/IR/sum_expr.hpp>
+#include <qbb/qubus/qtl/IR/sum_expr.hpp>
 
 #include <qbb/qubus/IR/type.hpp>
 
@@ -10,13 +10,16 @@ namespace qbb
 {
 namespace qubus
 {
+namespace qtl
+{
 
 sum_expr::sum_expr(variable_declaration contraction_index_, std::unique_ptr<expression> body_)
 : body_(take_over_child(body_)), contraction_indices_{std::move(contraction_index_)}
 {
 }
 
-sum_expr::sum_expr(std::vector<variable_declaration> contraction_indices_, std::unique_ptr<expression> body_)
+sum_expr::sum_expr(std::vector<variable_declaration> contraction_indices_,
+                   std::unique_ptr<expression> body_)
 : body_(take_over_child(body_)), contraction_indices_(std::move(contraction_indices_))
 {
 }
@@ -72,15 +75,16 @@ std::size_t sum_expr::arity() const
     return 1;
 }
 
-std::unique_ptr<expression> sum_expr::substitute_subexpressions(
-        std::vector<std::unique_ptr<expression>> new_children) const
+std::unique_ptr<expression>
+sum_expr::substitute_subexpressions(std::vector<std::unique_ptr<expression>> new_children) const
 {
     if (new_children.size() != 1)
         throw 0;
 
     if (alias_)
     {
-        return std::make_unique<sum_expr>(contraction_indices_, *alias_, std::move(new_children[0]));
+        return std::make_unique<sum_expr>(contraction_indices_, *alias_,
+                                          std::move(new_children[0]));
     }
     else
     {
@@ -96,6 +100,10 @@ bool operator==(const sum_expr& lhs, const sum_expr& rhs)
 bool operator!=(const sum_expr& lhs, const sum_expr& rhs)
 {
     return !(lhs == rhs);
+}
+
+QBB_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(equal, std::equal_to<sum_expr>(), sum_expr_equal);
+
 }
 }
 }
