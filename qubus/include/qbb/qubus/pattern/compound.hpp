@@ -50,6 +50,7 @@ public:
 
     void reset() const
     {
+        order_.reset();
         body_.reset();
     }
 

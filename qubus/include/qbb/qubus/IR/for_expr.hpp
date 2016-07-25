@@ -3,6 +3,7 @@
 
 #include <hpx/config.hpp>
 
+#include <qbb/qubus/IR/execution_order.hpp>
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/expression_traits.hpp>
 #include <qbb/qubus/IR/variable_declaration.hpp>
@@ -24,8 +25,16 @@ public:
     for_expr(variable_declaration loop_index_, std::unique_ptr<expression> lower_bound_,
              std::unique_ptr<expression> upper_bound_, std::unique_ptr<expression> increment_,
              std::unique_ptr<expression> body_);
+    for_expr(execution_order order_, variable_declaration loop_index_,
+             std::unique_ptr<expression> lower_bound_, std::unique_ptr<expression> upper_bound_,
+             std::unique_ptr<expression> body_);
+    for_expr(execution_order order_, variable_declaration loop_index_,
+             std::unique_ptr<expression> lower_bound_, std::unique_ptr<expression> upper_bound_,
+             std::unique_ptr<expression> increment_, std::unique_ptr<expression> body_);
 
     virtual ~for_expr() = default;
+
+    execution_order order() const;
 
     const expression& body() const;
 
@@ -47,6 +56,7 @@ public:
     template <typename Archive>
     void serialize(Archive& ar, unsigned QBB_UNUSED(version))
     {
+        ar& order_;
         ar& loop_index_;
         ar& lower_bound_;
         ar& upper_bound_;
@@ -57,6 +67,7 @@ public:
     HPX_SERIALIZATION_POLYMORPHIC(for_expr);
 
 private:
+    execution_order order_;
     variable_declaration loop_index_;
     std::unique_ptr<expression> lower_bound_;
     std::unique_ptr<expression> upper_bound_;
@@ -83,7 +94,29 @@ inline std::unique_ptr<for_expr> for_(variable_declaration loop_index,
                                       std::unique_ptr<expression> body)
 {
     return std::make_unique<for_expr>(std::move(loop_index), std::move(lower_bound),
-                                      std::move(upper_bound), std::move(increment), std::move(body));
+                                      std::move(upper_bound), std::move(increment),
+                                      std::move(body));
+}
+
+inline std::unique_ptr<for_expr> unordered_for(variable_declaration loop_index,
+                                               std::unique_ptr<expression> lower_bound,
+                                               std::unique_ptr<expression> upper_bound,
+                                               std::unique_ptr<expression> body)
+{
+    return std::make_unique<for_expr>(execution_order::unordered, std::move(loop_index),
+                                      std::move(lower_bound), std::move(upper_bound),
+                                      std::move(body));
+}
+
+inline std::unique_ptr<for_expr> unordered_for(variable_declaration loop_index,
+                                               std::unique_ptr<expression> lower_bound,
+                                               std::unique_ptr<expression> upper_bound,
+                                               std::unique_ptr<expression> increment,
+                                               std::unique_ptr<expression> body)
+{
+    return std::make_unique<for_expr>(execution_order::unordered, std::move(loop_index),
+                                      std::move(lower_bound), std::move(upper_bound),
+                                      std::move(increment), std::move(body));
 }
 }
 }
