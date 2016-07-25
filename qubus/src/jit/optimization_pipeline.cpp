@@ -59,7 +59,8 @@ void add_initial_alias_analysis_passes(llvm::legacy::PassManager& manager,
 
     if (use_experimental_passes)
     {
-        manager.add(createCFLSteensAAWrapperPass());
+        // Only one of these passes can be currently activated.
+        //manager.add(createCFLSteensAAWrapperPass());
         manager.add(createCFLAndersAAWrapperPass());
     }
 
