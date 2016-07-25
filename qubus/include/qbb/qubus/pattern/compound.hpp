@@ -3,11 +3,13 @@
 
 #include <qbb/qubus/IR/compound_expr.hpp>
 
-#include <qbb/qubus/pattern/variable.hpp>
+#include <qbb/qubus/pattern/any.hpp>
 #include <qbb/qubus/pattern/sequence.hpp>
+#include <qbb/qubus/pattern/value.hpp>
+#include <qbb/qubus/pattern/variable.hpp>
 
-#include <utility>
 #include <functional>
+#include <utility>
 
 namespace qbb
 {
@@ -16,11 +18,11 @@ namespace qubus
 namespace pattern
 {
 
-template <typename Body>
+template <typename Order, typename Body>
 class compound_pattern
 {
 public:
-    compound_pattern(Body body_) : body_(std::move(body_))
+    compound_pattern(Order order_, Body body_) : order_(std::move(order_)), body_(std::move(body_))
     {
     }
 
@@ -29,14 +31,17 @@ public:
     {
         if (auto concret_value = value.template try_as<compound_expr>())
         {
-            if (body_.match(concret_value->body()))
+            if (order_.match(concret_value->order()))
             {
-                if (var)
+                if (body_.match(concret_value->body()))
                 {
-                    var->set(*concret_value);
-                }
+                    if (var)
+                    {
+                        var->set(*concret_value);
+                    }
 
-                return true;
+                    return true;
+                }
             }
         }
 
@@ -47,14 +52,16 @@ public:
     {
         body_.reset();
     }
+
 private:
+    Order order_;
     Body body_;
 };
 
 template <typename Body>
-compound_pattern<Body> compound(Body body)
+auto compound(Body body)
 {
-    return compound_pattern<Body>(body);
+    return compound_pattern<any, Body>(_, body);
 }
 
 template <typename... Body>
@@ -64,15 +71,29 @@ auto compound_n(Body... body)
 }
 
 template <typename Tasks>
-compound_pattern<Tasks> sequenced_tasks(Tasks tasks)
+auto sequenced_tasks(Tasks tasks)
 {
-    return compound_pattern<Tasks>(tasks);
+    return compound_pattern<decltype(value(execution_order::sequential)), Tasks>(
+        value(execution_order::sequential), tasks);
 }
 
 template <typename... Tasks>
 auto sequenced_tasks_n(Tasks... tasks)
 {
-    return compound(sequence(tasks...));
+    return sequenced_tasks(sequence(tasks...));
+}
+
+template <typename Tasks>
+auto unordered_tasks(Tasks tasks)
+{
+    return compound_pattern<decltype(value(execution_order::unordered)), Tasks>(
+            value(execution_order::unordered), tasks);
+}
+
+template <typename... Tasks>
+auto unordered_tasks_n(Tasks... tasks)
+{
+    return unordered_tasks(sequence(tasks...));
 }
 
 }

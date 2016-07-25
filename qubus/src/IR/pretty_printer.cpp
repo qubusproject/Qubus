@@ -1,27 +1,27 @@
 #include <qbb/qubus/IR/pretty_printer.hpp>
 
-#include <qbb/qubus/IR/type_inference.hpp>
 #include <qbb/qubus/IR/qir.hpp>
+#include <qbb/qubus/IR/type_inference.hpp>
 
-#include <qbb/qubus/pattern/core.hpp>
 #include <qbb/qubus/pattern/IR.hpp>
+#include <qbb/qubus/pattern/core.hpp>
 
 #include <qbb/qubus/qtl/pattern/all.hpp>
 
+#include <qbb/util/handle.hpp>
 #include <qbb/util/multi_method.hpp>
 #include <qbb/util/unique_name_generator.hpp>
-#include <qbb/util/handle.hpp>
 
-#include <qbb/util/unreachable.hpp>
 #include <qbb/util/assert.hpp>
+#include <qbb/util/unreachable.hpp>
 
 #include <boost/optional.hpp>
 
-#include <iostream>
-#include <mutex>
-#include <map>
-#include <vector>
 #include <functional>
+#include <iostream>
+#include <map>
+#include <mutex>
+#include <vector>
 
 namespace qbb
 {
@@ -141,33 +141,18 @@ void print_type(const type& t)
     pattern::variable<type> subtype;
 
     auto m = pattern::make_matcher<type, void>()
-                 .case_(pattern::double_t,
-                        [&]
-                        {
-                            std::cout << "double";
-                        })
-                 .case_(pattern::integer_t,
-                        [&]
-                        {
-                            std::cout << "integer";
-                        })
-                 .case_(pattern::bool_t,
-                        [&]
-                        {
-                            std::cout << "bool";
-                        })
+                 .case_(pattern::double_t, [&] { std::cout << "double"; })
+                 .case_(pattern::integer_t, [&] { std::cout << "integer"; })
+                 .case_(pattern::bool_t, [&] { std::cout << "bool"; })
                  .case_(complex_t(subtype),
-                        [&]
-                        {
+                        [&] {
                             std::cout << "complex<";
 
                             print_type(subtype.get());
 
                             std::cout << ">";
                         })
-                 .case_(pattern::_, [&]
-                        {
-                        });
+                 .case_(pattern::_, [&] {});
 
     pattern::match(t, m);
 }
@@ -200,8 +185,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
     auto m =
         pattern::make_matcher<expression, void>()
             .case_(binary_operator(btag, a, b),
-                   [&]
-                   {
+                   [&] {
                        std::cout << "(";
                        print(a.get(), ctx, print_types);
                        std::cout << " " << translate_binary_op_tag(btag.get()) << " ";
@@ -209,14 +193,12 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << ")";
                    })
             .case_(unary_operator(utag, a),
-                   [&]
-                   {
+                   [&] {
                        std::cout << " " << translate_unary_op_tag(utag.get());
                        print(a.get(), ctx, print_types);
                    })
             .case_(qtl::pattern::sum_multi(a, index_decls, decl),
-                   [&]
-                   {
+                   [&] {
                        std::cout << "sum(";
 
                        print(a.get(), ctx, print_types);
@@ -270,8 +252,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << ")";
                    })
             .case_(qtl::pattern::sum_multi(a, index_decls),
-                   [&]
-                   {
+                   [&] {
                        std::cout << "sum(";
 
                        print(a.get(), ctx, print_types);
@@ -314,8 +295,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << ")";
                    })
             .case_(subscription(a, indices),
-                   [&]
-                   {
+                   [&] {
                        print(a.get(), ctx, print_types);
 
                        std::cout << "[";
@@ -329,8 +309,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << "]";
                    })
             .case_(variable_ref(decl),
-                   [&]
-                   {
+                   [&] {
                        if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
                        {
                            std::cout << debug_name.as<std::string>();
@@ -348,26 +327,39 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        }
                    })
             .case_(type_conversion(t, a),
-                   [&]
-                   {
+                   [&] {
                        std::cout << "cast<";
                        print_type(t.get());
                        std::cout << ">(";
                        print(a.get(), ctx, print_types);
                        std::cout << ")";
                    })
-            .case_(compound(subexprs),
-                   [&]
-                   {
+            .case_(sequenced_tasks(subexprs),
+                   [&] {
+                       std::cout << "do\n{\n";
+
                        for (const auto& sub_expr : subexprs.get())
                        {
                            print(sub_expr, ctx, print_types);
                            std::cout << " \n";
                        }
+
+                       std::cout << "}\n";
+                   })
+            .case_(unordered_tasks(subexprs),
+                   [&] {
+                       std::cout << "unordered do\n{\n";
+
+                       for (const auto& sub_expr : subexprs.get())
+                       {
+                           print(sub_expr, ctx, print_types);
+                           std::cout << " \n";
+                       }
+
+                       std::cout << "}\n";
                    })
             .case_(qtl::pattern::delta(a, b),
-                   [&]
-                   {
+                   [&] {
                        std::cout << "delta[";
 
                        print(a.get(), ctx, print_types);
@@ -377,8 +369,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << "]";
                    })
             .case_(intrinsic_function(id, args),
-                   [&]
-                   {
+                   [&] {
                        std::cout << id.get() << "(";
 
                        for (const auto& arg : args.get())
@@ -390,8 +381,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << ")";
                    })
             .case_(double_literal(dval),
-                   [&]
-                   {
+                   [&] {
                        std::cout << dval.get();
 
                        if (print_types)
@@ -401,8 +391,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        }
                    })
             .case_(float_literal(fval),
-                   [&]
-                   {
+                   [&] {
                        std::cout << fval.get();
 
                        if (print_types)
@@ -412,8 +401,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        }
                    })
             .case_(integer_literal(ival),
-                   [&]
-                   {
+                   [&] {
                        std::cout << ival.get();
 
                        if (print_types)
@@ -423,8 +411,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        }
                    })
             .case_(for_(decl, a, b, c, d),
-                   [&]
-                   {
+                   [&] {
                        std::cout << "for ";
 
                        if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
@@ -448,8 +435,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << "\n}";
                    })
             .case_(qtl::pattern::for_all_multi(index_decls, decl, b),
-                   [&]
-                   {
+                   [&] {
                        std::cout << "for all ";
 
                        if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
@@ -501,8 +487,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << "\n}";
                    })
             .case_(qtl::pattern::for_all_multi(index_decls, b),
-                   [&]
-                   {
+                   [&] {
                        std::cout << "for all ";
 
                        if (index_decls.get().size() > 1)
@@ -543,8 +528,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << "\n}";
                    })
             .case_(if_(a, b, opt_expr),
-                   [&]
-                   {
+                   [&] {
                        std::cout << "if (";
 
                        print(a.get(), ctx, print_types);
@@ -566,8 +550,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        }
                    })
             .case_(local_variable_def(decl, a),
-                   [&]
-                   {
+                   [&] {
                        std::cout << "let ";
 
                        if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
@@ -584,8 +567,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        print(a.get(), ctx, print_types);
                    })
             .case_(spawn(plan, args),
-                   [&]
-                   {
+                   [&] {
                        ctx.add_function_to_print(plan.get());
 
                        std::cout << "spawn " << plan.get().name() << "(";
@@ -599,8 +581,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << ")";
                    })
             .case_(construct(t, args),
-                   [&]
-                   {
+                   [&] {
                        print_type(t.get());
                        std::cout << "(";
 
@@ -613,8 +594,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << ")";
                    })
             .case_(macro(params, a),
-                   [&]
-                   {
+                   [&] {
                        std::cout << "macro(";
 
                        for (const auto& param : params.get())
@@ -632,24 +612,22 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
                    })
             .case_(member_access(a, id),
-                   [&]
-                   {
+                   [&] {
                        print(a.get(), ctx, print_types);
 
                        std::cout << "." << id.get();
                    })
-            .case_(call_foreign(_, args), [&]
-                   {
-                       std::cout << "foreign call (";
+            .case_(call_foreign(_, args), [&] {
+                std::cout << "foreign call (";
 
-                       for (const auto& arg : args.get())
-                       {
-                           print(arg, ctx, print_types);
-                           std::cout << ", ";
-                       }
+                for (const auto& arg : args.get())
+                {
+                    print(arg, ctx, print_types);
+                    std::cout << ", ";
+                }
 
-                       std::cout << ")";
-                   });
+                std::cout << ")";
+            });
 
     try
     {
