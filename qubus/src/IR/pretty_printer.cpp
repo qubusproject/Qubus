@@ -410,9 +410,33 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                            print_type(types::integer{});
                        }
                    })
-            .case_(for_(decl, a, b, c, d),
+            .case_(sequential_for(decl, a, b, c, d),
                    [&] {
                        std::cout << "for ";
+
+                       if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
+                       {
+                           std::cout << debug_name.as<std::string>();
+                       }
+                       else
+                       {
+                           std::cout << ctx.get_name_for_handle(decl.get().id());
+                       }
+
+                       std::cout << " in [";
+                       print(a.get(), ctx, print_types);
+                       std::cout << ", ";
+                       print(b.get(), ctx, print_types);
+                       std::cout << ", ";
+                       print(c.get(), ctx, print_types);
+                       std::cout << "]";
+                       std::cout << "\n{\n";
+                       print(d.get(), ctx, print_types);
+                       std::cout << "\n}";
+                   })
+            .case_(unordered_for(decl, a, b, c, d),
+                   [&] {
+                       std::cout << "unordered for ";
 
                        if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
                        {
