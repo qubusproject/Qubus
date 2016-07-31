@@ -1,7 +1,6 @@
 #include <qbb/qubus/local_object_factory.hpp>
 
 #include <qbb/qubus/host_object_views.hpp>
-#include <qbb/qubus/address.hpp>
 
 #include <qbb/qubus/hpx_utils.hpp>
 

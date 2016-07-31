@@ -3,8 +3,6 @@
 
 #include <hpx/config.hpp>
 
-#include <qbb/qubus/address.hpp>
-
 #include <qbb/qubus/allocator.hpp>
 #include <qbb/qubus/memory_block.hpp>
 

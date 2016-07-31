@@ -7,7 +7,6 @@
 
 #include <qbb/qubus/abi_info.hpp>
 #include <qbb/qubus/local_address_space.hpp>
-#include <qbb/qubus/object_materializer.hpp>
 
 #include <qbb/qubus/host_allocator.hpp>
 

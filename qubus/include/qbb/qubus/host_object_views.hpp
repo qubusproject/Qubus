@@ -8,7 +8,6 @@
 #include <qbb/qubus/object_view_traits.hpp>
 
 #include <qbb/qubus/local_runtime.hpp>
-#include <qbb/qubus/object_materializer.hpp>
 
 #include <hpx/include/lcos.hpp>
 

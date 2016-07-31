@@ -5,8 +5,6 @@
 
 #include <qbb/qubus/IR/function_declaration.hpp>
 
-#include <qbb/qubus/address.hpp>
-
 #include <memory>
 #include <functional>
 #include <vector>
