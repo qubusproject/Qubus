@@ -11,7 +11,6 @@
 #include <qbb/qubus/qtl/ast.hpp>
 
 #include <qbb/qubus/host_object_views.hpp>
-#include <qbb/qubus/object_materializer.hpp>
 
 #include <qbb/util/assert.hpp>
 #include <qbb/util/index_space.hpp>

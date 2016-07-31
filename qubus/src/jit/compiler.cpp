@@ -104,9 +104,7 @@ void compile_entry_point(const function_declaration& plan, compiler& comp,
 
     auto generic_ptr_type = llvm::PointerType::get(llvm::Type::getInt8Ty(env.ctx()), 0);
 
-    auto address_type = env.get_address_type();
-
-    param_types.push_back(address_type->getPointerTo(0));
+    param_types.push_back(generic_ptr_type->getPointerTo(0));
     param_types.push_back(generic_ptr_type);
 
     llvm::FunctionType* FT =
@@ -139,8 +137,7 @@ void compile_entry_point(const function_declaration& plan, compiler& comp,
         llvm::Value* ptr_to_arg =
             env.builder().CreateConstInBoundsGEP1_64(&kernel->getArgumentList().front(), counter);
 
-        auto arg = env.builder().CreateCall(env.get_translate_address(),
-                                            {&kernel->getArgumentList().back(), ptr_to_arg});
+        auto arg = env.builder().CreateLoad(ptr_to_arg);
 
         llvm::Value* typed_arg =
             env.builder().CreateBitCast(arg, llvm::PointerType::get(param_type, 0));

@@ -111,10 +111,6 @@ public:
 
     llvm::Function* get_dealloc_scratch_mem() const;
 
-    llvm::Function* get_translate_address() const;
-
-    llvm::Type* get_address_type() const;
-
     // llvm::Value* lookup_intrinsic_function(const std::string& name,
     //                                       const std::vector<type>& arg_types)const;
 
@@ -139,17 +135,12 @@ private:
     llvm::Function* assume_align_;
     llvm::Function* alloc_scratch_mem_;
     llvm::Function* dealloc_scratch_mem_;
-    llvm::Function* translate_address_;
-
-    llvm::Type* address_type_;
 
     void init_assume_align();
 
     void init_alloc_scratch_mem();
 
     void init_dealloc_scratch_mem();
-
-    void init_translate_address();
 
     // intrinsic_lookup_table instrinsic_lookup_table_;
 };

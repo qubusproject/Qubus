@@ -3,25 +3,26 @@
 
 #include <hpx/config.hpp>
 
-#include <qbb/qubus/address.hpp>
-
 #include <qbb/qubus/allocator.hpp>
 #include <qbb/qubus/memory_block.hpp>
 
-#include <qbb/util/handle.hpp>
-#include <qbb/util/integers.hpp>
 #include <qbb/util/delegate.hpp>
 #include <qbb/util/dense_hash_map.hpp>
+#include <qbb/util/handle.hpp>
+#include <qbb/util/integers.hpp>
 
-#include <hpx/include/local_lcos.hpp>
 #include <hpx/include/lcos.hpp>
+#include <hpx/include/local_lcos.hpp>
 
-#include <mutex>
-#include <map>
-#include <vector>
-#include <memory>
+#include <boost/bimap.hpp>
+#include <boost/bimap/unordered_set_of.hpp>
+
 #include <atomic>
 #include <functional>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <vector>
 
 namespace qbb
 {
@@ -30,74 +31,29 @@ namespace qubus
 
 class object;
 
-class host_address_translation_table
-{
-public:
-    host_address_translation_table();
-
-    void register_mapping(address addr, void* ptr);
-
-    void invalidate_mapping(address addr);
-
-    void* resolve_address(address addr) const;
-
-    const void* get_table() const;
-    std::size_t bucket_count() const;
-private:
-    util::dense_hash_map<address, void*> translation_table_;
-};
-
 class address_space
 {
 private:
     class address_entry
     {
     public:
-        address_entry(address addr_, std::unique_ptr<memory_block> data_);
-        ~address_entry();
+        address_entry(hpx::naming::gid_type addr_, std::unique_ptr<memory_block> data_);
 
         address_entry(const address_entry&) = delete;
         address_entry& operator=(const address_entry&) = delete;
 
-        address_entry(address_entry&& other);
-        address_entry& operator=(address_entry&& other);
+        address_entry(address_entry&& other) = default;
+        address_entry& operator=(address_entry&& other) = default;
 
-        const address& addr() const;
+        const hpx::naming::gid_type& addr() const;
         memory_block& data() const;
 
-        void pin();
-        void unpin();
-
-        bool is_pinned() const;
-
-        void on_delete(std::function<void(address)> callback);
     private:
-        address addr_;
+        hpx::naming::gid_type addr_;
         std::unique_ptr<memory_block> data_;
-        std::atomic<int> pin_count_;
-        util::delegate<void(address)> on_delete_;
     };
 
 public:
-    class pin
-    {
-    public:
-        explicit pin(std::shared_ptr<address_entry> entry_);
-        ~pin();
-
-        pin(const pin&) = delete;
-        pin& operator=(const pin&) = delete;
-
-        pin(pin&& other) = default;
-        pin& operator=(pin&& other) = default;
-
-        address addr() const;
-
-        memory_block& data() const;
-    private:
-        std::shared_ptr<address_entry> entry_;
-    };
-
     class handle
     {
     public:
@@ -110,11 +66,10 @@ public:
         handle(handle&& other) = default;
         handle& operator=(handle&& other) = default;
 
-        address addr() const;
+        memory_block& data() const;
 
         explicit operator bool() const;
 
-        hpx::future<pin> pin_object();
     private:
         std::shared_ptr<address_entry> entry_;
     };
@@ -125,24 +80,19 @@ public:
     hpx::future<handle> resolve_object(const object& obj);
     handle try_resolve_object(const object& obj) const;
 
-    const void* get_address_translation_table() const;
-    std::size_t bucket_count() const;
-
-    void on_deallocation(std::function<void(address)> callback);
-    void on_page_fault(std::function<hpx::future<handle>(address)> callback);
+    void on_page_fault(std::function<hpx::future<handle>(const object& obj)> callback);
 
     void dump() const;
+
 private:
     bool evict_objects(std::size_t hint);
 
     std::unique_ptr<allocator> allocator_;
 
-    mutable host_address_translation_table translation_table_;
-    mutable std::map<address, std::shared_ptr<address_entry>> entry_table_;
+    mutable std::map<hpx::naming::gid_type, std::shared_ptr<address_entry>> entry_table_;
     mutable hpx::lcos::local::mutex address_translation_table_mutex_;
 
-    util::delegate<void(address)> on_deallocation_;
-    util::delegate<hpx::future<handle>(address)> on_page_fault_;
+    util::delegate<hpx::future<handle>(const object& obj)> on_page_fault_;
 };
 
 using host_address_space = address_space;
@@ -153,8 +103,7 @@ using host_address_space = address_space;
 class local_address_space
 {
 public:
-    using handle = address_space::handle;
-    using pin = address_space::pin;
+    using handle = host_address_space::handle;
 
     explicit local_address_space(host_address_space& host_addr_space_);
 
@@ -163,9 +112,8 @@ public:
     handle try_resolve_object(const object& obj) const;
 
 private:
-    host_address_space* host_addr_space_;
+    std::reference_wrapper<host_address_space> host_addr_space_;
 };
-
 }
 }
 

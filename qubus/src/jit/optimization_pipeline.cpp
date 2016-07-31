@@ -225,7 +225,7 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
     // llvm.loop.distribute=true or when -enable-loop-distribute is specified.
     manager.add(createLoopDistributePass(/*ProcessAllLoopsByDefault=*/false));
 
-    manager.add(createLoopVectorizePass(true, true));
+    manager.add(createLoopVectorizePass());
 
     // Eliminate loads by forwarding stores from the previous iteration to loads
     // of the current iteration.
@@ -369,7 +369,7 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
 
         // manager.add(createLoopDistributePass());
 
-        manager.add(createLoopVectorizePass(true, true));
+        manager.add(createLoopVectorizePass());
 
         manager.add(createLoopLoadEliminationPass());
 
