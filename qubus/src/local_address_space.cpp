@@ -6,56 +6,26 @@
 
 #include <qbb/qubus/logging.hpp>
 
+#include <qbb/util/assert.hpp>
 #include <qbb/util/make_unique.hpp>
 #include <qbb/util/unused.hpp>
-#include <qbb/util/assert.hpp>
 
-#include <utility>
-#include <tuple>
 #include <exception>
+#include <tuple>
+#include <utility>
 
 namespace qbb
 {
 namespace qubus
 {
 
-host_address_translation_table::host_address_translation_table() : translation_table_(nulladdr)
-{
-}
-
-void host_address_translation_table::register_mapping(address addr, void* ptr)
-{
-    // TODO: Add error handling
-    translation_table_.emplace(addr, ptr);
-}
-
-void host_address_translation_table::invalidate_mapping(address addr)
-{
-    translation_table_.erase(addr);
-}
-
-void* host_address_translation_table::resolve_address(address addr) const
-{
-    return translation_table_.at(addr);
-}
-
-const void* host_address_translation_table::get_table() const
-{
-    return translation_table_.data();
-}
-
-std::size_t host_address_translation_table::bucket_count() const
-{
-    return translation_table_.bucket_count();
-}
-
 address_space::handle::handle(std::shared_ptr<address_entry> entry_) : entry_(std::move(entry_))
 {
 }
 
-address address_space::handle::addr() const
+memory_block& address_space::handle::data() const
 {
-    return entry_->addr();
+    return entry_->data();
 }
 
 address_space::handle::operator bool() const
@@ -63,65 +33,13 @@ address_space::handle::operator bool() const
     return static_cast<bool>(entry_);
 }
 
-hpx::future<address_space::pin> address_space::handle::pin_object()
-{
-    entry_->pin();
-
-    return hpx::make_ready_future(pin(entry_));
-}
-
-address_space::pin::pin(std::shared_ptr<address_entry> entry_) : entry_(std::move(entry_))
+address_space::address_entry::address_entry(hpx::naming::gid_type addr_,
+                                            std::unique_ptr<memory_block> data_)
+: addr_(std::move(addr_)), data_(std::move(data_))
 {
 }
 
-address_space::pin::~pin()
-{
-    if (entry_)
-    {
-        entry_->unpin();
-    }
-}
-
-address address_space::pin::addr() const
-{
-    return entry_->addr();
-}
-
-memory_block& address_space::pin::data() const
-{
-    return entry_->data();
-}
-
-address_space::address_entry::address_entry(address addr_, std::unique_ptr<memory_block> data_)
-: addr_(std::move(addr_)), data_(std::move(data_)), pin_count_(0), on_delete_([](address)
-                                                                              {
-                                                                              })
-{
-}
-
-address_space::address_entry::~address_entry()
-{
-    on_delete_(addr_);
-}
-
-address_space::address_entry::address_entry(address_space::address_entry&& other)
-: addr_(std::move(other.addr_)), data_(std::move(other.data_)), pin_count_(other.pin_count_.load()),
-  on_delete_(std::move(other.on_delete_))
-{
-}
-
-address_space::address_entry& address_space::address_entry::
-operator=(address_space::address_entry&& other)
-{
-    addr_ = std::move(other.addr_);
-    data_ = std::move(other.data_);
-    pin_count_.store(other.pin_count_.load());
-    on_delete_ = std::move(other.on_delete_);
-
-    return *this;
-}
-
-const address& address_space::address_entry::addr() const
+const hpx::naming::gid_type& address_space::address_entry::addr() const
 {
     return addr_;
 }
@@ -131,41 +49,13 @@ memory_block& address_space::address_entry::data() const
     return *data_;
 }
 
-void address_space::address_entry::pin()
-{
-    pin_count_.fetch_add(1);
-}
-
-void address_space::address_entry::unpin()
-{
-    pin_count_.fetch_sub(1);
-}
-
-bool address_space::address_entry::is_pinned() const
-{
-    return pin_count_.load() > 0;
-}
-
-void address_space::address_entry::on_delete(std::function<void(address)> callback)
-{
-    on_delete_.connect(callback);
-}
-
 address_space::address_space(std::unique_ptr<allocator> allocator_)
-: allocator_(std::make_unique<evicting_allocator>(std::move(allocator_),
-                                                  [this](std::size_t hint)
-                                                  {
-                                                      return evict_objects(hint);
-                                                  })),
-  on_deallocation_([](address)
-                   {
-                   }),
-  on_page_fault_([](address)
-                 {
-                     // TODO: Add correct exception type.
-                     return hpx::make_exceptional_future<address_space::handle>(
-                         std::runtime_error("Page fault"));
-                 })
+: allocator_(std::make_unique<evicting_allocator>(
+      std::move(allocator_), [this](std::size_t hint) { return evict_objects(hint); })),
+  on_page_fault_([](const object&) {
+      // TODO: Add correct exception type.
+      return hpx::make_exceptional_future<address_space::handle>(std::runtime_error("Page fault"));
+  })
 {
 }
 
@@ -174,11 +64,9 @@ address_space::handle address_space::allocate_object_page(const object& obj, lon
 {
     std::unique_lock<hpx::lcos::local::mutex> guard(address_translation_table_mutex_);
 
-    auto addr = make_address_from_id(obj.id());
+    auto addr = obj.get_id().get_gid();
 
     auto data = allocator_->allocate(size, alignment);
-
-    translation_table_.register_mapping(addr, data->ptr());
 
     bool addr_was_free;
     using entry_table_iterator = decltype(entry_table_.begin());
@@ -189,11 +77,6 @@ address_space::handle address_space::allocate_object_page(const object& obj, lon
 
     QBB_ASSERT(addr_was_free, "Address is spuriously occupied.");
 
-    pos->second->on_delete([this](address addr)
-                           {
-                               translation_table_.invalidate_mapping(addr);
-                           });
-
     return address_space::handle(pos->second);
 }
 
@@ -201,7 +84,7 @@ hpx::future<address_space::handle> address_space::resolve_object(const object& o
 {
     std::unique_lock<hpx::lcos::local::mutex> guard(address_translation_table_mutex_);
 
-    auto addr = make_address_from_id(obj.id());
+    auto addr = obj.get_id().get_gid();
 
     auto entry = entry_table_.find(addr);
 
@@ -216,7 +99,7 @@ hpx::future<address_space::handle> address_space::resolve_object(const object& o
 
         try
         {
-            return on_page_fault_(addr);
+            return on_page_fault_(obj);
         }
         catch (...)
         {
@@ -229,7 +112,7 @@ address_space::handle address_space::try_resolve_object(const object& obj) const
 {
     std::unique_lock<hpx::lcos::local::mutex> guard(address_translation_table_mutex_);
 
-    auto addr = make_address_from_id(obj.id());
+    auto addr = obj.get_id().get_gid();
 
     auto entry = entry_table_.find(addr);
 
@@ -275,23 +158,8 @@ bool address_space::evict_objects(std::size_t hint)
     return has_freed_memory;
 }
 
-const void* address_space::get_address_translation_table() const
-{
-    return translation_table_.get_table();
-}
-
-std::size_t address_space::bucket_count() const
-{
-    return translation_table_.bucket_count();
-}
-
-void address_space::on_deallocation(std::function<void(address)> callback)
-{
-    on_deallocation_.connect(std::move(callback));
-}
-
 void address_space::on_page_fault(
-    std::function<hpx::future<address_space::handle>(address)> callback)
+    std::function<hpx::future<address_space::handle>(const object& obj)> callback)
 {
     on_page_fault_.connect(std::move(callback));
 }
@@ -316,24 +184,49 @@ void address_space::dump() const
 }
 
 local_address_space::local_address_space(host_address_space& host_addr_space_)
-: host_addr_space_(&host_addr_space_)
+: host_addr_space_(host_addr_space_)
 {
+    host_addr_space_.on_page_fault([this](const object& obj) -> hpx::future<address_space::handle> {
+        auto components = obj.components();
+
+        if (!components.empty())
+        {
+            auto page = this->host_addr_space_.get().allocate_object_page(obj, sizeof(void*) * components.size(), sizeof(void*));
+
+            auto ptr = static_cast<void**>(page.data().ptr());
+
+            for (const auto& component : components)
+            {
+                auto component_page = this->host_addr_space_.get().resolve_object(component).get();
+
+                *ptr = component_page.data().ptr();
+
+                ++ptr;
+            }
+
+            return hpx::make_ready_future(std::move(page));
+        }
+        else
+        {
+            return hpx::make_exceptional_future<address_space::handle>(std::runtime_error("Page fault"));
+        }
+    });
 }
 
 local_address_space::handle
 local_address_space::allocate_object_page(const object& obj, long int size, long int alignment)
 {
-    return host_addr_space_->allocate_object_page(obj, size, alignment);
+    return host_addr_space_.get().allocate_object_page(obj, size, alignment);
 }
 
 hpx::future<local_address_space::handle> local_address_space::resolve_object(const object& obj)
 {
-    return host_addr_space_->resolve_object(obj);
+    return host_addr_space_.get().resolve_object(obj);
 }
 
 local_address_space::handle local_address_space::try_resolve_object(const object& obj) const
 {
-    return host_addr_space_->try_resolve_object(obj);
+    return host_addr_space_.get().try_resolve_object(obj);
 }
 }
 }

@@ -18,6 +18,7 @@
 #include <llvm/ExecutionEngine/JITEventListener.h>
 
 #include <llvm/Support/TargetSelect.h>
+#include <llvm/Analysis/TargetTransformInfo.h>
 
 #include <llvm/Transforms/Utils/Cloning.h>
 #include <llvm/IR/Module.h>
@@ -61,7 +62,7 @@ public:
 
     virtual ~cpu_plan_impl() = default;
 
-    void execute(const std::vector<address>& args, cpu_runtime& runtime) const override
+    void execute(const std::vector<void*>& args, cpu_runtime& runtime) const override
     {
         entry_(args.data(), &runtime);
     }
@@ -180,6 +181,11 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, jit::compile
 
     llvm::legacy::FunctionPassManager fn_pass_man(the_module.get());
     llvm::legacy::PassManager pass_man;
+
+    auto& TM = engine.get_target_machine();
+
+    fn_pass_man.add(llvm::createTargetTransformInfoWrapperPass(TM.getTargetIRAnalysis()));
+    pass_man.add(llvm::createTargetTransformInfoWrapperPass(TM.getTargetIRAnalysis()));
 
     jit::setup_function_optimization_pipeline(fn_pass_man, true);
     jit::setup_optimization_pipeline(pass_man, true, true);

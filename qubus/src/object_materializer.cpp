@@ -4,7 +4,7 @@
 
 #include <utility>
 
-namespace qbb
+/*namespace qbb
 {
 namespace qubus
 {
@@ -73,4 +73,4 @@ hpx::future<std::vector<address_space::pin>>
 }
 
 }
-}
+}*/

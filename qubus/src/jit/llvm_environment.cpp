@@ -63,7 +63,6 @@ llvm_environment::llvm_environment(llvm::LLVMContext& ctx_)
     init_assume_align();
     init_alloc_scratch_mem();
     init_dealloc_scratch_mem();
-    init_translate_address();
 }
 
 void llvm_environment::init_assume_align()
@@ -136,27 +135,6 @@ void llvm_environment::init_dealloc_scratch_mem()
     dealloc_scratch_mem_->setDoesNotCapture(1);
     dealloc_scratch_mem_->setDoesNotAlias(1);
     dealloc_scratch_mem_->setDoesNotThrow();
-}
-
-void llvm_environment::init_translate_address()
-{
-    auto generic_ptr = llvm::Type::getInt8PtrTy(ctx(), 0);
-    address_type_ = llvm::StructType::create(
-        {llvm::ArrayType::get(llvm::Type::getInt64Ty(ctx()), 2)}, "address");
-
-    std::vector<llvm::Type*> param_types = {generic_ptr, address_type_->getPointerTo(0)};
-
-    llvm::FunctionType* FT = llvm::FunctionType::get(generic_ptr, param_types, false);
-
-    translate_address_ = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
-                                                "qbb_qubus_cpurt_translate_address", &module());
-
-    translate_address_->setDoesNotCapture(1);
-    translate_address_->setDoesNotAlias(1);
-    translate_address_->setDoesNotCapture(2);
-    translate_address_->setDoesNotAlias(2);
-    translate_address_->setDoesNotThrow();
-    translate_address_->setDoesNotAccessMemory();
 }
 
 llvm::LLVMContext& llvm_environment::ctx() const
@@ -233,8 +211,10 @@ llvm::Type* llvm_environment::map_qubus_type(const type& t) const
                 .case_(struct_t(_, _), [&](const type& self) {
                     const auto& self_ = self.as<types::struct_>();
 
+                    auto generic_ptr_type = llvm::PointerType::get(llvm::Type::getInt8Ty(ctx()), 0);
+
                     auto member_table_type =
-                        llvm::ArrayType::get(address_type_, self_.member_count());
+                        llvm::ArrayType::get(generic_ptr_type, self_.member_count());
 
                     return llvm::StructType::create({member_table_type}, self_.id());
                 });
@@ -301,16 +281,6 @@ llvm::Function* llvm_environment::get_alloc_scratch_mem() const
 llvm::Function* llvm_environment::get_dealloc_scratch_mem() const
 {
     return dealloc_scratch_mem_;
-}
-
-llvm::Function* llvm_environment::get_translate_address() const
-{
-    return translate_address_;
-}
-
-llvm::Type* llvm_environment::get_address_type() const
-{
-    return address_type_;
 }
 
 bool llvm_environment::bind_symbol(const std::string& symbol, llvm::Value* value)

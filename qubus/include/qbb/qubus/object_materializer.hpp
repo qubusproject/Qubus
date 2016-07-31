@@ -16,11 +16,11 @@ namespace qbb
 namespace qubus
 {
 
-hpx::future<std::tuple<void*, std::vector<local_address_space::pin>>>
+/*hpx::future<std::tuple<void*, std::vector<local_address_space::pin>>>
 materialize_object(object obj, local_address_space& addr_space);
 
 hpx::future<std::vector<address_space::pin>>
-        materialize_object(object obj, address_space& addr_space);
+        materialize_object(object obj, address_space& addr_space);*/
 }
 }
 

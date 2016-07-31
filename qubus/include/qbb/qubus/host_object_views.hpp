@@ -28,7 +28,8 @@ namespace qubus
 class host_view_context
 {
 public:
-    explicit host_view_context(token access_token_) : access_token_(std::move(access_token_))
+    explicit host_view_context(token access_token_, local_address_space::handle associated_handle_)
+    : access_token_(std::move(access_token_)), associated_handle_(std::move(associated_handle_))
     {
     }
 
@@ -37,15 +38,9 @@ public:
 
     host_view_context(host_view_context&&) = delete;
     host_view_context& operator=(host_view_context&&) = delete;
-
-    void associate_pin(local_address_space::pin p)
-    {
-        associated_pins_.push_back(std::move(p));
-    }
-
 private:
     token access_token_;
-    std::vector<local_address_space::pin> associated_pins_;
+    local_address_space::handle associated_handle_;
 };
 
 template <typename View>
@@ -129,18 +124,13 @@ public:
 
         auto token = object_ready.get();
 
-        auto addr_space = get_local_runtime().get_address_space();
+        auto& addr_space = get_local_runtime().get_address_space();
 
-        auto ptr_and_pins = materialize_object(obj, addr_space).get();
+        auto hnd = addr_space.resolve_object(obj).get();
 
-        auto array_md = static_cast<array_metadata*>(std::get<0>(ptr_and_pins));
+        auto array_md = static_cast<array_metadata*>(hnd.data().ptr());
 
-        auto ctx = std::make_shared<host_view_context>(std::move(token));
-
-        for (auto&& pin : std::get<1>(ptr_and_pins))
-        {
-            ctx->associate_pin(std::move(pin));
-        }
+        auto ctx = std::make_shared<host_view_context>(std::move(token), std::move(hnd));
 
         return hpx::make_ready_future(
             cpu_array_view<T, Rank>(Rank, static_cast<util::index_t*>(array_md->shape),
@@ -193,7 +183,7 @@ public:
 
         auto token = object_ready.get();
 
-        auto ctx = std::make_shared<host_view_context>(std::move(token));
+        auto ctx = std::make_shared<host_view_context>(std::move(token), local_address_space::handle());
 
         auto tensor_components = obj.components();
 

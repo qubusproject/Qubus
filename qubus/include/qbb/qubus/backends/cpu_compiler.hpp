@@ -27,7 +27,7 @@ public:
     cpu_plan(const cpu_plan&) = delete;
     cpu_plan& operator=(const cpu_plan&) = delete;
 
-    virtual void execute(const std::vector<address>& args, cpu_runtime& runtime) const = 0;
+    virtual void execute(const std::vector<void*>& args, cpu_runtime& runtime) const = 0;
 };
 
 class cpu_compiler_impl;

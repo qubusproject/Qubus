@@ -58,35 +58,9 @@ namespace qubus
 class cpu_runtime
 {
 public:
-    cpu_runtime(const void* address_translation_table_, std::size_t bucket_count_)
-    : address_translation_table_(address_translation_table_), bucket_count_(bucket_count_),
-      scratch_mem_(8 * 1024 * 1024), current_stack_ptr_(scratch_mem_.data())
+    cpu_runtime()
+    : scratch_mem_(8 * 1024 * 1024), current_stack_ptr_(scratch_mem_.data())
     {
-    }
-
-    void* translate_address(address addr)
-    {
-        using bucket_type = std::pair<address, void*>;
-
-        const bucket_type* buckets = static_cast<const bucket_type*>(address_translation_table_);
-
-        auto bucket_count = bucket_count_;
-        auto guessed_bucket_id = std::hash<address>()(addr) % bucket_count;
-        auto bucket_id = guessed_bucket_id;
-
-        do
-        {
-            auto& bucket = buckets[bucket_id];
-
-            if (bucket.first == addr)
-            {
-                return bucket.second;
-            }
-
-            bucket_id = (bucket_id + 1) % bucket_count;
-        } while (bucket_id != guessed_bucket_id);
-
-        std::abort(); // invalid address
     }
 
     void* alloc_scratch_mem(util::index_t size)
@@ -104,17 +78,9 @@ public:
     }
 
 private:
-    const void* address_translation_table_;
-    std::size_t bucket_count_;
     std::vector<char> scratch_mem_;
     char* current_stack_ptr_;
 };
-
-extern "C" QBB_QUBUS_EXPORT void* qbb_qubus_cpurt_translate_address(cpu_runtime* runtime,
-                                                                    address* addr)
-{
-    return runtime->translate_address(*addr);
-}
 
 extern "C" QBB_QUBUS_EXPORT void* qbb_qubus_cpurt_alloc_scatch_mem(cpu_runtime* runtime,
                                                                    util::index_t size)
@@ -193,50 +159,35 @@ public:
 
         hpx::future<std::vector<hpx::future<token>>> deps_ready = hpx::when_all(std::move(tokens));
 
-        hpx::shared_future<void> task_done =
-            hpx::dataflow([ this, &compilation, c, ctx](
-                              hpx::future<std::vector<hpx::future<token>>>) mutable {
-                std::vector<address> task_args;
+        hpx::shared_future<void> task_done = hpx::dataflow(
+            [this, &compilation, c, ctx](hpx::future<std::vector<hpx::future<token>>>) mutable {
+                std::vector<void*> task_args;
 
-                std::vector<host_address_space::pin> pins;
-
-                host_address_translation_table address_translation_table;
+                std::vector<host_address_space::handle> pages;
 
                 for (auto& arg : ctx.args())
                 {
-                    auto arg_pins = materialize_object(arg, *address_space_).get();
+                    auto page = address_space_->resolve_object(arg).get();
 
-                    task_args.push_back(arg_pins.front().addr());
+                    task_args.push_back(page.data().ptr());
 
-                    for (auto&& pin : arg_pins)
-                    {
-                        pins.push_back(std::move(pin));
-                    }
+                    pages.push_back(std::move(page));
                 }
 
                 for (auto& result : ctx.results())
                 {
-                    auto result_pins = materialize_object(result, *address_space_).get();
+                    auto page = address_space_->resolve_object(result).get();
 
-                    task_args.push_back(result_pins.front().addr());
+                    task_args.push_back(page.data().ptr());
 
-                    for (auto&& pin : result_pins)
-                    {
-                        pins.push_back(std::move(pin));
-                    }
+                    pages.push_back(std::move(page));
                 }
 
-                for (const auto& pin : pins)
-                {
-                    address_translation_table.register_mapping(pin.addr(), pin.data().ptr());
-                }
-
-                cpu_runtime runtime(address_translation_table.get_table(),
-                                    address_translation_table.bucket_count());
+                cpu_runtime runtime;
 
                 compilation.execute(task_args, runtime);
             },
-                          std::move(deps_ready));
+            std::move(deps_ready));
 
         return hpx::make_ready_future();
     }

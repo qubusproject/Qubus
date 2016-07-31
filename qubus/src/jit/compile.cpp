@@ -431,7 +431,7 @@ reference compile(const expression& expr, compiler& comp)
 
                        auto runtime = &env.get_current_function()->getArgumentList().back();
 
-                       auto member_ptr = builder.CreateCall(env.get_translate_address(), {runtime, member});
+                       auto member_ptr = builder.CreateLoad(member);
 
                        auto typed_member_ptr = builder.CreateBitCast(member_ptr, env.map_qubus_type(member_type)->getPointerTo(0));
 

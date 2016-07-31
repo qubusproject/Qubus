@@ -17,27 +17,22 @@ namespace qubus
 class address
 {
 public:
-    constexpr address() : components_{{0, 0}}
+    constexpr address() : value_(0)
     {
     }
 
-    constexpr address(std::uint64_t msb, std::uint64_t lsb) : components_{{msb, lsb}}
+    constexpr address(std::uint64_t value_) : value_(value_)
     {
     }
 
-    constexpr std::uint64_t msb() const
+    constexpr std::uint64_t get() const
     {
-        return components_[0];
-    }
-
-    constexpr std::uint64_t lsb() const
-    {
-        return components_[1];
+        return value_;
     }
 
     friend bool operator==(address lhs, address rhs)
     {
-        return lhs.components_ == rhs.components_;
+        return lhs.value_ == rhs.value_;
     }
 
     friend bool operator!=(address lhs, address rhs)
@@ -47,14 +42,14 @@ public:
 
     friend bool operator<(address lhs, address rhs)
     {
-        return lhs.components_ < rhs.components_;
+        return lhs.value_ < rhs.value_;
     }
 
 private:
-    std::array<std::uint64_t, 2> components_;
+    std::uint64_t value_;
 };
 
-static_assert(sizeof(address) == 2 * sizeof(std::uint64_t),
+static_assert(sizeof(address) == sizeof(std::uint64_t),
               "The layout of qbb:qubus::address is broken.");
 static_assert(std::is_standard_layout<address>::value,
               "qbb:qubus::address is not a standard layout type.");
@@ -64,8 +59,7 @@ inline std::ostream& operator<<(std::ostream& os, const address& value)
     std::ios state(nullptr);
     state.copyfmt(os);
 
-    os << "0x" << std::hex << std::right << std::setfill('0') << std::setw(16) << value.msb()
-       << std::right << std::setfill('0') << std::setw(16) << value.lsb();
+    os << "0x" << std::hex << std::right << std::setfill('0') << std::setw(16) << value.get();
 
     os.copyfmt(state);
 
@@ -73,11 +67,6 @@ inline std::ostream& operator<<(std::ostream& os, const address& value)
 }
 
 constexpr address nulladdr = address();
-
-inline address make_address_from_id(const hpx::id_type &id)
-{
-    return address(id.get_msb(), id.get_lsb());
-}
 
 }
 }
@@ -92,9 +81,9 @@ struct hash<qbb::qubus::address>
 
     result_type operator()(const argument_type& addr) const
     {
-        result_type h1 = std::hash<std::uint64_t>()(addr.lsb());
-        result_type h2 = std::hash<std::uint64_t>()(addr.msb());
-        return h1 ^ (h2 << 1);
+        result_type hash = std::hash<std::uint64_t>()(addr.get());
+
+        return hash;
     }
 };
 }

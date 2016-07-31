@@ -45,9 +45,7 @@ local_object_factory_server::create_array(type value_type, std::vector<util::ind
     auto instance = address_space_->allocate_object_page(obj, util::to_uindex(layout.size()),
                                                          util::to_uindex(layout.alignment()));
 
-    auto pin = instance.pin_object().get();
-
-    auto& mem_block = pin.data();
+    auto& mem_block = instance.data();
 
     void* data = mem_block.ptr();
 
@@ -75,33 +73,12 @@ hpx::future<hpx::id_type> local_object_factory_server::create_struct(type struct
 {
     object obj = new_here<object_server>(struct_type);
 
-    auto object_size = members.size() * sizeof(address);
-
-    auto instance =
-        address_space_->allocate_object_page(obj, util::to_uindex(object_size), util::to_uindex(sizeof(void*)));
-
-    auto pin = instance.pin_object().get();
-
-    auto& mem_block = pin.data();
-
     auto obj_ptr = hpx::get_ptr_sync<object_server>(obj.get_id());
-
-    auto* data = static_cast<address*>(mem_block.ptr());
 
     for (const auto& member : members)
     {
-        static_assert(std::is_trivially_destructible<address>::value, "Object component not trivially destructible.");
-
-        auto QBB_UNUSED(pos) = new (data) address(make_address_from_id(member.id()));
-
-        QBB_ASSERT(pos == data, "Object component is not constructed at the expected position.");
-
-        ++data;
-
         obj_ptr->add_component(member);
     }
-
-    obj_ptr->register_instance(std::move(instance));
 
     return hpx::make_ready_future(obj.get());
 }
