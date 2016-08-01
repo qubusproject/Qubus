@@ -207,12 +207,11 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, jit::compile
     /*std::cout << "The assembler output:\n\n";
 
     llvm::raw_os_ostream m3log(std::cout);
-    llvm::formatted_raw_ostream fm3log(m3log);
+    llvm::buffer_ostream fm3log(m3log);
 
-    llvm::PassManager pMPasses;
-    // pMPasses.add(new llvm::DataLayoutPass(*engine.getDataLayout()));
-    engine.get_target_machine()->addPassesToEmitFile(pMPasses, fm3log,
-                                                   llvm::TargetMachine::CGFT_AssemblyFile);
+    llvm::legacy::PassManager pMPasses;
+
+    TM.addPassesToEmitFile(pMPasses, fm3log, llvm::TargetMachine::CGFT_AssemblyFile);
     pMPasses.run(*the_module);*/
 
     engine.add_module(std::move(the_module));
