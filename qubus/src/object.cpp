@@ -1,5 +1,7 @@
 #include <qbb/qubus/object.hpp>
 
+#include <qbb/qubus/local_runtime.hpp>
+
 #include <utility>
 
 using server_type = hpx::components::component<qbb::qubus::object_server>;
@@ -36,6 +38,11 @@ type object_server::object_type() const
     return object_type_;
 }
 
+object_server::~object_server()
+{
+    get_local_runtime().get_address_space().free_object(object(id()));
+}
+
 hpx::id_type object_server::id() const
 {
     return get_id();
@@ -69,6 +76,10 @@ void object_server::add_component(const object& component)
 const object& object_server::operator()(long int index) const
 {
     return components_.at(index);
+}
+
+object::object(hpx::id_type&& id) : base_type(std::move(id))
+{
 }
 
 object::object(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))

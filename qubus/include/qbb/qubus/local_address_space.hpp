@@ -77,6 +77,7 @@ public:
     explicit address_space(std::unique_ptr<allocator> allocator_);
 
     handle allocate_object_page(const object& obj, long int size, long int alignment);
+    void free_object(const object& obj);
     hpx::future<handle> resolve_object(const object& obj);
     handle try_resolve_object(const object& obj) const;
 
@@ -108,6 +109,7 @@ public:
     explicit local_address_space(host_address_space& host_addr_space_);
 
     handle allocate_object_page(const object& obj, long int size, long int alignment);
+    void free_object(const object& obj);
     hpx::future<handle> resolve_object(const object& obj);
     handle try_resolve_object(const object& obj) const;
 
