@@ -80,6 +80,13 @@ address_space::handle address_space::allocate_object_page(const object& obj, lon
     return address_space::handle(pos->second);
 }
 
+void address_space::free_object(const object& obj)
+{
+    std::unique_lock<hpx::lcos::local::mutex> guard(address_translation_table_mutex_);
+
+    entry_table_.erase(obj.get_id().get_gid());
+}
+
 hpx::future<address_space::handle> address_space::resolve_object(const object& obj)
 {
     std::unique_lock<hpx::lcos::local::mutex> guard(address_translation_table_mutex_);
@@ -217,6 +224,11 @@ local_address_space::handle
 local_address_space::allocate_object_page(const object& obj, long int size, long int alignment)
 {
     return host_addr_space_.get().allocate_object_page(obj, size, alignment);
+}
+
+void local_address_space::free_object(const object& obj)
+{
+    host_addr_space_.get().free_object(obj);
 }
 
 hpx::future<local_address_space::handle> local_address_space::resolve_object(const object& obj)

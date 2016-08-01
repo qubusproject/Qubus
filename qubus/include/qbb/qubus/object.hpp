@@ -25,6 +25,7 @@ class object_server : public hpx::components::component_base<object_server>
 public:
     object_server() = default;
     explicit object_server(type object_type_);
+    ~object_server();
 
     object_server(const object_server&) = delete;
     object_server& operator=(const object_server&) = delete;
@@ -59,6 +60,7 @@ public:
     using base_type = hpx::components::client_base<object, object_server>;
 
     object() = default;
+    object(hpx::id_type&& id);
     object(hpx::future<hpx::id_type>&& id);
 
     type object_type() const;
