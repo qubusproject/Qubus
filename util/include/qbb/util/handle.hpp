@@ -3,6 +3,12 @@
 
 #include <boost/serialization/is_bitwise_serializable.hpp>
 
+// Workaround for a missing definition of mpl_::true_ if using Boost 1.61.0 and following
+#include <boost/version.hpp>
+#if BOOST_VERSION >= 106100
+#include <boost/mpl/bool.hpp>
+#endif
+
 #include <qbb/util/unused.hpp>
 
 #include <cstdint>
