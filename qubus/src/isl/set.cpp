@@ -28,6 +28,15 @@ basic_set::~basic_set()
     isl_basic_set_free(handle_);
 }
 
+basic_set& basic_set::operator=(basic_set other)
+{
+    isl_basic_set_free(handle_);
+
+    handle_ = other.release();
+
+    return *this;
+}
+
 isl_basic_set* basic_set::native_handle() const
 {
     return handle_;
@@ -70,6 +79,26 @@ bool is_subset(const basic_set& lhs, const basic_set& rhs)
 bool is_empty(const basic_set& s)
 {
     return isl_basic_set_is_empty(s.native_handle());
+}
+
+basic_set flat_product(basic_set lhs, basic_set rhs)
+{
+    return basic_set(isl_basic_set_flat_product(lhs.release(), rhs.release()));
+}
+
+basic_set align_params(basic_set s, space model)
+{
+    return basic_set(isl_basic_set_align_params(s.release(), model.release()));
+}
+
+basic_set add_dims(basic_set s, isl_dim_type type, unsigned int n)
+{
+    return basic_set(isl_basic_set_add_dims(s.release(), type, n));
+}
+
+basic_set project_out(basic_set s, isl_dim_type type, unsigned int first, unsigned int n)
+{
+    return basic_set(isl_basic_set_project_out(s.release(), type, first, n));
 }
 
 set::set(isl_set* handle_) : handle_{handle_}
@@ -142,6 +171,16 @@ std::string set::get_tuple_name() const
     return std::string(isl_set_get_tuple_name(handle_));
 }
 
+void set::set_dim_name(isl_dim_type type, int pos, const std::string& name)
+{
+    handle_ = isl_set_set_dim_name(handle_, type, pos, name.c_str());
+}
+
+boost::string_ref set::get_dim_name(isl_dim_type type, int pos) const
+{
+    return isl_set_get_dim_name(handle_, type, pos);
+}
+
 bool set::bounded()
 {
     return isl_set_is_bounded(handle_);
@@ -175,6 +214,11 @@ set intersect_params(set lhs, set rhs)
 set substract(set lhs, set rhs)
 {
     return set(isl_set_subtract(lhs.release(), rhs.release()));
+}
+
+set complement(set arg)
+{
+    return set(isl_set_complement(arg.release()));
 }
 
 bool is_subset(const set& lhs, const set& rhs)
@@ -215,6 +259,31 @@ set lexmin(set s)
 set lexmax(set s)
 {
     return set(isl_set_lexmax(s.release()));
+}
+
+set add_dims(set s, isl_dim_type type, unsigned int n)
+{
+    return set(isl_set_add_dims(s.release(), type, n));
+}
+
+set coalesce(set s)
+{
+    return set(isl_set_coalesce(s.release()));
+}
+
+set detect_equalities(set s)
+{
+    return set(isl_set_detect_equalities(s.release()));
+}
+
+set remove_redundancies(set s)
+{
+    return set(isl_set_remove_redundancies(s.release()));
+}
+
+set simplify(set s)
+{
+    return remove_redundancies(detect_equalities(coalesce(std::move(s))));
 }
 
 union_set::union_set(isl_union_set* handle_) : handle_(handle_)
@@ -318,6 +387,26 @@ union_set add_set(union_set uset, set s)
 set extract_set(const union_set& uset, space s)
 {
     return set(isl_union_set_extract_set(uset.native_handle(), s.release()));
+}
+
+union_set coalesce(union_set s)
+{
+    return union_set(isl_union_set_coalesce(s.release()));
+}
+
+union_set detect_equalities(union_set s)
+{
+    return union_set(isl_union_set_detect_equalities(s.release()));
+}
+
+union_set remove_redundancies(union_set s)
+{
+    return union_set(isl_union_set_remove_redundancies(s.release()));
+}
+
+union_set simplify(union_set s)
+{
+    return remove_redundancies(detect_equalities(coalesce(std::move(s))));
 }
 
 namespace
