@@ -42,6 +42,14 @@ if (QBB_RUN_IWYU)
   set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE include-what-you-use)
 endif()
 
+if (NOT CMAKE_VERSION VERSION_LESS 3.6.0)
+    option(QBB_RUN_CLANG_TIDY "Toggle if CMake (>= 3.6.0) should run clang-tidy during compilation." OFF)
+endif()
+
+if (QBB_RUN_CLANG_TIDY)
+    set(CMAKE_CXX_CLANG_TIDY clang-tidy;-checks=-*,modernize-*,performance-*,readability-*,clang-analyzer-*,cppcoreguidelines-*,misc-*,-clang-analyzer-alpha.core.CastToStruct;-p;build)
+endif()
+
 add_subdirectory(util)
 add_subdirectory(qubus)
 
