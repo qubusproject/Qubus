@@ -64,12 +64,12 @@ object_factory runtime::get_object_factory() const
 
 void init(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
 {
-    auto global_runtime = hpx::agas::resolve_name_sync("/qubus/runtime");
+    auto global_runtime = hpx::agas::resolve_name(hpx::launch::sync, "/qubus/runtime");
 
     if (!global_runtime)
     {
         auto new_runtime = hpx::new_<runtime>(hpx::find_here());
-        hpx::agas::register_name_sync("/qubus/runtime", new_runtime.get_id());
+        hpx::agas::register_name(hpx::launch::sync, "/qubus/runtime", new_runtime.get_id());
     }
 }
 
