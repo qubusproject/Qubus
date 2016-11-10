@@ -59,10 +59,16 @@ private:
     Body body_;
 };
 
+template<typename Order, typename Body>
+auto compound(Order order, Body body)
+{
+    return compound_pattern<Order, Body>(order, body);
+}
+
 template <typename Body>
 auto compound(Body body)
 {
-    return compound_pattern<any, Body>(_, body);
+    return compound(_, body);
 }
 
 template <typename... Body>
