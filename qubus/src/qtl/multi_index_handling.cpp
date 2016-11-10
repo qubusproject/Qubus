@@ -57,7 +57,7 @@ std::unique_ptr<expression> expand_multi_indices(const expression& expr)
     std::map<util::handle, std::vector<std::unique_ptr<expression>>> multi_index_map;
 
     variable<std::vector<std::reference_wrapper<expression>>> indices;
-    variable<const expression&> tensor;
+    variable<const access_expr&> tensor;
 
     variable<std::vector<variable_declaration>> index_decls;
     variable<variable_declaration> alias;

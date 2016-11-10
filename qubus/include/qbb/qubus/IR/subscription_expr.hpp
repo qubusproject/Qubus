@@ -3,7 +3,7 @@
 
 #include <hpx/config.hpp>
 
-#include <qbb/qubus/IR/expression.hpp>
+#include <qbb/qubus/IR/access_qualifier.hpp>
 #include <qbb/util/unused.hpp>
 
 #include <hpx/runtime/serialization/vector.hpp>
@@ -17,21 +17,23 @@ namespace qbb
 namespace qubus
 {
 
-class subscription_expr : public expression_base<subscription_expr>
+class subscription_expr : public access_qualifier_base<subscription_expr>
 {
 public:
     subscription_expr() = default;
-    subscription_expr(std::unique_ptr<expression> indexed_expr_,
+    subscription_expr(std::unique_ptr<access_expr> indexed_expr_,
                       std::vector<std::unique_ptr<expression>> indices_);
 
     virtual ~subscription_expr() = default;
 
-    const expression& indexed_expr() const;
+    const access_expr& indexed_expr() const;
 
     auto indices() const
     {
         return indices_ | boost::adaptors::indirected;
     }
+
+    const access_expr& qualified_access() const override final;
 
     subscription_expr* clone() const override final;
 
@@ -52,7 +54,7 @@ public:
     HPX_SERIALIZATION_POLYMORPHIC(subscription_expr);
 
 private:
-    std::unique_ptr<expression> indexed_expr_;
+    std::unique_ptr<access_expr> indexed_expr_;
     std::vector<std::unique_ptr<expression>> indices_;
 };
 
@@ -60,14 +62,14 @@ bool operator==(const subscription_expr& lhs, const subscription_expr& rhs);
 bool operator!=(const subscription_expr& lhs, const subscription_expr& rhs);
 
 inline std::unique_ptr<subscription_expr>
-subscription(std::unique_ptr<expression> indexed_expr,
+subscription(std::unique_ptr<access_expr> indexed_expr,
              std::vector<std::unique_ptr<expression>> indices)
 {
     return std::make_unique<subscription_expr>(std::move(indexed_expr), std::move(indices));
 }
 
 inline auto
-subscription(std::unique_ptr<expression> indexed_expr, std::unique_ptr<expression> index)
+subscription(std::unique_ptr<access_expr> indexed_expr, std::unique_ptr<expression> index)
 {
     std::vector<std::unique_ptr<expression>> indices;
     indices.reserve(1);

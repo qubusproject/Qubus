@@ -3,7 +3,7 @@
 
 #include <hpx/config.hpp>
 
-#include <qbb/qubus/IR/expression.hpp>
+#include <qbb/qubus/IR/access.hpp>
 #include <qbb/qubus/IR/variable_declaration.hpp>
 
 #include <qbb/util/hash.hpp>
@@ -18,7 +18,7 @@ namespace qbb
 namespace qubus
 {
     
-class variable_ref_expr : public expression_base<variable_ref_expr>
+class variable_ref_expr : public access_expr_base<variable_ref_expr>
 {
 public:
     variable_ref_expr() = default;
