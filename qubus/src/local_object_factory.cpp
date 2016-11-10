@@ -60,7 +60,7 @@ local_object_factory_server::create_array(type value_type, std::vector<util::ind
         current_shape[i] = shape[i];
     }
 
-    auto obj_ptr = hpx::get_ptr_sync<object_server>(obj.get_id());
+    auto obj_ptr = hpx::get_ptr<object_server>(hpx::launch::sync, obj.get_id());
 
     obj_ptr->register_instance(std::move(instance));
 
@@ -72,7 +72,7 @@ hpx::future<hpx::id_type> local_object_factory_server::create_struct(type struct
 {
     object obj = new_here<object_server>(struct_type);
 
-    auto obj_ptr = hpx::get_ptr_sync<object_server>(obj.get_id());
+    auto obj_ptr = hpx::get_ptr<object_server>(hpx::launch::sync, obj.get_id());
 
     for (const auto& member : members)
     {

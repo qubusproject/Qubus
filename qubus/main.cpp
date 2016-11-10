@@ -91,7 +91,7 @@ int hpx_main(int argc, char** argv)
 
     hpx::cout << "------------------------------------------------------" << hpx::endl;
 
-    auto num_localities = hpx::get_num_localities_sync();
+    auto num_localities = hpx::get_num_localities(hpx::launch::sync);
 
     long int N = 3000;
 

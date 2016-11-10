@@ -39,7 +39,7 @@ hpx::future<hpx::id_type> object_factory_server::create_array(type value_type,
     auto obj =
         local_factories_.at(next_factory).create_array(std::move(value_type), std::move(shape));
 
-    next_factory = (next_factory + 1) % hpx::get_num_localities_sync();
+    next_factory = (next_factory + 1) % hpx::get_num_localities(hpx::launch::sync);
 
     return hpx::make_ready_future(obj.get());
 }
