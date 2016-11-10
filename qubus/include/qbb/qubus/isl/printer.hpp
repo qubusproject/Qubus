@@ -17,6 +17,7 @@ class union_map;
 class basic_set;
 class set;
 class context;
+class union_flow;
     
 class printer
 {
@@ -38,6 +39,8 @@ public:
     void print(const ast_node& ast);
 
     void print(const ast_expr& expr);
+
+    void print(const union_flow& flow);
     
     void print_macro(isl_ast_op_type op_type);
 
