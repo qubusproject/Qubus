@@ -13,6 +13,7 @@
 #include <boost/range/any_range.hpp>
 #include <boost/range/irange.hpp>
 
+#include <type_traits>
 #include <utility>
 #include <vector>
 
@@ -132,18 +133,28 @@ bool operator==(const expression& lhs, const expression& rhs);
 bool operator!=(const expression& lhs, const expression& rhs);
 
 std::unique_ptr<expression> clone(const expression& expr);
+
+template <typename Expression, typename Enabled = typename std::enable_if<std::is_base_of<expression, Expression>::value>::type>
+std::unique_ptr<Expression> clone(const Expression& expr)
+{
+    return std::unique_ptr<Expression>(static_cast<Expression*>(expr.clone()));
+}
+
 std::vector<std::unique_ptr<expression>>
 clone(const std::vector<std::unique_ptr<expression>>& expressions);
 std::vector<std::unique_ptr<expression>>
 clone(const std::vector<std::reference_wrapper<expression>>& expressions);
 
-template <typename Expression>
-class expression_base : public expression
+template <typename Expression, typename ExpressionBase = expression>
+class expression_base : public ExpressionBase
 {
 public:
+    static_assert(std::is_base_of<expression, ExpressionBase>::value,
+                  "expression needs to be a base class of ExpressionBase.");
+
     expression_base()
     {
-        tag_ = implementation_table_.register_type<Expression>();
+        tag_ = this->implementation_table_.template register_type<Expression>();
     }
 
     virtual ~expression_base() = default;
@@ -161,9 +172,9 @@ public:
     boost::any_range<const expression&, boost::forward_traversal_tag>
     sub_expressions() const override final
     {
-        return boost::irange<std::size_t>(0, arity()) |
+        return boost::irange<std::size_t>(0, this->arity()) |
                boost::adaptors::transformed(
-                   [this](std::size_t index) -> decltype(auto) { return child(index); });
+                   [this](std::size_t index) -> decltype(auto) { return this->child(index); });
     }
 
     qbb::util::index_t type_tag() const override final
