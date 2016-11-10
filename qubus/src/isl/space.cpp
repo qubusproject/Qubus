@@ -37,6 +37,15 @@ space::~space()
     isl_space_free(handle_);
 }
 
+space& space::operator=(space other)
+{
+    isl_space_free(handle_);
+
+    handle_ = other.release();
+
+    return *this;
+}
+
 isl_space* space::native_handle() const
 {
     return handle_;
@@ -76,11 +85,31 @@ int space::find_dim_by_name(isl_dim_type type, const std::string& name) const
     return isl_space_find_dim_by_name(handle_, type, name.c_str());
 }
 
+context_ref space::get_ctx() const
+{
+    return context_ref(isl_space_get_ctx(handle_));
+}
+
+space space::from_domain_and_range(space domain, space range)
+{
+    return space(isl_space_map_from_domain_and_range(domain.release(), range.release()));
+}
+
+space add_dims(space s, isl_dim_type type, unsigned int n)
+{
+    return space(isl_space_add_dims(s.release(), type, n));
+}
+
 space drop_all_dims(space s, isl_dim_type type)
 {
     auto n = s.dim(type);
     
     return space(isl_space_drop_dims(s.release(), type, 0, n));
+}
+
+space align_params(space s, space model)
+{
+    return space(isl_space_align_params(s.release(), model.release()));
 }
 }
 }
