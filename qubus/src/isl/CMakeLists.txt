@@ -13,7 +13,7 @@ set(qubus_isl_source_files affine_expr.cpp ast.cpp ast_builder.cpp constraint.cp
                            context.cpp flow.cpp local_space.cpp map.cpp
                            printer.cpp schedule.cpp set.cpp space.cpp value.cpp
                            id.cpp band.cpp schedule_node.cpp
-                           multi_union_pw_affine_expr.cpp pw_aff.cpp pw_multi_aff.cpp)
+                           multi_union_pw_affine_expr.cpp pw_aff.cpp pw_multi_aff.cpp multi_affine_expr.cpp)
 
 find_package(ISL MODULE REQUIRED)               
 
