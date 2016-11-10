@@ -74,6 +74,11 @@ bool schedule_node::band_is_permutable() const
     return isl_schedule_node_band_get_permutable(handle_);
 }
 
+void schedule_node::band_member_set_coincident(int pos, bool is_coincident)
+{
+    handle_ = isl_schedule_node_band_member_set_coincident(handle_, pos, is_coincident ? 1 : 0);
+}
+
 void schedule_node::band_member_set_ast_loop_type(int pos, isl_ast_loop_type type)
 {
     handle_ = isl_schedule_node_band_member_set_ast_loop_type(handle_, pos, type);
@@ -121,6 +126,11 @@ isl_schedule_node* schedule_node::release() noexcept
     handle_ = nullptr;
 
     return tmp;
+}
+
+schedule_node schedule_node::from_domain(union_set domain)
+{
+    return schedule_node(isl_schedule_node_from_domain(domain.release()));
 }
 
 schedule_node schedule_node::from_extension(union_map extension)
