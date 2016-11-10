@@ -6,6 +6,7 @@
 #include <qbb/qubus/isl/set.hpp>
 #include <qbb/qubus/isl/context.hpp>
 #include <qbb/qubus/isl/id.hpp>
+#include <qbb/qubus/isl/multi_affine_expr.hpp>
 
 #include <isl/map.h>
 #include <isl/union_map.h>
@@ -108,6 +109,8 @@ public:
     static map universe(space s);
     static map empty(space s);
     static map identity(space s);
+
+    static map from_multi_affine_expr(multi_affine_expr expr);
 private:
     isl_map* handle_;
 };
@@ -142,6 +145,8 @@ map reverse(map m);
 map coalesce(map m);
 map detect_equalities(map m);
 map remove_redundancies(map m);
+
+map simplify(map m);
 
 set wrap(map m);
 
@@ -220,6 +225,11 @@ inline union_map reverse(union_map m)
 {
     return union_map(isl_union_map_reverse(m.release()));
 }
+
+union_map coalesce(union_map m);
+union_map detect_equalities(union_map m);
+union_map remove_redundancies(union_map m);
+union_map simplify(union_map m);
 
 }
 }

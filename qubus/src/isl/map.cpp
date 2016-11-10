@@ -240,6 +240,11 @@ map map::identity(space s)
     return map(isl_map_identity(s.release()));
 }
 
+map map::from_multi_affine_expr(multi_affine_expr expr)
+{
+    return map(isl_map_from_multi_aff(expr.release()));
+}
+
 map project_out(map m, isl_dim_type type, unsigned int first, unsigned int n)
 {
     return map(isl_map_project_out(m.release(), type, first, n));
@@ -327,6 +332,11 @@ map detect_equalities(map m)
 map remove_redundancies(map m)
 {
     return map(isl_map_remove_redundancies(m.release()));
+}
+
+map simplify(map m)
+{
+    return remove_redundancies(detect_equalities(coalesce(std::move(m))));
 }
 
 set wrap(map m)
@@ -496,6 +506,26 @@ union_map align_params(union_map m, space s)
 union_map project_out(union_map m, isl_dim_type type, unsigned int first, unsigned int n)
 {
     return union_map(isl_union_map_project_out(m.release(), type, first, n));
+}
+
+union_map coalesce(union_map m)
+{
+    return union_map(isl_union_map_coalesce(m.release()));
+}
+
+union_map detect_equalities(union_map m)
+{
+    return union_map(isl_union_map_detect_equalities(m.release()));
+}
+
+union_map remove_redundancies(union_map m)
+{
+    return union_map(isl_union_map_remove_redundancies(m.release()));
+}
+
+union_map simplify(union_map m)
+{
+    return remove_redundancies(detect_equalities(coalesce(std::move(m))));
 }
 
 namespace
