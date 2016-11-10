@@ -2,6 +2,7 @@
 #define QBB_QUBUS_ISL_MULTI_UNION_PW_AFFINE_EXPR_HPP
 
 #include <qbb/qubus/isl/map.hpp>
+#include <qbb/qubus/isl/affine_expr.hpp>
 
 #include <isl/aff.h>
 
@@ -16,6 +17,7 @@ class multi_union_pw_affine_expr
 {
 public:
     explicit multi_union_pw_affine_expr(isl_multi_union_pw_aff* handle_);
+    multi_union_pw_affine_expr(affine_expr aff);
     
     multi_union_pw_affine_expr(const multi_union_pw_affine_expr& other);
 
