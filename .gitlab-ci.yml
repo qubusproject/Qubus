@@ -1,3 +1,6 @@
+# Currently, we run all test configurations concurrently to optimize for the usual (non failing) case.
+# We could also run the debug tests first and abort the entire pipeline if they fail to shorten the build but
+# IMHO we would not gain enough speedup to justify the regression in all other cases.
 Clang (Release):
   script:
   - "sudo chown -R `whoami`: ."
@@ -10,6 +13,7 @@ Clang (Release):
   - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
   - ctest
+  stage: test
   tags:
   - docker
 GCC (Release):
@@ -24,6 +28,37 @@ GCC (Release):
   - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
   - ctest
+  stage: test
+  tags:
+  - docker
+Clang (Debug):
+  script:
+  - "sudo chown -R `whoami`: ."
+  - git submodule update --init
+  - ls -la
+  - export CC=clang
+  - export CXX=clang++
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Debug -DHPX_DIR=/opt/hpx-debug -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - make
+  - ctest
+  stage: test
+  tags:
+  - docker
+GCC (Debug):
+  script:
+  - "sudo chown -R `whoami`: ."
+  - git submodule update --init
+  - ls -la
+  - export CC=gcc
+  - export CXX=g++
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Debug  -DHPX_DIR=/opt/hpx-debug -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - make
+  - ctest
+  stage: test
   tags:
   - docker
 Build documentation:
@@ -36,7 +71,7 @@ Build documentation:
   - cmake -DCMAKE_BUILD_TYPE=Release -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make doc
   - scp -r qubus/doc/html/* supas335@upload.rz.uni-kiel.de:htdocs/qubus/doc
-  type: deploy
+  stage: deploy
   tags:
   - docker
   - doc
