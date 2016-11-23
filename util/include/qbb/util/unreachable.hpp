@@ -12,6 +12,12 @@
         __builtin_unreachable();                                                                   \
     } while (false)
 
+#define QBB_UNREACHABLE_BECAUSE(MESSAGE)                                                           \
+    do                                                                                             \
+    {                                                                                              \
+        QBB_ASSERT(false, "Reached unreachable location: " MESSAGE);                               \
+        __builtin_unreachable();                                                                   \
+    } while (false)
 #else
 
 #warning "unreachable builtin not supported"
