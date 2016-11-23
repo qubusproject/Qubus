@@ -26,7 +26,8 @@ set(qubus_source_files allocator.cpp loop_optimizer.cpp
                        make_implicit_conversions_explicit.cpp scheduler.cpp object.cpp
                        runtime.cpp computelet.cpp host_allocator.cpp
                        local_object_factory.cpp vpu.cpp aggregate_vpu.cpp
-                       architecture_identifier.cpp object_monitor.cpp token.cpp)
+                       architecture_identifier.cpp object_monitor.cpp token.cpp
+                       pass_manager.cpp)
 
 add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 
