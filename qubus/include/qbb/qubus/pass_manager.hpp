@@ -27,7 +27,7 @@ namespace qubus
 using analysis_id = std::type_index;
 
 template <typename AnalysisPass>
-constexpr analysis_id get_analysis_id()
+analysis_id get_analysis_id()
 {
     return typeid(AnalysisPass);
 }
@@ -42,6 +42,90 @@ struct analysis_traits
     using result_type = typename Analysis::result_type;
 };
 
+class analysis_result
+{
+public:
+    analysis_result() = default;
+
+    template <typename T>
+    analysis_result(T value_)
+    : self_(std::make_unique<analysis_result_wrapper<T>>(std::move(value_)))
+    {
+    }
+
+    analysis_result(const analysis_result&) = delete;
+    analysis_result& operator=(const analysis_result&) = delete;
+
+    analysis_result(analysis_result&&) = default;
+    analysis_result& operator=(analysis_result&&) = default;
+
+    bool empty() const
+    {
+        return self_ == nullptr;
+    }
+
+    template <typename T>
+    const T& as() const
+    {
+        auto typed_self = dynamic_cast<const analysis_result_wrapper<T>*>(self_.get());
+
+        QBB_ASSERT(typed_self != nullptr, "Unexpected analysis result type.");
+
+        return typed_self->value();
+    }
+
+    template <typename T>
+    T& as()
+    {
+        auto typed_self = dynamic_cast<analysis_result_wrapper<T>*>(self_.get());
+
+        QBB_ASSERT(typed_self != nullptr, "Unexpected analysis result type.");
+
+        return typed_self->value();
+    }
+
+private:
+    class analysis_result_interface
+    {
+    public:
+        analysis_result_interface() = default;
+
+        virtual ~analysis_result_interface() = default;
+
+        analysis_result_interface(const analysis_result_interface&) = delete;
+        analysis_result_interface(analysis_result_interface&&) = delete;
+
+        analysis_result_interface& operator=(const analysis_result_interface&) = delete;
+        analysis_result_interface& operator=(analysis_result_interface&&) = delete;
+    };
+
+    template <typename T>
+    class analysis_result_wrapper final : public analysis_result_interface
+    {
+    public:
+        virtual ~analysis_result_wrapper() = default;
+
+        explicit analysis_result_wrapper(T value_) : value_(std::move(value_))
+        {
+        }
+
+        const T& value() const
+        {
+            return value_;
+        }
+
+        T& value()
+        {
+            return value_;
+        }
+
+    private:
+        T value_;
+    };
+
+    std::unique_ptr<analysis_result_interface> self_;
+};
+
 class analysis_pass
 {
 public:
@@ -51,14 +135,14 @@ public:
     {
     }
 
-    boost::any run(const expression& expr, analysis_manager& manager) const
+    analysis_result run(const expression& expr, analysis_manager& manager) const
     {
         return self_->run(expr, manager);
     }
 
     analysis_id id() const
     {
-        return typeid(*self_);
+        return self_->id();
     }
 
     std::vector<analysis_id> required_analyses() const
@@ -79,9 +163,11 @@ private:
         analysis_pass_interface& operator=(const analysis_pass_interface&) = delete;
         analysis_pass_interface& operator=(analysis_pass_interface&&) = delete;
 
-        virtual boost::any run(const expression& expr, analysis_manager& manager) const = 0;
+        virtual analysis_result run(const expression& expr, analysis_manager& manager) const = 0;
 
         virtual std::vector<analysis_id> required_analyses() const = 0;
+
+        virtual analysis_id id() const = 0;
     };
 
     template <typename AnalysisPass>
@@ -94,7 +180,7 @@ private:
         {
         }
 
-        boost::any run(const expression& expr, analysis_manager& manager) const override
+        analysis_result run(const expression& expr, analysis_manager& manager) const override
         {
             return analysis_.run(expr, manager);
         }
@@ -102,6 +188,11 @@ private:
         std::vector<analysis_id> required_analyses() const override
         {
             return analysis_.required_analyses();
+        }
+
+        analysis_id id() const override
+        {
+            return typeid(AnalysisPass);
         }
     private:
         AnalysisPass analysis_;
@@ -118,7 +209,8 @@ public:
     {
         std::lock_guard<std::mutex> guard(analysis_pass_table_mutex_);
 
-        analysis_pass_constructor_table_.emplace(get_analysis_id<AnalysisPass>(), [] { return AnalysisPass(); });
+        analysis_pass_constructor_table_.emplace(get_analysis_id<AnalysisPass>(),
+                                                 [] { return AnalysisPass(); });
     }
 
     std::vector<analysis_pass> construct_all_passes() const
@@ -141,9 +233,11 @@ public:
 
         return instance;
     }
+
 private:
     mutable std::mutex analysis_pass_table_mutex_;
-    std::unordered_map<analysis_id, std::function<analysis_pass()>> analysis_pass_constructor_table_;
+    std::unordered_map<analysis_id, std::function<analysis_pass()>>
+        analysis_pass_constructor_table_;
 };
 
 template <typename AnalysisPass>
@@ -183,12 +277,10 @@ public:
     {
         if (!cached_result_.empty())
         {
-            auto* typed_result =
-                boost::any_cast<typename analysis_traits<Analysis>::result_type>(cached_result_);
+            auto typed_result =
+                cached_result_.as<typename analysis_traits<Analysis>::result_type>();
 
-            QBB_ASSERT(typed_result, "Unexpected analysis result type.");
-
-            return *typed_result;
+            return typed_result;
         }
         else
         {
@@ -204,12 +296,9 @@ public:
             cached_result_ = pass_.run(expr, manager_);
         }
 
-        auto* typed_result =
-            boost::any_cast<typename analysis_traits<Analysis>::result_type>(&cached_result_);
+        auto typed_result = cached_result_.as<typename analysis_traits<Analysis>::result_type>();
 
-        QBB_ASSERT(typed_result, "Unexpected analysis result type.");
-
-        return *typed_result;
+        return typed_result;
     }
 
     void invalidate()
@@ -222,7 +311,7 @@ public:
 
 private:
     analysis_pass pass_;
-    boost::any cached_result_;
+    analysis_result cached_result_;
 
     std::vector<analysis_node*> dependents_;
 
@@ -273,7 +362,7 @@ public:
 
         if (search_result != analysis_table_.end())
         {
-            return search_result->second->get_analysis_cached<Analysis>(expr);
+            return search_result->second->template get_analysis_cached<Analysis>(expr);
         }
         else
         {
@@ -288,7 +377,7 @@ public:
 
         if (search_result != analysis_table_.end())
         {
-            return search_result->second->get_analysis<Analysis>(expr);
+            return search_result->second->template get_analysis<Analysis>(expr);
         }
         else
         {
@@ -317,6 +406,7 @@ public:
             analysis_table_.at(id_and_node.first)->invalidate();
         }
     }
+
 private:
     std::unordered_map<analysis_id, std::unique_ptr<analysis_node>> analysis_table_;
 };
