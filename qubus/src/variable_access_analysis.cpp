@@ -4,6 +4,8 @@
 #include <qbb/qubus/pattern/core.hpp>
 
 #include <qbb/util/optional_ref.hpp>
+#include <qbb/util/assert.hpp>
+#include <qbb/util/unreachable.hpp>
 
 #include <unordered_map>
 #include <utility>
@@ -54,7 +56,7 @@ decompose_access(const access_expr& access)
         return {*direct_access, std::move(qualifiers)};
     }
 
-    QBB_ASSERT(false, "'access' is of an unknown access type.");
+    QBB_UNREACHABLE_BECAUSE("'access' is of an unknown access type.");
 }
 }
 
