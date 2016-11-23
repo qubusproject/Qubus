@@ -27,7 +27,7 @@ add_library(wall INTERFACE)
 target_compile_options(wall INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-Wall -Wextra -Wno-unused-parameter>)
 
 if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    option(QUBUS_ENABLE_ADDRESS_SANITIZER "Enable the address sanitizer" ON)
+    option(QUBUS_ENABLE_ADDRESS_SANITIZER "Enable the address sanitizer" OFF)
 else()
     option(QUBUS_ENABLE_ADDRESS_SANITIZER "Enable the address sanitizer" OFF)
 endif()
