@@ -3,7 +3,7 @@ add_library(qubus_cpu_backend SHARED cpu_backend.cpp cpuinfo.cpp cpu_object_fact
 
 target_include_directories(qubus_cpu_backend PUBLIC ${Boost_LIBRARY_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>)
 target_compile_options(qubus_cpu_backend PUBLIC -std=c++14)
-target_link_libraries(qubus_cpu_backend ${Boost_LIBRARIES} qubus_ir qbb_util wall qubus_jit)
+target_link_libraries(qubus_cpu_backend PUBLIC ${Boost_LIBRARIES} qubus_ir qbb_util wall qubus_jit)
 hpx_setup_target(qubus_cpu_backend COMPONENT_DEPENDENCIES iostreams)
 hpx_set_lib_name(qubus_cpu_backend qubus_cpu_backend)
 qubus_set_output_name(qubus_cpu_backend qubus_cpu_backend)
