@@ -74,7 +74,7 @@ class axiom_analysis_result
 public:
     explicit axiom_analysis_result(std::unique_ptr<axiom_scope> root_scope_);
 
-    std::vector<axiom> get_valid_axioms(const expression& ctx);
+    std::vector<axiom> get_valid_axioms(const expression& ctx) const;
 
 private:
     std::unique_ptr<axiom_scope> root_scope_;

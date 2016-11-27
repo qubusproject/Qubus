@@ -157,7 +157,7 @@ axiom_analysis_result::axiom_analysis_result(std::unique_ptr<axiom_scope> root_s
     }
 }
 
-std::vector<axiom> axiom_analysis_result::get_valid_axioms(const expression& ctx)
+std::vector<axiom> axiom_analysis_result::get_valid_axioms(const expression& ctx) const
 {
     auto search_result = axiom_scope_index_.find(&ctx);
 
