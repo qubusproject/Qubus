@@ -48,6 +48,8 @@ private:
 bool operator==(const expression_cursor& lhs, const expression_cursor& rhs);
 bool operator!=(const expression_cursor& lhs, const expression_cursor& rhs);
 
+/** \brief Base class for all Qubus IR expression nodes.
+ */
 class expression
 {
 public:
