@@ -194,6 +194,7 @@ private:
         {
             return typeid(AnalysisPass);
         }
+
     private:
         AnalysisPass analysis_;
     };
@@ -277,7 +278,7 @@ public:
     {
         if (!cached_result_.empty())
         {
-            auto typed_result =
+            const auto& typed_result =
                 cached_result_.as<typename analysis_traits<Analysis>::result_type>();
 
             return typed_result;
@@ -296,7 +297,8 @@ public:
             cached_result_ = pass_.run(expr, manager_);
         }
 
-        auto typed_result = cached_result_.as<typename analysis_traits<Analysis>::result_type>();
+        const auto& typed_result =
+            cached_result_.as<typename analysis_traits<Analysis>::result_type>();
 
         return typed_result;
     }
