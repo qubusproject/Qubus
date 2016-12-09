@@ -1,4 +1,4 @@
-find_package(Boost 1.55.0 COMPONENTS log thread system REQUIRED)
+find_package(Boost 1.62.0 COMPONENTS log thread system REQUIRED)
 
 find_package(CUDA 7.0)
 
