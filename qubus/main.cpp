@@ -89,8 +89,6 @@ int hpx_main(int argc, char** argv)
 
     using namespace qbb::qubus::qtl;
 
-    hpx::cout << "------------------------------------------------------" << hpx::endl;
-
     auto num_localities = hpx::get_num_localities(hpx::launch::sync);
 
     long int N = 3000;
@@ -140,14 +138,12 @@ int hpx_main(int argc, char** argv)
         results[loc].when_ready().wait();
     }
 
-    hpx::cout << "------------------------------------------------------" << hpx::endl;
-
     auto start = std::chrono::high_resolution_clock::now();
 
-    for (long int k = 0; k < 1; ++k)
-    {
-        hpx::cout << "iteration " << k << hpx::endl;
+    auto run_start = std::chrono::system_clock::now();
 
+    while (std::chrono::system_clock::now() - run_start < std::chrono::minutes(10))
+    {
         std::vector<hpx::future<void>> futures;
         futures.reserve(num_localities);
 
@@ -155,8 +151,6 @@ int hpx_main(int argc, char** argv)
         {
             futures.push_back(hpx::async([&results, &codes, loc] { results[loc] = codes[loc]; }));
         }
-
-        hpx::cout << "end iteration " << k << hpx::endl;
 
         hpx::wait_all(std::move(futures));
     }
