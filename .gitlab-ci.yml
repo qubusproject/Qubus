@@ -2,32 +2,32 @@
 # We could also run the debug tests first and abort the entire pipeline if they fail to shorten the build but
 # IMHO we would not gain enough speedup to justify the regression in all other cases.
 stages:
-  - build
-  - test
-  - deploy
+- build
+- test
+- deploy
 Build using Clang (Release):
   script:
-    - "sudo chown -R `whoami`: ."
-    - git submodule update --init
-    - ls -la
-    - export CC=clang
-    - export CXX=clang++
-    - mkdir build
-    - cd build
-    - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
-    - make
+  - "sudo chown -R `whoami`: ."
+  - git submodule update --init
+  - ls -la
+  - export CC=clang
+  - export CXX=clang++
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - make
   stage: build
   tags:
   - docker
   artifacts:
     paths:
-      - build/
+    - build/
     expire_in: 1 hour
 Test Clang (Release):
   script:
-    - "sudo chown -R `whoami`: ."
-    - cd build
-    - ctest
+  - "sudo chown -R `whoami`: ."
+  - cd build
+  - ctest
   stage: test
   tags:
   - docker
@@ -36,26 +36,27 @@ Test Clang (Release):
 
 Build using GCC (Release):
   script:
-    - "sudo chown -R `whoami`: ."
-    - git submodule update --init
-    - ls -la
-    - export CC=gcc
-    - export CXX=g++
-    - mkdir build
-    - cd build
-    - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
-    - make
+  - "sudo chown -R `whoami`: ."
+  - git submodule update --init
+  - ls -la
+  - export CC=gcc
+  - export CXX=g++
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - make
   stage: build
   tags:
   - docker
   artifacts:
     paths:
-      - build/
+    - build/
     expire_in: 1 hour
 Test GCC (Release):
-    - "sudo chown -R `whoami`: ."
-    - cd build
-    - ctest
+  script:
+  - "sudo chown -R `whoami`: ."
+  - cd build
+  - ctest
   stage: test
   tags:
   - docker
@@ -64,26 +65,27 @@ Test GCC (Release):
 
 Build using Clang (Debug):
   script:
-    - "sudo chown -R `whoami`: ."
-    - git submodule update --init
-    - ls -la
-    - export CC=clang
-    - export CXX=clang++
-    - mkdir build
-    - cd build
-    - cmake -DCMAKE_BUILD_TYPE=Debug -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
-    - make
+  - "sudo chown -R `whoami`: ."
+  - git submodule update --init
+  - ls -la
+  - export CC=clang
+  - export CXX=clang++
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Debug -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - make
   stage: build
   tags:
   - docker
   artifacts:
     paths:
-      - build/
+    - build/
     expire_in: 1 hour
 Test Clang (Debug):
-    - "sudo chown -R `whoami`: ."
-    - cd build
-    - ctest
+  script:
+  - "sudo chown -R `whoami`: ."
+  - cd build
+  - ctest
   stage: test
   tags:
   - docker
@@ -92,41 +94,44 @@ Test Clang (Debug):
 
 Build using GCC (Debug):
   script:
-    - "sudo chown -R `whoami`: ."
-    - git submodule update --init
-    - ls -la
-    - export CC=gcc
-    - export CXX=g++
-    - mkdir build
-    - cd build
-    - cmake -DCMAKE_BUILD_TYPE=Debug  -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
-    - make
+  - "sudo chown -R `whoami`: ."
+  - git submodule update --init
+  - ls -la
+  - export CC=gcc
+  - export CXX=g++
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Debug  -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - make
   stage: build
   tags:
   - docker
   artifacts:
     paths:
-      - build/
+    - build/
     expire_in: 1 hour
 Test GCC (Debug):
-    - "sudo chown -R `whoami`: ."
-    - cd build
-    - ctest
+  script:
+  - "sudo chown -R `whoami`: ."
+  - cd build
+  - ctest
   stage: test
   tags:
   - docker
   dependencies:
   - Build using GCC (Debug)
 
+# We need to separate the doc build and deploy steps. Otherwise the documentation build itself
+# might fail but the (incomplete) documentation would still be deployed.
 Build documentation:
   script:
-    - "sudo chown -R `whoami`: ."
-    - git submodule update --init
-    - ls -la
-    - mkdir build
-    - cd build
-    - cmake -DCMAKE_BUILD_TYPE=Release -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
-    - make doc
+  - "sudo chown -R `whoami`: ."
+  - git submodule update --init
+  - ls -la
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - make doc
   stage: build
   tags:
   - docker
@@ -135,13 +140,13 @@ Build documentation:
   - master
   artifacts:
     paths:
-      - build/
+    - build/
     expire_in: 1 day
 Deploy documentation:
   script:
-     - "sudo chown -R `whoami`: ."
-     - cd build
-     - scp -r qubus/doc/html/* supas335@upload.rz.uni-kiel.de:htdocs/qubus/doc
+  - "sudo chown -R `whoami`: ."
+  - cd build
+  - scp -r qubus/doc/html/* supas335@upload.rz.uni-kiel.de:htdocs/qubus/doc
   stage: deploy
   tags:
   - docker
