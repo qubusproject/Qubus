@@ -146,7 +146,7 @@ Deploy documentation:
   script:
   - "sudo chown -R `whoami`: ."
   - cd build
-  - scp -r qubus/doc/html/* supas335@upload.rz.uni-kiel.de:htdocs/qubus/doc
+  - rsync -az --delete qubus/doc/html/* supas335@upload.rz.uni-kiel.de:htdocs/qubus/doc
   stage: deploy
   tags:
   - docker
