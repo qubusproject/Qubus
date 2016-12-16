@@ -171,9 +171,9 @@ deploy:source_code:
   - master
   artifacts:
     paths:
-    - ./*-src.tar.bz2
-    - ./*-src.tar.gz
-    - ./*-src.tar.xz
-    - ./*-src.tar.Z
+    - build/*-src.tar.bz2
+    - build/*-src.tar.gz
+    - build/*-src.tar.xz
+    - build/*-src.tar.Z
     expire_in: 1 day
   dependencies: []
