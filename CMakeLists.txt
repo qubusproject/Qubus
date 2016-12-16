@@ -28,6 +28,20 @@ message(STATUS "The cmake module path is: ${CMAKE_MODULE_PATH}")
 set(QBB_ROOT_DIR ${PROJECT_SOURCE_DIR})
 set(QBB_EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external)
 
+SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Qubus is an autoparallelizing framework for tensor arithmetic
+                                       supporting distributed and heterogeneous execution environments")
+SET(CPACK_PACKAGE_VENDOR "Christopher Hinz")
+SET(CPACK_PACKAGE_DESCRIPTION_FILE "${CMAKE_CURRENT_SOURCE_DIR}/Readme.md")
+SET(CPACK_RESOURCE_FILE_LICENSE "${CMAKE_CURRENT_SOURCE_DIR}/LICENSE.md")
+set(CPACK_PACKAGE_VERSION_MAJOR "0")
+set(CPACK_PACKAGE_VERSION_MINOR "1")
+set(CPACK_PACKAGE_VERSION_PATCH "0")
+
+set(CPACK_SOURCE_PACKAGE_FILE_NAME "Qubus-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK_PACKAGE_VERSION_MINOR}.${CPACK_PACKAGE_VERSION_PATCH}-src")
+set(CPACK_SOURCE_IGNORE_FILES "${CMAKE_CURRENT_BINARY_DIR}/;/.git/;~$;${CPACK_SOURCE_IGNORE_FILES}")
+
+include(CPack)
+
 include (CheckSIMD)
 include (CheckFMA)
 

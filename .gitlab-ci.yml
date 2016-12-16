@@ -1,7 +1,11 @@
 # Currently, we run all test configurations concurrently to optimize for the usual (non failing) case.
 # We could also run the debug tests first and abort the entire pipeline if they fail to shorten the build but
 # IMHO we would not gain enough speedup to justify the regression in all other cases.
-Clang (Release):
+stages:
+- build
+- test
+- deploy
+build:clang:release:
   script:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
@@ -12,11 +16,25 @@ Clang (Release):
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
+  stage: build
+  tags:
+  - docker
+  artifacts:
+    paths:
+    - build/
+    expire_in: 1 hour
+test:clang:release:
+  script:
+  - "sudo chown -R `whoami`: ."
+  - cd build
   - ctest
   stage: test
   tags:
   - docker
-GCC (Release):
+  dependencies:
+  - build:clang:release
+
+build:gcc:release:
   script:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
@@ -27,11 +45,25 @@ GCC (Release):
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
+  stage: build
+  tags:
+  - docker
+  artifacts:
+    paths:
+    - build/
+    expire_in: 1 hour
+test:gcc:release:
+  script:
+  - "sudo chown -R `whoami`: ."
+  - cd build
   - ctest
   stage: test
   tags:
   - docker
-Clang (Debug):
+  dependencies:
+  - build:gcc:release
+
+build:clang:debug:
   script:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
@@ -42,11 +74,25 @@ Clang (Debug):
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Debug -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
+  stage: build
+  tags:
+  - docker
+  artifacts:
+    paths:
+    - build/
+    expire_in: 1 hour
+test:clang:debug:
+  script:
+  - "sudo chown -R `whoami`: ."
+  - cd build
   - ctest
   stage: test
   tags:
   - docker
-GCC (Debug):
+  dependencies:
+  - build:clang:debug
+
+build:gcc:debug:
   script:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
@@ -57,11 +103,27 @@ GCC (Debug):
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Debug  -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
+  stage: build
+  tags:
+  - docker
+  artifacts:
+    paths:
+    - build/
+    expire_in: 1 hour
+test:gcc:debug:
+  script:
+  - "sudo chown -R `whoami`: ."
+  - cd build
   - ctest
   stage: test
   tags:
   - docker
-Build documentation:
+  dependencies:
+  - build:gcc:debug
+
+# We need to separate the doc build and deploy steps. Otherwise the documentation build itself
+# might fail but the (incomplete) documentation would still be deployed.
+build:doc:
   script:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
@@ -70,10 +132,48 @@ Build documentation:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make doc
-  - scp -r qubus/doc/html/* supas335@upload.rz.uni-kiel.de:htdocs/qubus/doc
+  stage: build
+  tags:
+  - docker
+  - doc
+  only:
+  - master
+  artifacts:
+    paths:
+    - build/
+    expire_in: 1 day
+deploy:doc:
+  script:
+  - "sudo chown -R `whoami`: ."
+  - cd build
+  - rsync -az --delete qubus/doc/html/* supas335@upload.rz.uni-kiel.de:htdocs/qubus/doc
   stage: deploy
   tags:
   - docker
   - doc
   only:
   - master
+  dependencies:
+  - build:doc
+
+deploy:source_code:
+  script:
+  - "sudo chown -R `whoami`: ."
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - make package_source
+  - rsync -az --delete *-src.tar.bz2 *-src.tar.gz *-src.tar.xz *-src.tar.Z supas335@upload.rz.uni-kiel.de:htdocs/qubus/downloads/src
+  stage: deploy
+  tags:
+  - docker
+  only:
+  - master
+  artifacts:
+    paths:
+    - build/*-src.tar.bz2
+    - build/*-src.tar.gz
+    - build/*-src.tar.xz
+    - build/*-src.tar.Z
+    expire_in: 1 day
+  dependencies: []
