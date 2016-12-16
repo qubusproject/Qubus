@@ -155,3 +155,24 @@ Deploy documentation:
   - master
   dependencies:
   - Build documentation
+
+Deploy source code:
+  script:
+  - "sudo chown -R `whoami`: ."
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - make package_source
+  - rsync -az --delete *-src.tar.bz2 *-src.tar.gz *-src.tar.xz *-src.tar.Z supas335@upload.rz.uni-kiel.de:htdocs/qubus/downloads/src
+  state: deploy
+  tags:
+  - docker
+  only:
+  - master
+  artifacts:
+    paths:
+    - *-src.tar.bz2
+    - *-src.tar.gz
+    - *-src.tar.xz
+    - *-src.tar.Z
+    expire_in: 1 day
