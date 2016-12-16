@@ -5,7 +5,7 @@ stages:
 - build
 - test
 - deploy
-Build using Clang (Release):
+build:clang:release:
   script:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
@@ -23,7 +23,7 @@ Build using Clang (Release):
     paths:
     - build/
     expire_in: 1 hour
-Test Clang (Release):
+test:clang:release:
   script:
   - "sudo chown -R `whoami`: ."
   - cd build
@@ -32,9 +32,9 @@ Test Clang (Release):
   tags:
   - docker
   dependencies:
-  - Build using Clang (Release)
+  - build:clang:release
 
-Build using GCC (Release):
+build:gcc:release:
   script:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
@@ -52,7 +52,7 @@ Build using GCC (Release):
     paths:
     - build/
     expire_in: 1 hour
-Test GCC (Release):
+test:gcc:release:
   script:
   - "sudo chown -R `whoami`: ."
   - cd build
@@ -61,9 +61,9 @@ Test GCC (Release):
   tags:
   - docker
   dependencies:
-  - Build using GCC (Release)
+  - build:gcc:release
 
-Build using Clang (Debug):
+build:clang:debug:
   script:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
@@ -81,7 +81,7 @@ Build using Clang (Debug):
     paths:
     - build/
     expire_in: 1 hour
-Test Clang (Debug):
+test:clang:debug:
   script:
   - "sudo chown -R `whoami`: ."
   - cd build
@@ -90,9 +90,9 @@ Test Clang (Debug):
   tags:
   - docker
   dependencies:
-  - Build using Clang (Debug)
+  - build:clang:debug
 
-Build using GCC (Debug):
+build:gcc:debug:
   script:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
@@ -110,7 +110,7 @@ Build using GCC (Debug):
     paths:
     - build/
     expire_in: 1 hour
-Test GCC (Debug):
+test:gcc:debug:
   script:
   - "sudo chown -R `whoami`: ."
   - cd build
@@ -119,11 +119,11 @@ Test GCC (Debug):
   tags:
   - docker
   dependencies:
-  - Build using GCC (Debug)
+  - build:gcc:debug
 
 # We need to separate the doc build and deploy steps. Otherwise the documentation build itself
 # might fail but the (incomplete) documentation would still be deployed.
-Build documentation:
+build:doc:
   script:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
@@ -142,7 +142,7 @@ Build documentation:
     paths:
     - build/
     expire_in: 1 day
-Deploy documentation:
+deploy:doc:
   script:
   - "sudo chown -R `whoami`: ."
   - cd build
@@ -154,9 +154,9 @@ Deploy documentation:
   only:
   - master
   dependencies:
-  - Build documentation
+  - build:doc
 
-Deploy source code:
+deploy:source_code:
   script:
   - "sudo chown -R `whoami`: ."
   - mkdir build
