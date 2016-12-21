@@ -41,6 +41,8 @@ set(CPACK_SOURCE_PACKAGE_FILE_NAME "Qubus-${CPACK_PACKAGE_VERSION_MAJOR}.${CPACK
 set(CPACK_SOURCE_IGNORE_FILES "${CMAKE_CURRENT_BINARY_DIR}/;/.git/;~$;${CPACK_SOURCE_IGNORE_FILES}")
 
 include(CPack)
+include(GenerateExportHeader)
+include(FeatureSummary)
 
 include (CheckSIMD)
 include (CheckFMA)
@@ -50,6 +52,17 @@ CheckFMA()
 
 if (CXX_COMPILER_ID STREQUAL "GNU" OR CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wall -Wextra)
+endif()
+
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    option(QUBUS_ENABLE_ADDRESS_SANITIZER "Enable the address sanitizer" OFF)
+else()
+    option(QUBUS_ENABLE_ADDRESS_SANITIZER "Enable the address sanitizer" OFF)
+endif()
+
+if(QUBUS_ENABLE_ADDRESS_SANITIZER)
+    add_compile_options(-fsanitize=address)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 endif()
 
 if (NOT CMAKE_VERSION VERSION_LESS 3.3.0)
@@ -96,3 +109,5 @@ install(
     ${ConfigPackageLocation})
     
 add_custom_target(doc DEPENDS qubus_doc COMMENT "Generating the documentation.")
+
+feature_summary(WHAT ALL)

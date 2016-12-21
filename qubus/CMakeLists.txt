@@ -1,29 +1,5 @@
-cmake_minimum_required(VERSION 3.5.0)
-enable_testing()
-
 project(qubus)
 
-if(POLICY CMP0053)
-  cmake_policy(SET CMP0053 NEW)
-endif()
-
-if(POLICY CMP0054)
-  cmake_policy(SET CMP0054 NEW)
-endif()
-
-if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
-    option(QUBUS_ENABLE_ADDRESS_SANITIZER "Enable the address sanitizer" OFF)
-else()
-    option(QUBUS_ENABLE_ADDRESS_SANITIZER "Enable the address sanitizer" OFF)
-endif()
-
-if(QUBUS_ENABLE_ADDRESS_SANITIZER)
-    add_compile_options(-fsanitize=address)
-    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
-endif()
-
-include(GenerateExportHeader)
-include(FeatureSummary)
 include(Qubus_SetOutputName)
 
 find_package(HPX 0.9.12 REQUIRED)
@@ -39,8 +15,6 @@ target_link_libraries(qubus_test PRIVATE qubus qubus_qtl)
 target_compile_options(qubus_test PRIVATE -mavx2 -mfma)
 target_compile_definitions(qubus_test PRIVATE -DEIGEN_DONT_VECTORIZE -DEIGEN_DONT_PARALLELIZE)
 hpx_setup_target(qubus_test COMPONENT_DEPENDENCIES iostreams)
-
-feature_summary(WHAT ALL)
 
 install(DIRECTORY include/ DESTINATION include
         FILES_MATCHING PATTERN "*.hpp")
