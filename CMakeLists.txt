@@ -65,9 +65,7 @@ if(QUBUS_ENABLE_ADDRESS_SANITIZER)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 endif()
 
-if (NOT CMAKE_VERSION VERSION_LESS 3.3.0)
-  option(QBB_RUN_IWYU "Toggle if CMake (>= 3.3.0) should run include-what-you-use during compilation." OFF)
-endif()
+option(QBB_RUN_IWYU "Toggle if CMake should run include-what-you-use during compilation." OFF)
 
 if (QBB_RUN_IWYU)
   set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE include-what-you-use)
