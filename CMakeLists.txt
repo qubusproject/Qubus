@@ -48,6 +48,10 @@ include (CheckFMA)
 CheckSIMD()
 CheckFMA()
 
+if (CXX_COMPILER_ID STREQUAL "GNU" OR CXX_COMPILER_ID STREQUAL "Clang")
+    add_compile_options(-Wall -Wextra)
+endif()
+
 if (NOT CMAKE_VERSION VERSION_LESS 3.3.0)
   option(QBB_RUN_IWYU "Toggle if CMake (>= 3.3.0) should run include-what-you-use during compilation." OFF)
 endif()

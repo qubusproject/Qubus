@@ -11,21 +11,6 @@ if(POLICY CMP0054)
   cmake_policy(SET CMP0054 NEW)
 endif()
 
-add_library(asan INTERFACE)
-target_compile_options(asan INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fsanitize=address -fno-omit-frame-pointer>)
-target_link_libraries(asan INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fsanitize=address -fno-omit-frame-pointer>)
-
-add_library(tsan INTERFACE)
-target_compile_options(tsan INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fsanitize=thread -fPIC>)
-target_link_libraries(tsan INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fsanitize=thread -fPIC>)
-
-add_library(usan INTERFACE)
-target_compile_options(usan INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fsanitize=undefined>)
-target_link_libraries(usan INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-fsanitize=undefined>)
-
-add_library(wall INTERFACE)
-target_compile_options(wall INTERFACE $<$<OR:$<CXX_COMPILER_ID:GNU>,$<CXX_COMPILER_ID:Clang>>:-Wall -Wextra -Wno-unused-parameter>)
-
 if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
     option(QUBUS_ENABLE_ADDRESS_SANITIZER "Enable the address sanitizer" OFF)
 else()
@@ -36,8 +21,6 @@ if(QUBUS_ENABLE_ADDRESS_SANITIZER)
     add_compile_options(-fsanitize=address)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 endif()
-
-install(TARGETS asan tsan usan wall EXPORT qubus-targets)
 
 include(GenerateExportHeader)
 include(FeatureSummary)
