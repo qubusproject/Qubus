@@ -125,6 +125,8 @@ map apply_domain(map lhs, map rhs);
 
 map apply_range(map lhs, map rhs);
 
+set apply(map m, set values);
+
 map union_(map lhs, map rhs);
 
 map intersect(map lhs, map rhs);

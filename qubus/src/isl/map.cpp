@@ -274,6 +274,11 @@ map apply_range(map lhs, map rhs)
     return map(temp);
 }
 
+set apply(map m, set values)
+{
+    return set(isl_set_apply(values.release(), m.release()));
+}
+
 map union_(map lhs, map rhs)
 {
     return map(isl_map_union(lhs.release(), rhs.release()));
