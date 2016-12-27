@@ -245,6 +245,11 @@ map map::from_multi_affine_expr(multi_affine_expr expr)
     return map(isl_map_from_multi_aff(expr.release()));
 }
 
+map map::from_affine_expr(affine_expr expr)
+{
+    return map(isl_map_from_aff(expr.release()));
+}
+
 map project_out(map m, isl_dim_type type, unsigned int first, unsigned int n)
 {
     return map(isl_map_project_out(m.release(), type, first, n));

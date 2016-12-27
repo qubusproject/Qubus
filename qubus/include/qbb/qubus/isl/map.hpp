@@ -7,6 +7,7 @@
 #include <qbb/qubus/isl/context.hpp>
 #include <qbb/qubus/isl/id.hpp>
 #include <qbb/qubus/isl/multi_affine_expr.hpp>
+#include <qbb/qubus/isl/affine_expr.hpp>
 
 #include <isl/map.h>
 #include <isl/union_map.h>
@@ -111,6 +112,7 @@ public:
     static map identity(space s);
 
     static map from_multi_affine_expr(multi_affine_expr expr);
+    static map from_affine_expr(affine_expr expr);
 private:
     isl_map* handle_;
 };
