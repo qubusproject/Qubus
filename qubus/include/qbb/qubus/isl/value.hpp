@@ -1,6 +1,8 @@
 #ifndef QBB_QUBUS_ISL_VALUE_HPP
 #define QBB_QUBUS_ISL_VALUE_HPP
 
+#include <qbb/qubus/isl/context.hpp>
+
 #include <isl/val.h>
 
 namespace qbb
@@ -17,7 +19,7 @@ class value
 public:
     explicit value(isl_val* handle_);
 
-    value(const context& ctx, long int val);
+    value(context_ref ctx, long int val);
 
     value(const value& other);
 

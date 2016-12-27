@@ -15,7 +15,7 @@ value::value(isl_val* handle_) : handle_(handle_)
 {
 }
 
-value::value(const context& ctx, long int val)
+value::value(context_ref ctx, long int val)
 : handle_(isl_val_int_from_si(ctx.native_handle(), val))
 {
 }
