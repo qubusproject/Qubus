@@ -54,6 +54,31 @@ TEST(axiom_analysis, if_condition_simple)
     EXPECT_EQ(axioms[0].as_expr(), *condition);
 }
 
+TEST(axiom_analysis, deep_nest)
+{
+    using namespace qbb::qubus;
+
+    variable_declaration i(types::integer{});
+
+    std::vector<std::unique_ptr<expression>> tasks;
+    tasks.push_back(variable_ref(i));
+
+    auto code = if_(less(variable_ref(i), integer_literal(0)), sequenced_tasks(std::move(tasks)));
+
+    auto& body = code->then_branch().child(0);
+
+    analysis_manager analysis_man;
+
+    axiom_analysis_pass analysis;
+
+    auto result = analysis.run(*code, analysis_man);
+
+    auto axioms = result.get_valid_axioms(body);
+
+    auto condition = less(variable_ref(i), integer_literal(0));
+    EXPECT_EQ(axioms[0].as_expr(), *condition);
+}
+
 int hpx_main(int argc, char** argv)
 {
     qbb::qubus::init(argc, argv);

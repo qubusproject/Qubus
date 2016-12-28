@@ -119,7 +119,7 @@ axiom_scope::axiom_scope(const expression& context_, std::vector<axiom> axioms_,
   parent_(nullptr),
   subscopes_(std::move(subscopes_))
 {
-    for (auto& scope : subscopes_)
+    for (auto& scope : this->subscopes_)
     {
         scope->set_parent(this);
     }
