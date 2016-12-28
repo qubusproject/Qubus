@@ -17,7 +17,8 @@ TEST(axiom_analysis, loop_iteration_range)
 
     auto& body = loop->body();
 
-    analysis_manager analysis_man;
+    pass_resource_manager resource_manager;
+    analysis_manager analysis_man(resource_manager);
 
     axiom_analysis_pass analysis;
 
@@ -42,7 +43,8 @@ TEST(axiom_analysis, if_condition_simple)
 
     auto& body = code->then_branch();
 
-    analysis_manager analysis_man;
+    pass_resource_manager resource_manager;
+    analysis_manager analysis_man(resource_manager);
 
     axiom_analysis_pass analysis;
 
@@ -67,7 +69,8 @@ TEST(axiom_analysis, deep_nest)
 
     auto& body = code->then_branch().child(0);
 
-    analysis_manager analysis_man;
+    pass_resource_manager resource_manager;
+    analysis_manager analysis_man(resource_manager);
 
     axiom_analysis_pass analysis;
 

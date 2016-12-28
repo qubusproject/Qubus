@@ -61,6 +61,7 @@ public:
     {
         return subscopes_.size();
     }
+
 private:
     const expression* context_;
     std::vector<axiom> axioms_;
@@ -87,7 +88,8 @@ class axiom_analysis_pass
 public:
     using result_type = axiom_analysis_result;
 
-    axiom_analysis_result run(const expression& root, analysis_manager& manager) const;
+    axiom_analysis_result run(const expression& root, analysis_manager& manager,
+                              pass_resource_manager& resource_manager) const;
 
     std::vector<analysis_id> required_analyses() const;
 };

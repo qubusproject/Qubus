@@ -271,7 +271,8 @@ std::unique_ptr<access_set> compute_access_set(const expression& expr)
 }
 
 variable_access_analyis_result variable_access_analysis::run(const expression& root,
-                                                             analysis_manager& manager) const
+                                                             analysis_manager& manager,
+                                                             pass_resource_manager& resource_manager) const
 {
     auto global_access_set = compute_access_set(root);
 

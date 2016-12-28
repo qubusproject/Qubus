@@ -4,6 +4,8 @@
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/function_declaration.hpp>
 
+#include <qbb/qubus/isl/context.hpp>
+
 #include <boost/any.hpp>
 
 #include <qbb/util/assert.hpp>
@@ -23,6 +25,15 @@ namespace qbb
 {
 namespace qubus
 {
+
+class pass_resource_manager
+{
+public:
+    isl::context& get_isl_ctx();
+
+private:
+    isl::context isl_ctx_;
+};
 
 using analysis_id = std::type_index;
 
@@ -135,9 +146,10 @@ public:
     {
     }
 
-    analysis_result run(const expression& expr, analysis_manager& manager) const
+    analysis_result run(const expression& expr, analysis_manager& manager,
+                        pass_resource_manager& resource_manager_) const
     {
-        return self_->run(expr, manager);
+        return self_->run(expr, manager, resource_manager_);
     }
 
     analysis_id id() const
@@ -163,7 +175,8 @@ private:
         analysis_pass_interface& operator=(const analysis_pass_interface&) = delete;
         analysis_pass_interface& operator=(analysis_pass_interface&&) = delete;
 
-        virtual analysis_result run(const expression& expr, analysis_manager& manager) const = 0;
+        virtual analysis_result run(const expression& expr, analysis_manager& manager,
+                                    pass_resource_manager& resource_manager_) const = 0;
 
         virtual std::vector<analysis_id> required_analyses() const = 0;
 
@@ -180,9 +193,10 @@ private:
         {
         }
 
-        analysis_result run(const expression& expr, analysis_manager& manager) const override
+        analysis_result run(const expression& expr, analysis_manager& manager,
+                            pass_resource_manager& resource_manager_) const override
         {
-            return analysis_.run(expr, manager);
+            return analysis_.run(expr, manager, resource_manager_);
         }
 
         std::vector<analysis_id> required_analyses() const override
@@ -257,8 +271,9 @@ public:
 class analysis_node
 {
 public:
-    explicit analysis_node(analysis_pass pass_, analysis_manager& manager_)
-    : pass_(std::move(pass_)), manager_(manager_)
+    explicit analysis_node(analysis_pass pass_, analysis_manager& manager_,
+                           pass_resource_manager& resource_manager_)
+    : pass_(std::move(pass_)), manager_(manager_), resource_manager_(&resource_manager_)
     {
     }
 
@@ -294,7 +309,7 @@ public:
     {
         if (cached_result_.empty())
         {
-            cached_result_ = pass_.run(expr, manager_);
+            cached_result_ = pass_.run(expr, manager_, *resource_manager_);
         }
 
         const auto& typed_result =
@@ -318,12 +333,13 @@ private:
     std::vector<analysis_node*> dependents_;
 
     std::reference_wrapper<analysis_manager> manager_;
+    pass_resource_manager* resource_manager_;
 };
 
 class analysis_manager
 {
 public:
-    analysis_manager()
+    explicit analysis_manager(pass_resource_manager& resource_manager_)
     {
         auto passes = analysis_pass_registry::get_instance().construct_all_passes();
 
@@ -331,7 +347,7 @@ public:
         {
             auto id = pass.id();
 
-            auto node = std::make_unique<analysis_node>(std::move(pass), *this);
+            auto node = std::make_unique<analysis_node>(std::move(pass), *this, resource_manager_);
 
             analysis_table_.emplace(std::move(id), std::move(node));
         }
@@ -472,6 +488,8 @@ private:
 class pass_manager
 {
 public:
+    pass_manager();
+
     template <typename TransformationPass>
     void add_transformation(TransformationPass transformation)
     {
@@ -491,6 +509,7 @@ public:
     }
 
 private:
+    pass_resource_manager resource_manager_;
     analysis_manager analysis_man_;
     std::vector<transformation_pass> optimization_pipeline_;
 };

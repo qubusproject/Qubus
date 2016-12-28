@@ -37,7 +37,8 @@ class basic_alias_analysis_pass
 public:
     using result_type = basic_alias_analysis_result;
 
-    basic_alias_analysis_result run(const expression& root, analysis_manager& manager) const;
+    basic_alias_analysis_result run(const expression& root, analysis_manager& manager,
+                                    pass_resource_manager& resource_manager) const;
 
     std::vector<analysis_id> required_analyses() const;
 };
@@ -62,7 +63,8 @@ class alias_analysis_pass
 public:
     using result_type = alias_analysis_result;
 
-    alias_analysis_result run(const expression& root, analysis_manager& manager) const;
+    alias_analysis_result run(const expression& root, analysis_manager& manager,
+                              pass_resource_manager& resource_manager) const;
 
     std::vector<analysis_id> required_analyses() const;
 };

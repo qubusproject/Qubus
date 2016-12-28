@@ -74,8 +74,7 @@ std::unique_ptr<axiom_scope> generate_axiom_scope_tree(const expression& ctx,
                        auto then_axiom = axiom(clone(condition.get()));
 
                        auto condition_scope = generate_axiom_scope_tree(condition.get(), {});
-                       auto then_scope =
-                           generate_axiom_scope_tree(then_branch.get(), {then_axiom});
+                       auto then_scope = generate_axiom_scope_tree(then_branch.get(), {then_axiom});
 
                        subscopes.push_back(std::move(condition_scope));
                        subscopes.push_back(std::move(then_scope));
@@ -190,7 +189,8 @@ std::vector<axiom> axiom_analysis_result::get_valid_axioms(const expression& ctx
     return axioms;
 }
 
-axiom_analysis_result axiom_analysis_pass::run(const expression& root, analysis_manager& manager) const
+axiom_analysis_result axiom_analysis_pass::run(const expression& root, analysis_manager& manager,
+                                               pass_resource_manager& resource_manager) const
 {
     return axiom_analysis_result(generate_axiom_scope_tree(root, {}));
 }

@@ -113,7 +113,8 @@ class variable_access_analysis
 public:
     using result_type = variable_access_analyis_result;
 
-    variable_access_analyis_result run(const expression& root, analysis_manager& manager) const;
+    variable_access_analyis_result run(const expression& root, analysis_manager& manager,
+                                       pass_resource_manager& resource_manager) const;
 
     std::vector<analysis_id> required_analyses() const;
 };
