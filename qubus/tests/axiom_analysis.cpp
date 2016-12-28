@@ -22,7 +22,7 @@ TEST(axiom_analysis, loop_iteration_range)
 
     axiom_analysis_pass analysis;
 
-    auto result = analysis.run(*loop, analysis_man);
+    auto result = analysis.run(*loop, analysis_man, resource_manager);
 
     auto axioms = result.get_valid_axioms(body);
 
@@ -48,7 +48,7 @@ TEST(axiom_analysis, if_condition_simple)
 
     axiom_analysis_pass analysis;
 
-    auto result = analysis.run(*code, analysis_man);
+    auto result = analysis.run(*code, analysis_man, resource_manager);
 
     auto axioms = result.get_valid_axioms(body);
 
@@ -74,7 +74,7 @@ TEST(axiom_analysis, deep_nest)
 
     axiom_analysis_pass analysis;
 
-    auto result = analysis.run(*code, analysis_man);
+    auto result = analysis.run(*code, analysis_man, resource_manager);
 
     auto axioms = result.get_valid_axioms(body);
 
