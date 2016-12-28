@@ -49,6 +49,9 @@ private:
     isl_basic_set* handle_;
 };
 
+bool operator==(const basic_set& lhs, const basic_set& rhs);
+bool operator!=(const basic_set& lhs, const basic_set& rhs);
+
 bool is_subset(const basic_set& lhs, const basic_set& rhs);
 
 bool is_empty(const basic_set& s);
@@ -120,6 +123,9 @@ set substract(set lhs, set rhs);
 
 set complement(set arg);
 
+bool operator==(const set& lhs, const set& rhs);
+bool operator!=(const set& lhs, const set& rhs);
+
 bool is_subset(const set& lhs, const set& rhs);
 
 bool is_strict_subset(const set& lhs, const set& rhs);
@@ -172,6 +178,9 @@ private:
 
 union_set union_(union_set lhs, union_set rhs);
 union_set intersect(union_set lhs, union_set rhs);
+
+bool operator==(const union_set& lhs, const union_set& rhs);
+bool operator!=(const union_set& lhs, const union_set& rhs);
 
 bool is_subset(const union_set& lhs, const union_set& rhs);
 

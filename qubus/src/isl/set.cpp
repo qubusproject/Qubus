@@ -71,6 +71,16 @@ basic_set basic_set::universe(space s)
     return basic_set(isl_basic_set_universe(s.release()));
 }
 
+bool operator==(const basic_set& lhs, const basic_set& rhs)
+{
+    return isl_basic_set_is_equal(lhs.native_handle(), rhs.native_handle());
+}
+
+bool operator!=(const basic_set& lhs, const basic_set& rhs)
+{
+    return !(lhs == rhs);
+}
+
 bool is_subset(const basic_set& lhs, const basic_set& rhs)
 {
     return isl_basic_set_is_subset(lhs.native_handle(), rhs.native_handle());
@@ -219,6 +229,16 @@ set substract(set lhs, set rhs)
 set complement(set arg)
 {
     return set(isl_set_complement(arg.release()));
+}
+
+bool operator==(const set& lhs, const set& rhs)
+{
+    return isl_set_is_equal(lhs.native_handle(), rhs.native_handle());
+}
+
+bool operator!=(const set& lhs, const set& rhs)
+{
+    return !(lhs == rhs);
 }
 
 bool is_subset(const set& lhs, const set& rhs)
@@ -372,6 +392,16 @@ bool is_subset(const union_set& lhs, const union_set& rhs)
 bool is_strict_subset(const union_set& lhs, const union_set& rhs)
 {
     return isl_union_set_is_strict_subset(lhs.native_handle(), rhs.native_handle());
+}
+
+bool operator==(const union_set& lhs, const union_set& rhs)
+{
+    return isl_union_set_is_equal(lhs.native_handle(), rhs.native_handle());
+}
+
+bool operator!=(const union_set& lhs, const union_set& rhs)
+{
+    return !(lhs == rhs);
 }
 
 bool is_empty(const union_set& s)
