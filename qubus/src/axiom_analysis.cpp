@@ -52,14 +52,22 @@ std::unique_ptr<axiom_scope> generate_axiom_scope_tree(const expression& ctx,
                            pattern::make_matcher<expression, axiom>()
                                .case_(integer_literal(value),
                                       [&] {
-                                          auto bound =
-                                              clone(upper_bound.get()) -
-                                              (clone(upper_bound.get()) - clone(lower_bound.get()) -
-                                               integer_literal(1)) %
-                                                  clone(increment.get());
+                                          if (value.get() == 1)
+                                          {
+                                              return axiom(less(variable_ref(idx.get()),
+                                                                clone(upper_bound.get())));
+                                          }
+                                          else
+                                          {
+                                              auto bound =
+                                                  clone(upper_bound.get()) -
+                                                  (clone(upper_bound.get()) -
+                                                   clone(lower_bound.get()) - integer_literal(1)) %
+                                                      clone(increment.get());
 
-                                          return axiom(less(variable_ref(idx.get()),
-                                                            fold_constant_expressions(*bound)));
+                                              return axiom(less(variable_ref(idx.get()),
+                                                                fold_constant_expressions(*bound)));
+                                          }
                                       })
                                .case_(_, [&] {
                                    return axiom(
