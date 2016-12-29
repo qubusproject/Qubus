@@ -48,26 +48,34 @@ std::unique_ptr<axiom_scope> generate_axiom_scope_tree(const expression& ctx,
 
                        pattern::variable<util::index_t> value;
 
-                       auto m2 = pattern::make_matcher<expression, axiom>()
-                                     .case_(integer_literal(value),
-                                            [&] {
-                                                auto bound = clone(upper_bound.get()) -
-                                                             (clone(upper_bound.get()) -
-                                                              clone(lower_bound.get()) - integer_literal(1)) %
-                                                                 clone(increment.get());
+                       auto m2 =
+                           pattern::make_matcher<expression, axiom>()
+                               .case_(integer_literal(value),
+                                      [&] {
+                                          auto bound =
+                                              clone(upper_bound.get()) -
+                                              (clone(upper_bound.get()) - clone(lower_bound.get()) -
+                                               integer_literal(1)) %
+                                                  clone(increment.get());
 
-                                                return axiom(less(variable_ref(idx.get()),
-                                                                  fold_constant_expressions(*bound)));
-                                            })
-                                     .case_(_, [&] {
-                                         return axiom(less(variable_ref(idx.get()),
-                                                           clone(upper_bound.get())));
-                                     });
+                                          return axiom(less(variable_ref(idx.get()),
+                                                            fold_constant_expressions(*bound)));
+                                      })
+                               .case_(_, [&] {
+                                   return axiom(
+                                       less(variable_ref(idx.get()), clone(upper_bound.get())));
+                               });
 
                        auto upper_bound_axiom = pattern::match(increment.get(), m2);
 
+                       auto stride_axiom =
+                           axiom(equal_to((variable_ref(idx.get()) - clone(lower_bound.get())) %
+                                              clone(increment.get()),
+                                          integer_literal(0)));
+
                        body_axioms.push_back(lower_bound_axiom);
                        body_axioms.push_back(upper_bound_axiom);
+                       body_axioms.push_back(stride_axiom);
 
                        auto lower_bound_scope = generate_axiom_scope_tree(lower_bound.get(), {});
                        auto upper_bound_scope = generate_axiom_scope_tree(upper_bound.get(), {});
