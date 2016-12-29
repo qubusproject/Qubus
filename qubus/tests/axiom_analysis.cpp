@@ -33,6 +33,32 @@ TEST(axiom_analysis, loop_iteration_range)
     EXPECT_EQ(axioms[1].as_expr(), *upper_bound_cond);
 }
 
+TEST(axiom_analysis, nonunit_stride_loop_iteration_range)
+{
+    using namespace qbb::qubus;
+
+    variable_declaration i(types::integer{});
+
+    auto loop = for_(i, integer_literal(0), integer_literal(100), integer_literal(10), sequenced_tasks({}));
+
+    auto& body = loop->body();
+
+    pass_resource_manager resource_manager;
+    analysis_manager analysis_man(resource_manager);
+
+    axiom_analysis_pass analysis;
+
+    auto result = analysis.run(*loop, analysis_man, resource_manager);
+
+    auto axioms = result.get_valid_axioms(body);
+
+    auto lower_bound_cond = greater_equal(variable_ref(i), integer_literal(0));
+    EXPECT_EQ(axioms[0].as_expr(), *lower_bound_cond);
+
+    auto upper_bound_cond = less(variable_ref(i), integer_literal(91));
+    EXPECT_EQ(axioms[1].as_expr(), *upper_bound_cond);
+}
+
 TEST(axiom_analysis, if_condition_simple)
 {
     using namespace qbb::qubus;

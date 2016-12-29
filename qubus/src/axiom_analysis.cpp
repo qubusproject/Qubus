@@ -1,5 +1,7 @@
 #include <qbb/qubus/axiom_analysis.hpp>
 
+#include <qbb/qubus/IR/constant_folding.hpp>
+
 #include <qbb/qubus/IR/qir.hpp>
 #include <qbb/qubus/pattern/IR.hpp>
 #include <qbb/qubus/pattern/core.hpp>
@@ -43,8 +45,26 @@ std::unique_ptr<axiom_scope> generate_axiom_scope_tree(const expression& ctx,
 
                        auto lower_bound_axiom =
                            axiom(greater_equal(variable_ref(idx.get()), clone(lower_bound.get())));
-                       auto upper_bound_axiom =
-                           axiom(less(variable_ref(idx.get()), clone(upper_bound.get())));
+
+                       pattern::variable<util::index_t> value;
+
+                       auto m2 = pattern::make_matcher<expression, axiom>()
+                                     .case_(integer_literal(value),
+                                            [&] {
+                                                auto bound = clone(upper_bound.get()) -
+                                                             (clone(upper_bound.get()) -
+                                                              clone(lower_bound.get()) - integer_literal(1)) %
+                                                                 clone(increment.get());
+
+                                                return axiom(less(variable_ref(idx.get()),
+                                                                  fold_constant_expressions(*bound)));
+                                            })
+                                     .case_(_, [&] {
+                                         return axiom(less(variable_ref(idx.get()),
+                                                           clone(upper_bound.get())));
+                                     });
+
+                       auto upper_bound_axiom = pattern::match(increment.get(), m2);
 
                        body_axioms.push_back(lower_bound_axiom);
                        body_axioms.push_back(upper_bound_axiom);
