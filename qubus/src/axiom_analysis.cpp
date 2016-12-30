@@ -81,9 +81,14 @@ std::unique_ptr<axiom_scope> generate_axiom_scope_tree(const expression& ctx,
                                               clone(increment.get()),
                                           integer_literal(0)));
 
-                       body_axioms.push_back(lower_bound_axiom);
-                       body_axioms.push_back(upper_bound_axiom);
-                       body_axioms.push_back(stride_axiom);
+                       // We can assume that the range is non-empty in the loop body
+                       // since we would not execute it otherwise.
+                       auto non_empty_axiom = axiom(less(clone(lower_bound.get()), clone(upper_bound.get())));
+
+                       body_axioms.push_back(std::move(lower_bound_axiom));
+                       body_axioms.push_back(std::move(upper_bound_axiom));
+                       body_axioms.push_back(std::move(stride_axiom));
+                       body_axioms.push_back(std::move(non_empty_axiom));
 
                        auto lower_bound_scope = generate_axiom_scope_tree(lower_bound.get(), {});
                        auto upper_bound_scope = generate_axiom_scope_tree(upper_bound.get(), {});
