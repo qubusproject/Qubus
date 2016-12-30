@@ -28,7 +28,7 @@ set(qubus_source_files allocator.cpp loop_optimizer.cpp
                        local_object_factory.cpp vpu.cpp aggregate_vpu.cpp
                        architecture_identifier.cpp object_monitor.cpp token.cpp
                        pass_manager.cpp variable_access_analysis.cpp alias_analysis.cpp axiom_analysis.cpp
-                       task_invariants_analysis.cpp)
+                       task_invariants_analysis.cpp affine_constraints.cpp)
 
 add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 
