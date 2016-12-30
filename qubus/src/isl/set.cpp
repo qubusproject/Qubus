@@ -256,6 +256,11 @@ bool is_empty(const set& s)
     return isl_set_is_empty(s.native_handle());
 }
 
+set get_params(set s)
+{
+    return set(isl_set_params(s.release()));
+}
+
 set flat_product(set lhs, set rhs)
 {
     return set(isl_set_flat_product(lhs.release(), rhs.release()));

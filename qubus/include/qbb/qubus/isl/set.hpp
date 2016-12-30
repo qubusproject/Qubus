@@ -132,6 +132,8 @@ bool is_strict_subset(const set& lhs, const set& rhs);
 
 bool is_empty(const set& s);
 
+set get_params(set s);
+
 set flat_product(set lhs, set rhs);
 
 set align_params(set s, space model);
