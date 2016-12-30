@@ -5,6 +5,7 @@
 #include <qbb/qubus/IR/variable_declaration.hpp>
 
 #include <qbb/qubus/isl/affine_expr.hpp>
+#include <qbb/qubus/isl/ast.hpp>
 #include <qbb/qubus/isl/context.hpp>
 #include <qbb/qubus/isl/set.hpp>
 #include <qbb/qubus/isl/space.hpp>
@@ -56,6 +57,7 @@ public:
     friend affine_constraint greater(affine_expr lhs, affine_expr rhs);
     friend affine_constraint less_equal(affine_expr lhs, affine_expr rhs);
     friend affine_constraint greater_equal(affine_expr lhs, affine_expr rhs);
+
 private:
     friend class affine_expr_context;
 
@@ -74,11 +76,14 @@ public:
 
     affine_expr define_constant(const expression& value);
     affine_expr create_literal(util::index_t value);
+
+    boost::optional<variable_declaration> lookup_variable(const std::string& name) const;
     std::unique_ptr<expression> get_constant(const std::string& name) const;
 
     isl::space construct_corresponding_space(isl::context& isl_ctx) const;
 
     const std::function<bool(const expression&)>& get_invariant_checker() const;
+
 private:
     std::function<bool(const expression&)> invariant_checker_;
 
@@ -99,6 +104,7 @@ public:
     friend affine_constraint operator&&(affine_constraint lhs, affine_constraint rhs);
     friend affine_constraint operator||(affine_constraint lhs, affine_constraint rhs);
     friend affine_constraint operator!(affine_constraint arg);
+
 private:
     std::unique_ptr<expression> expr_;
     affine_expr_context* ctx_;
@@ -109,6 +115,9 @@ boost::optional<affine_expr> try_construct_affine_expr(const expression& expr,
 
 boost::optional<affine_constraint> try_extract_affine_constraint(const expression& expr,
                                                                  affine_expr_context& ctx);
+
+std::unique_ptr<expression> convert_isl_ast_expr_to_qir(const isl::ast_expr &expr,
+                                                        const affine_expr_context &ctx);
 }
 }
 

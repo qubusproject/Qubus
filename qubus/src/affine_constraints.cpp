@@ -605,9 +605,9 @@ bool is_const(const affine_expr& expr)
     using pattern::_;
 
     auto m = pattern::make_matcher<expression, bool>()
-            .case_(affine_constant(_), [] { return true; })
-            .case_(integer_literal(_), [] { return true; })
-            .case_(_, [] { return false; });
+                 .case_(affine_constant(_), [] { return true; })
+                 .case_(integer_literal(_), [] { return true; })
+                 .case_(_, [] { return false; });
 
     return pattern::match(*expr.expr_, m);
 }
@@ -657,6 +657,22 @@ affine_expr affine_expr_context::define_constant(const expression& value)
     }
 }
 
+boost::optional<variable_declaration>
+affine_expr_context::lookup_variable(const std::string& name) const
+{
+    auto search_result = std::find_if(variable_table_.begin(), variable_table_.end(),
+                                      [&](const auto& entry) { return entry.second == name; });
+
+    if (search_result != variable_table_.end())
+    {
+        return search_result->first;
+    }
+    else
+    {
+        return boost::none;
+    }
+}
+
 std::unique_ptr<expression> affine_expr_context::get_constant(const std::string& name) const
 {
     auto search_result =
@@ -669,7 +685,7 @@ std::unique_ptr<expression> affine_expr_context::get_constant(const std::string&
     }
     else
     {
-        throw 0;
+        return nullptr;
     }
 }
 
@@ -998,5 +1014,226 @@ boost::optional<affine_constraint> try_extract_affine_constraint(const expressio
 
     return pattern::match(expr, m);
 }
+
+std::unique_ptr<expression> convert_isl_ast_expr_to_qir(const isl::ast_expr &expr,
+                                                        const affine_expr_context &ctx)
+{
+    using pattern::_;
+
+    switch (expr.type())
+    {
+    case isl_ast_expr_id:
+    {
+        auto name = expr.get_id().name();
+
+        if (auto var = ctx.lookup_variable(name))
+        {
+            return variable_ref(*var);
+        }
+        else if (auto value = ctx.get_constant(name))
+        {
+            return value;
+        }
+        else
+        {
+            throw 0; // Invalid identifier
+        }
+    }
+    case isl_ast_expr_int:
+        return integer_literal(expr.get_value().as_integer());
+    case isl_ast_expr_op:
+        switch (expr.get_op_type())
+        {
+        case isl_ast_op_add:
+            return convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx) +
+                    convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
+        case isl_ast_op_sub:
+            return convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx) -
+                    convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
+        case isl_ast_op_mul:
+            return convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx) *
+                    convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
+        case isl_ast_op_div:
+            return convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx) /
+                    convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
+        case isl_ast_op_fdiv_q:
+            return div_floor(convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx),
+                             convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx));
+        case isl_ast_op_pdiv_q:
+            return convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx) /
+                    convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
+        case isl_ast_op_pdiv_r:
+            return convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx) %
+                    convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
+        case isl_ast_op_minus:
+            return -convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx);
+        case isl_ast_op_min:
+        {
+            std::vector<std::unique_ptr<expression>> args;
+            args.reserve(2);
+            args.push_back(convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx));
+            args.push_back(convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx));
+
+            return intrinsic_function("min", std::move(args));
+        }
+        case isl_ast_op_max:
+        {
+            std::vector<std::unique_ptr<expression>> args;
+            args.reserve(2);
+            args.push_back(convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx));
+            args.push_back(convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx));
+
+            return intrinsic_function("max", std::move(args));
+        }
+        case isl_ast_op_cond:
+        case isl_ast_op_select:
+        {
+            std::vector<std::unique_ptr<expression>> args;
+            args.reserve(3);
+            args.push_back(convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx));
+            args.push_back(convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx));
+            args.push_back(convert_isl_ast_expr_to_qir(expr.get_arg(2), ctx));
+
+            return intrinsic_function("select", std::move(args));
+        }
+        case isl_ast_op_eq:
+            return equal_to(convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx),
+                            convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx));
+        case isl_ast_op_le:
+            return less_equal(convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx),
+                              convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx));
+        case isl_ast_op_lt:
+            return less(convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx),
+                        convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx));
+        case isl_ast_op_ge:
+            return greater_equal(convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx),
+                                 convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx));
+        case isl_ast_op_gt:
+            return greater(convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx),
+                           convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx));
+        case isl_ast_op_and:
+            return logical_and(convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx),
+                               convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx));
+        case isl_ast_op_or:
+            return logical_or(convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx),
+                              convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx));
+        default:
+            QBB_UNREACHABLE_BECAUSE("Invalid operation type.");
+        };
+    default:
+        QBB_UNREACHABLE_BECAUSE("Invalid expression type.");
+    }
+}
+
+/*std::unique_ptr<expression> isl_ast_to_kir(const isl::ast_node& root, ast_converter_context& ctx)
+{
+    // static long int current_extracted_fn_id = 0;
+
+    auto& symbol_table = ctx.symbol_table;
+
+    switch (root.type())
+    {
+        case isl_ast_node_for:
+        {
+            // Assume that a for loop is of the form
+            // for (int i = init; i </<= upper_bound; i += inc)
+
+            ctx.array_subs_scopes.emplace_back();
+
+            auto iterator = root.for_get_iterator();
+
+            if (iterator.type() != isl_ast_expr_id)
+                throw 0; // iterator has to be an id expr (might want to use an assert)
+
+            // TODO: add new index to the lookup table
+            variable_declaration idx_decl(types::integer{});
+
+            symbol_table.emplace(iterator.get_id().name(), var(idx_decl));
+
+            auto lower_bound = isl_ast_expr_to_kir(root.for_get_init(), ctx);
+            auto increment = isl_ast_expr_to_kir(root.for_get_inc(), ctx);
+
+            auto cond = root.for_get_cond();
+
+            auto upper_bound = [&] {
+                // Assume that the cond is of the form
+                // i </<= expr
+                // where i is the current iterator.
+
+                // TODO: assert if cond is not an op
+
+                switch (cond.get_op_type())
+                {
+                    case isl_ast_op_le:
+                    {
+                        auto rhs = isl_ast_expr_to_kir(cond.get_arg(1), ctx);
+
+                        return std::unique_ptr<expression>(std::move(rhs) + integer_literal(1));
+                    }
+                    case isl_ast_op_lt:
+                        return isl_ast_expr_to_kir(cond.get_arg(1), ctx);
+                    default:
+                        throw 0; // unexpected expr in cond
+                }
+            }();
+
+            auto body = isl_ast_to_kir(root.for_get_body(), ctx);
+
+            auto iter = std::remove_if(ctx.array_substitutions.begin(), ctx.array_substitutions.end(),
+                                       [&](const array_substitution& value) {
+                                           return std::any_of(ctx.array_subs_scopes.back().begin(),
+                                                              ctx.array_subs_scopes.back().end(),
+                                                              [&](const variable_declaration& decl) {
+                                                                  return value.parent == decl;
+                                                              });
+                                       });
+
+            ctx.array_substitutions.erase(iter, ctx.array_substitutions.end());
+
+            ctx.array_subs_scopes.pop_back();
+
+            symbol_table.erase(iterator.get_id().name());
+
+            return for_(std::move(idx_decl), std::move(lower_bound), std::move(upper_bound),
+                        std::move(increment), std::move(body));
+        }
+        case isl_ast_node_block:
+        {
+            std::vector<std::unique_ptr<expression>> sub_exprs;
+
+            for (const auto& child : root.block_get_children())
+            {
+                sub_exprs.emplace_back(isl_ast_to_kir(child, ctx));
+            }
+
+            return sequenced_tasks(std::move(sub_exprs));
+        }
+        case isl_ast_node_user:
+        {
+            return isl_ast_expr_to_kir(root.user_get_expr(), ctx);
+        }
+        case isl_ast_node_if:
+        {
+            auto condition = isl_ast_expr_to_kir(root.if_get_cond(), ctx);
+
+            auto then_branch = isl_ast_to_kir(root.if_get_then(), ctx);
+
+            auto else_block = root.if_get_else();
+
+            if (else_block)
+            {
+                auto else_branch = isl_ast_to_kir(*else_block, ctx);
+
+                return if_(std::move(condition), std::move(then_branch), std::move(else_branch));
+            }
+            else
+            {
+                return if_(std::move(condition), std::move(then_branch));
+            }
+        }
+        default:
+            throw 0; // TODO: Unknown node type
+    }
+}*/
 }
 }
