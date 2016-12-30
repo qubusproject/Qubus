@@ -73,7 +73,7 @@ task_invariants_analysis_result::task_invariants_analysis_result(
 }
 
 bool task_invariants_analysis_result::is_invariant(const expression& expr,
-                                                   const expression& context)
+                                                   const expression& context) const
 {
     using pattern::_;
 

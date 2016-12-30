@@ -19,7 +19,7 @@ class task_invariants_analysis_result
 public:
     explicit task_invariants_analysis_result(const basic_alias_analysis_result& basic_alias_analysis_);
 
-    bool is_invariant(const expression& expr, const expression& context);
+    bool is_invariant(const expression& expr, const expression& context) const;
 
 private:
     const basic_alias_analysis_result* basic_alias_analysis_;
