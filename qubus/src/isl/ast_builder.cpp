@@ -31,6 +31,13 @@ ast_expr ast_builder_base::build_access_from_pw_multi_aff(pw_multi_aff pma)
     return ast_expr(isl_ast_build_access_from_pw_multi_aff(handle_, pma.release()));
 }
 
+ast_expr ast_builder_base::build_expr_from_set(set s)
+{
+    isl_set_dump(s.native_handle());
+
+    return ast_expr(isl_ast_build_expr_from_set(handle_, s.release()));
+}
+
 void ast_builder_base::set_options(union_map options)
 {
     handle_ = isl_ast_build_set_options(handle_, options.release());
