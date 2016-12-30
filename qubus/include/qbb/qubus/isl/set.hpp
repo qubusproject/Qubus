@@ -100,7 +100,7 @@ public:
     void set_dim_name(isl_dim_type type, int pos, const std::string& name);
     boost::string_ref get_dim_name(isl_dim_type type, int pos) const;
 
-    bool bounded();
+    bool bounded() const;
 
     static set universe(space s);
     static set empty(space s);

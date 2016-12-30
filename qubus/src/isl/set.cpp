@@ -191,7 +191,7 @@ boost::string_ref set::get_dim_name(isl_dim_type type, int pos) const
     return isl_set_get_dim_name(handle_, type, pos);
 }
 
-bool set::bounded()
+bool set::bounded() const
 {
     return isl_set_is_bounded(handle_);
 }
