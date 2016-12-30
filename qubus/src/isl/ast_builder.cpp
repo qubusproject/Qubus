@@ -117,6 +117,11 @@ union_map ast_builder_base::get_schedule() const
     return union_map(isl_ast_build_get_schedule(handle_));
 }
 
+space ast_builder_base::get_schedule_space() const
+{
+    return space(isl_ast_build_get_schedule_space(handle_));
+}
+
 isl_ast_build* ast_builder_base::native_handle() const
 {
     return handle_;
