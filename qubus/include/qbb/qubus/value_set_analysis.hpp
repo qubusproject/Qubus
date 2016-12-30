@@ -4,16 +4,43 @@
 #include <qbb/qubus/axiom_analysis.hpp>
 #include <qbb/qubus/task_invariants_analysis.hpp>
 
+#include <qbb/qubus/affine_constraints.hpp>
+
 #include <qbb/qubus/pass_manager.hpp>
 
 #include <qbb/qubus/IR/expression.hpp>
 
 #include <qbb/qubus/isl/set.hpp>
 
+#include <memory>
+#include <utility>
+
 namespace qbb
 {
 namespace qubus
 {
+
+class value_set
+{
+public:
+    value_set(isl::set values_, std::shared_ptr<affine_expr_context> ctx_)
+    : values_(std::move(values_)), ctx_(std::move(ctx_))
+    {
+    }
+
+    const isl::set& values() const
+    {
+        return values_;
+    }
+
+    const std::shared_ptr<affine_expr_context>& ctx() const
+    {
+        return ctx_;
+    }
+private:
+    isl::set values_;
+    std::shared_ptr<affine_expr_context> ctx_;
+};
 
 class value_set_analysis_result
 {
@@ -22,7 +49,7 @@ public:
                                        const task_invariants_analysis_result& task_invariants_analysis_,
                                        isl::context& isl_ctx_);
 
-    isl::set determine_value_set(const expression& expr, const expression& context) const;
+    value_set determine_value_set(const expression& expr, const expression& context) const;
 
 private:
     const axiom_analysis_result* axiom_analysis_;

@@ -4,8 +4,6 @@
 
 #include <qbb/util/assert.hpp>
 
-#include <qbb/qubus/affine_constraints.hpp>
-
 namespace qbb
 {
 namespace qubus
@@ -20,18 +18,18 @@ value_set_analysis_result::value_set_analysis_result(
 {
 }
 
-isl::set value_set_analysis_result::determine_value_set(const expression& expr,
+value_set value_set_analysis_result::determine_value_set(const expression& expr,
                                                         const expression& context) const
 {
     QBB_ASSERT(axiom_analysis_ != nullptr, "Invalid value_set_analysis_result object.");
 
     auto axioms = axiom_analysis_->get_valid_axioms(expr);
 
-    affine_expr_context ctx([this, &context](const expression& expr) {
+    auto ctx = std::make_shared<affine_expr_context>([this, &context](const expression& expr) {
         return task_invariants_analysis_->is_invariant(expr, context);
     });
 
-    auto analyzed_expr = try_construct_affine_expr(expr, ctx);
+    auto analyzed_expr = try_construct_affine_expr(expr, *ctx);
 
     if (analyzed_expr)
     {
@@ -39,7 +37,7 @@ isl::set value_set_analysis_result::determine_value_set(const expression& expr,
 
         for (const auto& axiom : axioms)
         {
-            auto expr = try_extract_affine_constraint(axiom.as_expr(), ctx);
+            auto expr = try_extract_affine_constraint(axiom.as_expr(), *ctx);
 
             if (expr)
             {
@@ -47,7 +45,7 @@ isl::set value_set_analysis_result::determine_value_set(const expression& expr,
             }
         }
 
-        auto domain = isl::set::universe(ctx.construct_corresponding_space(*isl_ctx_));
+        auto domain = isl::set::universe(ctx->construct_corresponding_space(*isl_ctx_));
 
         for (const auto& axiom : affine_axioms)
         {
@@ -62,11 +60,11 @@ isl::set value_set_analysis_result::determine_value_set(const expression& expr,
 
         auto value_set = apply(map, domain);
 
-        return value_set;
+        return {std::move(value_set), std::move(ctx)};
     }
     else
     {
-        return isl::set::universe(isl::space(*isl_ctx_, 0, 1));
+        return {isl::set::universe(isl::space(*isl_ctx_, 0, 1)), std::move(ctx)};
     }
 }
 

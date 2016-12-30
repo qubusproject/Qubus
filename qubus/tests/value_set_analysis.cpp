@@ -35,7 +35,7 @@ TEST(value_set_anaylsis, simple_array_access_in_loop_nest)
     auto value_set = result.determine_value_set(expr, *root);
 
     auto expected_value_set = isl::set(resource_man.get_isl_ctx(), "[p0] -> { [i0] : 0 <= i0 < p0 }");
-    EXPECT_TRUE(is_subset(expected_value_set, value_set));
+    EXPECT_TRUE(is_subset(expected_value_set, value_set.values()));
 }
 
 TEST(value_set_anaylsis, array_access_in_loop_nest)
@@ -67,7 +67,7 @@ TEST(value_set_anaylsis, array_access_in_loop_nest)
     auto value_set = result.determine_value_set(expr, *root);
 
     auto expected_value_set = isl::set(resource_man.get_isl_ctx(), "{ [i0] : 7 <= i0 <= 50 }");
-    EXPECT_EQ(expected_value_set, value_set);
+    EXPECT_EQ(expected_value_set, value_set.values());
 }
 
 TEST(value_set_anaylsis, dependent_loops)
@@ -99,7 +99,7 @@ TEST(value_set_anaylsis, dependent_loops)
     auto value_set = result.determine_value_set(expr, *root);
 
     auto expected_value_set = isl::set(resource_man.get_isl_ctx(), "{ [i0] : 0 <= i0 <= 8 }");
-    EXPECT_EQ(expected_value_set, value_set);
+    EXPECT_EQ(expected_value_set, value_set.values());
 }
 
 TEST(value_set_anaylsis, blocking)
@@ -143,7 +143,7 @@ TEST(value_set_anaylsis, blocking)
         isl::set(resource_man.get_isl_ctx(),
                  "[p0, p1] -> { [i0] : 0 <= p0 <= 990 and 0 <= p1 <= 990 and p0 <= i0 <= p0 + 9 }");
 
-    EXPECT_EQ(expected_value_set, value_set);
+    EXPECT_EQ(expected_value_set, value_set.values());
 }
 
 int hpx_main(int argc, char** argv)
