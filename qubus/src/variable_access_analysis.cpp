@@ -68,14 +68,14 @@ access::access(const variable_ref_expr& direct_access_,
                std::vector<std::reference_wrapper<const access_qualifier_expr>> qualifiers_)
 : direct_access_(direct_access_),
   qualifiers_(std::move(qualifiers_)),
-  location_([&]() -> const expression& {
-      if (qualifiers_.empty())
+  location_([this]() -> const expression& {
+      if (this->qualifiers_.empty())
       {
-          return direct_access_;
+          return this->direct_access_;
       }
       else
       {
-          return qualifiers_.back();
+          return this->qualifiers_.back();
       }
   }())
 {
