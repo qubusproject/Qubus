@@ -7,6 +7,7 @@
 #include <qbb/util/assert.hpp>
 #include <qbb/util/unreachable.hpp>
 
+#include <stack>
 #include <unordered_map>
 #include <utility>
 
@@ -182,50 +183,31 @@ variable_access_analyis_result::query_accesses_for_location(const expression& lo
 namespace
 {
 
-access get_access(const variable_ref_expr& variable_access)
+std::vector<access> get_accesses(const expression& expr)
 {
-    std::vector<std::reference_wrapper<const access_qualifier_expr>> qualifiers;
+    std::vector<access> accesses;
 
-    const expression* current_expression = &variable_access;
+    std::stack<const expression*> pending_expressions;
 
-    for (;;)
+    pending_expressions.push(&expr);
+
+    while (!pending_expressions.empty())
     {
-        auto next_expression = current_expression->parent();
+        auto current_expr = pending_expressions.top();
+        pending_expressions.pop();
 
-        QBB_ASSERT(next_expression, "Unexpected null pointer.");
-
-        if (auto qualifier = next_expression->try_as<access_qualifier_expr>())
+        if (auto acc = current_expr->try_as<access_expr>())
         {
-            // If the current expression is not the qualified one we have reached an independent qualifier
-            // and need to stop.
-            if (current_expression != &qualifier->qualified_access())
-                break;
-
-            qualifiers.push_back(*qualifier);
-
-            current_expression = next_expression;
+            accesses.emplace_back(*acc);
         }
         else
         {
-            break;
+            for (const auto &child : current_expr->sub_expressions())
+            {
+                pending_expressions.push(&child);
+            }
         }
     }
-
-    return access(variable_access, std::move(qualifiers));
-}
-
-std::vector<access> get_accesses(const expression& expr)
-{
-    using pattern::_;
-
-    std::vector<access> accesses;
-
-    pattern::variable<const variable_ref_expr&> access;
-
-    auto m = pattern::make_matcher<expression, void>().case_(
-        bind_to(variable_ref(_), access), [&] { accesses.push_back(get_access(access.get())); });
-
-    pattern::for_each(expr, m);
 
     return accesses;
 }
