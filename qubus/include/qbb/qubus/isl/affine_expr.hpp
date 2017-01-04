@@ -29,6 +29,8 @@ public:
 
     affine_expr& operator=(affine_expr other);
 
+    value constant_value() const;
+
     space get_space() const;
 
     context_ref ctx() const;
@@ -55,6 +57,7 @@ affine_expr operator/(affine_expr lhs, affine_expr rhs);
 
 affine_expr operator-(affine_expr arg);
 
+affine_expr operator%(affine_expr lhs, value rhs);
 affine_expr operator%(affine_expr lhs, long rhs);
 
 affine_expr floor(affine_expr arg);

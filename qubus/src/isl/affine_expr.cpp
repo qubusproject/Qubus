@@ -39,6 +39,11 @@ affine_expr& affine_expr::operator=(affine_expr other)
     return *this;
 }
 
+value affine_expr::constant_value() const
+{
+    return value(isl_aff_get_constant_val(handle_));
+}
+
 space affine_expr::get_space() const
 {
     return space(isl_aff_get_space(handle_));
@@ -108,9 +113,14 @@ affine_expr operator-(affine_expr arg)
     return affine_expr(isl_aff_neg(arg.release()));
 }
 
+affine_expr operator%(affine_expr lhs, value rhs)
+{
+    return affine_expr(isl_aff_mod_val(lhs.release(), rhs.release()));
+}
+
 affine_expr operator%(affine_expr lhs, long rhs)
 {
-    return affine_expr(isl_aff_mod_val(lhs.release(), value(lhs.ctx(), rhs).release()));
+    return std::move(lhs) % value(lhs.ctx(), rhs);
 }
 
 affine_expr floor(affine_expr arg)
