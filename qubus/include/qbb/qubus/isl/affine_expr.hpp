@@ -55,6 +55,8 @@ affine_expr operator/(affine_expr lhs, affine_expr rhs);
 
 affine_expr operator-(affine_expr arg);
 
+affine_expr operator%(affine_expr lhs, long rhs);
+
 affine_expr floor(affine_expr arg);
 
 affine_expr align_params(affine_expr aff, space model);

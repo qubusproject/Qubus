@@ -108,6 +108,11 @@ affine_expr operator-(affine_expr arg)
     return affine_expr(isl_aff_neg(arg.release()));
 }
 
+affine_expr operator%(affine_expr lhs, long rhs)
+{
+    return affine_expr(isl_aff_mod_val(lhs.release(), value(lhs.ctx(), rhs).release()));
+}
+
 affine_expr floor(affine_expr arg)
 {
     return affine_expr(isl_aff_floor(arg.release()));
