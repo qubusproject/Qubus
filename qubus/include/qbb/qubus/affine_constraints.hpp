@@ -47,6 +47,7 @@ public:
     friend affine_expr operator-(affine_expr lhs, affine_expr rhs);
     friend affine_expr operator*(affine_expr lhs, affine_expr rhs);
     friend affine_expr operator/(affine_expr lhs, affine_expr rhs);
+    friend affine_expr operator%(affine_expr lhs, affine_expr rhs);
     friend affine_expr operator-(affine_expr arg);
 
     friend bool is_const(const affine_expr& expr);

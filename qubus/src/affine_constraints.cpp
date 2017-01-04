@@ -348,6 +348,12 @@ isl::affine_expr convert_to_isl_aff_expr(const expression& expr, const isl::spac
                                 return lhs_expr * rhs_expr;
                             case binary_op_tag::divides:
                                 return lhs_expr / rhs_expr;
+                            case binary_op_tag::modulus:
+                            {
+                                QBB_ASSERT(is_cst(rhs_expr), "The right-hand side has to be a literal value.");
+
+                                return lhs_expr % rhs_expr.constant_value();
+                            }
                             default:
                                 QBB_UNREACHABLE();
                             }
@@ -370,6 +376,7 @@ isl::affine_expr convert_to_isl_aff_expr(const expression& expr, const isl::spac
                         [&] {
                             util::index_t val = ival.get();
 
+                            // TODO: Check for overflow during conversion.
                             return isl::affine_expr(s, isl::value(s.get_ctx(), val));
                         })
                  .case_(affine_constant(name),
@@ -589,6 +596,17 @@ affine_expr operator/(affine_expr lhs, affine_expr rhs)
     QBB_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
 
     auto new_expr = std::move(lhs.expr_) / std::move(rhs.expr_);
+
+    return affine_expr(std::move(new_expr), *lhs.ctx_);
+}
+
+affine_expr operator%(affine_expr lhs, affine_expr rhs)
+{
+    QBB_ASSERT(is_const(rhs), "The divisor needs to be constant to form an affine expression");
+
+    QBB_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
+
+    auto new_expr = std::move(lhs.expr_) % std::move(rhs.expr_);
 
     return affine_expr(std::move(new_expr), *lhs.ctx_);
 }
@@ -861,6 +879,13 @@ boost::optional<affine_expr> try_construct_affine_expr(const expression& expr,
 
                                 return *std::move(lhs_expr) / *std::move(rhs_expr);
                             }
+                            case binary_op_tag::modulus:
+                            {
+                                if (!is_const(*rhs_expr))
+                                    return boost::none;
+
+                                return *std::move(lhs_expr) % *std::move(rhs_expr);
+                            }
                             default:
                                 return boost::none;
                             }
@@ -1015,8 +1040,8 @@ boost::optional<affine_constraint> try_extract_affine_constraint(const expressio
     return pattern::match(expr, m);
 }
 
-std::unique_ptr<expression> convert_isl_ast_expr_to_qir(const isl::ast_expr &expr,
-                                                        const affine_expr_context &ctx)
+std::unique_ptr<expression> convert_isl_ast_expr_to_qir(const isl::ast_expr& expr,
+                                                        const affine_expr_context& ctx)
 {
     using pattern::_;
 
@@ -1046,25 +1071,25 @@ std::unique_ptr<expression> convert_isl_ast_expr_to_qir(const isl::ast_expr &exp
         {
         case isl_ast_op_add:
             return convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx) +
-                    convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
+                   convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
         case isl_ast_op_sub:
             return convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx) -
-                    convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
+                   convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
         case isl_ast_op_mul:
             return convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx) *
-                    convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
+                   convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
         case isl_ast_op_div:
             return convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx) /
-                    convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
+                   convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
         case isl_ast_op_fdiv_q:
             return div_floor(convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx),
                              convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx));
         case isl_ast_op_pdiv_q:
             return convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx) /
-                    convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
+                   convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
         case isl_ast_op_pdiv_r:
             return convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx) %
-                    convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
+                   convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx);
         case isl_ast_op_minus:
             return -convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx);
         case isl_ast_op_min:
