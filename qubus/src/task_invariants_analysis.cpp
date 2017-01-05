@@ -52,7 +52,7 @@ bool is_referencing_invariant_object(const expression& obj, const expression& co
                 // FIXME: Currently, we use the non-caching variant of the basic alias analysis algorithm
                 //        since the cache gets confused by temporary expression objects.
                 auto query_result =
-                        alias_using_basic_rules(access(*obj_access), access(*modifing_access));
+                        basic_alias_analysis.alias(access(*obj_access), access(*modifing_access), false);
 
                 if (query_result != alias_result::noalias)
                 {

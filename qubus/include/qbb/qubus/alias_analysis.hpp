@@ -1,6 +1,7 @@
 #ifndef QUBUS_ALIAS_ANALYSIS_HPP
 #define QUBUS_ALIAS_ANALYSIS_HPP
 
+#include <qbb/qubus/value_set_analysis.hpp>
 #include <qbb/qubus/variable_access_analysis.hpp>
 
 #include <qbb/qubus/pass_manager.hpp>
@@ -8,6 +9,7 @@
 #include <array>
 #include <functional>
 #include <map>
+#include <vector>
 
 namespace qbb
 {
@@ -21,14 +23,30 @@ enum class alias_result
     must_alias
 };
 
-alias_result alias_using_basic_rules(const access& first_access, const access& second_access);
-
-class basic_alias_analysis_result
+class alias_query_driver
 {
 public:
     alias_result alias(const access& first_access, const access& second_access) const;
 
+    void add_rule(std::function<alias_result(alias_result, const access_qualifier_expr&,
+                                             const access_qualifier_expr&)>
+                      differentiator);
 private:
+    std::vector<std::function<alias_result(alias_result, const access_qualifier_expr&,
+                                           const access_qualifier_expr&)>>
+        aliasing_rules_;
+};
+
+class basic_alias_analysis_result
+{
+public:
+    basic_alias_analysis_result();
+
+    alias_result alias(const access& first_access, const access& second_access,
+                       bool enable_caching = true) const;
+
+private:
+    alias_query_driver driver_;
     mutable std::map<std::array<const expression*, 2>, alias_result> alias_cache_;
 };
 
@@ -46,16 +64,15 @@ public:
 class alias_analysis_result
 {
 public:
-    alias_analysis_result(const expression& root_, analysis_manager& manager_)
-    : root_(root_), manager_(manager_)
-    {
-    }
+    alias_analysis_result(const expression& root_,
+                          const value_set_analysis_result& value_set_analysis_);
 
-    alias_result alias(const access& first_access, const access& second_access) const;
+    alias_result alias(const access& first_access, const access& second_access,
+                       bool enable_caching = true) const;
 
 private:
-    std::reference_wrapper<const expression> root_;
-    std::reference_wrapper<analysis_manager> manager_;
+    alias_query_driver driver_;
+    mutable std::map<std::array<const expression*, 2>, alias_result> alias_cache_;
 };
 
 class alias_analysis_pass
