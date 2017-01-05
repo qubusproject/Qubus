@@ -34,7 +34,8 @@ TEST(value_set_anaylsis, simple_array_access_in_loop_nest)
 
     auto value_set = result.determine_value_set(expr, *root);
 
-    auto expected_value_set = isl::set(resource_man.get_isl_ctx(), "[p0] -> { [i0] : 0 <= i0 < p0 }");
+    auto expected_value_set =
+        isl::set(resource_man.get_isl_ctx(), "[p0] -> { [i0] : 0 <= i0 < p0 }");
     EXPECT_TRUE(is_subset(expected_value_set, value_set.values()));
 }
 
@@ -141,7 +142,8 @@ TEST(value_set_anaylsis, blocking)
 
     auto expected_value_set =
         isl::set(resource_man.get_isl_ctx(),
-                 "[p0, p1] -> { [i0] : 0 <= p0 <= 990 and 0 <= p1 <= 990 and p0 <= i0 <= p0 + 9 }");
+                 "[p0, p1] -> { [i0] : exists (e0 = floor((p1)/10), e1 = floor((p0)/10): 10e0 = p1 "
+                 "and 10e1 = p0 and 0 <= p0 <= 990 and 0 <= p1 <= 990 and p0 <= i0 <= p0 + 9) }");
 
     EXPECT_EQ(expected_value_set, value_set.values());
 }
