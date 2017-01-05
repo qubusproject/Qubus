@@ -12,6 +12,9 @@
 
 #include <qbb/qubus/isl/set.hpp>
 
+#include <boost/range/any_range.hpp>
+
+#include <functional>
 #include <memory>
 #include <utility>
 
@@ -37,6 +40,7 @@ public:
     {
         return ctx_;
     }
+
 private:
     isl::set values_;
     std::shared_ptr<affine_expr_context> ctx_;
@@ -45,10 +49,13 @@ private:
 class value_set_analysis_result
 {
 public:
-    explicit value_set_analysis_result(const axiom_analysis_result& axiom_analysis_,
-                                       const task_invariants_analysis_result& task_invariants_analysis_,
-                                       isl::context& isl_ctx_);
+    explicit value_set_analysis_result(
+        const axiom_analysis_result& axiom_analysis_,
+        const task_invariants_analysis_result& task_invariants_analysis_, isl::context& isl_ctx_);
 
+    std::vector<value_set>
+    determine_value_sets(boost::any_range<const expression&, boost::forward_traversal_tag> expressions,
+                         const expression& context) const;
     value_set determine_value_set(const expression& expr, const expression& context) const;
 
 private:

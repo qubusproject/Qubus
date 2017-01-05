@@ -2,6 +2,8 @@
 
 #include <qbb/qubus/isl/map.hpp>
 
+#include <boost/range/adaptor/transformed.hpp>
+
 #include <qbb/util/assert.hpp>
 
 namespace qbb
@@ -18,54 +20,88 @@ value_set_analysis_result::value_set_analysis_result(
 {
 }
 
-value_set value_set_analysis_result::determine_value_set(const expression& expr,
-                                                        const expression& context) const
+std::vector<value_set> value_set_analysis_result::determine_value_sets(
+    boost::any_range<const expression&, boost::forward_traversal_tag> expressions,
+    const expression& context) const
 {
     QBB_ASSERT(axiom_analysis_ != nullptr, "Invalid value_set_analysis_result object.");
-
-    auto axioms = axiom_analysis_->get_valid_axioms(expr);
 
     auto ctx = std::make_shared<affine_expr_context>([this, &context](const expression& expr) {
         return task_invariants_analysis_->is_invariant(expr, context);
     });
 
-    auto analyzed_expr = try_construct_affine_expr(expr, *ctx);
+    std::vector<value_set> value_sets;
 
-    if (analyzed_expr)
+    for (const auto& expr : expressions)
     {
-        std::vector<affine_constraint> affine_axioms;
+        auto axioms = axiom_analysis_->get_valid_axioms(expr);
 
-        for (const auto& axiom : axioms)
+        auto analyzed_expr = try_construct_affine_expr(expr, *ctx);
+
+        if (analyzed_expr)
         {
-            auto expr = try_extract_affine_constraint(axiom.as_expr(), *ctx);
+            std::vector<affine_constraint> affine_axioms;
 
-            if (expr)
+            for (const auto& axiom : axioms)
             {
-                affine_axioms.push_back(*std::move(expr));
+                auto expr = try_extract_affine_constraint(axiom.as_expr(), *ctx);
+
+                if (expr)
+                {
+                    affine_axioms.push_back(*std::move(expr));
+                }
             }
+
+            auto domain = isl::set::universe(ctx->construct_corresponding_space(*isl_ctx_));
+
+            for (const auto& axiom : affine_axioms)
+            {
+                auto constraint = axiom.convert(*isl_ctx_);
+
+                domain = intersect(std::move(domain), constraint);
+            }
+
+            domain = simplify(std::move(domain));
+
+            auto map = isl::map::from_affine_expr(analyzed_expr->convert(*isl_ctx_));
+
+            auto value_set = apply(map, domain);
+
+            value_sets.emplace_back(std::move(value_set), ctx);
         }
-
-        auto domain = isl::set::universe(ctx->construct_corresponding_space(*isl_ctx_));
-
-        for (const auto& axiom : affine_axioms)
+        else
         {
-            auto constraint = axiom.convert(*isl_ctx_);
-
-            domain = intersect(std::move(domain), constraint);
+            value_sets.emplace_back(isl::set::universe(isl::space(*isl_ctx_, 0, 1)), ctx);
         }
-
-        domain = simplify(std::move(domain));
-
-        auto map = isl::map::from_affine_expr(analyzed_expr->convert(*isl_ctx_));
-
-        auto value_set = apply(map, domain);
-
-        return {std::move(value_set), std::move(ctx)};
     }
-    else
+
+    return value_sets;
+}
+
+namespace
+{
+struct unwrap_reference
+{
+    template <typename T>
+    T& operator()(const std::reference_wrapper<T>& wrapper) const
     {
-        return {isl::set::universe(isl::space(*isl_ctx_, 0, 1)), std::move(ctx)};
+        return wrapper.get();
     }
+};
+}
+
+value_set value_set_analysis_result::determine_value_set(const expression& expr,
+                                                         const expression& context) const
+{
+    std::vector<std::reference_wrapper<const expression>> expressions{expr};
+
+    using boost::adaptors::transformed;
+
+    auto value_sets = determine_value_sets(expressions | transformed(unwrap_reference()), context);
+
+    QBB_ASSERT(value_sets.size() == 1, "Expecting only one value set.");
+
+    return value_sets[0];
 }
 
 value_set_analysis_result
