@@ -56,6 +56,9 @@ private:
     isl_basic_map* handle_;
 };
 
+bool operator==(const basic_map& lhs, const basic_map& rhs);
+bool operator!=(const basic_map& lhs, const basic_map& rhs);
+
 basic_set wrap(basic_map map);
 
 basic_map project_out(basic_map map, isl_dim_type type, unsigned int first, unsigned int n);
@@ -116,6 +119,9 @@ public:
 private:
     isl_map* handle_;
 };
+
+bool operator==(const map& lhs, const map& rhs);
+bool operator!=(const map& lhs, const map& rhs);
 
 map project_out(map m, isl_dim_type type, unsigned int first, unsigned int n);
 
@@ -199,6 +205,9 @@ public:
 private:
     isl_union_map* handle_;
 };
+
+bool operator==(const union_map& lhs, const union_map& rhs);
+bool operator!=(const union_map& lhs, const union_map& rhs);
 
 union_map apply_domain(union_map lhs, union_map rhs);
 

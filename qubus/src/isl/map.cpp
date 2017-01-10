@@ -165,6 +165,16 @@ context_ref map::get_ctx() const
     return context_ref(isl_map_get_ctx(handle_));
 }
 
+bool operator==(const basic_map& lhs, const basic_map& rhs)
+{
+    return isl_basic_map_is_equal(lhs.native_handle(), rhs.native_handle());
+}
+
+bool operator!=(const basic_map& lhs, const basic_map& rhs)
+{
+    return !(lhs == rhs);
+}
+
 set map::domain() const
 {
     return set(isl_map_domain(isl_map_copy(handle_)));
@@ -248,6 +258,16 @@ map map::from_multi_affine_expr(multi_affine_expr expr)
 map map::from_affine_expr(affine_expr expr)
 {
     return map(isl_map_from_aff(expr.release()));
+}
+
+bool operator==(const map& lhs, const map& rhs)
+{
+    return isl_map_is_equal(lhs.native_handle(), rhs.native_handle());
+}
+
+bool operator!=(const map& lhs, const map& rhs)
+{
+    return !(lhs == rhs);
 }
 
 map project_out(map m, isl_dim_type type, unsigned int first, unsigned int n)
@@ -456,6 +476,16 @@ isl_union_map* union_map::release() noexcept
 union_map union_map::empty(space s)
 {
     return union_map(isl_union_map_empty(s.release()));
+}
+
+bool operator==(const union_map& lhs, const union_map& rhs)
+{
+    return isl_union_map_is_equal(lhs.native_handle(), rhs.native_handle());
+}
+
+bool operator!=(const union_map& lhs, const union_map& rhs)
+{
+    return !(lhs == rhs);
 }
 
 union_map apply_domain(union_map lhs, union_map rhs)
