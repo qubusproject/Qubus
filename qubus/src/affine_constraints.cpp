@@ -630,6 +630,30 @@ bool is_const(const affine_expr& expr)
     return pattern::match(*expr.expr_, m);
 }
 
+bool is_variable(const affine_expr& expr)
+{
+    using pattern::_;
+
+    auto m = pattern::make_matcher<expression, bool>()
+            .case_(affine_variable(_), [] { return true; })
+            .case_(_, [] { return false; });
+
+    return pattern::match(*expr.expr_, m);
+}
+
+std::string get_variable_name(const affine_expr& expr)
+{
+    using pattern::_;
+
+    pattern::variable<std::string> name;
+
+    auto m = pattern::make_matcher<expression, std::string>()
+            .case_(affine_variable(name), [&] { return name.get(); })
+            .case_(_, [] () -> std::string { throw 0; });
+
+    return pattern::match(*expr.expr_, m);
+}
+
 affine_expr_context::affine_expr_context(std::function<bool(const expression&)> invariant_checker_)
 : invariant_checker_(std::move(invariant_checker_))
 {
@@ -745,6 +769,31 @@ const std::function<bool(const expression&)>& affine_expr_context::get_invariant
 affine_constraint::affine_constraint(std::unique_ptr<expression> expr_, affine_expr_context& ctx_)
 : expr_(std::move(expr_)), ctx_(&ctx_)
 {
+}
+
+affine_constraint::affine_constraint(const affine_constraint& other) : expr_(clone(*other.expr_)), ctx_(other.ctx_)
+{
+}
+
+affine_constraint::affine_constraint(affine_constraint&& other) noexcept
+        : expr_(std::move(other.expr_)), ctx_(other.ctx_)
+{
+}
+
+affine_constraint& affine_constraint::operator=(const affine_constraint& other)
+{
+    this->expr_ = clone(*other.expr_);
+    this->ctx_ = other.ctx_;
+
+    return *this;
+}
+
+affine_constraint& affine_constraint::operator=(affine_constraint&& other) noexcept
+{
+    this->expr_ = std::move(other.expr_);
+    this->ctx_ = other.ctx_;
+
+    return *this;
 }
 
 isl::set affine_constraint::convert(isl::context& isl_ctx) const

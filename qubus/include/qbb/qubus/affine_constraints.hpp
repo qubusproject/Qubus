@@ -51,6 +51,9 @@ public:
     friend affine_expr operator-(affine_expr arg);
 
     friend bool is_const(const affine_expr& expr);
+    friend bool is_variable(const affine_expr& expr);
+
+    friend std::string get_variable_name(const affine_expr& expr);
 
     friend affine_constraint equal_to(affine_expr lhs, affine_expr rhs);
     friend affine_constraint not_equal_to(affine_expr lhs, affine_expr rhs);
@@ -99,6 +102,12 @@ class affine_constraint
 {
 public:
     affine_constraint(std::unique_ptr<expression> expr_, affine_expr_context& ctx_);
+
+    affine_constraint(const affine_constraint& other);
+    affine_constraint(affine_constraint&& other) noexcept;
+
+    affine_constraint& operator=(const affine_constraint& other);
+    affine_constraint& operator=(affine_constraint&& other) noexcept;
 
     isl::set convert(isl::context& isl_ctx) const;
 
