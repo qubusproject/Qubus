@@ -6,6 +6,8 @@
 #include <qbb/qubus/isl/set.hpp>
 #include <qbb/qubus/isl/context.hpp>
 #include <qbb/qubus/isl/id.hpp>
+#include <qbb/qubus/isl/multi_affine_expr.hpp>
+#include <qbb/qubus/isl/affine_expr.hpp>
 
 #include <isl/map.h>
 #include <isl/union_map.h>
@@ -53,6 +55,9 @@ public:
 private:
     isl_basic_map* handle_;
 };
+
+bool operator==(const basic_map& lhs, const basic_map& rhs);
+bool operator!=(const basic_map& lhs, const basic_map& rhs);
 
 basic_set wrap(basic_map map);
 
@@ -108,9 +113,15 @@ public:
     static map universe(space s);
     static map empty(space s);
     static map identity(space s);
+
+    static map from_multi_affine_expr(multi_affine_expr expr);
+    static map from_affine_expr(affine_expr expr);
 private:
     isl_map* handle_;
 };
+
+bool operator==(const map& lhs, const map& rhs);
+bool operator!=(const map& lhs, const map& rhs);
 
 map project_out(map m, isl_dim_type type, unsigned int first, unsigned int n);
 
@@ -119,6 +130,8 @@ map make_map_from_domain_and_range(set domain, set range);
 map apply_domain(map lhs, map rhs);
 
 map apply_range(map lhs, map rhs);
+
+set apply(map m, set values);
 
 map union_(map lhs, map rhs);
 
@@ -142,6 +155,8 @@ map reverse(map m);
 map coalesce(map m);
 map detect_equalities(map m);
 map remove_redundancies(map m);
+
+map simplify(map m);
 
 set wrap(map m);
 
@@ -191,6 +206,9 @@ private:
     isl_union_map* handle_;
 };
 
+bool operator==(const union_map& lhs, const union_map& rhs);
+bool operator!=(const union_map& lhs, const union_map& rhs);
+
 union_map apply_domain(union_map lhs, union_map rhs);
 
 union_map apply_range(union_map lhs, union_map rhs);
@@ -220,6 +238,11 @@ inline union_map reverse(union_map m)
 {
     return union_map(isl_union_map_reverse(m.release()));
 }
+
+union_map coalesce(union_map m);
+union_map detect_equalities(union_map m);
+union_map remove_redundancies(union_map m);
+union_map simplify(union_map m);
 
 }
 }

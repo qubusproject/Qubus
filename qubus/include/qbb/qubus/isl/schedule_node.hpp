@@ -38,6 +38,7 @@ public:
     union_map band_get_partial_schedule_union_map() const;
     int band_n_member() const;
     bool band_is_permutable() const;
+    void band_member_set_coincident(int pos, bool is_coincident);
     void band_member_set_ast_loop_type(int pos, isl_ast_loop_type type);
     void band_member_set_isolate_ast_loop_type(int pos, isl_ast_loop_type type);
     void band_set_ast_build_options(union_set options);
@@ -51,6 +52,7 @@ public:
     isl_schedule_node* native_handle() const;
     isl_schedule_node* release() noexcept;
 
+    static schedule_node from_domain(union_set domain);
     static schedule_node from_extension(union_map extension);
 private:
     isl_schedule_node* handle_;

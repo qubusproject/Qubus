@@ -93,18 +93,7 @@ reference compile(const expression& expr, compiler& comp)
                        emit_loop(induction_var_ref, lower_bound, upper_bound, increment_value,
                                  [&]()
                                  {
-                                     if (!contains_loops(d.get()))
-                                     {
-                                         ctx.enter_code_region(d.get());
-
-                                         comp.compile(d.get());
-
-                                         ctx.leave_code_region();
-                                     }
-                                     else
-                                     {
-                                         comp.compile(d.get());
-                                     }
+                                    comp.compile(d.get());
                                  },
                                  env, ctx);
 

@@ -7,7 +7,6 @@
 
 #include <qbb/qubus/jit/alias_info.hpp>
 #include <qbb/qubus/jit/llvm_environment.hpp>
-#include <qbb/qubus/jit/local_array_alias_analysis.hpp>
 #include <qbb/qubus/jit/reference.hpp>
 
 #include <hpx/lcos/future.hpp>
@@ -20,6 +19,7 @@
 #include <qbb/util/handle.hpp>
 #include <qbb/util/optional_ref.hpp>
 
+#include <memory>
 #include <map>
 
 namespace qbb
@@ -48,24 +48,6 @@ public:
 
 private:
     std::unique_ptr<on_scope_exit_signal> on_scope_exit_;
-};
-
-class code_region
-{
-public:
-    code_region(util::handle token_, const expression& expr_, llvm_environment& env_);
-
-    code_region(const code_region&) = delete;
-    code_region& operator=(const code_region&) = delete;
-
-    alias_info register_access(variable_declaration accessed_array,
-                               std::vector<std::reference_wrapper<expression>> indices,
-                               reference data_ref);
-
-private:
-    util::handle token_;
-
-    local_array_access_alias_analysis laa_alias_analysis_;
 };
 
 class global_alias_info_query
@@ -117,12 +99,6 @@ public:
 
     void exit_current_scope();
 
-    void enter_code_region(const expression& expr);
-
-    void leave_code_region();
-
-    util::optional_ref<code_region> current_code_region();
-
     alias_info query_global_alias_info(const reference& ref) const;
 
     void register_pending_task(hpx::lcos::future<void> f);
@@ -137,9 +113,6 @@ private:
     std::map<qbb::util::handle, reference> symbol_table_;
     std::vector<function_declaration> plans_to_compile_;
     std::vector<scope> scopes_;
-
-    std::unique_ptr<code_region> current_code_region_;
-    std::uintptr_t next_region_token_;
 
     mutable std::vector<global_alias_info_query> pending_global_alias_queries_;
 

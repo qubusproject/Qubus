@@ -42,7 +42,7 @@ public:
     
     optional_ref<T>& operator=(T& ref_)
     {
-        this->ref_ = ref_;
+        this->ref_ = &ref_;
         
         return *this;
     }

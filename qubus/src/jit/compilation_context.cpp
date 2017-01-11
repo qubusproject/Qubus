@@ -9,7 +9,7 @@ namespace qubus
 namespace jit
 {
 
-scope::scope() : on_scope_exit_(util::make_unique<on_scope_exit_signal>())
+scope::scope() : on_scope_exit_(std::make_unique<on_scope_exit_signal>())
 {
 }
 
@@ -24,18 +24,6 @@ scope::~scope()
 void scope::on_exit(const on_scope_exit_signal::slot_type& subscriber)
 {
     on_scope_exit_->connect(subscriber);
-}
-
-code_region::code_region(util::handle token_, const expression& QBB_UNUSED(expr_),
-                         llvm_environment& env_)
-: token_(token_), laa_alias_analysis_(token_, env_)
-{
-}
-
-alias_info code_region::register_access(variable_declaration accessed_array,
-                                        std::vector<std::reference_wrapper<expression>> indices, reference data_ref)
-{
-    return laa_alias_analysis_.query(accessed_array, indices, data_ref);
 }
 
 global_alias_info_query::global_alias_info_query(reference ref_) : ref_(std::move(ref_))
@@ -64,7 +52,7 @@ hpx::lcos::shared_future<llvm::MDNode*> global_alias_info_query::get_alias_set()
 }
 
 compilation_context::compilation_context(llvm_environment& env_)
-: env_(&env_), scopes_(1), next_region_token_(0)
+: env_(&env_), scopes_(1)
 {
 }
 
@@ -122,24 +110,6 @@ const scope& compilation_context::get_current_scope() const
 void compilation_context::exit_current_scope()
 {
     scopes_.pop_back();
-}
-
-void compilation_context::enter_code_region(const expression& expr)
-{
-    current_code_region_ =
-        util::make_unique<code_region>(util::handle(next_region_token_), expr, *env_);
-    next_region_token_++;
-}
-
-void compilation_context::leave_code_region()
-{
-    current_code_region_.reset();
-}
-
-util::optional_ref<code_region> compilation_context::current_code_region()
-{
-    return current_code_region_ ? util::optional_ref<code_region>(*current_code_region_)
-                                : util::optional_ref<code_region>();
 }
 
 alias_info compilation_context::query_global_alias_info(const reference& ref) const

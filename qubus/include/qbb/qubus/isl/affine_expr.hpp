@@ -3,6 +3,7 @@
 
 #include <qbb/qubus/isl/local_space.hpp>
 #include <qbb/qubus/isl/value.hpp>
+#include <qbb/qubus/isl/context.hpp>
 
 #include <isl/aff.h>
 
@@ -26,6 +27,14 @@ public:
 
     ~affine_expr();
 
+    affine_expr& operator=(affine_expr other);
+
+    value constant_value() const;
+
+    space get_space() const;
+
+    context_ref ctx() const;
+
     isl_aff* native_handle() const;
 
     isl_aff* release() noexcept;
@@ -35,8 +44,12 @@ private:
 };
 
 affine_expr operator+(affine_expr lhs, affine_expr rhs);
+affine_expr operator+(affine_expr lhs, int rhs);
+affine_expr operator+(int lhs, affine_expr rhs);
 
 affine_expr operator-(affine_expr lhs, affine_expr rhs);
+affine_expr operator-(affine_expr lhs, int rhs);
+affine_expr operator-(int lhs, affine_expr rhs);
 
 affine_expr operator*(affine_expr lhs, affine_expr rhs);
 
@@ -44,7 +57,14 @@ affine_expr operator/(affine_expr lhs, affine_expr rhs);
 
 affine_expr operator-(affine_expr arg);
 
+affine_expr operator%(affine_expr lhs, value rhs);
+affine_expr operator%(affine_expr lhs, long rhs);
+
 affine_expr floor(affine_expr arg);
+
+affine_expr align_params(affine_expr aff, space model);
+
+bool is_cst(const affine_expr& aff);
 
 }
 }

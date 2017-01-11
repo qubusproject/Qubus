@@ -7,6 +7,8 @@
 #include <isl/set.h>
 #include <isl/union_set.h>
 
+#include <boost/utility/string_ref.hpp>
+
 #include <string>
 #include <vector>
 
@@ -30,6 +32,8 @@ public:
 
     ~basic_set();
 
+    basic_set& operator=(basic_set other);
+
     isl_basic_set* native_handle() const;
 
     isl_basic_set* release() noexcept;
@@ -45,9 +49,20 @@ private:
     isl_basic_set* handle_;
 };
 
+bool operator==(const basic_set& lhs, const basic_set& rhs);
+bool operator!=(const basic_set& lhs, const basic_set& rhs);
+
 bool is_subset(const basic_set& lhs, const basic_set& rhs);
 
 bool is_empty(const basic_set& s);
+
+basic_set flat_product(basic_set lhs, basic_set rhs);
+
+basic_set align_params(basic_set s, space model);
+
+basic_set add_dims(basic_set s, isl_dim_type type, unsigned int n);
+
+basic_set project_out(basic_set s, isl_dim_type type, unsigned int first, unsigned int n);
 
 class set
 {
@@ -82,7 +97,10 @@ public:
     void set_tuple_name(const std::string& name);
     std::string get_tuple_name() const;
 
-    bool bounded();
+    void set_dim_name(isl_dim_type type, int pos, const std::string& name);
+    boost::string_ref get_dim_name(isl_dim_type type, int pos) const;
+
+    bool bounded() const;
 
     static set universe(space s);
     static set empty(space s);
@@ -103,11 +121,18 @@ set intersect_params(set lhs, set rhs);
 
 set substract(set lhs, set rhs);
 
+set complement(set arg);
+
+bool operator==(const set& lhs, const set& rhs);
+bool operator!=(const set& lhs, const set& rhs);
+
 bool is_subset(const set& lhs, const set& rhs);
 
 bool is_strict_subset(const set& lhs, const set& rhs);
 
 bool is_empty(const set& s);
+
+set get_params(set s);
 
 set flat_product(set lhs, set rhs);
 
@@ -117,6 +142,13 @@ set project_out(set s, isl_dim_type type, unsigned int first, unsigned int n);
 
 set lexmin(set s);
 set lexmax(set s);
+
+set add_dims(set s, isl_dim_type type, unsigned int n);
+
+set coalesce(set s);
+set detect_equalities(set s);
+set remove_redundancies(set s);
+set simplify(set s);
 
 class union_set
 {
@@ -149,6 +181,9 @@ private:
 union_set union_(union_set lhs, union_set rhs);
 union_set intersect(union_set lhs, union_set rhs);
 
+bool operator==(const union_set& lhs, const union_set& rhs);
+bool operator!=(const union_set& lhs, const union_set& rhs);
+
 bool is_subset(const union_set& lhs, const union_set& rhs);
 
 bool is_strict_subset(const union_set& lhs, const union_set& rhs);
@@ -157,6 +192,11 @@ bool is_empty(const union_set& s);
 
 union_set add_set(union_set uset, set s);
 set extract_set(const union_set& uset, space s);
+
+union_set coalesce(union_set s);
+union_set detect_equalities(union_set s);
+union_set remove_redundancies(union_set s);
+union_set simplify(union_set s);
 
 }
 }

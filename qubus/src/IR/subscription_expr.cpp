@@ -7,14 +7,19 @@ namespace qbb
 namespace qubus
 {
 
-subscription_expr::subscription_expr(std::unique_ptr<expression> indexed_expr_, std::vector<std::unique_ptr<expression>> indices_)
+subscription_expr::subscription_expr(std::unique_ptr<access_expr> indexed_expr_, std::vector<std::unique_ptr<expression>> indices_)
 : indexed_expr_{take_over_child(indexed_expr_)}, indices_(take_over_children(indices_))
 {
 }
 
-const expression& subscription_expr::indexed_expr() const
+const access_expr& subscription_expr::indexed_expr() const
 {
     return *indexed_expr_;
+}
+
+const access_expr& subscription_expr::qualified_access() const
+{
+    return indexed_expr();
 }
 
 subscription_expr* subscription_expr::clone() const
@@ -49,6 +54,11 @@ std::unique_ptr<expression> subscription_expr::substitute_subexpressions(
     if (new_children.size() < 1)
         throw 0;
 
+    std::unique_ptr<access_expr> indexed_access(dynamic_cast<access_expr*>(new_children[0].release()));
+
+    if (!indexed_access)
+        throw 0;
+
     std::vector<std::unique_ptr<expression>> indices;
     indices.reserve(new_children.size() - 1);
 
@@ -58,7 +68,7 @@ std::unique_ptr<expression> subscription_expr::substitute_subexpressions(
         indices.push_back(std::move(new_children[i]));
     }
 
-    return std::make_unique<subscription_expr>(std::move(new_children[0]), std::move(indices));
+    return std::make_unique<subscription_expr>(std::move(indexed_access), std::move(indices));
 }
 
 bool operator==(const subscription_expr& lhs, const subscription_expr& rhs)

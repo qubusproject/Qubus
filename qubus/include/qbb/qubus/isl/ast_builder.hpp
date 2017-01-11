@@ -9,6 +9,7 @@
 #include <qbb/qubus/isl/id.hpp>
 #include <qbb/qubus/isl/pw_aff.hpp>
 #include <qbb/qubus/isl/pw_multi_aff.hpp>
+#include <qbb/qubus/isl/space.hpp>
 
 #include <isl/ast_build.h>
 
@@ -34,6 +35,8 @@ public:
     ast_expr build_expr_from_pw_aff(pw_aff f);
     ast_expr build_access_from_pw_multi_aff(pw_multi_aff pma);
 
+    ast_expr build_expr_from_set(set s);
+
     void set_options(union_map options);
     
     void set_create_leaf(std::function<ast_node(ast_builder_ref)> callback);
@@ -44,6 +47,7 @@ public:
     void set_after_each_for(std::function<ast_node(ast_node, ast_builder_ref)> callback);
 
     union_map get_schedule() const;
+    space get_schedule_space() const;
 
     isl_ast_build* native_handle() const;
 protected:

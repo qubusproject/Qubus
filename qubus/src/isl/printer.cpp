@@ -4,6 +4,7 @@
 #include <qbb/qubus/isl/map.hpp>
 #include <qbb/qubus/isl/ast.hpp>
 #include <qbb/qubus/isl/context.hpp>
+#include <qbb/qubus/isl/flow.hpp>
 
 #include <iostream>
 
@@ -108,6 +109,23 @@ void printer::print(const ast_expr& expr)
     free(buffer);
 
     std::cout << result;
+}
+
+void printer::print(const union_flow& flow)
+{
+    handle_ = isl_printer_set_output_format(handle_, ISL_FORMAT_ISL);
+
+    handle_ = isl_printer_print_union_flow(handle_, flow.native_handle());
+
+    char* buffer = isl_printer_get_str(handle_);
+
+    std::string result = buffer;
+
+    handle_ = isl_printer_flush(handle_);
+
+    free(buffer);
+
+    std::cout << result << std::endl;
 }
 
 void printer::print_macro(isl_ast_op_type op_type)

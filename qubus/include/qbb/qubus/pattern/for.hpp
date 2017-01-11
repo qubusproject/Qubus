@@ -84,6 +84,15 @@ private:
     Body body_;
 };
 
+template <typename Order, typename Index, typename LowerBound, typename UpperBound,
+          typename Increment, typename Body>
+auto for_(Order order, Index index, LowerBound lower_bound, UpperBound upper_bound,
+          Increment increment, Body body)
+{
+    return for_pattern<Order, Index, LowerBound, UpperBound, Increment, Body>(
+        order, index, lower_bound, upper_bound, increment, body);
+}
+
 template <typename Index, typename LowerBound, typename UpperBound, typename Increment,
           typename Body>
 auto for_(Index index, LowerBound lower_bound, UpperBound upper_bound, Increment increment,

@@ -31,6 +31,11 @@ ast_expr ast_builder_base::build_access_from_pw_multi_aff(pw_multi_aff pma)
     return ast_expr(isl_ast_build_access_from_pw_multi_aff(handle_, pma.release()));
 }
 
+ast_expr ast_builder_base::build_expr_from_set(set s)
+{
+    return ast_expr(isl_ast_build_expr_from_set(handle_, s.release()));
+}
+
 void ast_builder_base::set_options(union_map options)
 {
     handle_ = isl_ast_build_set_options(handle_, options.release());
@@ -108,6 +113,11 @@ void ast_builder_base::set_after_each_for(std::function<ast_node(ast_node, ast_b
 union_map ast_builder_base::get_schedule() const
 {
     return union_map(isl_ast_build_get_schedule(handle_));
+}
+
+space ast_builder_base::get_schedule_space() const
+{
+    return space(isl_ast_build_get_schedule_space(handle_));
 }
 
 isl_ast_build* ast_builder_base::native_handle() const

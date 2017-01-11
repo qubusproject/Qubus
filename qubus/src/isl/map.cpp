@@ -165,6 +165,16 @@ context_ref map::get_ctx() const
     return context_ref(isl_map_get_ctx(handle_));
 }
 
+bool operator==(const basic_map& lhs, const basic_map& rhs)
+{
+    return isl_basic_map_is_equal(lhs.native_handle(), rhs.native_handle());
+}
+
+bool operator!=(const basic_map& lhs, const basic_map& rhs)
+{
+    return !(lhs == rhs);
+}
+
 set map::domain() const
 {
     return set(isl_map_domain(isl_map_copy(handle_)));
@@ -240,6 +250,26 @@ map map::identity(space s)
     return map(isl_map_identity(s.release()));
 }
 
+map map::from_multi_affine_expr(multi_affine_expr expr)
+{
+    return map(isl_map_from_multi_aff(expr.release()));
+}
+
+map map::from_affine_expr(affine_expr expr)
+{
+    return map(isl_map_from_aff(expr.release()));
+}
+
+bool operator==(const map& lhs, const map& rhs)
+{
+    return isl_map_is_equal(lhs.native_handle(), rhs.native_handle());
+}
+
+bool operator!=(const map& lhs, const map& rhs)
+{
+    return !(lhs == rhs);
+}
+
 map project_out(map m, isl_dim_type type, unsigned int first, unsigned int n)
 {
     return map(isl_map_project_out(m.release(), type, first, n));
@@ -262,6 +292,11 @@ map apply_range(map lhs, map rhs)
     isl_map* temp = isl_map_apply_range(lhs.release(), rhs.release());
 
     return map(temp);
+}
+
+set apply(map m, set values)
+{
+    return set(isl_set_apply(values.release(), m.release()));
 }
 
 map union_(map lhs, map rhs)
@@ -327,6 +362,11 @@ map detect_equalities(map m)
 map remove_redundancies(map m)
 {
     return map(isl_map_remove_redundancies(m.release()));
+}
+
+map simplify(map m)
+{
+    return remove_redundancies(detect_equalities(coalesce(std::move(m))));
 }
 
 set wrap(map m)
@@ -438,6 +478,16 @@ union_map union_map::empty(space s)
     return union_map(isl_union_map_empty(s.release()));
 }
 
+bool operator==(const union_map& lhs, const union_map& rhs)
+{
+    return isl_union_map_is_equal(lhs.native_handle(), rhs.native_handle());
+}
+
+bool operator!=(const union_map& lhs, const union_map& rhs)
+{
+    return !(lhs == rhs);
+}
+
 union_map apply_domain(union_map lhs, union_map rhs)
 {
     isl_union_map* temp = isl_union_map_apply_domain(lhs.release(), rhs.release());
@@ -496,6 +546,26 @@ union_map align_params(union_map m, space s)
 union_map project_out(union_map m, isl_dim_type type, unsigned int first, unsigned int n)
 {
     return union_map(isl_union_map_project_out(m.release(), type, first, n));
+}
+
+union_map coalesce(union_map m)
+{
+    return union_map(isl_union_map_coalesce(m.release()));
+}
+
+union_map detect_equalities(union_map m)
+{
+    return union_map(isl_union_map_detect_equalities(m.release()));
+}
+
+union_map remove_redundancies(union_map m)
+{
+    return union_map(isl_union_map_remove_redundancies(m.release()));
+}
+
+union_map simplify(union_map m)
+{
+    return remove_redundancies(detect_equalities(coalesce(std::move(m))));
 }
 
 namespace

@@ -20,7 +20,8 @@ set(qubus_ir_source_files annotations.cpp binary_operator_expr.cpp compound_expr
                           function_declaration.cpp macro_expr.cpp spawn_expr.cpp
                           local_variable_def_expr.cpp construct_expr.cpp
                           if_expr.cpp member_access_expr.cpp foreign_call_expr.cpp expression.cpp
-                          pretty_printer.cpp type_inference.cpp deduce_expression_environment.cpp)
+                          pretty_printer.cpp type_inference.cpp deduce_expression_environment.cpp
+                          constant_folding.cpp)
         
 set(qubus_pattern_header_file_names any.hpp binary_operator.hpp bind_to.hpp compound.hpp core.hpp
                                     for.hpp intrinsic_function.hpp IR.hpp

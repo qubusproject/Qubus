@@ -31,6 +31,8 @@ public:
 
     ~space();
 
+    space& operator=(space other);
+
     isl_space* native_handle() const;
 
     isl_space* release() noexcept;
@@ -43,11 +45,19 @@ public:
     boost::string_ref get_dim_name(isl_dim_type type, int pos) const;
 
     int find_dim_by_name(isl_dim_type type, const std::string& name) const;
+
+    context_ref get_ctx() const;
+
+    static space from_domain_and_range(space domain, space range);
 private:
     isl_space* handle_;
 };
 
+space add_dims(space s, isl_dim_type type, unsigned int n);
+
 space drop_all_dims(space s, isl_dim_type type);
+
+space align_params(space s, space model);
 
 }
 }
