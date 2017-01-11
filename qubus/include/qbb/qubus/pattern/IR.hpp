@@ -19,6 +19,7 @@
 #include <qbb/qubus/pattern/member_access.hpp>
 #include <qbb/qubus/pattern/foreign_call.hpp>
 #include <qbb/qubus/pattern/access.hpp>
+#include <qbb/qubus/pattern/array_slice.hpp>
 
 #include <qbb/qubus/pattern/type.hpp>
 

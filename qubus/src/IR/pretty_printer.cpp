@@ -169,6 +169,9 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
     pattern::variable<std::vector<std::reference_wrapper<const expression>>> indices;
     pattern::variable<std::vector<std::reference_wrapper<const expression>>> subexprs;
     pattern::variable<std::vector<std::reference_wrapper<const expression>>> args;
+    pattern::variable<std::vector<std::reference_wrapper<const expression>>> offset;
+    pattern::variable<std::vector<std::reference_wrapper<const expression>>> shape;
+    pattern::variable<std::vector<std::reference_wrapper<const expression>>> strides;
     pattern::variable<std::string> id;
 
     pattern::variable<double> dval;
@@ -641,16 +644,36 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
                        std::cout << "." << id.get();
                    })
-            .case_(call_foreign(_, args), [&] {
-                std::cout << "foreign call (";
+            .case_(call_foreign(_, args),
+                   [&] {
+                       std::cout << "foreign call (";
 
-                for (const auto& arg : args.get())
+                       for (const auto& arg : args.get())
+                       {
+                           print(arg, ctx, print_types);
+                           std::cout << ", ";
+                       }
+
+                       std::cout << ")";
+                   })
+            .case_(array_slice(a, offset, shape, strides), [&] {
+                print(a.get(), ctx, print_types);
+
+                auto rank = shape.get().size();
+
+                std::cout << "[";
+
+                for (std::size_t i = 0; i < rank; ++i)
                 {
-                    print(arg, ctx, print_types);
+                    print(offset.get()[i], ctx, print_types);
+                    std::cout << ':';
+                    print(shape.get()[i], ctx, print_types);
+                    std::cout << ':';
+                    print(strides.get()[i], ctx, print_types);
                     std::cout << ", ";
                 }
 
-                std::cout << ")";
+                std::cout << "]";
             });
 
     try
