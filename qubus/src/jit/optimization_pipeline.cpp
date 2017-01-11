@@ -2,7 +2,7 @@
 
 #include <llvm/Analysis/BasicAliasAnalysis.h>
 #include <llvm/Analysis/ScalarEvolutionAliasAnalysis.h>
-#if (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 9) || LLVM_VERSION_MAJOR > 4
+#if (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 9) || LLVM_VERSION_MAJOR >= 4
 #include <llvm/Analysis/CFLAndersAliasAnalysis.h>
 #include <llvm/Analysis/CFLSteensAliasAnalysis.h>
 #include <llvm/Analysis/GlobalsModRef.h>
@@ -11,11 +11,11 @@
 #include <llvm/Analysis/TypeBasedAliasAnalysis.h>
 #include <llvm/Config/llvm-config.h>
 #include <llvm/Transforms/Scalar.h>
-#if (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 9) || LLVM_VERSION_MAJOR > 4
+#if (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 9) || LLVM_VERSION_MAJOR >= 4
 #include <llvm/Transforms/Scalar/GVN.h>
 #endif
 #include <llvm/Transforms/IPO.h>
-#if (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 9) || LLVM_VERSION_MAJOR > 4
+#if (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 9) || LLVM_VERSION_MAJOR >= 4
 #include <llvm/Transforms/IPO/FunctionAttrs.h>
 #include <llvm/Transforms/Instrumentation.h>
 #endif
@@ -48,7 +48,7 @@ void setup_function_optimization_pipeline(llvm::legacy::FunctionPassManager& man
     manager.add(createLowerExpectIntrinsicPass());
 }
 
-#if (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 9) || LLVM_VERSION_MAJOR > 4
+#if (LLVM_VERSION_MAJOR == 3 && LLVM_VERSION_MINOR >= 9) || LLVM_VERSION_MAJOR >= 4
 
 namespace
 {
@@ -223,7 +223,11 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
     // into separate loop that would otherwise inhibit vectorization.  This is
     // currently only performed for loops marked with the metadata
     // llvm.loop.distribute=true or when -enable-loop-distribute is specified.
+#if LLVM_VERSION_MAJOR < 4
     manager.add(createLoopDistributePass(/*ProcessAllLoopsByDefault=*/false));
+#else
+    manager.add(createLoopDistributePass());
+#endif
 
     manager.add(createLoopVectorizePass());
 

@@ -94,6 +94,7 @@ public:
 
     module_handle_type add_module(std::unique_ptr<llvm::Module> module)
     {
+#if LLVM_VERSION_MAJOR < 4
         auto resolver = llvm::orc::createLambdaResolver(
             [&](const std::string& name)
             {
@@ -105,6 +106,19 @@ public:
             {
                 return nullptr;
             });
+#else
+        auto resolver = llvm::orc::createLambdaResolver(
+                [&](const std::string& name)
+                {
+                    if (auto symbol = find_mangled_symbol(name))
+                        return symbol;
+                    return llvm::JITSymbol(nullptr);
+                },
+                [](const std::string& S)
+                {
+                    return nullptr;
+                });
+#endif
 
         auto handle = compile_layer_.addModuleSet(make_singleton_set(std::move(module)),
                                                   std::make_unique<llvm::SectionMemoryManager>(),
@@ -120,10 +134,17 @@ public:
         compile_layer_.removeModuleSet(handle);
     }
 
+#if LLVM_VERSION_MAJOR < 4
     llvm::orc::JITSymbol find_symbol(const std::string name)
     {
         return find_mangled_symbol(mangle(name));
     }
+#else
+    llvm::JITSymbol find_symbol(const std::string name)
+    {
+        return find_mangled_symbol(mangle(name));
+    }
+#endif
 
 private:
     std::string mangle(const std::string& name)
@@ -144,6 +165,7 @@ private:
         return vec;
     }
 
+#if LLVM_VERSION_MAJOR < 4
     llvm::orc::JITSymbol find_mangled_symbol(const std::string& name)
     {
         for (auto handle : llvm::make_range(module_handles_.begin(), module_handles_.end()))
@@ -156,6 +178,20 @@ private:
 
         return nullptr;
     }
+#else
+    llvm::JITSymbol find_mangled_symbol(const std::string& name)
+    {
+        for (auto handle : llvm::make_range(module_handles_.begin(), module_handles_.end()))
+            if (auto symbol = compile_layer_.findSymbolIn(handle, name, true))
+                return symbol;
+
+        // If we can't find the symbol in the JIT, try looking in the host process.
+        if (auto sym_addr = llvm::RTDyldMemoryManager::getSymbolAddressInProcess(name))
+            return llvm::JITSymbol(sym_addr, llvm::JITSymbolFlags::Exported);
+
+        return nullptr;
+    }
+#endif
 
     std::unique_ptr<llvm::TargetMachine> target_machine_;
     llvm::DataLayout data_layout_;
