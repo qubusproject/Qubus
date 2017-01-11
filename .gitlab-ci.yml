@@ -22,7 +22,7 @@ build:clang:release:
   artifacts:
     paths:
     - build/
-    expire_in: 1 hour
+    expire_in: 12 hour
 test:clang:release:
   script:
   - "sudo chown -R `whoami`: ."
@@ -51,7 +51,7 @@ build:gcc:release:
   artifacts:
     paths:
     - build/
-    expire_in: 1 hour
+    expire_in: 12 hour
 test:gcc:release:
   script:
   - "sudo chown -R `whoami`: ."
@@ -80,7 +80,7 @@ build:clang:debug:
   artifacts:
     paths:
     - build/
-    expire_in: 1 hour
+    expire_in: 12 hour
 test:clang:debug:
   script:
   - "sudo chown -R `whoami`: ."
@@ -109,7 +109,7 @@ build:gcc:debug:
   artifacts:
     paths:
     - build/
-    expire_in: 1 hour
+    expire_in: 12 hour
 test:gcc:debug:
   script:
   - "sudo chown -R `whoami`: ."
