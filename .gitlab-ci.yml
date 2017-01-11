@@ -148,6 +148,9 @@ deploy:doc:
   - cd build
   - rsync -az --delete qubus/doc/html/* supas335@upload.rz.uni-kiel.de:htdocs/qubus/doc
   stage: deploy
+  environment:
+    name: documentation
+    url: http://qubus.qbb-project.org/
   tags:
   - docker
   - doc
@@ -165,6 +168,9 @@ deploy:source_code:
   - make package_source
   - rsync -az --delete *-src.tar.bz2 *-src.tar.gz *-src.tar.xz *-src.tar.Z supas335@upload.rz.uni-kiel.de:htdocs/qubus/downloads/src
   stage: deploy
+  environment:
+    name: source code
+    url: http://qubus.qbb-project.org/
   tags:
   - docker
   only:
