@@ -29,7 +29,7 @@ set(qubus_source_files allocator.cpp loop_optimizer.cpp
                        architecture_identifier.cpp object_monitor.cpp token.cpp
                        pass_manager.cpp variable_access_analysis.cpp alias_analysis.cpp axiom_analysis.cpp
                        task_invariants_analysis.cpp affine_constraints.cpp value_set_analysis.cpp
-                       value_range_analysis.cpp)
+                       value_range_analysis.cpp static_schedule.cpp static_schedule_analysis.cpp)
 
 add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 
