@@ -6,8 +6,8 @@
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/variable_declaration.hpp>
 
-#include <qbb/qubus/jit/llvm_environment.hpp>
 #include <qbb/qubus/jit/compilation_context.hpp>
+#include <qbb/qubus/jit/llvm_environment.hpp>
 #include <qbb/qubus/jit/reference.hpp>
 
 #include <llvm/IR/Value.h>
@@ -24,13 +24,19 @@ namespace jit
 class compiler;
 
 reference emit_tensor_access(const variable_declaration& tensor,
-                             const std::vector<std::reference_wrapper<const expression>>& indices, compiler& comp);
+                             const std::vector<std::reference_wrapper<const expression>>& indices,
+                             compiler& comp);
 
-reference emit_tensor_access(const expression& tensor, const std::vector<std::reference_wrapper<const expression>>& indices,
+reference emit_tensor_access(const expression& tensor,
+                             const std::vector<std::reference_wrapper<const expression>>& indices,
                              compiler& comp);
 
 reference emit_array_slice_access(const reference& slice, const std::vector<llvm::Value*>& indices,
                                   compiler& comp);
+
+reference emit_array_slice(const reference& array, const std::vector<llvm::Value*>& offset,
+                           const std::vector<llvm::Value*>& shape,
+                           const std::vector<llvm::Value*>& strides, compiler& comp);
 }
 }
 }
