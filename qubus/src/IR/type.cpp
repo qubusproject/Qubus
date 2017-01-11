@@ -163,49 +163,60 @@ std::size_t hash<qbb::qubus::type>::operator()(const qbb::qubus::type& value) co
     pattern::variable<type> t;
     pattern::variable<qbb::util::index_t> rank;
 
-    auto m = pattern::make_matcher<type, std::size_t>()
-                 .case_(pattern::double_t,
-                        [&] { return std::hash<std::type_index>()(typeid(types::double_)); })
-                 .case_(pattern::float_t,
-                        [&] { return std::hash<std::type_index>()(typeid(types::float_)); })
-                 .case_(pattern::integer_t,
-                        [&] { return std::hash<std::type_index>()(typeid(types::integer)); })
-                 .case_(pattern::index_t,
-                        [&] { return std::hash<std::type_index>()(typeid(types::index)); })
-                 .case_(pattern::complex_t(t),
-                        [&] {
-                            std::size_t seed = 0;
+    auto m =
+        pattern::make_matcher<type, std::size_t>()
+            .case_(pattern::double_t,
+                   [&] { return std::hash<std::type_index>()(typeid(types::double_)); })
+            .case_(pattern::float_t,
+                   [&] { return std::hash<std::type_index>()(typeid(types::float_)); })
+            .case_(pattern::integer_t,
+                   [&] { return std::hash<std::type_index>()(typeid(types::integer)); })
+            .case_(pattern::index_t,
+                   [&] { return std::hash<std::type_index>()(typeid(types::index)); })
+            .case_(pattern::complex_t(t),
+                   [&] {
+                       std::size_t seed = 0;
 
-                            qbb::util::hash_combine(seed, std::type_index(typeid(types::complex)));
-                            qbb::util::hash_combine(seed, t.get());
+                       qbb::util::hash_combine(seed, std::type_index(typeid(types::complex)));
+                       qbb::util::hash_combine(seed, t.get());
 
-                            return seed;
-                        })
-                 .case_(pattern::array_t(t, rank),
-                        [&] {
-                            std::size_t seed = 0;
+                       return seed;
+                   })
+            .case_(pattern::array_t(t, rank),
+                   [&] {
+                       std::size_t seed = 0;
 
-                            qbb::util::hash_combine(seed, std::type_index(typeid(types::array)));
-                            qbb::util::hash_combine(seed, t.get());
-                            qbb::util::hash_combine(seed, rank.get());
+                       qbb::util::hash_combine(seed, std::type_index(typeid(types::array)));
+                       qbb::util::hash_combine(seed, t.get());
+                       qbb::util::hash_combine(seed, rank.get());
 
-                            return seed;
-                        })
-                 .case_(pattern::struct_t(_, _), [&](const type& self) {
-                     const auto& stype = self.as<types::struct_>();
+                       return seed;
+                   })
+            .case_(pattern::array_slice_t(t, rank),
+                   [&] {
+                       std::size_t seed = 0;
 
-                     std::size_t seed = 0;
+                       qbb::util::hash_combine(seed, std::type_index(typeid(types::array_slice)));
+                       qbb::util::hash_combine(seed, t.get());
+                       qbb::util::hash_combine(seed, rank.get());
 
-                     qbb::util::hash_combine(seed, std::type_index(typeid(types::struct_)));
-                     qbb::util::hash_combine(seed, stype.id());
+                       return seed;
+                   })
+            .case_(pattern::struct_t(_, _), [&](const type& self) {
+                const auto& stype = self.as<types::struct_>();
 
-                     for (const auto& member : stype)
-                     {
-                         qbb::util::hash_combine(seed, member);
-                     }
+                std::size_t seed = 0;
 
-                     return seed;
-                 });
+                qbb::util::hash_combine(seed, std::type_index(typeid(types::struct_)));
+                qbb::util::hash_combine(seed, stype.id());
+
+                for (const auto& member : stype)
+                {
+                    qbb::util::hash_combine(seed, member);
+                }
+
+                return seed;
+            });
 
     return pattern::match(value, m);
 }
