@@ -1,8 +1,6 @@
 find_package(LLVM REQUIRED)
 
-if (${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR} VERSION_EQUAL 3.8)
-elseif (${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR} VERSION_EQUAL 3.9)
-    message(WARNING "Support for LLVM 3.9 is experimental.")
+if (NOT ${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR} VERSION_LESS 3.8)
 else()
     message(SEND_ERROR "Only LLVM >= 3.8 is supported. Please choose a suitable version.")
 endif()
