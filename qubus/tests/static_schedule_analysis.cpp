@@ -44,7 +44,7 @@ TEST(static_schedule_analysis, zero_init)
 
     variable_declaration i(types::integer{});
 
-    variable_declaration A(types::array(types::double_{}));
+    variable_declaration A(types::array(types::double_{}, 1));
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(var(i));
@@ -85,7 +85,7 @@ TEST(static_schedule_analysis, strip_mined_loop)
     variable_declaration ii(types::integer{});
     variable_declaration N(types::integer{});
 
-    variable_declaration A(types::array(types::double_{}));
+    variable_declaration A(types::array(types::double_{}, 1));
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(var(ii));
@@ -127,7 +127,7 @@ TEST(static_schedule_analysis, multiple_statements)
     variable_declaration i(types::integer{});
     variable_declaration N(types::integer{});
 
-    variable_declaration A(types::array(types::double_{}));
+    variable_declaration A(types::array(types::double_{}, 1));
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(var(i));
@@ -171,7 +171,7 @@ TEST(static_schedule_analysis, loop_with_guard)
     variable_declaration i(types::integer{});
     variable_declaration N(types::integer{});
 
-    variable_declaration A(types::array(types::double_{}));
+    variable_declaration A(types::array(types::double_{}, 1));
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(var(i));

@@ -221,7 +221,7 @@ public:
 
         auto ast = detail::wrap_literals(boost::hana::unpack(kernel_args, kernel));
 
-        auto result_type = types::array(associated_qubus_type<T>::get());
+        auto result_type = types::array(associated_qubus_type<T>::get(), Rank);
 
         std::vector<detail::index_info> indices;
         std::vector<variable_declaration> params;
@@ -402,7 +402,7 @@ struct associated_qubus_type<qtl::ast::tensor<T, Rank>>
 {
     static type get()
     {
-        return types::array(associated_qubus_type<T>::get());
+        return types::array(associated_qubus_type<T>::get(), Rank);
     }
 };
 }

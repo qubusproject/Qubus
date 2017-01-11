@@ -121,11 +121,13 @@ std::unique_ptr<expression> reassociate_index_expression(const expression& expr)
 
 type value_type(const type& array_type)
 {
+    using pattern::_;
+
     pattern::variable<type> value_type;
 
     auto m = pattern::make_matcher<type, type>()
-                 .case_(array_t(value_type), [&] { return value_type.get(); })
-                 .case_(array_slice_t(value_type), [&] { return value_type.get(); });
+                 .case_(array_t(value_type, _), [&] { return value_type.get(); })
+                 .case_(array_slice_t(value_type, _), [&] { return value_type.get(); });
 
     // TODO: Error handling
     return pattern::match(array_type, m);
@@ -180,20 +182,12 @@ reference emit_tensor_access(const variable_declaration& tensor,
 
     auto data_value_type = value_type(tensor_.datatype());
 
-    auto data = load_from_ref(reference(data_ptr, tensor_.origin(), types::array(data_value_type)),
+    auto data = load_from_ref(reference(data_ptr, tensor_.origin(), tensor_.datatype()),
                               env, ctx);
 
     auto data_ref = reference(builder.CreateInBoundsGEP(env.map_qubus_type(data_value_type), data,
                                                         load_from_ref(linearized_index_, env, ctx)),
                               tensor_.origin() / "data", data_value_type);
-
-    // TODO: Reenable LAAA
-    /*if (auto code_region = ctx.current_code_region())
-    {
-        auto alias_info = code_region->register_access(tensor, indices, data_ref);
-
-        data_ref.add_alias_info(alias_info);
-    }*/
 
     return data_ref;
 }

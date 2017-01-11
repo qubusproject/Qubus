@@ -62,7 +62,7 @@ TEST(alias_analysis, array_alias_analysis)
     variable_declaration i(types::integer{});
     variable_declaration N(types::integer{});
 
-    variable_declaration A(types::array(types::double_{}));
+    variable_declaration A(types::array(types::double_{}, 1));
 
     auto task1 = assign(subscription(variable_ref(A), variable_ref(i)), double_literal(0.0));
     auto task2 = assign(subscription(variable_ref(A), variable_ref(i) + integer_literal(1)), double_literal(1.0));

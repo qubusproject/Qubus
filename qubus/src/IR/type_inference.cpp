@@ -113,17 +113,6 @@ type common_type_complex_complex(const types::complex& lhs, const types::complex
     return types::complex(common_type_(lhs.real_type(), rhs.real_type()));
 }
 
-type common_type_array_array(const types::array& lhs, const types::array& rhs)
-{
-    return types::array(common_type_(lhs.value_type(), rhs.value_type()));
-}
-
-type common_type_array_slice_array_slice(const types::array_slice& lhs,
-                                         const types::array_slice& rhs)
-{
-    return types::array_slice(common_type_(lhs.value_type(), rhs.value_type()));
-}
-
 void init_common_type()
 {
     common_type_.add_specialization(common_type_double_double);
@@ -144,8 +133,6 @@ void init_common_type()
     common_type_.add_specialization(common_type_complex_integer);
     common_type_.add_specialization(common_type_integer_complex);
     common_type_.add_specialization(common_type_complex_complex);
-    common_type_.add_specialization(common_type_array_array);
-    common_type_.add_specialization(common_type_array_slice_array_slice);
 }
 
 std::once_flag common_type_init_flag = {};
@@ -159,6 +146,8 @@ type common_type(const type& t1, const type& t2)
 
 type value_type(const type& tensor_type)
 {
+    using pattern::_;
+
     pattern::variable<type> value_type;
 
     auto m = pattern::make_matcher<type, type>()
@@ -167,7 +156,7 @@ type value_type(const type& tensor_type)
                         {
                             return value_type.get();
                         })
-                 .case_(array_t(value_type), [&]
+                 .case_(array_t(value_type, _), [&]
                         {
                             return value_type.get();
                         });

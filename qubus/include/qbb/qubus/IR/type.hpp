@@ -9,17 +9,17 @@
 
 #include <qbb/util/unused.hpp>
 
-#include <hpx/runtime/serialization/serialize.hpp>
 #include <hpx/runtime/serialization/base_object.hpp>
+#include <hpx/runtime/serialization/serialize.hpp>
 
 #include <hpx/include/serialization.hpp>
 
-#include <memory>
-#include <typeinfo>
-#include <typeindex>
-#include <utility>
 #include <functional>
+#include <memory>
 #include <type_traits>
+#include <typeindex>
+#include <typeinfo>
+#include <utility>
 #include <vector>
 
 namespace qbb
@@ -59,8 +59,7 @@ public:
         self_ = std::make_unique<type_wrapper<T>>(value, tag);
     }
 
-    type(const type& other)
-    : self_(other.self_ ? other.self_->clone() : nullptr)
+    type(const type& other) : self_(other.self_ ? other.self_->clone() : nullptr)
     {
     }
 
@@ -137,8 +136,9 @@ public:
     template <typename Archive>
     void serialize(Archive& ar, unsigned QBB_UNUSED(version))
     {
-        ar & self_;
+        ar& self_;
     }
+
 private:
     class type_interface
     {
@@ -152,7 +152,7 @@ private:
 
         virtual std::unique_ptr<type_interface> clone() const = 0;
 
-        template<typename Archive>
+        template <typename Archive>
         void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
         {
         }
@@ -199,16 +199,17 @@ private:
             return std::make_unique<type_wrapper<T>>(value_, tag_);
         }
 
-        template<typename Archive>
+        template <typename Archive>
         void serialize(Archive& ar, unsigned QBB_UNUSED(version))
         {
-            ar & hpx::serialization::base_object<type_interface>(*this);
+            ar& hpx::serialization::base_object<type_interface>(*this);
 
-            ar & value_;
-            ar & tag_;
+            ar& value_;
+            ar& tag_;
         }
 
         HPX_SERIALIZATION_POLYMORPHIC_TEMPLATE(type_wrapper);
+
     private:
         T value_;
         qbb::util::index_t tag_;
@@ -233,7 +234,7 @@ public:
         return true;
     }
 
-    template<typename Archive>
+    template <typename Archive>
     void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
     {
     }
@@ -247,7 +248,7 @@ public:
         return true;
     }
 
-    template<typename Archive>
+    template <typename Archive>
     void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
     {
     }
@@ -261,7 +262,7 @@ public:
         return true;
     }
 
-    template<typename Archive>
+    template <typename Archive>
     void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
     {
     }
@@ -275,7 +276,7 @@ public:
         return true;
     }
 
-    template<typename Archive>
+    template <typename Archive>
     void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
     {
     }
@@ -289,7 +290,7 @@ public:
         return true;
     }
 
-    template<typename Archive>
+    template <typename Archive>
     void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
     {
     }
@@ -316,11 +317,12 @@ public:
         return rank_;
     }
 
-    template<typename Archive>
+    template <typename Archive>
     void serialize(Archive& ar, unsigned QBB_UNUSED(version))
     {
-        ar & rank_;
+        ar& rank_;
     }
+
 private:
     long int rank_;
 };
@@ -344,11 +346,12 @@ public:
         return real_type_;
     }
 
-    template<typename Archive>
+    template <typename Archive>
     void serialize(Archive& ar, unsigned QBB_UNUSED(version))
     {
-        ar & real_type_;
+        ar& real_type_;
     }
+
 private:
     type real_type_;
 };
@@ -358,7 +361,8 @@ class array : public type_base<array>
 public:
     array() = default;
 
-    explicit array(type value_type_) : value_type_{std::move(value_type_)}
+    explicit array(type value_type_, util::index_t rank_)
+    : value_type_{std::move(value_type_)}, rank_(std::move(rank_))
     {
     }
 
@@ -367,18 +371,26 @@ public:
         return value_type_;
     }
 
+    util::index_t rank() const
+    {
+        return rank_;
+    }
+
     bool is_primitive() const
     {
         return false;
     }
 
-    template<typename Archive>
+    template <typename Archive>
     void serialize(Archive& ar, unsigned QBB_UNUSED(version))
     {
-        ar & value_type_;
+        ar& value_type_;
+        ar& rank_;
     }
+
 private:
     type value_type_;
+    util::index_t rank_;
 };
 
 class array_slice : public type_base<array_slice>
@@ -386,7 +398,8 @@ class array_slice : public type_base<array_slice>
 public:
     array_slice() = default;
 
-    explicit array_slice(type value_type_) : value_type_{std::move(value_type_)}
+    explicit array_slice(type value_type_, util::index_t rank_)
+    : value_type_{std::move(value_type_)}, rank_(std::move(rank_))
     {
     }
 
@@ -395,18 +408,26 @@ public:
         return value_type_;
     }
 
+    util::index_t rank() const
+    {
+        return rank_;
+    }
+
     bool is_primitive() const
     {
         return false;
     }
 
-    template<typename Archive>
+    template <typename Archive>
     void serialize(Archive& ar, unsigned QBB_UNUSED(version))
     {
-        ar & value_type_;
+        ar& value_type_;
+        ar& rank_;
     }
+
 private:
     type value_type_;
+    util::index_t rank_;
 };
 
 class struct_ : public type_base<struct_>
@@ -420,11 +441,11 @@ public:
         {
         }
 
-        template<typename Archive>
+        template <typename Archive>
         void serialize(Archive& ar, unsigned QBB_UNUSED(version))
         {
-            ar & datatype;
-            ar & id;
+            ar& datatype;
+            ar& id;
         }
 
         type datatype;
@@ -472,12 +493,13 @@ public:
         return false;
     }
 
-    template<typename Archive>
+    template <typename Archive>
     void serialize(Archive& ar, unsigned QBB_UNUSED(version))
     {
-        ar & id_;
-        ar & members_;
+        ar& id_;
+        ar& members_;
     }
+
 private:
     std::string id_;
     std::vector<member> members_;
@@ -485,7 +507,6 @@ private:
 
 type sparse_tensor(type value_type);
 }
-
 }
 }
 
@@ -500,7 +521,7 @@ struct hash<qbb::qubus::type>
     std::size_t operator()(const qbb::qubus::type& value) const noexcept;
 };
 
-template<>
+template <>
 struct hash<qbb::qubus::types::struct_::member>
 {
     using argument_type = qbb::qubus::types::struct_::member;
@@ -508,7 +529,6 @@ struct hash<qbb::qubus::types::struct_::member>
 
     std::size_t operator()(const qbb::qubus::types::struct_::member& value) const noexcept;
 };
-
 }
 
 #endif

@@ -53,10 +53,10 @@ object_factory_server::create_sparse_tensor(type value_type, std::vector<util::i
     auto shape_array = choosen_factory.create_array(types::integer(), {util::to_uindex(shape.size())});
 
     auto sell_tensor_type = types::struct_(
-        "sell_tensor", {types::struct_::member(types::array(value_type), "val"),
-                        types::struct_::member(types::array(types::integer()), "col"),
-                        types::struct_::member(types::array(types::integer()), "cs"),
-                        types::struct_::member(types::array(types::integer()), "cl")});
+        "sell_tensor", {types::struct_::member(types::array(value_type, 1), "val"),
+                        types::struct_::member(types::array(types::integer(), 1), "col"),
+                        types::struct_::member(types::array(types::integer(), 1), "cs"),
+                        types::struct_::member(types::array(types::integer(), 1), "cl")});
 
     object sell_tensor_val = choosen_factory.create_array(value_type, {layout.nnz});
     object sell_tensor_col = choosen_factory.create_array(types::integer(), {layout.nnz});
@@ -75,7 +75,7 @@ object_factory_server::create_sparse_tensor(type value_type, std::vector<util::i
 
     auto sparse_tensor_type = types::struct_(
         "sparse_tensor", {types::struct_::member(sell_tensor_type, "data"),
-                          types::struct_::member(types::array(types::integer()), "shape")});
+                          types::struct_::member(types::array(types::integer(), 1), "shape")});
 
     std::vector<object> sparse_tensor_members;
 

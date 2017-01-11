@@ -356,12 +356,12 @@ reference compile(const expression& expr, compiler& comp)
                        using pattern::_;
 
                        auto m = pattern::make_matcher<type, reference>()
-                                    .case_(pattern::array_t(_),
+                                    .case_(pattern::array_t(_, _),
                                            [&]
                                            {
                                                return emit_tensor_access(idx.get(), indices, comp);
                                            })
-                                    .case_(pattern::array_slice_t(_), [&]
+                                    .case_(pattern::array_slice_t(_, _), [&]
                                            {
                                                return emit_array_slice_access(ref, indices_, comp);
                                            });
@@ -388,12 +388,12 @@ reference compile(const expression& expr, compiler& comp)
                        using pattern::_;
 
                        auto m = pattern::make_matcher<type, reference>()
-                                    .case_(pattern::array_t(_),
+                                    .case_(pattern::array_t(_, _),
                                            [&]
                                            {
                                                return emit_tensor_access(a.get(), indices, comp);
                                            })
-                                    .case_(pattern::array_slice_t(_), [&]
+                                    .case_(pattern::array_slice_t(_, _), [&]
                                            {
                                                auto ref = comp.compile(a.get());
 
@@ -497,7 +497,7 @@ reference compile(const expression& expr, compiler& comp)
 
                     auto m =
                         pattern::make_matcher<type, reference>()
-                            .case_(array_t(value_type),
+                            .case_(array_t(value_type, _),
                                 [&](const type& self)
                                 {
                                     auto size_type = env.map_qubus_type(types::integer());

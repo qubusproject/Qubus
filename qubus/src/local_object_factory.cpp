@@ -37,7 +37,7 @@ local_object_factory_server::local_object_factory_server(local_address_space* ad
 hpx::future<hpx::id_type>
 local_object_factory_server::create_array(type value_type, std::vector<util::index_t> shape)
 {
-    object obj = new_here<object_server>(types::array(value_type));
+    object obj = new_here<object_server>(types::array(value_type, util::to_uindex(shape.size())));
 
     auto layout = abi_.get_array_layout(value_type, shape);
 
