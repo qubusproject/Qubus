@@ -1,5 +1,7 @@
 #include <qbb/qubus/alias_analysis.hpp>
 
+#include <qbb/qubus/affine_constraints.hpp>
+
 #include <qbb/qubus/pattern/IR.hpp>
 #include <qbb/qubus/pattern/core.hpp>
 
@@ -23,6 +25,27 @@ namespace qbb
 namespace qubus
 {
 
+namespace
+{
+
+alias_result evaluate_alias_query_stage(
+    alias_result current_state, const access_qualifier_expr& first_qualifier,
+    const access_qualifier_expr& second_qualifier,
+    const std::vector<std::function<alias_result(alias_result, const access_qualifier_expr&,
+                                                 const access_qualifier_expr&)>>& aliasing_rules)
+{
+    for (const auto& rule : aliasing_rules)
+    {
+        auto result = rule(current_state, first_qualifier, second_qualifier);
+
+        if (result != alias_result::may_alias)
+            return result;
+    }
+
+    return alias_result::may_alias;
+}
+}
+
 alias_result alias_query_driver::alias(const access& first_access,
                                        const access& second_access) const
 {
@@ -41,16 +64,8 @@ alias_result alias_query_driver::alias(const access& first_access,
          second_access_qualifier != second_access_qualifiers.end();
          ++first_access_qualifier, ++second_access_qualifier)
     {
-        for (const auto& rule : aliasing_rules_)
-        {
-            auto result = rule(current_state, *first_access_qualifier, *second_access_qualifier);
-
-            if (result != alias_result::may_alias)
-            {
-                current_state = result;
-                break;
-            }
-        }
+        current_state = evaluate_alias_query_stage(current_state, *first_access_qualifier,
+                                                   *second_access_qualifier, aliasing_rules_);
 
         // If the accesses do not reference the same object, their sub-objects can not either.
         // Therefore, we can just terminate our examination.
@@ -108,12 +123,74 @@ alias_result basic_aliasing_rule(alias_result current_state,
     return current_state;
 }
 
+boost::optional<isl::set> generate_slice_set(const affine_expr& var, const expression& offset,
+                                             const expression& extend, const expression& stride,
+                                             affine_expr_context& aff_ctx, isl::context& isl_ctx)
+{
+    auto zero = aff_ctx.create_literal(0);
+
+    auto aff_offset = try_construct_affine_expr(offset, aff_ctx);
+
+    if (!aff_offset)
+        return boost::none;
+
+    auto aff_extend = try_construct_affine_expr(extend, aff_ctx);
+
+    if (!aff_extend)
+        return boost::none;
+
+    auto aff_stride = try_construct_affine_expr(stride, aff_ctx);
+
+    if (!aff_stride)
+        return boost::none;
+
+    auto constraint1 = less_equal(*aff_offset, var);
+    auto constraint2 = less(var, *aff_offset + *aff_extend);
+    auto constraint3 = equal_to((var - *aff_offset) % *aff_stride, zero);
+
+    affine_constraint constraint = constraint1 && constraint2 && constraint3;
+
+    auto set = constraint.convert(isl_ctx);
+
+    return set;
+}
+
+boost::optional<isl::set>
+generate_set(const affine_expr& var,
+             const std::vector<std::reference_wrapper<const expression>>& offset,
+             const std::vector<std::reference_wrapper<const expression>>& shape,
+             const std::vector<std::reference_wrapper<const expression>>& strides,
+             affine_expr_context& aff_ctx, isl::context& isl_ctx)
+{
+    auto set = isl::set::universe(isl::space(isl_ctx, 0, 0));
+
+    const auto rank = shape.size();
+
+    for (std::size_t i = 0; i < rank; ++i)
+    {
+        auto partial_set =
+            generate_slice_set(var, offset[i], shape[i], strides[i], aff_ctx, isl_ctx);
+
+        if (!partial_set)
+            return boost::none;
+
+        set = flat_product(std::move(set), *std::move(partial_set));
+    }
+
+    return set;
+}
+
 class array_aliasing_rule
 {
 public:
     array_aliasing_rule(const expression& context_,
-                        const value_set_analysis_result& value_set_analysis_)
-    : context_(&context_), value_set_analysis_(&value_set_analysis_)
+                        const value_set_analysis_result& value_set_analysis_,
+                        const task_invariants_analysis_result& task_invariants_analysis_,
+                        isl::context& isl_ctx_)
+    : context_(&context_),
+      value_set_analysis_(&value_set_analysis_),
+      task_invariants_analysis_(&task_invariants_analysis_),
+      isl_ctx_(&isl_ctx_)
     {
     }
 
@@ -123,50 +200,85 @@ public:
     {
         using pattern::_;
 
-        pattern::variable<std::vector<std::reference_wrapper<const expression>>> indices1, indices2;
+        pattern::variable<std::vector<std::reference_wrapper<const expression>>> indices1, indices2,
+            offset1, offset2, shape1, shape2, strides1, strides2;
 
-        auto m =
-            pattern::make_matcher<
-                std::tuple<const access_qualifier_expr&, const access_qualifier_expr&>,
-                alias_result>()
-                .case_(tuple(subscription(_, indices1), subscription(_, indices2)), [&] {
+        auto m = pattern::make_matcher<
+                     std::tuple<const access_qualifier_expr&, const access_qualifier_expr&>,
+                     alias_result>()
+                     .case_(tuple(subscription(_, indices1), subscription(_, indices2)),
+                            [&] {
 
-                    if (indices1.get().size() != indices2.get().size())
-                    {
-                        return alias_result::noalias;
-                    }
+                                if (indices1.get().size() != indices2.get().size())
+                                {
+                                    return alias_result::noalias;
+                                }
 
-                    auto order = indices1.get().size();
+                                auto order = indices1.get().size();
 
-                    std::vector<std::reference_wrapper<const expression>> expressions;
-                    expressions.reserve(2 * order);
+                                std::vector<std::reference_wrapper<const expression>> expressions;
+                                expressions.reserve(2 * order);
 
-                    expressions.insert(expressions.end(), indices1.get().begin(),
-                                       indices1.get().end());
-                    expressions.insert(expressions.end(), indices2.get().begin(),
-                                       indices2.get().end());
+                                expressions.insert(expressions.end(), indices1.get().begin(),
+                                                   indices1.get().end());
+                                expressions.insert(expressions.end(), indices2.get().begin(),
+                                                   indices2.get().end());
 
-                    using boost::adaptors::transformed;
+                                using boost::adaptors::transformed;
 
-                    auto value_sets = value_set_analysis_->determine_value_sets(
-                        expressions | transformed(unwrap_reference()), *context_);
+                                auto value_sets = value_set_analysis_->determine_value_sets(
+                                    expressions | transformed(unwrap_reference()), *context_);
 
-                    using boost::adaptors::sliced;
+                                using boost::adaptors::sliced;
 
-                    for (const auto& pair : boost::range::combine(
-                             value_sets | sliced(0, order), value_sets | sliced(order, 2 * order)))
-                    {
-                        auto common_values =
-                            intersect(boost::get<0>(pair).values(), boost::get<1>(pair).values());
+                                for (const auto& pair :
+                                     boost::range::combine(value_sets | sliced(0, order),
+                                                           value_sets | sliced(order, 2 * order)))
+                                {
+                                    auto common_values = intersect(boost::get<0>(pair).values(),
+                                                                   boost::get<1>(pair).values());
 
-                        if (is_empty(common_values))
-                        {
-                            return alias_result::noalias;
-                        }
-                    }
+                                    if (is_empty(common_values))
+                                    {
+                                        return alias_result::noalias;
+                                    }
+                                }
 
-                    return alias_result::may_alias;
-                });
+                                return alias_result::may_alias;
+                            })
+                     .case_(tuple(array_slice(_, offset1, shape1, strides1),
+                                  array_slice(_, offset2, shape2, strides2)),
+                            [&] {
+
+                                if (shape1.get().size() != shape2.get().size())
+                                {
+                                    return alias_result::noalias;
+                                }
+
+                                affine_expr_context aff_ctx([this](const expression& expr) {
+                                    return task_invariants_analysis_->is_invariant(expr, *context_);
+                                });
+
+                                variable_declaration tmp(types::integer{});
+                                auto var = aff_ctx.declare_variable(tmp);
+
+                                auto set1 = generate_set(var, offset1.get(), shape1.get(),
+                                                         strides1.get(), aff_ctx, *isl_ctx_);
+                                auto set2 = generate_set(var, offset2.get(), shape2.get(),
+                                                         strides2.get(), aff_ctx, *isl_ctx_);
+
+                                if (!set1 || !set2)
+                                    return alias_result::may_alias;
+
+                                auto common_values = intersect(*set1, *set2);
+
+                                if (is_empty(common_values))
+                                {
+                                    return alias_result::noalias;
+                                }
+
+                                return alias_result::may_alias;
+                            });
 
         return pattern::match(std::tie(first_access_qualifier, second_access_qualifier), m);
     }
@@ -174,6 +286,8 @@ public:
 private:
     const expression* context_;
     const value_set_analysis_result* value_set_analysis_;
+    const task_invariants_analysis_result* task_invariants_analysis_;
+    isl::context* isl_ctx_;
 };
 }
 
@@ -220,11 +334,13 @@ std::vector<analysis_id> basic_alias_analysis_pass::required_analyses() const
     return {};
 }
 
-alias_analysis_result::alias_analysis_result(const expression& root_,
-                                             const value_set_analysis_result& value_set_analysis_)
+alias_analysis_result::alias_analysis_result(
+    const expression& root_, const value_set_analysis_result& value_set_analysis_,
+    const task_invariants_analysis_result& task_invariants_analysis_, isl::context& isl_ctx_)
 {
     driver_.add_rule(basic_aliasing_rule);
-    driver_.add_rule(array_aliasing_rule(root_, value_set_analysis_));
+    driver_.add_rule(
+        array_aliasing_rule(root_, value_set_analysis_, task_invariants_analysis_, isl_ctx_));
 }
 
 alias_result alias_analysis_result::alias(const access& first_access, const access& second_access,
@@ -251,16 +367,18 @@ alias_result alias_analysis_result::alias(const access& first_access, const acce
     return result;
 }
 
-alias_analysis_result
-alias_analysis_pass::run(const expression& root, analysis_manager& manager,
-                         pass_resource_manager& QBB_UNUSED(resource_manager)) const
+alias_analysis_result alias_analysis_pass::run(const expression& root, analysis_manager& manager,
+                                               pass_resource_manager& resource_manager) const
 {
-    return alias_analysis_result(root, manager.get_analysis<value_set_analysis_pass>(root));
+    return alias_analysis_result(root, manager.get_analysis<value_set_analysis_pass>(root),
+                                 manager.get_analysis<task_invariants_analysis_pass>(root),
+                                 resource_manager.get_isl_ctx());
 }
 
 std::vector<analysis_id> alias_analysis_pass::required_analyses() const
 {
-    return {get_analysis_id<value_set_analysis_pass>()};
+    return {get_analysis_id<value_set_analysis_pass>(),
+            get_analysis_id<task_invariants_analysis_pass>()};
 }
 
 QUBUS_REGISTER_ANALYSIS_PASS(basic_alias_analysis_pass);

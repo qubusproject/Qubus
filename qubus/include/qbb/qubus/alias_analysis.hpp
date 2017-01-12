@@ -3,6 +3,7 @@
 
 #include <qbb/qubus/value_set_analysis.hpp>
 #include <qbb/qubus/variable_access_analysis.hpp>
+#include <qbb/qubus/task_invariants_analysis.hpp>
 
 #include <qbb/qubus/pass_manager.hpp>
 
@@ -31,6 +32,7 @@ public:
     void add_rule(std::function<alias_result(alias_result, const access_qualifier_expr&,
                                              const access_qualifier_expr&)>
                       differentiator);
+
 private:
     std::vector<std::function<alias_result(alias_result, const access_qualifier_expr&,
                                            const access_qualifier_expr&)>>
@@ -65,7 +67,9 @@ class alias_analysis_result
 {
 public:
     alias_analysis_result(const expression& root_,
-                          const value_set_analysis_result& value_set_analysis_);
+                          const value_set_analysis_result& value_set_analysis_,
+                          const task_invariants_analysis_result& task_invariants_analysis_,
+                          isl::context& isl_ctx_);
 
     alias_result alias(const access& first_access, const access& second_access,
                        bool enable_caching = true) const;
