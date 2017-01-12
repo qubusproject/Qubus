@@ -123,9 +123,10 @@ alias_result basic_aliasing_rule(alias_result current_state,
     return current_state;
 }
 
-boost::optional<isl::set> generate_slice_set(const affine_expr& var, const expression& offset,
-                                             const expression& extend, const expression& stride,
-                                             affine_expr_context& aff_ctx, isl::context& isl_ctx)
+boost::optional<affine_constraint>
+try_generate_slice_constraints_1D(const affine_expr& var, const expression& offset,
+                             const expression& extend, const expression& stride,
+                             affine_expr_context& aff_ctx, isl::context& isl_ctx)
 {
     auto zero = aff_ctx.create_literal(0);
 
@@ -150,34 +151,46 @@ boost::optional<isl::set> generate_slice_set(const affine_expr& var, const expre
 
     affine_constraint constraint = constraint1 && constraint2 && constraint3;
 
-    auto set = constraint.convert(isl_ctx);
-
-    return set;
+    return constraint;
 }
 
 boost::optional<isl::set>
-generate_set(const affine_expr& var,
-             const std::vector<std::reference_wrapper<const expression>>& offset,
-             const std::vector<std::reference_wrapper<const expression>>& shape,
-             const std::vector<std::reference_wrapper<const expression>>& strides,
-             affine_expr_context& aff_ctx, isl::context& isl_ctx)
+try_generate_slice_region(const std::vector<affine_expr>& vars,
+                          const std::vector<std::reference_wrapper<const expression>>& offset,
+                          const std::vector<std::reference_wrapper<const expression>>& shape,
+                          const std::vector<std::reference_wrapper<const expression>>& strides,
+                          affine_expr_context& aff_ctx, isl::context& isl_ctx)
 {
-    auto set = isl::set::universe(isl::space(isl_ctx, 0, 0));
-
     const auto rank = shape.size();
 
-    for (std::size_t i = 0; i < rank; ++i)
-    {
-        auto partial_set =
-            generate_slice_set(var, offset[i], shape[i], strides[i], aff_ctx, isl_ctx);
+    QBB_ASSERT(rank == vars.size(), "The number of variables need to match the rank.");
+    QBB_ASSERT(rank == offset.size(), "The number of offsets need to match the rank.");
+    QBB_ASSERT(rank == shape.size(), "The number of extends need to match the rank.");
+    QBB_ASSERT(rank == strides.size(), "The number of strides need to match the rank.");
 
-        if (!partial_set)
+    if (rank == 0)
+        return boost::none;
+
+    auto partial_constraint = try_generate_slice_constraints_1D(vars[0], offset[0], shape[0], strides[0],
+                                                                aff_ctx, isl_ctx);
+
+    if (!partial_constraint)
+        return boost::none;
+
+    affine_constraint constraint = *partial_constraint;
+
+    for (std::size_t i = 1; i < rank; ++i)
+    {
+        auto partial_constraint = try_generate_slice_constraints_1D(vars[i], offset[i], shape[i], strides[i],
+                                                        aff_ctx, isl_ctx);
+
+        if (!partial_constraint)
             return boost::none;
 
-        set = flat_product(std::move(set), *std::move(partial_set));
+        constraint = std::move(constraint) && *partial_constraint;
     }
 
-    return set;
+    return constraint.convert(isl_ctx);
 }
 
 class array_aliasing_rule
@@ -259,13 +272,25 @@ public:
                                     return task_invariants_analysis_->is_invariant(expr, *context_);
                                 });
 
-                                variable_declaration tmp(types::integer{});
-                                auto var = aff_ctx.declare_variable(tmp);
+                                auto rank = shape1.get().size();
 
-                                auto set1 = generate_set(var, offset1.get(), shape1.get(),
-                                                         strides1.get(), aff_ctx, *isl_ctx_);
-                                auto set2 = generate_set(var, offset2.get(), shape2.get(),
-                                                         strides2.get(), aff_ctx, *isl_ctx_);
+                                std::vector<affine_expr> vars;
+                                vars.reserve(rank);
+
+                                for (std::size_t i = 0; i < rank; ++i)
+                                {
+                                    variable_declaration tmp(types::integer{});
+                                    auto var = aff_ctx.declare_variable(tmp);
+
+                                    vars.push_back(std::move(var));
+                                }
+
+                                auto set1 =
+                                    try_generate_slice_region(vars, offset1.get(), shape1.get(),
+                                                              strides1.get(), aff_ctx, *isl_ctx_);
+                                auto set2 =
+                                    try_generate_slice_region(vars, offset2.get(), shape2.get(),
+                                                              strides2.get(), aff_ctx, *isl_ctx_);
 
                                 if (!set1 || !set2)
                                     return alias_result::may_alias;

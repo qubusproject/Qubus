@@ -182,6 +182,63 @@ TEST(alias_analysis, slice_with_overlap_alias_analysis)
     EXPECT_EQ(result.alias(accesses[0], accesses[1]), alias_result::may_alias);
 }
 
+TEST(alias_analysis, 2d_slice_alias_analysis)
+{
+    using namespace qbb::qubus;
+
+    pass_resource_manager resource_manager;
+    analysis_manager analysis_man(resource_manager);
+
+    alias_analysis_pass analysis;
+    variable_access_analysis access_analysis;
+
+    variable_declaration i(types::integer{});
+    variable_declaration N(types::integer{});
+    variable_declaration M(types::integer{});
+
+    variable_declaration A(types::array(types::double_{}, 2));
+
+    std::vector<std::unique_ptr<expression>> indices, offset1, offset2, shape1, shape2, strides;
+
+    indices.push_back(var(i));
+
+    offset1.push_back(var(M));
+    offset1.push_back(integer_literal(0));
+    shape1.push_back(integer_literal(10));
+    shape1.push_back(integer_literal(42));
+
+    offset2.push_back(var(M) + integer_literal(10));
+    offset2.push_back(integer_literal(7));
+    shape2.push_back(integer_literal(7));
+    shape2.push_back(integer_literal(9));
+
+    strides.push_back(integer_literal(1));
+    strides.push_back(integer_literal(2));
+
+    auto task1 = assign(
+        subscription(slice(variable_ref(A), std::move(offset1), std::move(shape1)), clone(indices)),
+        double_literal(0.0));
+    auto task2 = assign(
+        subscription(slice(variable_ref(A), std::move(offset2), std::move(shape2), std::move(strides)), clone(indices)),
+        double_literal(1.0));
+
+    auto body = sequenced_tasks(std::move(task1), std::move(task2));
+
+    auto root = for_(i, integer_literal(0), variable_ref(N), integer_literal(2), std::move(body));
+
+    auto result = analysis.run(*root, analysis_man, resource_manager);
+
+    auto access_result = access_analysis.run(*root, analysis_man, resource_manager);
+
+    const auto& access_set = access_result.query_accesses_for_location(root->body());
+
+    auto accesses = access_set.get_write_accesses();
+
+    ASSERT_EQ(accesses.size(), 2);
+
+    EXPECT_EQ(result.alias(accesses[0], accesses[1]), alias_result::noalias);
+}
+
 int hpx_main(int argc, char** argv)
 {
     qbb::qubus::init(argc, argv);
