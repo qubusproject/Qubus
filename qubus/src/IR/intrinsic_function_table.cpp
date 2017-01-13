@@ -1,10 +1,10 @@
 #include <qbb/qubus/IR/intrinsic_function_table.hpp>
 
-#include <map>
 #include <algorithm>
+#include <map>
 #include <memory>
-#include <utility>
 #include <mutex>
+#include <utility>
 
 namespace qbb
 {
@@ -42,8 +42,7 @@ public:
     {
         auto iter =
             std::find_if(begin(overloads_), end(overloads_),
-                         [&](const std::pair<std::vector<type>, intrinsic_function_info>& value)
-                         {
+                         [&](const std::pair<std::vector<type>, intrinsic_function_info>& value) {
                              return value.first == arg_types;
                          });
 
@@ -80,13 +79,19 @@ public:
             add_intrinsic_function("pow", {t, types::integer{}}, t);
         }
 
-        for (const auto& t : math_types)
+        // TODO: Think about a better solution.
+        for (util::index_t rank = 1; rank < 13; ++rank)
         {
-            add_intrinsic_function("extent", {types::array(t), types::integer{}}, types::integer{});
-        }
+            for (const auto& t : math_types)
+            {
+                add_intrinsic_function("extent", {types::array(t, rank), types::integer{}},
+                                       types::integer{});
+            }
 
-        add_intrinsic_function("extent", {types::array(types::integer{}), types::integer{}},
-                               types::integer{});
+            add_intrinsic_function("extent",
+                                   {types::array(types::integer{}, rank), types::integer{}},
+                                   types::integer{});
+        }
 
         add_intrinsic_function("delta", {types::integer{}, types::integer{}}, types::integer{});
 

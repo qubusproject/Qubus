@@ -65,7 +65,7 @@ auto tensor(Declaration declaration)
 {
     using qubus::pattern::_;
 
-    return tensor_pattern<Declaration, decltype(array_t(_))>(declaration, array_t(_));
+    return tensor_pattern<Declaration, decltype(array_t(_, _))>(declaration, array_t(_, _));
 }
 
 inline auto tensor()

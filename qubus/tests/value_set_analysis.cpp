@@ -11,7 +11,7 @@ TEST(value_set_anaylsis, simple_array_access_in_loop_nest)
 {
     using namespace qbb::qubus;
 
-    variable_declaration var(types::array(types::double_{}));
+    variable_declaration var(types::array(types::double_{}, 1));
 
     variable_declaration i(types::integer{});
     variable_declaration N(types::integer{});
@@ -43,7 +43,7 @@ TEST(value_set_anaylsis, array_access_in_loop_nest)
 {
     using namespace qbb::qubus;
 
-    variable_declaration var(types::array(types::double_{}));
+    variable_declaration var(types::array(types::double_{}, 1));
 
     variable_declaration i(types::integer{});
     variable_declaration j(types::integer{});
@@ -75,7 +75,7 @@ TEST(value_set_anaylsis, dependent_loops)
 {
     using namespace qbb::qubus;
 
-    variable_declaration var(types::array(types::double_{}));
+    variable_declaration var(types::array(types::double_{}, 1));
 
     variable_declaration i(types::integer{});
     variable_declaration j(types::integer{});
@@ -107,7 +107,7 @@ TEST(value_set_anaylsis, blocking)
 {
     using namespace qbb::qubus;
 
-    variable_declaration var(types::array(types::double_{}));
+    variable_declaration var(types::array(types::double_{}, 1));
 
     variable_declaration i(types::integer{});
     variable_declaration j(types::integer{});

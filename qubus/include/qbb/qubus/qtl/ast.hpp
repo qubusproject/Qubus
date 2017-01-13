@@ -3,6 +3,7 @@
 
 #include <qbb/qubus/qtl/index.hpp>
 
+#include <boost/hana/any.hpp>
 #include <boost/hana/tuple.hpp>
 
 #include <qbb/util/integers.hpp>
@@ -17,6 +18,19 @@ namespace qubus
 {
 namespace qtl
 {
+
+struct range
+{
+    range(util::index_t start, util::index_t end, util::index_t stride = 1)
+    : start(start), end(end), stride(stride)
+    {
+    }
+
+    util::index_t start;
+    util::index_t end;
+    util::index_t stride;
+};
+
 namespace ast
 {
 template <typename T>
@@ -44,6 +58,9 @@ private:
 template <typename Tensor, typename... Indices>
 class subscripted_tensor;
 
+template <typename Tensor, typename... Ranges>
+class sliced_tensor;
+
 template <typename T>
 class variable
 {
@@ -55,7 +72,11 @@ public:
     template <typename... Indices>
     auto operator()(Indices... indices) const
     {
-        return subscripted_tensor<variable<T>, Indices...>(*this, std::move(indices)...);
+        using subscription_type = std::conditional_t<
+            boost::hana::any(boost::hana::make_tuple(std::is_same<Indices, range>::value...)),
+            sliced_tensor<variable<T>, Indices...>, subscripted_tensor<variable<T>, Indices...>>;
+
+        return subscription_type(*this, std::move(indices)...);
     }
 
     hpx::naming::gid_type id() const
@@ -76,8 +97,8 @@ template <typename Tensor, typename... Indices>
 class subscripted_tensor
 {
 public:
-    subscripted_tensor(const Tensor& tensor_, Indices... indices_)
-    : tensor_(tensor_), indices_(boost::hana::make_tuple(indices_...))
+    explicit subscripted_tensor(Tensor tensor_, Indices... indices_)
+    : tensor_(std::move(tensor_)), indices_(boost::hana::make_tuple(indices_...))
     {
     }
 
@@ -92,24 +113,52 @@ public:
     }
 
 private:
-    template<typename T>
-    struct storage_type
-    {
-        using type = std::reference_wrapper<const T>;
-    };
-
-    template<typename T>
-    struct storage_type<variable<T>>
-    {
-        using type = variable<T>;
-    };
-
-    typename storage_type<Tensor>::type tensor_;
+    Tensor tensor_;
     boost::hana::tuple<Indices...> indices_;
 };
 
 template <typename Tensor, typename... Indices>
 struct is_term<subscripted_tensor<Tensor, Indices...>> : std::true_type
+{
+};
+
+template <typename Tensor, typename... Ranges>
+class sliced_tensor
+{
+public:
+    explicit sliced_tensor(Tensor tensor_, Ranges... ranges_)
+    : tensor_(std::move(tensor_)), ranges_(boost::hana::make_tuple(ranges_...))
+    {
+    }
+
+    const Tensor& tensor() const
+    {
+        return tensor_;
+    }
+
+    const boost::hana::tuple<Ranges...>& ranges() const
+    {
+        return ranges_;
+    }
+
+    template <typename... Indices>
+    auto operator()(Indices... indices) const
+    {
+        using subscription_type = std::conditional_t<boost::hana::any(boost::hana::make_tuple(
+                                                         std::is_same<Indices, range>::value...)),
+                                                     sliced_tensor<sliced_tensor, Indices...>,
+                                                     subscripted_tensor<sliced_tensor, Indices...>>;
+
+        return subscription_type(*this, std::move(indices)...);
+    }
+
+private:
+    Tensor tensor_;
+    boost::hana::tuple<Ranges...> ranges_;
+};
+
+template <typename Tensor, typename... Indices>
+struct is_term<sliced_tensor<Tensor, Indices...>> : std::true_type
 {
 };
 
@@ -283,7 +332,8 @@ class kronecker_delta
 {
 public:
     kronecker_delta(util::index_t extent_, FirstIndex first_index_, SecondIndex second_index_)
-    : extent_(std::move(extent_)), first_index_(std::move(first_index_)),
+    : extent_(std::move(extent_)),
+      first_index_(std::move(first_index_)),
       second_index_(std::move(second_index_))
     {
     }

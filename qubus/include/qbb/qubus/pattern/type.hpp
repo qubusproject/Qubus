@@ -3,10 +3,10 @@
 
 #include <qbb/qubus/IR/type.hpp>
 
-#include <qbb/qubus/pattern/variable.hpp>
-#include <qbb/qubus/pattern/value.hpp>
-#include <qbb/qubus/pattern/sequence.hpp>
 #include <qbb/qubus/pattern/any.hpp>
+#include <qbb/qubus/pattern/sequence.hpp>
+#include <qbb/qubus/pattern/value.hpp>
+#include <qbb/qubus/pattern/variable.hpp>
 
 #include <utility>
 
@@ -71,17 +71,19 @@ public:
 
     void reset() const
     {
+        real_type_.reset();
     }
 
 private:
     RealType real_type_;
 };
 
-template <typename TensorType, typename ValueType>
-class tensor_type_pattern
+template <typename TensorType, typename ValueType, typename Rank>
+class array_type_pattern
 {
 public:
-    tensor_type_pattern(ValueType value_type_) : value_type_(std::move(value_type_))
+    explicit array_type_pattern(ValueType value_type_, Rank rank_)
+    : value_type_(std::move(value_type_)), rank_(std::move(rank_))
     {
     }
 
@@ -92,12 +94,15 @@ public:
         {
             if (value_type_.match(concret_value->value_type()))
             {
-                if (var)
+                if (rank_.match(concret_value->rank()))
                 {
-                    var->set(*concret_value);
-                }
+                    if (var)
+                    {
+                        var->set(*concret_value);
+                    }
 
-                return true;
+                    return true;
+                }
             }
         }
 
@@ -106,10 +111,13 @@ public:
 
     void reset() const
     {
+        value_type_.reset();
+        rank_.reset();
     }
 
 private:
     ValueType value_type_;
+    Rank rank_;
 };
 
 template <typename Rank>
@@ -246,16 +254,19 @@ multi_index_type_pattern<Rank> multi_index_t(Rank rank)
     return multi_index_type_pattern<Rank>(std::move(rank));
 }
 
-template <typename ValueType>
-tensor_type_pattern<types::array, ValueType> array_t(ValueType value_type)
+template <typename ValueType, typename Rank>
+array_type_pattern<types::array, ValueType, Rank> array_t(ValueType value_type, Rank rank)
 {
-    return tensor_type_pattern<types::array, ValueType>(std::move(value_type));
+    return array_type_pattern<types::array, ValueType, Rank>(std::move(value_type),
+                                                             std::move(rank));
 }
 
-template <typename ValueType>
-tensor_type_pattern<types::array_slice, ValueType> array_slice_t(ValueType value_type)
+template <typename ValueType, typename Rank>
+array_type_pattern<types::array_slice, ValueType, Rank> array_slice_t(ValueType value_type,
+                                                                      Rank rank)
 {
-    return tensor_type_pattern<types::array_slice, ValueType>(std::move(value_type));
+    return array_type_pattern<types::array_slice, ValueType, Rank>(std::move(value_type),
+                                                                   std::move(rank));
 }
 
 template <typename Id, typename Members>
@@ -275,7 +286,7 @@ auto sparse_tensor_t(ValueType value_type)
 {
     return struct_t(
         value("sparse_tensor"),
-        sequence(member(struct_t(_, sequence(member(array_t(value_type), value("val")), _, _, _)),
+        sequence(member(struct_t(_, sequence(member(array_t(value_type, _), value("val")), _, _, _)),
                         value("data")),
                  member(_, value("shape"))));
 }

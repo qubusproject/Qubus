@@ -11,7 +11,7 @@ TEST(task_invariants_analysis, loop_bound_and_ind_var)
 {
     using namespace qbb::qubus;
 
-    variable_declaration var(types::array(types::double_{}));
+    variable_declaration var(types::array(types::double_{}, 1));
 
     variable_declaration i(types::integer{});
     variable_declaration j(types::integer{});

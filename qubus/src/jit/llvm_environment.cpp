@@ -28,6 +28,7 @@ std::string mangle_type(const type& t)
     using pattern::_;
 
     pattern::variable<type> subtype;
+    pattern::variable<util::index_t> rank;
 
     auto m = pattern::make_matcher<type, std::string>()
                  .case_(pattern::integer_t, [&] { return "integer"; })
@@ -35,9 +36,9 @@ std::string mangle_type(const type& t)
                  .case_(pattern::double_t, [&] { return "double"; })
                  .case_(pattern::float_t, [&] { return "float"; })
                  .case_(complex_t(subtype), [&] { return "complex_" + mangle_type(subtype.get()); })
-                 .case_(array_t(subtype), [&] { return "array_" + mangle_type(subtype.get()); })
-                 .case_(array_slice_t(subtype),
-                        [&] { return "array_slice_" + mangle_type(subtype.get()); })
+                 .case_(array_t(subtype, rank), [&] { return "array_" + mangle_type(subtype.get()) + "_" + std::to_string(rank.get()); })
+                 .case_(array_slice_t(subtype, rank),
+                        [&] { return "array_slice_" + mangle_type(subtype.get()) + "_" + std::to_string(rank.get()); })
                  .case_(struct_t(_, _), [&](const type& self) {
                      const auto& self_ = self.as<types::struct_>();
 
@@ -175,6 +176,7 @@ llvm::Type* llvm_environment::map_qubus_type(const type& t) const
     else
     {
         pattern::variable<type> subtype;
+        pattern::variable<util::index_t> rank;
 
         auto m =
             pattern::make_matcher<type, llvm::Type*>()
@@ -191,7 +193,7 @@ llvm::Type* llvm_environment::map_qubus_type(const type& t) const
 
                            return llvm::StructType::create({real_pair}, mangle_type(total_type));
                        })
-                .case_(array_t(subtype),
+                .case_(array_t(subtype, _),
                        [&](const type& total_type) {
                            llvm::Type* size_type = map_qubus_type(types::integer());
                            std::vector<llvm::Type*> types{
@@ -199,13 +201,15 @@ llvm::Type* llvm_environment::map_qubus_type(const type& t) const
                                llvm::PointerType::get(size_type, 0)};
                            return llvm::StructType::create(types, mangle_type(total_type));
                        })
-                .case_(array_slice_t(subtype),
+                .case_(array_slice_t(subtype, rank),
                        [&](const type& total_type) {
                            llvm::Type* size_type = map_qubus_type(types::integer());
                            std::vector<llvm::Type*> types{
                                llvm::PointerType::get(map_qubus_type(subtype.get()), 0),
                                llvm::PointerType::get(size_type, 0),
-                               llvm::PointerType::get(size_type, 0)};
+                               llvm::ArrayType::get(size_type, rank.get()),
+                               llvm::ArrayType::get(size_type, rank.get()),
+                               llvm::ArrayType::get(size_type, rank.get())};
                            return llvm::StructType::create(types, mangle_type(total_type));
                        })
                 .case_(struct_t(_, _), [&](const type& self) {
