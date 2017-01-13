@@ -288,10 +288,9 @@ reference emit_array_slice_access(const reference& slice, const std::vector<llvm
 
     auto data_value_type = get_value_type(slice.datatype());
     auto shape_value_type = types::integer();
-    auto origin_value_type = types::integer();
 
-    auto shape = load_from_ref(reference(shape_ptr, slice.origin(), data_value_type), env, ctx);
-    auto data = load_from_ref(reference(data_ptr, slice.origin(), shape_value_type), env, ctx);
+    auto data = load_from_ref(reference(data_ptr, slice.origin(), data_value_type), env, ctx);
+    auto shape = load_from_ref(reference(shape_ptr, slice.origin(), shape_value_type), env, ctx);
 
     std::vector<llvm::Value*> transformed_indices;
     transformed_indices.reserve(indices.size());
@@ -380,7 +379,7 @@ reference emit_array_slice(const reference& array, const std::vector<llvm::Value
             .case_(array_slice_t(_, _), [&] {
                 for (util::index_t i = 0; i < rank; ++i)
                 {
-                    auto idx = llvm::ConstantInt::get(size_type, i, true);
+                    auto idx = llvm::ConstantInt::get(size_type, i);
 
                     std::vector<llvm::Value*> offset_indices = {zero, two, idx};
 
@@ -396,11 +395,11 @@ reference emit_array_slice(const reference& array, const std::vector<llvm::Value
                         reference(builder.CreateInBoundsGEP(array_ty, array.addr(), stride_indices),
                                   array.origin() / "strides", types::integer{});
 
-                    auto old_stride = load_from_ref(offset_ref, env, ctx);
+                    auto old_stride = load_from_ref(stride_ref, env, ctx);
 
                     auto new_offset =
-                        builder.CreateAdd(builder.CreateMul(old_offset, strides[i], "", true, true),
-                                          offset[i], "", true, true);
+                        builder.CreateAdd(builder.CreateMul(offset[i], old_stride, "", true, true),
+                                          old_offset, "", true, true);
                     auto new_stride = builder.CreateMul(old_stride, strides[i], "", true, true);
 
                     total_offset.push_back(new_offset);

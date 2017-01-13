@@ -5,6 +5,8 @@
 
 #include <qbb/qubus/pattern/sequence.hpp>
 #include <qbb/qubus/pattern/variable.hpp>
+#include <qbb/qubus/pattern/all_of.hpp>
+#include <qbb/qubus/pattern/value.hpp>
 
 #include <functional>
 #include <utility>
@@ -81,7 +83,7 @@ auto array_slice(Array array, Offset offset, Shape shape, Strides strides)
 template <typename Array, typename Offset, typename Shape, typename Strides>
 auto array_slice(Array array, Offset offset, Shape shape)
 {
-    return array_slice(std::move(array), std::move(offset), std::move(shape), _);
+    return array_slice(std::move(array), std::move(offset), std::move(shape), all_of(value(1)));
 }
 }
 }
