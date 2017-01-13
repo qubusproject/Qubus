@@ -362,9 +362,11 @@ public:
     template <typename... Indices>
     auto operator()(Indices... indices) const
     {
-        static_assert(are_all_indices<Indices...>(), "Expecting indices.");
+        using subscription_type = std::conditional_t<
+                boost::hana::any(boost::hana::make_tuple(std::is_same<Indices, range>::value...)),
+                sliced_tensor<tensor<T, Rank>, Indices...>, subscripted_tensor<tensor<T, Rank>, Indices...>>;
 
-        return subscripted_tensor<tensor<T, Rank>, Indices...>(*this, indices...);
+        return subscription_type(*this, indices...);
     }
 
     hpx::future<void> when_ready()

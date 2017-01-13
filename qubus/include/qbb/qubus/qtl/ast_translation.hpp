@@ -159,6 +159,29 @@ auto translate_ast(subscripted_tensor<Tensor, Indices...> node, ast_context& ctx
     return subscription(std::move(tensor), std::move(indices));
 }
 
+template <typename Tensor, typename... Ranges>
+auto translate_ast(sliced_tensor<Tensor, Ranges...> node, ast_context& ctx)
+{
+    auto tensor = translate_ast(node.tensor(), ctx);
+
+    std::vector<std::unique_ptr<expression>> offset;
+    offset.reserve(sizeof...(Ranges));
+
+    std::vector<std::unique_ptr<expression>> shape;
+    shape.reserve(sizeof...(Ranges));
+
+    std::vector<std::unique_ptr<expression>> strides;
+    strides.reserve(sizeof...(Ranges));
+
+    boost::hana::for_each(node.ranges(), [&offset, &shape, &strides, &ctx](auto range) {
+        offset.push_back(integer_literal(range.start));
+        shape.push_back(integer_literal((range.end - range.start)/range.stride));
+        strides.push_back(integer_literal(range.stride));
+    });
+
+    return slice(std::move(tensor), std::move(offset), std::move(shape), std::move(strides));
+}
+
 inline auto translate_ast(const index& idx, ast_context& ctx)
 {
     if (auto idx_var = ctx.symbol_table.lookup(idx.id()))
@@ -222,7 +245,8 @@ auto translate_ast(kronecker_delta<FirstIndex, SecondIndex> node, ast_context& c
     auto first_index = translate_ast(node.first_index(), ctx);
     auto second_index = translate_ast(node.second_index(), ctx);
 
-    return qbb::qubus::qtl::kronecker_delta(node.extent(), std::move(first_index), std::move(second_index));
+    return qbb::qubus::qtl::kronecker_delta(node.extent(), std::move(first_index),
+                                            std::move(second_index));
 }
 }
 }

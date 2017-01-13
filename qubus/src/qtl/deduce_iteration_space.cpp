@@ -25,6 +25,7 @@ std::array<std::unique_ptr<expression>, 2> deduce_iteration_space(const variable
 
     variable<variable_declaration> decl;
     variable<std::size_t> index_pos;
+    variable<std::vector<std::reference_wrapper<const expression>>> shape;
 
     variable<util::index_t> extent;
 
@@ -43,6 +44,15 @@ std::array<std::unique_ptr<expression>, 2> deduce_iteration_space(const variable
                        args.push_back(std::move(index_position));
 
                        auto upper_bound = intrinsic_function("extent", std::move(args));
+
+                       return std::array<std::unique_ptr<expression>, 2>{
+                           {std::move(lower_bound), std::move(upper_bound)}};
+                   })
+            .case_(subscription(array_slice(_, _, shape, _), bind_to(any_of(index(value(idx))), index_pos)),
+                   [&] {
+                       auto lower_bound = integer_literal(0);
+
+                       auto upper_bound = clone(shape.get()[index_pos.get()]);
 
                        return std::array<std::unique_ptr<expression>, 2>{
                            {std::move(lower_bound), std::move(upper_bound)}};
