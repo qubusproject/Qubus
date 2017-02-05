@@ -191,6 +191,11 @@ public:
         return hpx::make_ready_future();
     }
 
+    hpx::future<boost::optional<std::chrono::microseconds>>
+    try_estimate_execution_time(const computelet& c, const execution_context& ctx) const override
+    {
+        return hpx::make_ready_future(boost::optional<std::chrono::microseconds>());
+    }
 private:
     caching_cpu_comiler compiler_;
     host_address_space* address_space_;

@@ -29,5 +29,11 @@ hpx::future<void> aggregate_vpu::execute(computelet c, execution_context ctx) co
     return hpx::make_ready_future();
 }
 
+hpx::future<boost::optional<std::chrono::microseconds>>
+aggregate_vpu::try_estimate_execution_time(const computelet& c, const execution_context& ctx) const
+{
+    return hpx::make_ready_future(boost::optional<std::chrono::microseconds>());
+}
+
 }
 }
