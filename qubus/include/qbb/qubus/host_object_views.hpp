@@ -37,6 +37,7 @@ public:
 
     host_view_context(host_view_context&&) = delete;
     host_view_context& operator=(host_view_context&&) = delete;
+
 private:
     token access_token_;
     local_address_space::handle associated_handle_;
@@ -54,6 +55,53 @@ hpx::future<token> acquire_access_for_view(object& obj)
         return obj.acquire_read_access();
     }
 }
+
+template <typename T>
+class cpu_scalar_view
+{
+public:
+    using value_type = T;
+
+    const T& get() const
+    {
+        return value_;
+    }
+
+    T& get()
+    {
+        return value_;
+    }
+
+    static hpx::future<cpu_scalar_view<T>> construct(object obj)
+    {
+        auto object_ready = acquire_access_for_view<cpu_scalar_view<T>>(obj);
+
+        auto token = object_ready.get();
+
+        auto& addr_space = get_local_runtime().get_address_space();
+
+        auto hnd = addr_space.resolve_object(obj).get();
+
+        auto value = static_cast<T*>(hnd.data().ptr());
+
+        auto ctx = std::make_shared<host_view_context>(std::move(token), std::move(hnd));
+
+        return hpx::make_ready_future(cpu_scalar_view<T>(value, std::move(ctx)));
+    }
+
+private:
+    cpu_scalar_view(T* value_, std::shared_ptr<host_view_context> ctx_)
+    : value_(value_), ctx_(std::move(ctx_))
+    {
+    }
+
+    T* value_;
+
+    std::shared_ptr<host_view_context> ctx_;
+};
+
+template <typename T>
+using host_scalar_view = cpu_scalar_view<T>;
 
 struct array_metadata
 {
@@ -182,7 +230,8 @@ public:
 
         auto token = object_ready.get();
 
-        auto ctx = std::make_shared<host_view_context>(std::move(token), local_address_space::handle());
+        auto ctx =
+            std::make_shared<host_view_context>(std::move(token), local_address_space::handle());
 
         auto tensor_components = obj.components();
 
@@ -290,8 +339,12 @@ private:
                                    cpu_array_view<T, 1> values_,
                                    cpu_array_view<util::index_t, 1> shape_,
                                    std::shared_ptr<host_view_context> ctx_)
-    : col_(std::move(col_)), cl_(std::move(cl_)), cs_(std::move(cs_)), values_(std::move(values_)),
-      shape_(std::move(shape_)), ctx_(std::move(ctx_))
+    : col_(std::move(col_)),
+      cl_(std::move(cl_)),
+      cs_(std::move(cs_)),
+      values_(std::move(values_)),
+      shape_(std::move(shape_)),
+      ctx_(std::move(ctx_))
     {
     }
 
