@@ -101,6 +101,17 @@ private:
 };
 
 template <typename T>
+struct object_view_traits<cpu_scalar_view<T>>
+{
+static constexpr bool is_immutable = std::is_const<T>::value;
+
+static type associated_type()
+{
+    return associated_qubus_type<T>::get();
+}
+};
+
+template <typename T>
 using host_scalar_view = cpu_scalar_view<T>;
 
 struct array_metadata
