@@ -64,12 +64,12 @@ public:
 
     const T& get() const
     {
-        return value_;
+        return *value_;
     }
 
     T& get()
     {
-        return value_;
+        return *value_;
     }
 
     static hpx::future<cpu_scalar_view<T>> construct(object obj)
