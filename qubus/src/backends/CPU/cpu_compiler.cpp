@@ -25,6 +25,8 @@
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/FormattedStream.h>
 
+#include <llvm/Support/Host.h>
+
 #include <qbb/qubus/jit/cpuinfo.hpp>
 #include <qbb/qubus/jit/llvm_environment.hpp>
 #include <qbb/qubus/jit/compiler.hpp>
