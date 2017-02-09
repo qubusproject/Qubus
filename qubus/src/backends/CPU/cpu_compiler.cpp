@@ -24,9 +24,8 @@
 
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/FormattedStream.h>
-#include <llvm/Support/Host.h>
 
-#include <qbb/qubus/backends/cpuinfo.hpp>
+#include <qbb/qubus/jit/cpuinfo.hpp>
 #include <qbb/qubus/jit/llvm_environment.hpp>
 #include <qbb/qubus/jit/compiler.hpp>
 #include <qbb/qubus/jit/execution_stack.hpp>
@@ -134,25 +133,9 @@ public:
 
         llvm::EngineBuilder builder;
 
-        std::vector<std::string> available_features;
-        llvm::StringMap<bool> features;
+        auto available_features = get_host_cpu_features();
 
-        if (llvm::sys::getHostCPUFeatures(features))
-        {
-            for (const auto& feature : features)
-            {
-                if (feature.getValue())
-                {
-                    available_features.push_back(feature.getKey());
-                }
-            }
-        }
-        else
-        {
-            builder.setMCPU(llvm::sys::getHostCPUName());
-
-            available_features = deduce_host_cpu_features();
-        }
+        builder.setMCPU(llvm::sys::getHostCPUName());
 
         builder.setMAttrs(available_features);
         builder.setOptLevel(llvm::CodeGenOpt::Aggressive);
