@@ -51,6 +51,7 @@ public:
         push_arg,
         kronecker,
         quot_rule,
+        prod_rule,
         halt
     };
 
@@ -153,6 +154,19 @@ public:
                 auto rhs_diff = stack[sp - 1];
 
                 stack[sp - 4] = (rhs * lhs_diff - lhs * rhs_diff) / (rhs * rhs);
+
+                sp -= 3;
+                break;
+            }
+            case opcode::prod_rule:
+            {
+                auto lhs = stack[sp - 4];
+                auto rhs = stack[sp - 3];
+
+                auto lhs_diff = stack[sp - 2];
+                auto rhs_diff = stack[sp - 1];
+
+                stack[sp - 4] = lhs * rhs_diff + lhs_diff * rhs;
 
                 sp -= 3;
                 break;
@@ -428,15 +442,13 @@ public:
             bytecode.push_back(compiled_expression::opcode::sub);
             break;
         case tag::multiplies:
-            lhs_->emit_df_bytecode(bytecode);
-            rhs_->emit_evaluate_bytecode(bytecode);
-            bytecode.push_back(compiled_expression::opcode::mul);
-
             lhs_->emit_evaluate_bytecode(bytecode);
-            rhs_->emit_df_bytecode(bytecode);
-            bytecode.push_back(compiled_expression::opcode::mul);
+            rhs_->emit_evaluate_bytecode(bytecode);
 
-            bytecode.push_back(compiled_expression::opcode::add);
+            lhs_->emit_df_bytecode(bytecode);
+            rhs_->emit_df_bytecode(bytecode);
+
+            bytecode.push_back(compiled_expression::opcode::prod_rule);
             break;
         case tag::divides:
             lhs_->emit_evaluate_bytecode(bytecode);
