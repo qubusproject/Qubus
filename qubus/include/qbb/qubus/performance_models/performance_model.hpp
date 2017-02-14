@@ -1,5 +1,5 @@
-#ifndef QUBUS_PERFORMANCE_MODEL_HPP
-#define QUBUS_PERFORMANCE_MODEL_HPP
+#ifndef QUBUS_PERFORMANCE_MODELS_PERFORMANCE_MODEL_HPP
+#define QUBUS_PERFORMANCE_MODELS_PERFORMANCE_MODEL_HPP
 
 #include <qbb/qubus/computelet.hpp>
 #include <qbb/qubus/execution_context.hpp>
