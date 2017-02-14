@@ -209,7 +209,8 @@ public:
     virtual void
     emit_evaluate_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const = 0;
 
-    virtual void emit_df_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const = 0;
+    virtual void
+    emit_df_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const = 0;
 
     virtual std::string dump(const Eigen::VectorXd& parameters) const = 0;
 
@@ -373,8 +374,8 @@ public:
         }
     }
 
-    void
-    emit_evaluate_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
+    void emit_evaluate_bytecode(
+        std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
     {
         lhs_->emit_evaluate_bytecode(bytecode);
         rhs_->emit_evaluate_bytecode(bytecode);
@@ -555,8 +556,8 @@ public:
         }
     }
 
-    void
-    emit_evaluate_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
+    void emit_evaluate_bytecode(
+        std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
     {
         arg_->emit_evaluate_bytecode(bytecode);
 
@@ -571,7 +572,8 @@ public:
         }
     }
 
-    void emit_df_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
+    void
+    emit_df_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
     {
         switch (tag_)
         {
@@ -666,8 +668,8 @@ public:
         return index_ == index ? 1.0 : 0.0;
     }
 
-    void
-    emit_evaluate_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
+    void emit_evaluate_bytecode(
+        std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
     {
         bytecode.push_back(compiled_expression::opcode::push_param);
 
@@ -680,7 +682,8 @@ public:
         bytecode.push_back(data);
     }
 
-    void emit_df_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
+    void
+    emit_df_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
     {
         bytecode.push_back(compiled_expression::opcode::kronecker);
 
@@ -753,8 +756,8 @@ public:
         return 0.0;
     }
 
-    void
-    emit_evaluate_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
+    void emit_evaluate_bytecode(
+        std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
     {
         bytecode.push_back(compiled_expression::opcode::push_arg);
 
@@ -767,7 +770,8 @@ public:
         bytecode.push_back(data);
     }
 
-    void emit_df_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
+    void
+    emit_df_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
     {
         bytecode.push_back(compiled_expression::opcode::push);
 
@@ -1143,8 +1147,8 @@ public:
     : root_(clone(*other.root_)),
       number_of_parameters_(other.number_of_parameters_),
       data_set_(other.data_set_),
-      compiled_expression(other.evaluate_),
-      compiled_expression(other.df_)
+      evaluate_(other.evaluate_),
+      df_(other.df_)
     {
     }
 
@@ -1163,8 +1167,8 @@ public:
     : root_(std::move(other.root_)),
       number_of_parameters_(std::move(other.number_of_parameters_)),
       data_set_(other.data_set_),
-      compiled_expression(std::move(other.evaluate_)),
-      compiled_expression(std::move(other.df_))
+      evaluate_(std::move(other.evaluate_)),
+      df_(std::move(other.df_))
     {
     }
 
