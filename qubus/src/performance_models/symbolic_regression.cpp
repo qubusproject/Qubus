@@ -155,6 +155,7 @@ public:
                 stack[sp - 4] = (rhs * lhs_diff - lhs * rhs_diff) / (rhs * rhs);
 
                 sp -= 3;
+                break;
             }
             case opcode::halt:
                 return stack[sp - 1];
