@@ -4,6 +4,8 @@ find_package(CUDA 7.0)
 
 find_package(HPX 0.9.12 REQUIRED)
 
+find_package(Eigen3 REQUIRED)
+
 set(QUBUS_BUILD_PREFIX ${CMAKE_CURRENT_BINARY_DIR})
 
 add_subdirectory(IR)
@@ -30,11 +32,12 @@ set(qubus_source_files allocator.cpp loop_optimizer.cpp
                        pass_manager.cpp variable_access_analysis.cpp alias_analysis.cpp axiom_analysis.cpp
                        task_invariants_analysis.cpp affine_constraints.cpp value_set_analysis.cpp
                        value_range_analysis.cpp static_schedule.cpp static_schedule_analysis.cpp
-                       performance_models/unified_performance_model.cpp performance_models/simple_statistical_performance_model.cpp)
+                       performance_models/unified_performance_model.cpp performance_models/simple_statistical_performance_model.cpp
+                       performance_models/symbolic_regression.cpp)
 
 add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 
-target_include_directories(qubus PUBLIC ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
+target_include_directories(qubus PUBLIC ${Boost_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 target_compile_options(qubus PUBLIC -std=c++14)
 target_link_libraries(qubus PUBLIC qubus_ir qubus_isl qbb_util)
 target_link_libraries(qubus PUBLIC ${Boost_LIBRARIES} qubus_cpu_backend)
