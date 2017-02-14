@@ -11,7 +11,9 @@
 #include <qbb/util/unused.hpp>
 
 #include <algorithm>
+#include <array>
 #include <cmath>
+#include <cstdint>
 #include <functional>
 #include <iterator>
 #include <limits>
@@ -28,6 +30,131 @@ namespace qubus
 
 namespace
 {
+
+class compiled_expression
+{
+public:
+    static constexpr std::size_t stack_size = 40;
+
+    using bytecode_unit_t = std::uint64_t;
+
+    enum opcode : bytecode_unit_t
+    {
+        add,
+        sub,
+        mul,
+        div,
+        exp,
+        log,
+        push,
+        push_param,
+        push_arg,
+        kronecker,
+        halt
+    };
+
+    compiled_expression() = default;
+
+    explicit compiled_expression(std::vector<bytecode_unit_t> bytecode_)
+    : bytecode_(std::move(bytecode_))
+    {
+    }
+
+    double operator()(const Eigen::VectorXd& parameters, const std::vector<double>& arguments,
+                      long int diff_index) const
+    {
+        std::array<double, stack_size> stack;
+
+        std::size_t sp = 0;
+        std::size_t pc = 0;
+
+        for (;;)
+        {
+            opcode op;
+            static_assert(sizeof(opcode) == sizeof(bytecode_unit_t),
+                          "Unexpected size of bytecode unit.");
+            std::memcpy(&op, &bytecode_[pc++], sizeof(opcode));
+
+            switch (op)
+            {
+            case opcode::push:
+            {
+                static_assert(sizeof(double) == sizeof(bytecode_unit_t),
+                              "Unexpected size of bytecode unit.");
+
+                double value;
+                std::memcpy(&value, &bytecode_[pc++], sizeof(double));
+
+                stack[sp++] = value;
+                break;
+            }
+            case opcode::push_param:
+            {
+                static_assert(sizeof(long int) == sizeof(bytecode_unit_t),
+                              "Unexpected size of bytecode unit.");
+
+                long int index;
+                std::memcpy(&index, &bytecode_[pc++], sizeof(long int));
+
+                stack[sp++] = parameters[index];
+                break;
+            }
+            case opcode::push_arg:
+            {
+                static_assert(sizeof(long int) == sizeof(bytecode_unit_t),
+                              "Unexpected size of bytecode unit.");
+
+                long int index;
+                std::memcpy(&index, &bytecode_[pc++], sizeof(long int));
+
+                stack[sp++] = arguments[index];
+                break;
+            }
+            case opcode::add:
+                stack[sp - 2] = stack[sp - 2] + stack[sp - 1];
+                --sp;
+                break;
+            case opcode::sub:
+                stack[sp - 2] = stack[sp - 2] - stack[sp - 1];
+                --sp;
+                break;
+            case opcode::mul:
+                stack[sp - 2] = stack[sp - 2] * stack[sp - 1];
+                --sp;
+                break;
+            case opcode::div:
+                stack[sp - 2] = stack[sp - 2] / stack[sp - 1];
+                --sp;
+                break;
+            case opcode::exp:
+                stack[sp - 1] = std::exp(stack[sp - 1]);
+                break;
+            case opcode::log:
+                stack[sp - 1] = std::log(stack[sp - 1]);
+                break;
+            case opcode::kronecker:
+            {
+                static_assert(sizeof(long int) == sizeof(bytecode_unit_t),
+                              "Unexpected size of bytecode unit.");
+
+                long int index;
+                std::memcpy(&index, &bytecode_[pc++], sizeof(long int));
+
+                stack[sp++] = index == diff_index ? 1.0 : 0.0;
+                break;
+            }
+            case opcode::halt:
+                return stack[sp - 1];
+            default:
+                QBB_UNREACHABLE_BECAUSE("Invalid opcode.");
+            }
+        }
+    }
+
+private:
+    std::vector<bytecode_unit_t> bytecode_;
+};
+
 class model_expression
 {
 public:
@@ -78,6 +205,11 @@ public:
 
     virtual double df(const Eigen::VectorXd& parameters, const std::vector<double>& arguments,
                       long int index) const = 0;
+
+    virtual void
+    emit_evaluate_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const = 0;
+
+    virtual void emit_df_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const = 0;
 
     virtual std::string dump(const Eigen::VectorXd& parameters) const = 0;
 
@@ -241,6 +373,77 @@ public:
         }
     }
 
+    void
+    emit_evaluate_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
+    {
+        lhs_->emit_evaluate_bytecode(bytecode);
+        rhs_->emit_evaluate_bytecode(bytecode);
+
+        switch (tag_)
+        {
+        case tag::plus:
+            bytecode.push_back(compiled_expression::opcode::add);
+            return;
+        case tag::minus:
+            bytecode.push_back(compiled_expression::opcode::sub);
+            return;
+        case tag::multiplies:
+            bytecode.push_back(compiled_expression::opcode::mul);
+            return;
+        case tag::divides:
+            bytecode.push_back(compiled_expression::opcode::div);
+            return;
+        }
+    }
+
+    void emit_df_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const
+    {
+        switch (tag_)
+        {
+        case tag::plus:
+            lhs_->emit_df_bytecode(bytecode);
+            rhs_->emit_df_bytecode(bytecode);
+
+            bytecode.push_back(compiled_expression::opcode::add);
+            break;
+        case tag::minus:
+            lhs_->emit_df_bytecode(bytecode);
+            rhs_->emit_df_bytecode(bytecode);
+
+            bytecode.push_back(compiled_expression::opcode::sub);
+            break;
+        case tag::multiplies:
+            lhs_->emit_df_bytecode(bytecode);
+            rhs_->emit_evaluate_bytecode(bytecode);
+            bytecode.push_back(compiled_expression::opcode::mul);
+
+            lhs_->emit_evaluate_bytecode(bytecode);
+            rhs_->emit_df_bytecode(bytecode);
+            bytecode.push_back(compiled_expression::opcode::mul);
+
+            bytecode.push_back(compiled_expression::opcode::add);
+            break;
+        case tag::divides:
+            lhs_->emit_df_bytecode(bytecode);
+            rhs_->emit_evaluate_bytecode(bytecode);
+            bytecode.push_back(compiled_expression::opcode::mul);
+
+            lhs_->emit_evaluate_bytecode(bytecode);
+            rhs_->emit_df_bytecode(bytecode);
+            bytecode.push_back(compiled_expression::opcode::mul);
+
+            bytecode.push_back(compiled_expression::opcode::sub);
+
+            rhs_->emit_evaluate_bytecode(bytecode);
+            rhs_->emit_evaluate_bytecode(bytecode);
+
+            bytecode.push_back(compiled_expression::opcode::mul);
+            bytecode.push_back(compiled_expression::opcode::div);
+
+            break;
+        }
+    }
+
     std::string dump(const Eigen::VectorXd& parameters) const override
     {
         switch (tag_)
@@ -352,6 +555,43 @@ public:
         }
     }
 
+    void
+    emit_evaluate_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
+    {
+        arg_->emit_evaluate_bytecode(bytecode);
+
+        switch (tag_)
+        {
+        case tag::exp:
+            bytecode.push_back(compiled_expression::opcode::exp);
+            return;
+        case tag::log:
+            bytecode.push_back(compiled_expression::opcode::log);
+            return;
+        }
+    }
+
+    void emit_df_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
+    {
+        switch (tag_)
+        {
+        case tag::exp:
+            arg_->emit_evaluate_bytecode(bytecode);
+            bytecode.push_back(compiled_expression::opcode::exp);
+
+            arg_->emit_df_bytecode(bytecode);
+
+            bytecode.push_back(compiled_expression::opcode::mul);
+            return;
+        case tag::log:
+            arg_->emit_df_bytecode(bytecode);
+            arg_->emit_evaluate_bytecode(bytecode);
+
+            bytecode.push_back(compiled_expression::opcode::div);
+            return;
+        }
+    }
+
     std::string dump(const Eigen::VectorXd& parameters) const override
     {
         switch (tag_)
@@ -426,6 +666,33 @@ public:
         return index_ == index ? 1.0 : 0.0;
     }
 
+    void
+    emit_evaluate_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
+    {
+        bytecode.push_back(compiled_expression::opcode::push_param);
+
+        compiled_expression::bytecode_unit_t data;
+
+        static_assert(sizeof(long int) == sizeof(compiled_expression::bytecode_unit_t),
+                      "Unexpected size of bytecode unit.");
+        std::memcpy(&data, &index_, sizeof(long int));
+
+        bytecode.push_back(data);
+    }
+
+    void emit_df_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
+    {
+        bytecode.push_back(compiled_expression::opcode::kronecker);
+
+        compiled_expression::bytecode_unit_t data;
+
+        static_assert(sizeof(long int) == sizeof(compiled_expression::bytecode_unit_t),
+                      "Unexpected size of bytecode unit.");
+        std::memcpy(&data, &index_, sizeof(long int));
+
+        bytecode.push_back(data);
+    }
+
     std::string dump(const Eigen::VectorXd& parameters) const override
     {
         QBB_ASSERT(index_ < parameters.size(), "Invalid index.");
@@ -484,6 +751,34 @@ public:
               long int QBB_UNUSED(index)) const override
     {
         return 0.0;
+    }
+
+    void
+    emit_evaluate_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
+    {
+        bytecode.push_back(compiled_expression::opcode::push_arg);
+
+        compiled_expression::bytecode_unit_t data;
+
+        static_assert(sizeof(long int) == sizeof(compiled_expression::bytecode_unit_t),
+                      "Unexpected size of bytecode unit.");
+        std::memcpy(&data, &index_, sizeof(long int));
+
+        bytecode.push_back(data);
+    }
+
+    void emit_df_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
+    {
+        bytecode.push_back(compiled_expression::opcode::push);
+
+        compiled_expression::bytecode_unit_t data;
+        const double value = 0.0;
+
+        static_assert(sizeof(double) == sizeof(compiled_expression::bytecode_unit_t),
+                      "Unexpected size of bytecode unit.");
+        std::memcpy(&data, &value, sizeof(double));
+
+        bytecode.push_back(data);
     }
 
     std::string dump(const Eigen::VectorXd& QBB_UNUSED(parameters)) const override
@@ -822,12 +1117,34 @@ public:
     {
         QBB_ASSERT(determine_depth(*this->root_) <= max_depth,
                    "The depth is larger than expected.");
+
+        {
+            std::vector<compiled_expression::bytecode_unit_t> bytecode;
+
+            this->root_->emit_evaluate_bytecode(bytecode);
+
+            bytecode.push_back(compiled_expression::opcode::halt);
+
+            evaluate_ = compiled_expression(std::move(bytecode));
+        }
+
+        {
+            std::vector<compiled_expression::bytecode_unit_t> bytecode;
+
+            this->root_->emit_df_bytecode(bytecode);
+
+            bytecode.push_back(compiled_expression::opcode::halt);
+
+            df_ = compiled_expression(std::move(bytecode));
+        }
     }
 
     model(const model& other)
     : root_(clone(*other.root_)),
       number_of_parameters_(other.number_of_parameters_),
-      data_set_(other.data_set_)
+      data_set_(other.data_set_),
+      compiled_expression(other.evaluate_),
+      compiled_expression(other.df_)
     {
     }
 
@@ -836,6 +1153,8 @@ public:
         root_ = clone(*other.root_);
         number_of_parameters_ = other.number_of_parameters_;
         data_set_ = other.data_set_;
+        evaluate_ = other.evaluate_;
+        df_ = other.df_;
 
         return *this;
     }
@@ -843,7 +1162,9 @@ public:
     model(model&& other) noexcept
     : root_(std::move(other.root_)),
       number_of_parameters_(std::move(other.number_of_parameters_)),
-      data_set_(other.data_set_)
+      data_set_(other.data_set_),
+      compiled_expression(std::move(other.evaluate_)),
+      compiled_expression(std::move(other.df_))
     {
     }
 
@@ -852,6 +1173,8 @@ public:
         root_ = std::move(other.root_);
         number_of_parameters_ = std::move(other.number_of_parameters_);
         data_set_ = other.data_set_;
+        evaluate_ = std::move(other.evaluate_);
+        df_ = std::move(other.df_);
 
         return *this;
     }
@@ -912,7 +1235,7 @@ public:
             auto i_idx = util::integer_cast<Eigen::Index>(i);
             auto i_std = util::integer_cast<std::size_t>(i);
 
-            result(i_idx) = root_->evaluate(parameters, (*data_set_)[i_std].arguments) -
+            result(i_idx) = evaluate_(parameters, (*data_set_)[i_std].arguments, 0) -
                             (*data_set_)[i_std].execution_time.count();
         }
 
@@ -933,7 +1256,7 @@ public:
             {
                 auto col_idx = util::integer_cast<Eigen::Index>(col);
 
-                result(i_idx, col_idx) = root_->df(parameters, (*data_set_)[i_std].arguments, col);
+                result(i_idx, col_idx) = df_(parameters, (*data_set_)[i_std].arguments, col);
             }
         }
 
@@ -949,6 +1272,9 @@ private:
     std::unique_ptr<model_expression> root_;
     long int number_of_parameters_;
     const std::vector<data_point>* data_set_;
+
+    compiled_expression evaluate_;
+    compiled_expression df_;
 };
 
 class regression_model
