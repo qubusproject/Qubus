@@ -820,7 +820,8 @@ public:
       number_of_parameters_(determine_number_of_parameters(*this->root_)),
       data_set_(&data_set_)
     {
-        QBB_ASSERT(determine_depth(*this->root_) <= max_depth, "The depth is larger than expected.");
+        QBB_ASSERT(determine_depth(*this->root_) <= max_depth,
+                   "The depth is larger than expected.");
     }
 
     model(const model& other)
