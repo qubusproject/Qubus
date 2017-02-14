@@ -106,6 +106,23 @@ long int determine_number_of_expressions(const model_expression& root)
 
 long int determine_number_of_parameters(const model_expression& root);
 
+long int determine_depth(const model_expression& root)
+{
+    if (root.arity() == 0)
+        return 1;
+
+    long int depth = 1;
+
+    for (const auto& child : root.children())
+    {
+        auto depth_of_child = determine_depth(child);
+
+        depth = std::max(depth, depth_of_child);
+    }
+
+    return depth + 1;
+}
+
 class binary_operator_expression final : public model_expression
 {
 public:
@@ -795,12 +812,15 @@ struct data_point
 class model
 {
 public:
+    static constexpr long int max_depth = 20;
+
     explicit model(std::unique_ptr<model_expression> root_,
                    const std::vector<data_point>& data_set_)
     : root_(std::move(root_)),
       number_of_parameters_(determine_number_of_parameters(*this->root_)),
       data_set_(&data_set_)
     {
+        QBB_ASSERT(determine_depth(*this->root_) <= max_depth, "The depth is larger than expected.");
     }
 
     model(const model& other)
@@ -1055,6 +1075,8 @@ perform_genetic_programming_step(std::vector<regression_model> old_generation,
     constexpr long int wrap_rate = 10;
     constexpr long int combination_rate = 10;
 
+    constexpr long int max_depth = model::max_depth;
+
     constexpr long int crossover_rate = 100 - mutation_rate - wrap_rate - combination_rate;
 
     const auto fitness_comperator = [](const regression_model& lhs, const regression_model& rhs) {
@@ -1110,7 +1132,14 @@ perform_genetic_programming_step(std::vector<regression_model> old_generation,
             auto new_expr = mutate_expression(reg_model.expr(), reg_model.number_of_arguments(),
                                               reg_model.number_of_parameters(), engine);
 
-            remove_dead_parameters(*new_expr);
+            if (determine_depth(*new_expr) <= max_depth)
+            {
+                remove_dead_parameters(*new_expr);
+            }
+            else
+            {
+                new_expr = clone(reg_model.expr());
+            }
 
             auto new_model = model(std::move(new_expr), data_set);
 
@@ -1125,6 +1154,11 @@ perform_genetic_programming_step(std::vector<regression_model> old_generation,
             const auto& reg_model = old_generation[index];
 
             auto new_expr = wrap_expression(reg_model.expr(), engine);
+
+            if (determine_depth(*new_expr) > max_depth)
+            {
+                new_expr = clone(reg_model.expr());
+            }
 
             auto new_model = model(std::move(new_expr), data_set);
 
@@ -1142,6 +1176,11 @@ perform_genetic_programming_step(std::vector<regression_model> old_generation,
 
             auto new_expr = combine_expressions(mother.expr(), father.expr(), engine);
 
+            if (determine_depth(*new_expr) > max_depth)
+            {
+                new_expr = clone(mother.expr());
+            }
+
             auto new_model = model(std::move(new_expr), data_set);
 
             new_generation.push_back(regression_model(std::move(new_model), engine));
@@ -1158,7 +1197,14 @@ perform_genetic_programming_step(std::vector<regression_model> old_generation,
 
             auto new_expr = mix_expressions(mother.expr(), father.expr(), engine);
 
-            remove_dead_parameters(*new_expr);
+            if (determine_depth(*new_expr) <= max_depth)
+            {
+                remove_dead_parameters(*new_expr);
+            }
+            else
+            {
+                new_expr = clone(mother.expr());
+            }
 
             auto new_model = model(std::move(new_expr), data_set);
 
