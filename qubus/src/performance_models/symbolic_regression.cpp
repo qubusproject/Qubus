@@ -31,6 +31,7 @@ namespace qubus
 namespace
 {
 
+#ifndef __GNUC__
 class compiled_expression
 {
 public:
@@ -186,6 +187,169 @@ public:
 private:
     std::vector<bytecode_unit_t> bytecode_;
 };
+#else
+class compiled_expression
+{
+public:
+    static constexpr std::size_t stack_size = 40;
+
+    using bytecode_unit_t = std::uint8_t;
+
+    enum opcode : bytecode_unit_t
+    {
+        add,
+        sub,
+        mul,
+        div,
+        exp,
+        log,
+        push,
+        push_param,
+        push_arg,
+        kronecker,
+        quot_rule,
+        prod_rule,
+        halt
+    };
+
+    compiled_expression() = default;
+
+    explicit compiled_expression(std::vector<bytecode_unit_t> bytecode_)
+    : bytecode_(std::move(bytecode_))
+    {
+    }
+
+    double operator()(const Eigen::VectorXd& parameters, const std::vector<double>& arguments,
+                      long int diff_index) const
+    {
+        static constexpr void* dispatch_table[] = {
+            &&do_add,       &&do_sub,       &&do_mul,        &&do_div,      &&do_exp,
+            &&do_log,       &&do_push,      &&do_push_param, &&do_push_arg, &&do_kronecker,
+            &&do_quot_rule, &&do_prod_rule, &&do_halt};
+
+        std::array<double, stack_size> stack;
+
+        std::size_t sp = 0;
+        std::size_t pc = 0;
+
+        {
+            goto* dispatch_table[next_opcode(pc)];
+
+        do_push:
+        {
+            static_assert(sizeof(double) == 8 * sizeof(bytecode_unit_t),
+                          "Unexpected size of bytecode unit.");
+
+            double value;
+            std::memcpy(&value, &bytecode_[pc], sizeof(double));
+            pc += 8;
+
+            stack[sp++] = value;
+            goto* dispatch_table[next_opcode(pc)];
+        }
+        do_push_param:
+        {
+            static_assert(sizeof(long int) == 8 * sizeof(bytecode_unit_t),
+                          "Unexpected size of bytecode unit.");
+
+            long int index;
+            std::memcpy(&index, &bytecode_[pc], sizeof(long int));
+            pc += 8;
+
+            stack[sp++] = parameters[index];
+            goto* dispatch_table[next_opcode(pc)];
+        }
+        do_push_arg:
+        {
+            static_assert(sizeof(long int) == 8 * sizeof(bytecode_unit_t),
+                          "Unexpected size of bytecode unit.");
+
+            long int index;
+            std::memcpy(&index, &bytecode_[pc], sizeof(long int));
+            pc += 8;
+
+            stack[sp++] = arguments[index];
+            goto* dispatch_table[next_opcode(pc)];
+        }
+        do_add:
+            stack[sp - 2] = stack[sp - 2] + stack[sp - 1];
+            --sp;
+            goto* dispatch_table[next_opcode(pc)];
+        do_sub:
+            stack[sp - 2] = stack[sp - 2] - stack[sp - 1];
+            --sp;
+            goto* dispatch_table[next_opcode(pc)];
+        do_mul:
+            stack[sp - 2] = stack[sp - 2] * stack[sp - 1];
+            --sp;
+            goto* dispatch_table[next_opcode(pc)];
+        do_div:
+            stack[sp - 2] = stack[sp - 2] / stack[sp - 1];
+            --sp;
+            goto* dispatch_table[next_opcode(pc)];
+        do_exp:
+            stack[sp - 1] = std::exp(stack[sp - 1]);
+            goto* dispatch_table[next_opcode(pc)];
+        do_log:
+            stack[sp - 1] = std::log(stack[sp - 1]);
+            goto* dispatch_table[next_opcode(pc)];
+        do_kronecker:
+        {
+            static_assert(sizeof(long int) == 8 * sizeof(bytecode_unit_t),
+                          "Unexpected size of bytecode unit.");
+
+            long int index;
+            std::memcpy(&index, &bytecode_[pc], sizeof(long int));
+            pc += 8;
+
+            stack[sp++] = index == diff_index ? 1.0 : 0.0;
+            goto* dispatch_table[next_opcode(pc)];
+        }
+        do_quot_rule:
+        {
+            auto lhs = stack[sp - 4];
+            auto rhs = stack[sp - 3];
+
+            auto lhs_diff = stack[sp - 2];
+            auto rhs_diff = stack[sp - 1];
+
+            stack[sp - 4] = (rhs * lhs_diff - lhs * rhs_diff) / (rhs * rhs);
+
+            sp -= 3;
+            goto* dispatch_table[next_opcode(pc)];
+        }
+        do_prod_rule:
+        {
+            auto lhs = stack[sp - 4];
+            auto rhs = stack[sp - 3];
+
+            auto lhs_diff = stack[sp - 2];
+            auto rhs_diff = stack[sp - 1];
+
+            stack[sp - 4] = lhs * rhs_diff + lhs_diff * rhs;
+
+            sp -= 3;
+            goto* dispatch_table[next_opcode(pc)];
+        }
+        do_halt:
+            return stack[sp - 1];
+        }
+    }
+
+private:
+    opcode next_opcode(std::size_t& pc) const
+    {
+        opcode op;
+        static_assert(sizeof(opcode) == sizeof(bytecode_unit_t),
+                      "Unexpected size of bytecode unit.");
+        std::memcpy(&op, &bytecode_[pc++], sizeof(opcode));
+
+        return op;
+    }
+
+    std::vector<bytecode_unit_t> bytecode_;
+};
+#endif
 
 class model_expression
 {
