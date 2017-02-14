@@ -26,7 +26,7 @@ TEST(symbolic_regression, polynomial)
         }
     }
 
-    for (long int i = 0; i < 20; ++i)
+    while (!reg.accuracy() || *reg.accuracy() > 75us)
     {
         reg.update();
     }
@@ -73,7 +73,7 @@ TEST(symbolic_regression, exponential)
         }
     }
 
-    for (long int i = 0; i < 20; ++i)
+    while (!reg.accuracy() || *reg.accuracy() > 75us)
     {
         reg.update();
     }
@@ -125,7 +125,12 @@ TEST(symbolic_regression, exponential_sliding)
         }
     }
 
-    reg.update();
+    ASSERT_TRUE(static_cast<bool>(reg.accuracy()));
+
+    while (*reg.accuracy() > 75us)
+    {
+        reg.update();
+    }
 
     std::chrono::microseconds norm(0);
 
