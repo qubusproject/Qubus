@@ -36,7 +36,7 @@ class compiled_expression
 public:
     static constexpr std::size_t stack_size = 40;
 
-    using bytecode_unit_t = std::uint64_t;
+    using bytecode_unit_t = std::uint8_t;
 
     enum opcode : bytecode_unit_t
     {
@@ -81,33 +81,36 @@ public:
             {
             case opcode::push:
             {
-                static_assert(sizeof(double) == sizeof(bytecode_unit_t),
+                static_assert(sizeof(double) == 8 * sizeof(bytecode_unit_t),
                               "Unexpected size of bytecode unit.");
 
                 double value;
-                std::memcpy(&value, &bytecode_[pc++], sizeof(double));
+                std::memcpy(&value, &bytecode_[pc], sizeof(double));
+                pc += 8;
 
                 stack[sp++] = value;
                 break;
             }
             case opcode::push_param:
             {
-                static_assert(sizeof(long int) == sizeof(bytecode_unit_t),
+                static_assert(sizeof(long int) == 8 * sizeof(bytecode_unit_t),
                               "Unexpected size of bytecode unit.");
 
                 long int index;
-                std::memcpy(&index, &bytecode_[pc++], sizeof(long int));
+                std::memcpy(&index, &bytecode_[pc], sizeof(long int));
+                pc += 8;
 
                 stack[sp++] = parameters[index];
                 break;
             }
             case opcode::push_arg:
             {
-                static_assert(sizeof(long int) == sizeof(bytecode_unit_t),
+                static_assert(sizeof(long int) == 8 * sizeof(bytecode_unit_t),
                               "Unexpected size of bytecode unit.");
 
                 long int index;
-                std::memcpy(&index, &bytecode_[pc++], sizeof(long int));
+                std::memcpy(&index, &bytecode_[pc], sizeof(long int));
+                pc += 8;
 
                 stack[sp++] = arguments[index];
                 break;
@@ -136,11 +139,12 @@ public:
                 break;
             case opcode::kronecker:
             {
-                static_assert(sizeof(long int) == sizeof(bytecode_unit_t),
+                static_assert(sizeof(long int) == 8 * sizeof(bytecode_unit_t),
                               "Unexpected size of bytecode unit.");
 
                 long int index;
-                std::memcpy(&index, &bytecode_[pc++], sizeof(long int));
+                std::memcpy(&index, &bytecode_[pc], sizeof(long int));
+                pc += 8;
 
                 stack[sp++] = index == diff_index ? 1.0 : 0.0;
                 break;
@@ -691,13 +695,16 @@ public:
     {
         bytecode.push_back(compiled_expression::opcode::push_param);
 
-        compiled_expression::bytecode_unit_t data;
+        compiled_expression::bytecode_unit_t data[8];
 
-        static_assert(sizeof(long int) == sizeof(compiled_expression::bytecode_unit_t),
+        static_assert(sizeof(long int) == 8 * sizeof(compiled_expression::bytecode_unit_t),
                       "Unexpected size of bytecode unit.");
         std::memcpy(&data, &index_, sizeof(long int));
 
-        bytecode.push_back(data);
+        for (std::size_t i = 0; i < 8; ++i)
+        {
+            bytecode.push_back(data[i]);
+        }
     }
 
     void
@@ -705,13 +712,16 @@ public:
     {
         bytecode.push_back(compiled_expression::opcode::kronecker);
 
-        compiled_expression::bytecode_unit_t data;
+        compiled_expression::bytecode_unit_t data[8];
 
-        static_assert(sizeof(long int) == sizeof(compiled_expression::bytecode_unit_t),
+        static_assert(sizeof(long int) == 8 * sizeof(compiled_expression::bytecode_unit_t),
                       "Unexpected size of bytecode unit.");
         std::memcpy(&data, &index_, sizeof(long int));
 
-        bytecode.push_back(data);
+        for (std::size_t i = 0; i < 8; ++i)
+        {
+            bytecode.push_back(data[i]);
+        }
     }
 
     std::string dump(const Eigen::VectorXd& parameters) const override
@@ -779,13 +789,16 @@ public:
     {
         bytecode.push_back(compiled_expression::opcode::push_arg);
 
-        compiled_expression::bytecode_unit_t data;
+        compiled_expression::bytecode_unit_t data[8];
 
-        static_assert(sizeof(long int) == sizeof(compiled_expression::bytecode_unit_t),
+        static_assert(sizeof(long int) == 8 * sizeof(compiled_expression::bytecode_unit_t),
                       "Unexpected size of bytecode unit.");
         std::memcpy(&data, &index_, sizeof(long int));
 
-        bytecode.push_back(data);
+        for (std::size_t i = 0; i < 8; ++i)
+        {
+            bytecode.push_back(data[i]);
+        }
     }
 
     void
@@ -793,14 +806,17 @@ public:
     {
         bytecode.push_back(compiled_expression::opcode::push);
 
-        compiled_expression::bytecode_unit_t data;
+        compiled_expression::bytecode_unit_t data[8];
         const double value = 0.0;
 
-        static_assert(sizeof(double) == sizeof(compiled_expression::bytecode_unit_t),
+        static_assert(sizeof(double) == 8 * sizeof(compiled_expression::bytecode_unit_t),
                       "Unexpected size of bytecode unit.");
-        std::memcpy(&data, &value, sizeof(double));
+        std::memcpy(&data, &index_, sizeof(double));
 
-        bytecode.push_back(data);
+        for (std::size_t i = 0; i < 8; ++i)
+        {
+            bytecode.push_back(data[i]);
+        }
     }
 
     std::string dump(const Eigen::VectorXd& QBB_UNUSED(parameters)) const override
