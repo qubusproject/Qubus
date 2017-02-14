@@ -50,6 +50,7 @@ public:
         push_param,
         push_arg,
         kronecker,
+        quot_rule,
         halt
     };
 
@@ -142,6 +143,18 @@ public:
 
                 stack[sp++] = index == diff_index ? 1.0 : 0.0;
                 break;
+            }
+            case opcode::quot_rule:
+            {
+                auto lhs = stack[sp - 4];
+                auto rhs = stack[sp - 3];
+
+                auto lhs_diff = stack[sp - 2];
+                auto rhs_diff = stack[sp - 1];
+
+                stack[sp - 4] = (rhs * lhs_diff - lhs * rhs_diff) / (rhs * rhs);
+
+                sp -= 3;
             }
             case opcode::halt:
                 return stack[sp - 1];
@@ -425,21 +438,13 @@ public:
             bytecode.push_back(compiled_expression::opcode::add);
             break;
         case tag::divides:
-            lhs_->emit_df_bytecode(bytecode);
-            rhs_->emit_evaluate_bytecode(bytecode);
-            bytecode.push_back(compiled_expression::opcode::mul);
-
             lhs_->emit_evaluate_bytecode(bytecode);
+            rhs_->emit_evaluate_bytecode(bytecode);
+
+            lhs_->emit_df_bytecode(bytecode);
             rhs_->emit_df_bytecode(bytecode);
-            bytecode.push_back(compiled_expression::opcode::mul);
 
-            bytecode.push_back(compiled_expression::opcode::sub);
-
-            rhs_->emit_evaluate_bytecode(bytecode);
-            rhs_->emit_evaluate_bytecode(bytecode);
-
-            bytecode.push_back(compiled_expression::opcode::mul);
-            bytecode.push_back(compiled_expression::opcode::div);
+            bytecode.push_back(compiled_expression::opcode::quot_rule);
 
             break;
         }
