@@ -68,8 +68,8 @@ public:
     {
         std::array<double, stack_size> stack;
 
-        std::size_t sp = 0;
-        std::size_t pc = 0;
+        std::int64_t sp = 0;
+        std::int64_t pc = 0;
 
         for (;;)
         {
@@ -101,7 +101,7 @@ public:
                 std::memcpy(&index, &bytecode_[pc], sizeof(long int));
                 pc += 8;
 
-                stack[sp++] = parameters[index];
+                stack[sp++] = parameters(index);
                 break;
             }
             case opcode::push_arg:
@@ -229,12 +229,12 @@ public:
 
         std::array<double, stack_size> stack;
 
-        std::size_t sp = 0;
-        std::size_t pc = 0;
+        std::int64_t sp = 0;
+        std::int64_t pc = 0;
+
+        goto* dispatch_table[next_opcode(pc)];
 
         {
-            goto* dispatch_table[next_opcode(pc)];
-
         do_push:
         {
             static_assert(sizeof(double) == 8 * sizeof(bytecode_unit_t),
@@ -256,7 +256,7 @@ public:
             std::memcpy(&index, &bytecode_[pc], sizeof(long int));
             pc += 8;
 
-            stack[sp++] = parameters[index];
+            stack[sp++] = parameters(index);
             goto* dispatch_table[next_opcode(pc)];
         }
         do_push_arg:
@@ -337,7 +337,7 @@ public:
     }
 
 private:
-    opcode next_opcode(std::size_t& pc) const
+    opcode next_opcode(std::int64_t& pc) const
     {
         opcode op;
         static_assert(sizeof(opcode) == sizeof(bytecode_unit_t),
@@ -593,7 +593,8 @@ public:
         }
     }
 
-    void emit_df_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const
+    void
+    emit_df_bytecode(std::vector<compiled_expression::bytecode_unit_t>& bytecode) const override
     {
         switch (tag_)
         {
@@ -1132,6 +1133,8 @@ generate_random_expression(Engine& engine, long int number_of_arguments,
 
         return std::make_unique<function_expression>(function_expression::tag::log, std::move(arg));
     }
+    case number_of_types:
+        QBB_UNREACHABLE_BECAUSE("number_of_types is not an actual expression type.");
     }
 
     QBB_UNREACHABLE();
@@ -1319,6 +1322,9 @@ public:
     {
         QBB_ASSERT(determine_depth(*this->root_) <= max_depth,
                    "The depth is larger than expected.");
+
+        static_assert(max_depth < compiled_expression::stack_size,
+                      "The size of the stack might not be sufficient.");
 
         {
             std::vector<compiled_expression::bytecode_unit_t> bytecode;
