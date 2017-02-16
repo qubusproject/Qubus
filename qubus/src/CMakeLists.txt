@@ -39,7 +39,7 @@ add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 
 target_include_directories(qubus PUBLIC ${Boost_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 target_compile_options(qubus PUBLIC -std=c++14)
-target_link_libraries(qubus PUBLIC qubus_ir qubus_isl qbb_util)
+target_link_libraries(qubus PUBLIC qubus_ir qubus_isl qubus_util)
 target_link_libraries(qubus PUBLIC ${Boost_LIBRARIES} qubus_cpu_backend)
 target_compile_definitions(qubus PUBLIC -DBOOST_LOG_DYN_LINK)
 add_dependencies(qubus qubus_cpu_backend)

@@ -22,7 +22,7 @@ add_library(qubus_isl SHARED ${qubus_isl_header_files} ${qubus_isl_source_files}
 target_include_directories(qubus_isl PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 
 target_compile_options(qubus_isl PUBLIC -std=c++14)
-target_link_libraries(qubus_isl PUBLIC isl::isl qbb_util)
+target_link_libraries(qubus_isl PUBLIC isl::isl qubus_util)
 
 set_property(TARGET qubus_isl PROPERTY VERSION ${QUBUS_VERSION})
 set_property(TARGET qubus_isl PROPERTY SOVERSION 0)
