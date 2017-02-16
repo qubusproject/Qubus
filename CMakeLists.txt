@@ -76,7 +76,7 @@ if (NOT CMAKE_VERSION VERSION_LESS 3.6.0)
 endif()
 
 if (QBB_RUN_CLANG_TIDY)
-    set(CMAKE_CXX_CLANG_TIDY clang-tidy;-checks=-*,modernize-*,performance-*,readability-*,clang-analyzer-*,cppcoreguidelines-*,misc-*,-clang-analyzer-alpha.core.CastToStruct;-p;build)
+    set(CMAKE_CXX_CLANG_TIDY clang-tidy;-p;${CMAKE_BINARY_DIR})
 endif()
 
 add_subdirectory(util)

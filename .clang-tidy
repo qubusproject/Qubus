@@ -1,0 +1,1 @@
+Checks: -*,modernize-*,performance-*,readability-*,clang-analyzer-*,cppcoreguidelines-*,misc-*,-clang-analyzer-alpha.core.CastToStruct
