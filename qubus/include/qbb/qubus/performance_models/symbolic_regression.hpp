@@ -28,7 +28,9 @@ public:
 
     void add_datapoint(std::vector<double> arguments, std::chrono::microseconds execution_time);
 
-    void update();
+    boost::optional<std::chrono::microseconds> update();
+
+    boost::optional<std::chrono::microseconds> update_cheaply();
 
     long int size_of_dataset() const;
 

@@ -25,8 +25,7 @@ namespace
 class regression_analysis
 {
 public:
-    regression_analysis()
-    : regression_model_(1000)
+    regression_analysis() : regression_model_(1000)
     {
     }
 
@@ -38,15 +37,39 @@ public:
 
     void add_datapoint(std::vector<double> arguments, std::chrono::microseconds execution_time)
     {
+        using namespace std::chrono_literals;
+
         regression_model_.add_datapoint(std::move(arguments), std::move(execution_time));
 
         ++number_of_new_data_points_;
 
-        if (number_of_new_data_points_ > 10 && regression_model_.size_of_dataset() > 10)
-        {
-            regression_model_.update();
+        if (regression_model_.size_of_dataset() < 10)
+            return;
 
-            number_of_new_data_points_ = 0;
+        auto accuracy = regression_model_.accuracy();
+
+        constexpr auto target_accuarcy = 20us;
+        constexpr auto minimal_accuary = 100us;
+
+        static_assert(target_accuarcy < minimal_accuary,
+                      "The target accuarcy should always be smaller than the minimal accuarcy.");
+
+        if (accuracy > minimal_accuary)
+        {
+            update();
+            return;
+        }
+
+        if (number_of_new_data_points_ >= 10)
+        {
+            accuracy = regression_model_.update_cheaply();
+
+            if (accuracy > target_accuarcy)
+            {
+                update();
+            }
+
+            return;
         }
     }
 
@@ -61,6 +84,13 @@ public:
     }
 
 private:
+    void update()
+    {
+        regression_model_.update();
+
+        number_of_new_data_points_ = 0;
+    }
+
     symbolic_regression regression_model_;
 
     long int number_of_new_data_points_ = 0;

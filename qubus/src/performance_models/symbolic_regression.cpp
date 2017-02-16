@@ -1779,7 +1779,7 @@ public:
         dataset_.push_back(data_point{std::move(arguments), std::move(execution_time)});
     }
 
-    void update()
+    boost::optional<std::chrono::microseconds> update()
     {
         if (dataset_.empty())
             return;
@@ -1814,6 +1814,15 @@ public:
             models_ = perform_genetic_programming_step(
                 std::move(models_), dataset_.front().arguments.size(), dataset_, engine_);
         }
+
+        return accuracy();
+    }
+
+    boost::optional<std::chrono::microseconds> update_cheaply()
+    {
+        models_.front().update();
+
+        return accuracy();
     }
 
     long int size_of_dataset() const
@@ -1862,9 +1871,14 @@ void symbolic_regression::add_datapoint(std::vector<double> arguments,
     impl_->add_datapoint(std::move(arguments), std::move(execution_time));
 }
 
-void symbolic_regression::update()
+boost::optional<std::chrono::microseconds> symbolic_regression::update()
 {
-    impl_->update();
+    return impl_->update();
+}
+
+boost::optional<std::chrono::microseconds> symbolic_regression::update_cheaply()
+{
+    return impl_->update_cheaply();
 }
 
 long int symbolic_regression::size_of_dataset() const
