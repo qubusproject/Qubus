@@ -11,7 +11,7 @@ TEST(symbolic_regression, polynomial)
     using namespace qbb::qubus;
     using namespace std::literals::chrono_literals;
 
-    symbolic_regression reg;
+    symbolic_regression reg(1000);
 
     std::vector<double> arguments(1);
 
@@ -58,7 +58,7 @@ TEST(symbolic_regression, exponential)
     using namespace qbb::qubus;
     using namespace std::literals::chrono_literals;
 
-    symbolic_regression reg;
+    symbolic_regression reg(1000);
 
     std::vector<double> arguments(1);
 
@@ -105,7 +105,7 @@ TEST(symbolic_regression, exponential_sliding)
     using namespace qbb::qubus;
     using namespace std::literals::chrono_literals;
 
-    symbolic_regression reg;
+    symbolic_regression reg(1000);
 
     std::vector<double> arguments(1);
 

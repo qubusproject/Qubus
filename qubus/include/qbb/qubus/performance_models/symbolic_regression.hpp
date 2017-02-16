@@ -17,7 +17,7 @@ class symbolic_regression_impl;
 class symbolic_regression
 {
 public:
-    symbolic_regression();
+    explicit symbolic_regression(long int window_size_);
     ~symbolic_regression();
 
     symbolic_regression(const symbolic_regression&) = delete;

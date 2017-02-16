@@ -25,7 +25,10 @@ namespace
 class regression_analysis
 {
 public:
-    regression_analysis() = default;
+    regression_analysis()
+    : regression_model_(1000)
+    {
+    }
 
     regression_analysis(const regression_analysis&) = delete;
     regression_analysis& operator=(const regression_analysis&) = delete;

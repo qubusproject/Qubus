@@ -3,6 +3,7 @@
 #include <Eigen/Core>
 #include <unsupported/Eigen/NonLinearOptimization>
 
+#include <boost/circular_buffer.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/irange.hpp>
 
@@ -1309,16 +1310,16 @@ struct data_point
     std::chrono::microseconds execution_time;
 };
 
+template <typename Dataset>
 class model
 {
 public:
     static constexpr long int max_depth = 20;
 
-    explicit model(std::unique_ptr<model_expression> root_,
-                   const std::vector<data_point>& data_set_)
+    explicit model(std::unique_ptr<model_expression> root_, const Dataset& dataset_)
     : root_(std::move(root_)),
       number_of_parameters_(determine_number_of_parameters(*this->root_)),
-      data_set_(&data_set_)
+      dataset_(&dataset_)
     {
         QBB_ASSERT(determine_depth(*this->root_) <= max_depth,
                    "The depth is larger than expected.");
@@ -1350,7 +1351,7 @@ public:
     model(const model& other)
     : root_(clone(*other.root_)),
       number_of_parameters_(other.number_of_parameters_),
-      data_set_(other.data_set_),
+      dataset_(other.dataset_),
       evaluate_(other.evaluate_),
       df_(other.df_)
     {
@@ -1360,7 +1361,7 @@ public:
     {
         root_ = clone(*other.root_);
         number_of_parameters_ = other.number_of_parameters_;
-        data_set_ = other.data_set_;
+        dataset_ = other.dataset_;
         evaluate_ = other.evaluate_;
         df_ = other.df_;
 
@@ -1370,7 +1371,7 @@ public:
     model(model&& other) noexcept
     : root_(std::move(other.root_)),
       number_of_parameters_(std::move(other.number_of_parameters_)),
-      data_set_(other.data_set_),
+      dataset_(other.dataset_),
       evaluate_(std::move(other.evaluate_)),
       df_(std::move(other.df_))
     {
@@ -1380,7 +1381,7 @@ public:
     {
         root_ = std::move(other.root_);
         number_of_parameters_ = std::move(other.number_of_parameters_);
-        data_set_ = other.data_set_;
+        dataset_ = other.dataset_;
         evaluate_ = std::move(other.evaluate_);
         df_ = std::move(other.df_);
 
@@ -1396,7 +1397,7 @@ public:
 
     long int number_of_arguments() const
     {
-        return data_set_->front().arguments.size();
+        return dataset_->front().arguments.size();
     }
 
     long int number_of_parameters() const
@@ -1404,14 +1405,14 @@ public:
         return number_of_parameters_;
     }
 
-    const std::vector<data_point>& data_set() const
+    const Dataset& data_set() const
     {
-        return *data_set_;
+        return *dataset_;
     }
 
     int values() const
     {
-        return util::integer_cast<int>(data_set_->size());
+        return util::integer_cast<int>(dataset_->size());
     }
 
     std::chrono::microseconds query(const Eigen::VectorXd& parameters,
@@ -1443,8 +1444,8 @@ public:
             auto i_idx = util::integer_cast<Eigen::Index>(i);
             auto i_std = util::integer_cast<std::size_t>(i);
 
-            result(i_idx) = evaluate_(parameters, (*data_set_)[i_std].arguments, 0) -
-                            (*data_set_)[i_std].execution_time.count();
+            result(i_idx) = evaluate_(parameters, (*dataset_)[i_std].arguments, 0) -
+                            (*dataset_)[i_std].execution_time.count();
         }
 
         return 0;
@@ -1452,7 +1453,7 @@ public:
 
     int df(const Eigen::VectorXd& parameters, Eigen::MatrixXd& result) const
     {
-        QBB_ASSERT(result.rows() == data_set_->size(), "Unexpected number of results.");
+        QBB_ASSERT(result.rows() == dataset_->size(), "Unexpected number of results.");
         QBB_ASSERT(result.cols() == parameters.size(), "Unexpected number of variables.");
 
         for (long int i = 0; i < result.rows(); ++i)
@@ -1464,7 +1465,7 @@ public:
             {
                 auto col_idx = util::integer_cast<Eigen::Index>(col);
 
-                result(i_idx, col_idx) = df_(parameters, (*data_set_)[i_std].arguments, col);
+                result(i_idx, col_idx) = df_(parameters, (*dataset_)[i_std].arguments, col);
             }
         }
 
@@ -1479,17 +1480,18 @@ public:
 private:
     std::unique_ptr<model_expression> root_;
     long int number_of_parameters_;
-    const std::vector<data_point>* data_set_;
+    const Dataset* dataset_;
 
     compiled_expression evaluate_;
     compiled_expression df_;
 };
 
+template <typename Dataset>
 class regression_model
 {
 public:
     template <typename Engine>
-    regression_model(model m, Engine& engine) : model_(m)
+    regression_model(model<Dataset> m, Engine& engine) : model_(m)
     {
         auto number_of_parameters = this->model_.number_of_parameters();
 
@@ -1549,7 +1551,7 @@ private:
 
         if (number_of_parameters > 0 && number_of_parameters < this->model_.data_set().size())
         {
-            Eigen::LevenbergMarquardt<model> lm(this->model_);
+            Eigen::LevenbergMarquardt<model<Dataset>> lm(this->model_);
             lm.minimize(parameters_);
         }
     }
@@ -1591,17 +1593,17 @@ private:
                    2 * determine_number_of_expressions(model_.expr());
     }
 
-    model model_;
+    model<Dataset> model_;
     Eigen::VectorXd parameters_;
     std::chrono::microseconds accuracy_;
     double fitness_;
 };
 
-template <typename Engine>
-std::vector<regression_model>
-perform_genetic_programming_step(std::vector<regression_model> old_generation,
-                                 long int number_of_arguments,
-                                 const std::vector<data_point>& data_set, Engine& engine)
+template <typename Dataset, typename Engine>
+std::vector<regression_model<Dataset>>
+perform_genetic_programming_step(std::vector<regression_model<Dataset>> old_generation,
+                                 long int number_of_arguments, const Dataset& dataset,
+                                 Engine& engine)
 {
     constexpr long int elite_share = 10;
     constexpr long int immigrant_share = 10;
@@ -1610,11 +1612,12 @@ perform_genetic_programming_step(std::vector<regression_model> old_generation,
     constexpr long int wrap_rate = 10;
     constexpr long int combination_rate = 10;
 
-    constexpr long int max_depth = model::max_depth;
+    constexpr long int max_depth = model<Dataset>::max_depth;
 
     constexpr long int crossover_rate = 100 - mutation_rate - wrap_rate - combination_rate;
 
-    const auto fitness_comperator = [](const regression_model& lhs, const regression_model& rhs) {
+    const auto fitness_comperator = [](const regression_model<Dataset>& lhs,
+                                       const regression_model<Dataset>& rhs) {
         return lhs.fitness() < rhs.fitness();
     };
 
@@ -1627,7 +1630,7 @@ perform_genetic_programming_step(std::vector<regression_model> old_generation,
         {mutation_rate, wrap_rate, combination_rate, crossover_rate});
     std::uniform_int_distribution<long int> population_index_dist(0, population_size - 1);
 
-    std::vector<regression_model> new_generation;
+    std::vector<regression_model<Dataset>> new_generation;
     new_generation.reserve(population_size);
 
     auto number_of_elites = (population_size * elite_share) / 100;
@@ -1647,9 +1650,9 @@ perform_genetic_programming_step(std::vector<regression_model> old_generation,
         auto new_expr =
             generate_random_expression(engine, number_of_arguments, number_of_parameters);
 
-        auto new_model = model(std::move(new_expr), data_set);
+        auto new_model = model<Dataset>(std::move(new_expr), dataset);
 
-        new_generation.push_back(regression_model(std::move(new_model), engine));
+        new_generation.push_back(regression_model<Dataset>(std::move(new_model), engine));
     }
 
     for (std::size_t i = number_of_elites + number_of_immigrants; i < population_size; ++i)
@@ -1676,9 +1679,9 @@ perform_genetic_programming_step(std::vector<regression_model> old_generation,
                 new_expr = clone(reg_model.expr());
             }
 
-            auto new_model = model(std::move(new_expr), data_set);
+            auto new_model = model<Dataset>(std::move(new_expr), dataset);
 
-            new_generation.push_back(regression_model(std::move(new_model), engine));
+            new_generation.push_back(regression_model<Dataset>(std::move(new_model), engine));
 
             break;
         }
@@ -1695,9 +1698,9 @@ perform_genetic_programming_step(std::vector<regression_model> old_generation,
                 new_expr = clone(reg_model.expr());
             }
 
-            auto new_model = model(std::move(new_expr), data_set);
+            auto new_model = model<Dataset>(std::move(new_expr), dataset);
 
-            new_generation.push_back(regression_model(std::move(new_model), engine));
+            new_generation.push_back(regression_model<Dataset>(std::move(new_model), engine));
 
             break;
         }
@@ -1716,9 +1719,9 @@ perform_genetic_programming_step(std::vector<regression_model> old_generation,
                 new_expr = clone(mother.expr());
             }
 
-            auto new_model = model(std::move(new_expr), data_set);
+            auto new_model = model<Dataset>(std::move(new_expr), dataset);
 
-            new_generation.push_back(regression_model(std::move(new_model), engine));
+            new_generation.push_back(regression_model<Dataset>(std::move(new_model), engine));
 
             break;
         }
@@ -1741,9 +1744,9 @@ perform_genetic_programming_step(std::vector<regression_model> old_generation,
                 new_expr = clone(mother.expr());
             }
 
-            auto new_model = model(std::move(new_expr), data_set);
+            auto new_model = model<Dataset>(std::move(new_expr), dataset);
 
-            new_generation.push_back(regression_model(std::move(new_model), engine));
+            new_generation.push_back(regression_model<Dataset>(std::move(new_model), engine));
 
             break;
         }
@@ -1764,7 +1767,8 @@ perform_genetic_programming_step(std::vector<regression_model> old_generation,
 class symbolic_regression_impl
 {
 public:
-    symbolic_regression_impl()
+    explicit symbolic_regression_impl(long int window_size_)
+    : dataset_(util::integer_cast<dataset_type::size_type>(window_size_))
     {
         std::random_device dev;
         engine_ = std::mt19937(dev());
@@ -1790,16 +1794,16 @@ public:
             {
                 long int number_of_parameters = 0;
 
-                auto new_model =
-                    model(generate_random_expression(engine_, dataset_.front().arguments.size(),
-                                                     number_of_parameters),
-                          dataset_);
+                auto new_model = model<dataset_type>(
+                    generate_random_expression(engine_, dataset_.front().arguments.size(),
+                                               number_of_parameters),
+                    dataset_);
 
-                models_.push_back(regression_model(std::move(new_model), engine_));
+                models_.push_back(regression_model<dataset_type>(std::move(new_model), engine_));
             }
 
-            const auto fitness_comperator = [](const regression_model& lhs,
-                                               const regression_model& rhs) {
+            const auto fitness_comperator = [](const regression_model<dataset_type>& lhs,
+                                               const regression_model<dataset_type>& rhs) {
                 return lhs.fitness() < rhs.fitness();
             };
 
@@ -1834,13 +1838,16 @@ public:
     }
 
 private:
+    using dataset_type = boost:: circular_buffer_space_optimized<data_point>;
+
     std::mt19937 engine_;
 
-    std::vector<data_point> dataset_;
-    std::vector<regression_model> models_;
+    dataset_type dataset_;
+    std::vector<regression_model<dataset_type>> models_;
 };
 
-symbolic_regression::symbolic_regression() : impl_(std::make_unique<symbolic_regression_impl>())
+symbolic_regression::symbolic_regression(long int window_size_)
+: impl_(std::make_unique<symbolic_regression_impl>(window_size_))
 {
 }
 
