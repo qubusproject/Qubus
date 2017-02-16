@@ -31,7 +31,7 @@ hpx::future<void> aggregate_vpu::execute(computelet c, execution_context ctx) co
     return hpx::make_ready_future();
 }
 
-hpx::future<boost::optional<std::chrono::microseconds>>
+hpx::future<boost::optional<performance_estimate>>
 aggregate_vpu::try_estimate_execution_time(const computelet& c, const execution_context& ctx) const
 {
     // We will just forward the task and can simply base our estimate on the estimates of
@@ -45,7 +45,7 @@ aggregate_vpu::try_estimate_execution_time(const computelet& c, const execution_
     // Note: To improve the estimate, we could memorize the frequency of selecting each VPU and
     //       use these values to compute a weighted average instead.
 
-    std::vector<hpx::future<boost::optional<std::chrono::microseconds>>> collected_estimates;
+    std::vector<hpx::future<boost::optional<performance_estimate>>> collected_estimates;
 
     for (const auto& vpu : member_vpus_ | boost::adaptors::indirected)
     {
@@ -56,25 +56,27 @@ aggregate_vpu::try_estimate_execution_time(const computelet& c, const execution_
 
     auto estimate =
         hpx::when_all(collected_estimates)
-            .then(
-                [](hpx::future<std::vector<hpx::future<boost::optional<std::chrono::microseconds>>>>
-                       collected_estimates) {
-                    auto average_estimate = std::chrono::microseconds::zero();
+            .then([](hpx::future<std::vector<hpx::future<boost::optional<performance_estimate>>>>
+                         collected_estimates) {
+                auto average_estimate = std::chrono::microseconds::zero();
+                auto min_accuracy = std::chrono::microseconds::zero();
 
-                    for (auto& estimate : collected_estimates.get())
-                    {
-                        auto value = estimate.get();
+                for (auto& estimate : collected_estimates.get())
+                {
+                    auto value = estimate.get();
 
-                        if (!value)
-                            return boost::optional<std::chrono::microseconds>();
+                    if (!value)
+                        return boost::optional<performance_estimate>();
 
-                        average_estimate += *value;
-                    }
+                    average_estimate += value->runtime;
+                    min_accuracy = std::max(min_accuracy, value->accuracy);
+                }
 
-                    average_estimate /= collected_estimates.get().size();
+                average_estimate /= collected_estimates.get().size();
 
-                    return boost::optional<std::chrono::microseconds>(average_estimate);
-                });
+                return boost::optional<performance_estimate>(
+                    performance_estimate{std::move(average_estimate), std::move(min_accuracy)});
+            });
 
     return estimate;
 }

@@ -45,7 +45,7 @@ void remote_vpu_server::execute(computelet c, execution_context ctx) const
     underlying_vpu_->execute(std::move(c), std::move(ctx)).get();
 }
 
-boost::optional<std::chrono::microseconds>
+boost::optional<performance_estimate>
 remote_vpu_server::try_estimate_execution_time(const computelet& c,
                                                const execution_context& ctx) const
 {
@@ -62,7 +62,7 @@ hpx::future<void> remote_vpu::execute(computelet c, execution_context ctx) const
                                                          std::move(ctx));
 }
 
-hpx::future<boost::optional<std::chrono::microseconds>>
+hpx::future<boost::optional<performance_estimate>>
 remote_vpu::try_estimate_execution_time(const computelet& c, const execution_context& ctx) const
 {
     return hpx::async<remote_vpu_server::try_estimate_execution_time_action>(this->get_id(), c,
@@ -79,7 +79,7 @@ void remote_vpu_reference_server::execute(computelet c, execution_context ctx) c
     underlying_vpu_->execute(std::move(c), std::move(ctx)).get();
 }
 
-boost::optional<std::chrono::microseconds>
+boost::optional<performance_estimate>
 remote_vpu_reference_server::try_estimate_execution_time(const computelet& c,
                                                          const execution_context& ctx) const
 {
@@ -97,7 +97,7 @@ hpx::future<void> remote_vpu_reference::execute(computelet c, execution_context 
                                                                    std::move(ctx));
 }
 
-hpx::future<boost::optional<std::chrono::microseconds>>
+hpx::future<boost::optional<performance_estimate>>
 remote_vpu_reference::try_estimate_execution_time(const computelet& c,
                                                   const execution_context& ctx) const
 {

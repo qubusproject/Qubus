@@ -4,7 +4,11 @@
 #include <qbb/qubus/computelet.hpp>
 #include <qbb/qubus/execution_context.hpp>
 
+#include <qbb/util/hpx/serialization/chrono.hpp>
+
 #include <boost/optional.hpp>
+
+#include <qbb/util/unused.hpp>
 
 #include <chrono>
 
@@ -17,6 +21,13 @@ struct performance_estimate
 {
     std::chrono::microseconds runtime;
     std::chrono::microseconds accuracy;
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    {
+        ar & runtime;
+        ar & accuracy;
+    }
 };
 
 class performance_model

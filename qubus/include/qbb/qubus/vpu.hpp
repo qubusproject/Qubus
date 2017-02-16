@@ -1,6 +1,8 @@
 #ifndef QBB_QUBUS_VPU_HPP
 #define QBB_QUBUS_VPU_HPP
 
+#include <qbb/qubus/performance_models/performance_model.hpp>
+
 #include <qbb/qubus/computelet.hpp>
 #include <qbb/qubus/execution_context.hpp>
 
@@ -9,7 +11,6 @@
 #include <boost/optional.hpp>
 
 #include <qbb/util/hpx/serialization/optional.hpp>
-#include <qbb/util/hpx/serialization/chrono.hpp>
 
 #include <chrono>
 #include <memory>
@@ -27,7 +28,7 @@ public:
     virtual ~vpu() = default;
 
     virtual hpx::future<void> execute(computelet c, execution_context ctx) const = 0;
-    virtual hpx::future<boost::optional<std::chrono::microseconds>>
+    virtual hpx::future<boost::optional<performance_estimate>>
     try_estimate_execution_time(const computelet& c, const execution_context& ctx) const = 0;
 
 protected:
@@ -48,7 +49,7 @@ public:
     explicit remote_vpu_server(std::unique_ptr<vpu> underlying_vpu_);
 
     void execute(computelet c, execution_context ctx) const;
-    boost::optional<std::chrono::microseconds>
+    boost::optional<performance_estimate>
     try_estimate_execution_time(const computelet& c, const execution_context& ctx) const;
 
     HPX_DEFINE_COMPONENT_ACTION(remote_vpu_server, execute, execute_action);
@@ -69,7 +70,7 @@ public:
     remote_vpu(hpx::future<hpx::id_type>&& id);
 
     hpx::future<void> execute(computelet c, execution_context ctx) const;
-    hpx::future<boost::optional<std::chrono::microseconds>>
+    hpx::future<boost::optional<performance_estimate>>
     try_estimate_execution_time(const computelet& c, const execution_context& ctx) const override;
 };
 
@@ -82,7 +83,7 @@ public:
     explicit remote_vpu_reference_server(vpu* underlying_vpu_);
 
     void execute(computelet c, execution_context ctx) const;
-    boost::optional<std::chrono::microseconds>
+    boost::optional<performance_estimate>
     try_estimate_execution_time(const computelet& c, const execution_context& ctx) const;
 
     HPX_DEFINE_COMPONENT_ACTION(remote_vpu_reference_server, execute, execute_action);
@@ -106,7 +107,7 @@ public:
     remote_vpu_reference(hpx::future<hpx::id_type>&& id);
 
     hpx::future<void> execute(computelet c, execution_context ctx) const;
-    hpx::future<boost::optional<std::chrono::microseconds>>
+    hpx::future<boost::optional<performance_estimate>>
     try_estimate_execution_time(const computelet& c, const execution_context& ctx) const override;
 };
 }
