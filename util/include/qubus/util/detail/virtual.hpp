@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_VIRTUAL_HPP
-#define QBB_UTIL_VIRTUAL_HPP
+#ifndef QUBUS_UTIL_VIRTUAL_HPP
+#define QUBUS_UTIL_VIRTUAL_HPP
 
 #include <qubus/util/meta/type_sequence.hpp>
 #include <qubus/util/integer_sequence.hpp>

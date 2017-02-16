@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_MULTI_ARRAY_HPP
-#define QBB_UTIL_MULTI_ARRAY_HPP
+#ifndef QUBUS_UTIL_MULTI_ARRAY_HPP
+#define QUBUS_UTIL_MULTI_ARRAY_HPP
 
 #include <qubus/util/integers.hpp>
 #include <qubus/util/detail/all_integral.hpp>

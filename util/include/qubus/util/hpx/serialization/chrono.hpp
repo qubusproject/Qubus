@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_HPX_SERIALIZATION_CHRONO_HPP
-#define QBB_UTIL_HPX_SERIALIZATION_CHRONO_HPP
+#ifndef QUBUS_UTIL_HPX_SERIALIZATION_CHRONO_HPP
+#define QUBUS_UTIL_HPX_SERIALIZATION_CHRONO_HPP
 
 #include <hpx/runtime/serialization/serialize.hpp>
 #include <hpx/runtime/serialization/input_archive.hpp>

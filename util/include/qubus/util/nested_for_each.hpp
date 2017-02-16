@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_NESTED_FOR_EACH_HPP
-#define QBB_UTIL_NESTED_FOR_EACH_HPP
+#ifndef QUBUS_UTIL_NESTED_FOR_EACH_HPP
+#define QUBUS_UTIL_NESTED_FOR_EACH_HPP
 
 #include <vector>
 #include <iterator>

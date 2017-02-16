@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_META_CONTAINS_HPP
-#define QBB_UTIL_META_CONTAINS_HPP
+#ifndef QUBUS_UTIL_META_CONTAINS_HPP
+#define QUBUS_UTIL_META_CONTAINS_HPP
 
 #include <type_traits>
 

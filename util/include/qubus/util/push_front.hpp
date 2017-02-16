@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_PUSH_FRONT_HPP
-#define QBB_UTIL_PUSH_FRONT_HPP
+#ifndef QUBUS_UTIL_PUSH_FRONT_HPP
+#define QUBUS_UTIL_PUSH_FRONT_HPP
 
 #include <qubus/util/integer_sequence.hpp>
 

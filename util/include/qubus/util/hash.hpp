@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_HASH_HPP
-#define QBB_UTIL_HASH_HPP
+#ifndef QUBUS_UTIL_HASH_HPP
+#define QUBUS_UTIL_HASH_HPP
 
 #include <functional>
 #include <cstddef>

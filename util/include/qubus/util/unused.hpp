@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_UNUSED_HPP
-#define QBB_UTIL_UNUSED_HPP
+#ifndef QUBUS_UTIL_UNUSED_HPP
+#define QUBUS_UTIL_UNUSED_HPP
 
 #ifdef __GNUC__
 

@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_HANDLE_HPP
-#define QBB_UTIL_HANDLE_HPP
+#ifndef QUBUS_UTIL_HANDLE_HPP
+#define QUBUS_UTIL_HANDLE_HPP
 
 #include <boost/serialization/is_bitwise_serializable.hpp>
 

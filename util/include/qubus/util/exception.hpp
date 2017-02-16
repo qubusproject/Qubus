@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_EXCEPTION_HPP
-#define QBB_UTIL_EXCEPTION_HPP
+#ifndef QUBUS_UTIL_EXCEPTION_HPP
+#define QUBUS_UTIL_EXCEPTION_HPP
 
 #include <system_error>
 

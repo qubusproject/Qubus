@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_BENCHMARK_HPP
-#define QBB_UTIL_BENCHMARK_HPP
+#ifndef QUBUS_UTIL_BENCHMARK_HPP
+#define QUBUS_UTIL_BENCHMARK_HPP
 
 namespace qubus
 {

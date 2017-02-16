@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_META_EXPAND_HPP
-#define QBB_UTIL_META_EXPAND_HPP
+#ifndef QUBUS_UTIL_META_EXPAND_HPP
+#define QUBUS_UTIL_META_EXPAND_HPP
 
 namespace qubus
 {

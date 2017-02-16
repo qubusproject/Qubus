@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_MAKE_UNIQUE_HPP
-#define QBB_UTIL_MAKE_UNIQUE_HPP
+#ifndef QUBUS_UTIL_MAKE_UNIQUE_HPP
+#define QUBUS_UTIL_MAKE_UNIQUE_HPP
 
 #include <utility>
 #include <memory>

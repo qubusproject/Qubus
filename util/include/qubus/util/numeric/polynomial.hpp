@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_POLYNOMIAL_HPP
-#define QBB_UTIL_POLYNOMIAL_HPP
+#ifndef QUBUS_UTIL_POLYNOMIAL_HPP
+#define QUBUS_UTIL_POLYNOMIAL_HPP
 
 #include <qubus/util/integers.hpp>
 

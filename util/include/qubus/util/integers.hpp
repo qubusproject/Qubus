@@ -1,5 +1,5 @@
-#ifndef QBB_UTILITY_INTEGERS_HPP
-#define QBB_UTILITY_INTEGERS_HPP
+#ifndef QUBUS_UTILITY_INTEGERS_HPP
+#define QUBUS_UTILITY_INTEGERS_HPP
 
 #include <boost/numeric/conversion/cast.hpp>
 

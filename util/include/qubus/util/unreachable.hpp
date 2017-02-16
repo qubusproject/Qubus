@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_UNREACHABLE_HPP
-#define QBB_UTIL_UNREACHABLE_HPP
+#ifndef QUBUS_UTIL_UNREACHABLE_HPP
+#define QUBUS_UTIL_UNREACHABLE_HPP
 
 #include <qubus/util/assert.hpp>
 

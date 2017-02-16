@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_CLONING_PTR_HPP
-#define QBB_UTIL_CLONING_PTR_HPP
+#ifndef QUBUS_UTIL_CLONING_PTR_HPP
+#define QUBUS_UTIL_CLONING_PTR_HPP
 
 #include <qubus/util/unused.hpp>
 

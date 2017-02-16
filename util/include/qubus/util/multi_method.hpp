@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_MULTI_METHOD_HPP
-#define QBB_UTIL_MULTI_METHOD_HPP
+#ifndef QUBUS_UTIL_MULTI_METHOD_HPP
+#define QUBUS_UTIL_MULTI_METHOD_HPP
 
 #include <qubus/util/detail/dispatch_table.hpp>
 #include <qubus/util/detail/virtual.hpp>

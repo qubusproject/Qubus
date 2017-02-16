@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_LRU_CACHE_HPP
-#define QBB_UTIL_LRU_CACHE_HPP
+#ifndef QUBUS_UTIL_LRU_CACHE_HPP
+#define QUBUS_UTIL_LRU_CACHE_HPP
 
 // This code is based on the LRU implementation of Tim Day (URL:
 // http://timday.bitbucket.org/lru.html).

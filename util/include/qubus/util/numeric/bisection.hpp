@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_BISECTION_HPP
-#define QBB_UTIL_BISECTION_HPP
+#ifndef QUBUS_UTIL_BISECTION_HPP
+#define QUBUS_UTIL_BISECTION_HPP
 
 #include <qubus/util/integers.hpp>
 

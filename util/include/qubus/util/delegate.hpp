@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_DELEGATE_HPP
-#define QBB_UTIL_DELEGATE_HPP
+#ifndef QUBUS_UTIL_DELEGATE_HPP
+#define QUBUS_UTIL_DELEGATE_HPP
 
 #include <qubus/util/function_traits.hpp>
 

@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_INDEX_SPACE_HPP
-#define QBB_UTIL_INDEX_SPACE_HPP
+#ifndef QUBUS_UTIL_INDEX_SPACE_HPP
+#define QUBUS_UTIL_INDEX_SPACE_HPP
 
 #include <qubus/util/concat.hpp>
 #include <qubus/util/assert.hpp>

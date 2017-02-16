@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_GET_PREFIX_HPP
-#define QBB_UTIL_GET_PREFIX_HPP
+#ifndef QUBUS_UTIL_GET_PREFIX_HPP
+#define QUBUS_UTIL_GET_PREFIX_HPP
 
 #include <boost/filesystem/path.hpp>
 

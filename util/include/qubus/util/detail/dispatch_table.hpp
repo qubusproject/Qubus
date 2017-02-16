@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_DISPATCH_TABLE_HPP
-#define QBB_UTIL_DISPATCH_TABLE_HPP
+#ifndef QUBUS_UTIL_DISPATCH_TABLE_HPP
+#define QUBUS_UTIL_DISPATCH_TABLE_HPP
 
 #include <qubus/util/detail/virtual.hpp>
 #include <qubus/util/multi_array.hpp>

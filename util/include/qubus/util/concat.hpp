@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_CONCAT_HPP
-#define QBB_UTIL_CONCAT_HPP
+#ifndef QUBUS_UTIL_CONCAT_HPP
+#define QUBUS_UTIL_CONCAT_HPP
 
 #include <qubus/util/integer_sequence.hpp>
 

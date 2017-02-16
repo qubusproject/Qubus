@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_OPTIONAL_REF_HPP
-#define QBB_UTIL_OPTIONAL_REF_HPP
+#ifndef QUBUS_UTIL_OPTIONAL_REF_HPP
+#define QUBUS_UTIL_OPTIONAL_REF_HPP
 
 #include <boost/optional.hpp>
 #include <type_traits>

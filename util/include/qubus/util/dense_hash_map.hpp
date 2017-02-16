@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_DENSE_HASH_MAP_HPP
-#define QBB_UTIL_DENSE_HASH_MAP_HPP
+#ifndef QUBUS_UTIL_DENSE_HASH_MAP_HPP
+#define QUBUS_UTIL_DENSE_HASH_MAP_HPP
 
 #include <qubus/util/unreachable.hpp>
 #include <qubus/util/assert.hpp>

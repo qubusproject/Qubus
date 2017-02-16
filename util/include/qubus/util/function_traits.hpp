@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_FUNCTION_TRAITS_HPP
-#define QBB_UTIL_FUNCTION_TRAITS_HPP
+#ifndef QUBUS_UTIL_FUNCTION_TRAITS_HPP
+#define QUBUS_UTIL_FUNCTION_TRAITS_HPP
 
 #include <type_traits>
 #include <tuple>

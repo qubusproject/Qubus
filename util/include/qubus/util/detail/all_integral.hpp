@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_ALL_INTEGRAL_HPP
-#define QBB_UTIL_ALL_INTEGRAL_HPP
+#ifndef QUBUS_UTIL_ALL_INTEGRAL_HPP
+#define QUBUS_UTIL_ALL_INTEGRAL_HPP
 
 #include <type_traits>
 

@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_ONE_SHOT_HPP
-#define QBB_UTIL_ONE_SHOT_HPP
+#ifndef QUBUS_UTIL_ONE_SHOT_HPP
+#define QUBUS_UTIL_ONE_SHOT_HPP
 
 #include <qubus/util/function_traits.hpp>
 

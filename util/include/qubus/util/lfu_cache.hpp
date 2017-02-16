@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_LFU_CACHE_HPP
-#define QBB_UTIL_LFU_CACHE_HPP
+#ifndef QUBUS_UTIL_LFU_CACHE_HPP
+#define QUBUS_UTIL_LFU_CACHE_HPP
 
 #include <qubus/util/assert.hpp>
 

@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_BOX_HPP
-#define QBB_UTIL_BOX_HPP
+#ifndef QUBUS_UTIL_BOX_HPP
+#define QUBUS_UTIL_BOX_HPP
 
 #include <qubus/util/make_unique.hpp>
 

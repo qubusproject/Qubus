@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_DLL_HPP
-#define QBB_UTIL_DLL_HPP
+#ifndef QUBUS_UTIL_DLL_HPP
+#define QUBUS_UTIL_DLL_HPP
 
 #include <qubus/util/exception.hpp>
 

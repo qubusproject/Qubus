@@ -1,5 +1,5 @@
-#ifndef QBB_UTIL_MAKE_ARRAY_HPP
-#define QBB_UTIL_MAKE_ARRAY_HPP
+#ifndef QUBUS_UTIL_MAKE_ARRAY_HPP
+#define QUBUS_UTIL_MAKE_ARRAY_HPP
 
 #include <qubus/util/push_back.hpp>
 
