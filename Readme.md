@@ -1,5 +1,4 @@
-QBB
-===
+Qubus
+=====
 
-Quantum Building Blocks (QBB) is a library, which aims at providing an extensive set of components to support the development of quantum-mechanical
-simulations.
+Qubus is an auto-parallelizing framework to speed up tensor algebra.
