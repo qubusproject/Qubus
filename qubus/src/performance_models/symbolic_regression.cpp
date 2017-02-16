@@ -1782,7 +1782,7 @@ public:
     boost::optional<std::chrono::microseconds> update()
     {
         if (dataset_.empty())
-            return;
+            return accuracy();
 
         if (models_.empty())
         {
