@@ -21,8 +21,6 @@
 #include <unordered_set>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -418,7 +416,6 @@ private:
     analysis_manager analysis_man_;
     std::vector<transformation_pass> optimization_pipeline_;
 };
-}
 }
 
 #endif

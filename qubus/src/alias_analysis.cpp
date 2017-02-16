@@ -20,8 +20,6 @@
 //    2.2 Accesses of disjoint array regions for the same array-like (sub)-object never alias
 // 3. Accesses of the same object through the same members always alias.
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -408,5 +406,4 @@ std::vector<analysis_id> alias_analysis_pass::required_analyses() const
 
 QUBUS_REGISTER_ANALYSIS_PASS(basic_alias_analysis_pass);
 QUBUS_REGISTER_ANALYSIS_PASS(alias_analysis_pass);
-}
 }

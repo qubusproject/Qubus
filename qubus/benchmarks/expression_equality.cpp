@@ -9,7 +9,7 @@
 
 void simple_expression_tree_setup()
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     expression expr = integer_literal_expr(42);
     expression expr2 = integer_literal_expr(42);
@@ -17,7 +17,7 @@ void simple_expression_tree_setup()
 
 void simple_expression_tree_compare_match()
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     expression expr = integer_literal_expr(42);
     expression expr2 = integer_literal_expr(42);
@@ -27,7 +27,7 @@ void simple_expression_tree_compare_match()
 
 void simple_expression_tree_compare_mismatch()
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     expression expr = integer_literal_expr(42);
     expression expr2 = integer_literal_expr(7);
@@ -37,7 +37,7 @@ void simple_expression_tree_compare_mismatch()
 
 void complex_expression_tree_setup()
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration var1(types::array(types::double_{}));
     variable_declaration var2(types::array(types::double_{}));
@@ -53,7 +53,7 @@ void complex_expression_tree_setup()
 
 void complex_expression_tree_compare_match()
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration var1(types::array(types::double_{}));
     variable_declaration var2(types::array(types::double_{}));
@@ -71,7 +71,7 @@ void complex_expression_tree_compare_match()
 
 void complex_expression_tree_compare_early_mismatch()
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration var1(types::array(types::double_{}));
     variable_declaration var2(types::array(types::double_{}));

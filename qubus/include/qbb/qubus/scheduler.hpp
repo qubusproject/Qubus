@@ -13,8 +13,6 @@
 #include <vector>
 #include <mutex>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -44,7 +42,6 @@ private:
     mutable hpx::lcos::local::mutex scheduling_mutex_;
 };
 
-}
 }
 
 #endif

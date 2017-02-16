@@ -19,8 +19,6 @@
 #include <utility>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -381,7 +379,6 @@ struct object_view_traits<mutable_cpu_sparse_tensor_view<T, Rank>>
         return types::sparse_tensor(associated_qubus_type<T>::get());
     }
 };
-}
 }
 
 #endif

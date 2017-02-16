@@ -11,8 +11,6 @@
 #include <algorithm>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -199,7 +197,6 @@ function_declaration fold_kronecker_deltas(function_declaration decl)
     decl.substitute_body(fold_kronecker_deltas(decl.body()));
 
     return decl;
-}
 }
 }
 }

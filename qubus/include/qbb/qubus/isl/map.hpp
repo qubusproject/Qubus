@@ -15,8 +15,6 @@
 #include <string>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -244,7 +242,6 @@ union_map detect_equalities(union_map m);
 union_map remove_redundancies(union_map m);
 union_map simplify(union_map m);
 
-}
 }
 }
 

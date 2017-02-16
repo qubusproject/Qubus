@@ -3,8 +3,6 @@
 #include <qbb/qubus/isl/context.hpp>
 #include <qbb/qubus/isl/pw_multi_aff.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -459,6 +457,5 @@ isl_stat add_set(isl_set* s, void* user) noexcept
 }
 }
 
-}
 }
 }

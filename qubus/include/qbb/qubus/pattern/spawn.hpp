@@ -9,8 +9,6 @@
 #include <utility>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -69,7 +67,6 @@ auto spawn_n(SpawnedPlan spawned_plan, Arguments... arguments)
     return spawn(spawned_plan, sequence(arguments...));
 }
 
-}
 }
 }
 

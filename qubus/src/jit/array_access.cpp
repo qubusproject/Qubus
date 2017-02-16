@@ -13,8 +13,6 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Type.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -446,7 +444,6 @@ reference emit_array_slice(const reference& array, const std::vector<llvm::Value
     }
 
     return reference(slice, array.origin(), std::move(slice_type));
-}
 }
 }
 }

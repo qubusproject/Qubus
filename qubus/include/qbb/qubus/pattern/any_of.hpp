@@ -6,8 +6,6 @@
 #include <utility>
 #include <cstddef>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -56,7 +54,6 @@ template <typename Pattern>
 any_of_pattern<Pattern> any_of(Pattern pattern)
 {
     return any_of_pattern<Pattern>(pattern);
-}
 }
 }
 }

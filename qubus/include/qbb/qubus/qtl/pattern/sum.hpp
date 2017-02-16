@@ -9,8 +9,6 @@
 #include <functional>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -127,7 +125,6 @@ template <typename Body, typename Index>
 auto sum(Body body, Index index)
 {
     return sum_multi(body, sequence(index));
-}
 }
 }
 }

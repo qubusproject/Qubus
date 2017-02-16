@@ -14,7 +14,7 @@
 
 TEST(kronecker_delta, identity)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 10;
@@ -46,7 +46,7 @@ TEST(kronecker_delta, identity)
 
 TEST(kronecker_delta, identity_contraction)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -78,7 +78,7 @@ TEST(kronecker_delta, identity_contraction)
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

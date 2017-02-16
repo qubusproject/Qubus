@@ -10,8 +10,6 @@
 #include <functional>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -85,7 +83,6 @@ auto sparse_tensor(Declaration declaration)
 inline auto sparse_tensor()
 {
     return sparse_tensor(qubus::pattern::_);
-}
 }
 }
 }

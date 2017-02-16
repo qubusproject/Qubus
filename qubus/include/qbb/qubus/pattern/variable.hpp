@@ -13,8 +13,6 @@
 #include <iterator>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -142,7 +140,6 @@ public:
 private:
     std::shared_ptr<boost::optional<storage_type>> value_;
 };
-}
 }
 }
 

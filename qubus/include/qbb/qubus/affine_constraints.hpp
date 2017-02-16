@@ -19,8 +19,6 @@
 #include <tuple>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -128,7 +126,6 @@ boost::optional<affine_constraint> try_extract_affine_constraint(const expressio
 
 std::unique_ptr<expression> convert_isl_ast_expr_to_qir(const isl::ast_expr &expr,
                                                         const affine_expr_context &ctx);
-}
 }
 
 #endif

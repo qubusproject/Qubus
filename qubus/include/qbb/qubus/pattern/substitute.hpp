@@ -10,8 +10,6 @@
 #include <string>
 #include <memory>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -47,7 +45,6 @@ std::unique_ptr<expression> substitute(const expression& expr, const Matcher& ma
     }
 }
 
-}
 }
 }
 

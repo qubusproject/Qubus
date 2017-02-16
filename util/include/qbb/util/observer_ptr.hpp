@@ -1,7 +1,7 @@
 #ifndef QBB_UTIL_OBSERVER_PTR_HPP
 #define QBB_UTIL_OBSERVER_PTR_HPP
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {
@@ -204,12 +204,12 @@ namespace std
 {
 
 template<typename T>
-struct hash<qbb::util::observer_ptr<T>>
+struct hash<qubus::util::observer_ptr<T>>
 {
-    using argument_type = qbb::util::observer_ptr<T>;
+    using argument_type = qubus::util::observer_ptr<T>;
     using result_type = size_t;
 
-    size_t operator()(const qbb::util::observer_ptr<T>& value) const
+    size_t operator()(const qubus::util::observer_ptr<T>& value) const
     {
         return std::hash<T*>()(value.get());
     }

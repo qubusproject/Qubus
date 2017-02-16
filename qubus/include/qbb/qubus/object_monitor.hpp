@@ -5,8 +5,6 @@
 
 #include <hpx/include/lcos.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -31,7 +29,6 @@ private:
     hpx::lcos::local::mutex acquire_mutex_;
 };
 
-}
 }
 
 #endif

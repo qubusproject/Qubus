@@ -9,8 +9,6 @@
 #include <utility>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -68,7 +66,6 @@ template <typename ForeignComputelet, typename... Arguments>
 auto call_foreign_n(ForeignComputelet foreign_computelet, Arguments... arguments)
 {
     return call_foreign(foreign_computelet, sequence(arguments...));
-}
 }
 }
 }

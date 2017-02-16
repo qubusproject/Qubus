@@ -6,8 +6,6 @@
 
 #include <cstdlib>
 
-inline namespace qbb
-{
 namespace qubus
 {
 std::unique_ptr<memory_block> cpu_allocator::allocate(std::size_t size, std::size_t alignment)
@@ -25,6 +23,5 @@ std::unique_ptr<memory_block> cpu_allocator::allocate(std::size_t size, std::siz
 void cpu_allocator::deallocate(memory_block& mem_block)
 {
     std::free(mem_block.ptr());
-}
 }
 }

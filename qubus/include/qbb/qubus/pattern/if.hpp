@@ -8,8 +8,6 @@
 #include <utility>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -70,7 +68,6 @@ if_pattern<Condition, ThenBranch, ElseBranch> if_(Condition condition, ThenBranc
     return if_pattern<Condition, ThenBranch, ElseBranch>(condition, then_branch, else_branch);
 }
 
-}
 }
 }
 

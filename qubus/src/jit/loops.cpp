@@ -6,8 +6,6 @@
 #include <llvm/IR/Value.h>
 #include <llvm/IR/BasicBlock.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -55,7 +53,6 @@ void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Val
     exit->moveAfter(body);
 
     builder_.SetInsertPoint(exit);
-}
 }
 }
 }

@@ -13,8 +13,6 @@
 #include <vector>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
     
@@ -63,7 +61,6 @@ inline std::unique_ptr<variable_ref_expr> var(variable_declaration var)
     return variable_ref(std::move(var));
 }
 
-}
 }
 
 #endif

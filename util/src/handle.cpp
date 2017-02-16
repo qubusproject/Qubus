@@ -5,7 +5,7 @@
 #include <sstream>
 #include <iomanip>
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {

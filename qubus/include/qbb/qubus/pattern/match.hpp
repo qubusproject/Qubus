@@ -1,8 +1,6 @@
 #ifndef QBB_QUBUS_PATTERN_MATCH_HPP
 #define QBB_QUBUS_PATTERN_MATCH_HPP
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -42,7 +40,6 @@ inline auto try_match(const T& value, const Matcher& matcher)
     detail::matcher_cleanup_guard<Matcher> guard(matcher);
     
     return matcher.try_match(value);
-}
 }
 }
 }

@@ -24,8 +24,6 @@
 #include <unordered_map>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -1895,6 +1893,5 @@ symbolic_regression::query(const std::vector<double>& arguments) const
 boost::optional<std::chrono::microseconds> symbolic_regression::accuracy() const
 {
     return impl_->accuracy();
-}
 }
 }

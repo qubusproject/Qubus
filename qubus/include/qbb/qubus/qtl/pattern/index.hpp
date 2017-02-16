@@ -11,8 +11,6 @@
 #include <functional>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -119,7 +117,6 @@ multi_index_pattern<Declaration> multi_index(Declaration declaration)
 inline auto multi_index()
 {
     return multi_index_pattern<qubus::pattern::any>(qubus::pattern::_);
-}
 }
 }
 }

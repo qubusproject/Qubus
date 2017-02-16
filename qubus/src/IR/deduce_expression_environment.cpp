@@ -14,8 +14,6 @@
 #include <vector>
 #include <stack>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -169,6 +167,5 @@ expression_environment deduce_expression_environment(const expression& expr)
     }
 
     return env;
-}
 }
 }

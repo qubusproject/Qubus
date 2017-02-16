@@ -54,11 +54,11 @@ double run_benchmark(F f, OnStop on_stop)
     return avg_time;
 }
 
-using namespace qbb::qubus;
+using namespace qubus;
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     std::ofstream bench_data("bench_data.dat");
 
@@ -92,16 +92,16 @@ int hpx_main(int argc, char** argv)
         bench_data << N << "   ";
 
         {
-            qbb::qubus::assembly_tensor<double, 2> A_assembly(N, N);
+            qubus::assembly_tensor<double, 2> A_assembly(N, N);
 
             for (const auto& nonzero : nonzeros)
             {
                 A_assembly.add_nonzero({nonzero.row(), nonzero.col()}, nonzero.value());
             }
 
-            qbb::qubus::index i("i");
-            qbb::qubus::index j("j");
-            qbb::qubus::index k("k");
+            qubus::index i("i");
+            qubus::index j("j");
+            qubus::index k("k");
 
             sparse_tensor<double, 2> A = std::move(A_assembly);
 

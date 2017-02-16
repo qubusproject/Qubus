@@ -20,7 +20,7 @@ INSTANTIATE_TEST_CASE_P(base_extents, sparse_support,
 
 TEST_P(sparse_support, sparse_matrix_vector_product)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = GetParam();
@@ -107,7 +107,7 @@ TEST_P(sparse_support, sparse_matrix_vector_product)
 
 TEST_P(sparse_support, sparse_matrix_matrix_product)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = GetParam();
@@ -203,7 +203,7 @@ TEST_P(sparse_support, sparse_matrix_matrix_product)
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

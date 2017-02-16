@@ -5,8 +5,6 @@
 
 #include <isl/local_space.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -31,7 +29,6 @@ private:
     isl_local_space* handle_;
 };
 
-}
 }
 }
 

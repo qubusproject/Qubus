@@ -7,8 +7,6 @@
 
 #include <qbb/util/assert.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -122,5 +120,4 @@ std::vector<analysis_id> task_invariants_analysis_pass::required_analyses() cons
 }
 
 QUBUS_REGISTER_ANALYSIS_PASS(task_invariants_analysis_pass);
-}
 }

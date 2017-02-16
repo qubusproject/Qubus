@@ -11,8 +11,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -61,7 +59,6 @@ inline std::unique_ptr<construct_expr> construct(type result_type, std::vector<s
     return std::make_unique<construct_expr>(std::move(result_type), std::move(parameters));
 }
 
-}
 }
 
 #endif

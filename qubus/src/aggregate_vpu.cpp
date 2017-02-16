@@ -4,8 +4,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -79,6 +77,5 @@ aggregate_vpu::try_estimate_execution_time(const computelet& c, const execution_
             });
 
     return estimate;
-}
 }
 }

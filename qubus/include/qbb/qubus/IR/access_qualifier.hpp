@@ -3,8 +3,6 @@
 
 #include <qbb/qubus/IR/access.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -23,7 +21,6 @@ public:
     virtual ~access_qualifier_base() = default;
 };
 
-}
 }
 
 #endif

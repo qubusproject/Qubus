@@ -14,8 +14,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -83,7 +81,6 @@ inline std::unique_ptr<sum_expr> sum(std::vector<variable_declaration> contracti
 {
     return std::make_unique<sum_expr>(std::move(contraction_indices), std::move(alias),
                                       std::move(body));
-}
 }
 }
 }

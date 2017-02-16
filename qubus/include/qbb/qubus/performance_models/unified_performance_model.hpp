@@ -5,8 +5,6 @@
 
 #include <memory>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -28,7 +26,6 @@ private:
     std::unique_ptr<unified_performance_model_impl> impl_;
 };
 
-}
 }
 
 #endif

@@ -16,8 +16,6 @@
 #include <typeinfo>
 #include <typeindex>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -52,7 +50,7 @@ public:
         return self_->rtti();
     }
 
-    qbb::util::index_t type_tag() const
+    util::index_t type_tag() const
     {
         return self_->tag();
     }
@@ -87,7 +85,7 @@ public:
         }
     }
 
-    static const qbb::util::implementation_table& get_implementation_table()
+    static const util::implementation_table& get_implementation_table()
     {
         return implementation_table_;
     }
@@ -118,7 +116,7 @@ private:
         architecture_identifier_interface& operator=(architecture_identifier_interface&&) = delete;
 
         virtual std::type_index rtti() const = 0;
-        virtual qbb::util::index_t tag() const = 0;
+        virtual util::index_t tag() const = 0;
 
         template <typename Archive>
         void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
@@ -136,7 +134,7 @@ private:
 
         architecture_identifier_wrapper() = default;
 
-        explicit architecture_identifier_wrapper(T value_, qbb::util::index_t tag_)
+        explicit architecture_identifier_wrapper(T value_, util::index_t tag_)
         : value_(std::move(value_)), tag_(tag_)
         {
         }
@@ -146,7 +144,7 @@ private:
             return typeid(T);
         }
 
-        qbb::util::index_t tag() const override final
+        util::index_t tag() const override final
         {
             return tag_;
         }
@@ -174,12 +172,12 @@ private:
 
     private:
         T value_;
-        qbb::util::index_t tag_;
+        util::index_t tag_;
     };
 
     std::shared_ptr<architecture_identifier_interface> self_;
 
-    static qbb::util::implementation_table implementation_table_;
+    static util::implementation_table implementation_table_;
 };
 
 extern util::multi_method<bool(const util::virtual_<architecture_identifier>&,
@@ -210,7 +208,6 @@ namespace architectures
 constexpr auto host = host_architecture_identifier();
 }
 
-}
 }
 
 #endif

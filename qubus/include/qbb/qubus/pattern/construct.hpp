@@ -9,8 +9,6 @@
 #include <utility>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -68,7 +66,6 @@ template <typename ResultType, typename... Parameters>
 auto construct_n(ResultType result_type, Parameters... parameters)
 {
     return construct(result_type, sequence(parameters...));
-}
 }
 }
 }

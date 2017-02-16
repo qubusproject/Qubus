@@ -46,8 +46,6 @@
 #include <utility>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -407,7 +405,6 @@ struct associated_qubus_type<qtl::ast::tensor<T, Rank>>
         return types::array(associated_qubus_type<T>::get(), Rank);
     }
 };
-}
 }
 
 #endif

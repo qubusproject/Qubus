@@ -4,14 +4,14 @@
 
 TEST(one_shot, empty)
 {
-    qbb::util::one_shot<int(int)> os;
+    util::one_shot<int(int)> os;
 
     EXPECT_FALSE(static_cast<bool>(os));
 }
 
 TEST(one_shot, init)
 {
-    qbb::util::one_shot<int(int)> os([] (int value) { return value; });
+    util::one_shot<int(int)> os([] (int value) { return value; });
 
     EXPECT_TRUE(static_cast<bool>(os));
 }
@@ -33,14 +33,14 @@ public:
 
 TEST(one_shot, move_only_init)
 {
-    qbb::util::one_shot<int(int)> os(move_only_functor{});
+    util::one_shot<int(int)> os(move_only_functor{});
 
     EXPECT_TRUE(static_cast<bool>(os));
 }
 
 TEST(one_shot, call)
 {
-    qbb::util::one_shot<int(int)> os([] (int value) { return value; });
+    util::one_shot<int(int)> os([] (int value) { return value; });
 
     EXPECT_EQ(42, os(42));
 
@@ -49,7 +49,7 @@ TEST(one_shot, call)
 
 TEST(one_shot, mutable_call)
 {
-    qbb::util::one_shot<int()> os([value = 42] () mutable { value = 43; return value; });
+    util::one_shot<int()> os([value = 42] () mutable { value = 43; return value; });
 
     EXPECT_TRUE(static_cast<bool>(os));
 
@@ -60,7 +60,7 @@ TEST(one_shot, mutable_call)
 
 TEST(one_shot, void_result_type)
 {
-    qbb::util::one_shot<void()> os([] { });
+    util::one_shot<void()> os([] { });
 
     EXPECT_TRUE(static_cast<bool>(os));
 

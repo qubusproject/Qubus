@@ -8,8 +8,6 @@
 #include <mutex>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -68,10 +66,10 @@ bool operator!=(const expression_cursor& lhs, const expression_cursor& rhs)
     return !(lhs == rhs);
 }
 
-qbb::util::implementation_table expression::implementation_table_ = {};
+util::implementation_table expression::implementation_table_ = {};
 
-qbb::util::multi_method<bool(const qbb::util::virtual_<expression>&,
-                             const qbb::util::virtual_<expression>&)> equal = {};
+util::multi_method<bool(const util::virtual_<expression>&,
+                             const util::virtual_<expression>&)> equal = {};
 
 namespace
 {
@@ -142,5 +140,4 @@ std::vector<std::unique_ptr<expression>> clone(const std::vector<std::reference_
     return result;
 }
 
-}
 }

@@ -7,8 +7,6 @@
 
 #include <isl/aff.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -66,7 +64,6 @@ affine_expr align_params(affine_expr aff, space model);
 
 bool is_cst(const affine_expr& aff);
 
-}
 }
 }
 

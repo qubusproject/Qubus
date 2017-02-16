@@ -13,8 +13,6 @@
 #include <memory>
 #include <string>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -69,7 +67,6 @@ private:
 
 std::unique_ptr<module> compile(const function_declaration& func, compiler& comp);
 
-}
 }
 }
 

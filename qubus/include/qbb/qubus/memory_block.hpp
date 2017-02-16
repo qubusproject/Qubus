@@ -3,8 +3,6 @@
 
 #include <cstddef>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -21,7 +19,6 @@ public:
 
     virtual void* ptr() const = 0;
 };
-}
 }
 
 #endif

@@ -1,7 +1,5 @@
 #include <qbb/qubus/isl/ast_builder.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -144,6 +142,5 @@ ast_builder::~ast_builder()
 
 
 
-}
 }
 }

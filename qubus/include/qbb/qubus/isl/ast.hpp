@@ -10,8 +10,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -86,7 +84,6 @@ public:
 private:
     isl_ast_node* root_;
 };
-}
 }
 }
 

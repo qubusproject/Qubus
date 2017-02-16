@@ -1,8 +1,6 @@
 #ifndef QBB_QUBUS_ACTION_SUPPORT_HPP
 #define QBB_QUBUS_ACTION_SUPPORT_HPP
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -48,7 +46,6 @@ struct foreign_computelet_traits<
 {
 };
 
-}
 }
 
 #endif

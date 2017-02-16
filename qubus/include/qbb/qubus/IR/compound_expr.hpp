@@ -13,8 +13,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -89,7 +87,6 @@ inline std::unique_ptr<compound_expr> unordered_tasks(std::unique_ptr<expression
     return unordered_tasks(std::move(expressions));
 }
 
-}
 }
 
 #endif

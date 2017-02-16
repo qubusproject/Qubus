@@ -16,8 +16,6 @@
 #include <vector>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -212,7 +210,7 @@ compiler::compiler()
 
 reference compiler::compile(const expression& expr)
 {
-    return ::qbb::qubus::jit::compile(expr, *this);
+    return ::qubus::jit::compile(expr, *this);
 }
 
 void compiler::compile(const function_declaration& func)
@@ -263,7 +261,6 @@ std::unique_ptr<module> compile(const function_declaration& func, compiler& comp
     comp.reset();
 
     return mod;
-}
 }
 }
 }

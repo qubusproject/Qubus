@@ -3,8 +3,6 @@
 
 #include <qbb/qubus/pattern/variable.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -44,7 +42,6 @@ inline protect_pattern<Pattern> protect(Pattern pattern)
     return protect_pattern<Pattern>(pattern);
 }
  
-}
 }
 }
 

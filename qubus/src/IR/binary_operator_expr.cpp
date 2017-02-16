@@ -4,8 +4,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -36,7 +34,7 @@ const expression& binary_operator_expr::right() const
 
 binary_operator_expr* binary_operator_expr::clone() const
 {
-    return new binary_operator_expr(tag_, qbb::qubus::clone(*left_), qbb::qubus::clone(*right_));
+    return new binary_operator_expr(tag_, qubus::clone(*left_), qubus::clone(*right_));
 }
 
 const expression& binary_operator_expr::child(std::size_t index) const
@@ -77,6 +75,5 @@ bool operator==(const binary_operator_expr& lhs, const binary_operator_expr& rhs
 bool operator!=(const binary_operator_expr& lhs, const binary_operator_expr& rhs)
 {
     return !(lhs == rhs);
-}
 }
 }

@@ -3,8 +3,6 @@
 
 #include <isl/ctx.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -38,7 +36,6 @@ private:
     isl_ctx* handle_;
 };
 
-}
 }
 }
 

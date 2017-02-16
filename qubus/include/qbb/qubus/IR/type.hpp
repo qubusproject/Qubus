@@ -22,8 +22,6 @@
 #include <utility>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -118,12 +116,12 @@ public:
         return static_cast<bool>(self_);
     }
 
-    qbb::util::index_t type_tag() const
+    util::index_t type_tag() const
     {
         return self_->tag();
     }
 
-    static const qbb::util::implementation_table& get_implementation_table()
+    static const util::implementation_table& get_implementation_table()
     {
         return implementation_table_;
     }
@@ -148,7 +146,7 @@ private:
         virtual bool is_primitive() const = 0;
 
         virtual std::type_index rtti() const = 0;
-        virtual qbb::util::index_t tag() const = 0;
+        virtual util::index_t tag() const = 0;
 
         virtual std::unique_ptr<type_interface> clone() const = 0;
 
@@ -166,7 +164,7 @@ private:
     public:
         type_wrapper() = default;
 
-        explicit type_wrapper(T value_, qbb::util::index_t tag_) : value_(value_), tag_(tag_)
+        explicit type_wrapper(T value_, util::index_t tag_) : value_(value_), tag_(tag_)
         {
         }
 
@@ -189,7 +187,7 @@ private:
             return typeid(T);
         }
 
-        qbb::util::index_t tag() const override final
+        util::index_t tag() const override final
         {
             return tag_;
         }
@@ -212,12 +210,12 @@ private:
 
     private:
         T value_;
-        qbb::util::index_t tag_;
+        util::index_t tag_;
     };
 
     std::unique_ptr<type_interface> self_;
 
-    static qbb::util::implementation_table implementation_table_;
+    static util::implementation_table implementation_table_;
 };
 
 bool operator==(const type& lhs, const type& rhs);
@@ -508,26 +506,25 @@ private:
 type sparse_tensor(type value_type);
 }
 }
-}
 
 namespace std
 {
 template <>
-struct hash<qbb::qubus::type>
+struct hash<qubus::type>
 {
-    using argument_type = qbb::qubus::type;
+    using argument_type = qubus::type;
     using result_type = std::size_t;
 
-    std::size_t operator()(const qbb::qubus::type& value) const noexcept;
+    std::size_t operator()(const qubus::type& value) const noexcept;
 };
 
 template <>
-struct hash<qbb::qubus::types::struct_::member>
+struct hash<qubus::types::struct_::member>
 {
-    using argument_type = qbb::qubus::types::struct_::member;
+    using argument_type = qubus::types::struct_::member;
     using result_type = std::size_t;
 
-    std::size_t operator()(const qbb::qubus::types::struct_::member& value) const noexcept;
+    std::size_t operator()(const qubus::types::struct_::member& value) const noexcept;
 };
 }
 

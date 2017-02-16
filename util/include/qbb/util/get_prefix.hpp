@@ -5,7 +5,7 @@
 
 #include <string>
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {

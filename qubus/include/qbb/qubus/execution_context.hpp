@@ -9,8 +9,6 @@
 #include <memory>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -59,8 +57,7 @@ private:
     std::vector<object> arguments_;
     std::vector<object> results_;
 };
-    
-}
+
 }
 
 #endif

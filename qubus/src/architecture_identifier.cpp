@@ -1,11 +1,9 @@
 #include <qbb/qubus/architecture_identifier.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
-qbb::util::implementation_table architecture_identifier::implementation_table_ = {};
+util::implementation_table architecture_identifier::implementation_table_ = {};
 
 util::multi_method<bool(const util::virtual_<architecture_identifier>&,
                         const util::virtual_<architecture_identifier>&)>
@@ -24,5 +22,4 @@ bool is_same_architecture_host(const host_architecture_identifier&, const host_a
 
 QBB_DEFINE_MULTI_METHOD_SPECIALIZATION(is_same_architecture, is_same_architecture_host);
 
-}
 }

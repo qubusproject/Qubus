@@ -6,8 +6,6 @@
 #include <qbb/util/unused.hpp>
 #include <qbb/util/integers.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -87,6 +85,5 @@ array_layout abi_info::get_array_layout(const type& value_type,
     auto data_offset = shape_offset + shape_size + data_padding;
     
     return array_layout(current_size, block_alignment, shape_offset, shape_size, data_offset, data_size);
-}
 }
 }

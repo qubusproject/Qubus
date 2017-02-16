@@ -4,8 +4,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -51,11 +49,11 @@ for_all_expr* for_all_expr::clone() const
 {
     if (alias_)
     {
-        return new for_all_expr(loop_indices_, *alias_, qbb::qubus::clone(*body_));
+        return new for_all_expr(loop_indices_, *alias_, qubus::clone(*body_));
     }
     else
     {
-        return new for_all_expr(loop_indices_, qbb::qubus::clone(*body_));
+        return new for_all_expr(loop_indices_, qubus::clone(*body_));
     }
 }
 
@@ -104,6 +102,5 @@ bool operator!=(const for_all_expr& lhs, const for_all_expr& rhs)
 
 QBB_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(equal, std::equal_to<for_all_expr>(), for_all_expr_equal);
 
-}
 }
 }

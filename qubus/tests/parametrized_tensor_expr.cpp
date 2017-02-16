@@ -14,7 +14,7 @@
 
 TEST(parametrized_tensor_expr, vector_add)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -84,7 +84,7 @@ TEST(parametrized_tensor_expr, vector_add)
 
 TEST(parametrized_tensor_expr, sparse_matrix_vector_product)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100l;
@@ -172,7 +172,7 @@ TEST(parametrized_tensor_expr, sparse_matrix_vector_product)
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

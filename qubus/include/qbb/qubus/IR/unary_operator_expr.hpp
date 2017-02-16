@@ -6,8 +6,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -79,7 +77,6 @@ inline std::unique_ptr<unary_operator_expr> logical_not(std::unique_ptr<expressi
     return unary_operator(unary_op_tag::logical_not, std::move(arg));
 }
 
-}
 }
 
 #endif

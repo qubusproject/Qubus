@@ -9,16 +9,14 @@
 #include <algorithm>
 #include <mutex>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
 namespace
 {
 
-qbb::util::sparse_multi_method<bool(const qbb::util::virtual_<type>&,
-                                    const qbb::util::virtual_<type>&)>
+util::sparse_multi_method<bool(const util::virtual_<type>&,
+                                    const util::virtual_<type>&)>
     type_eq = {};
 
 bool type_eq_double(const types::double_&, const types::double_&)
@@ -101,7 +99,7 @@ bool operator!=(const type& lhs, const type& rhs)
     return !(lhs == rhs);
 }
 
-qbb::util::implementation_table type::implementation_table_ = {};
+util::implementation_table type::implementation_table_ = {};
 
 namespace types
 {
@@ -151,17 +149,16 @@ type sparse_tensor(type value_type)
 }
 }
 }
-}
 
 namespace std
 {
-std::size_t hash<qbb::qubus::type>::operator()(const qbb::qubus::type& value) const noexcept
+std::size_t hash<qubus::type>::operator()(const qubus::type& value) const noexcept
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using pattern::_;
 
     pattern::variable<type> t;
-    pattern::variable<qbb::util::index_t> rank;
+    pattern::variable<util::index_t> rank;
 
     auto m =
         pattern::make_matcher<type, std::size_t>()
@@ -177,8 +174,8 @@ std::size_t hash<qbb::qubus::type>::operator()(const qbb::qubus::type& value) co
                    [&] {
                        std::size_t seed = 0;
 
-                       qbb::util::hash_combine(seed, std::type_index(typeid(types::complex)));
-                       qbb::util::hash_combine(seed, t.get());
+                       util::hash_combine(seed, std::type_index(typeid(types::complex)));
+                       util::hash_combine(seed, t.get());
 
                        return seed;
                    })
@@ -186,9 +183,9 @@ std::size_t hash<qbb::qubus::type>::operator()(const qbb::qubus::type& value) co
                    [&] {
                        std::size_t seed = 0;
 
-                       qbb::util::hash_combine(seed, std::type_index(typeid(types::array)));
-                       qbb::util::hash_combine(seed, t.get());
-                       qbb::util::hash_combine(seed, rank.get());
+                       util::hash_combine(seed, std::type_index(typeid(types::array)));
+                       util::hash_combine(seed, t.get());
+                       util::hash_combine(seed, rank.get());
 
                        return seed;
                    })
@@ -196,9 +193,9 @@ std::size_t hash<qbb::qubus::type>::operator()(const qbb::qubus::type& value) co
                    [&] {
                        std::size_t seed = 0;
 
-                       qbb::util::hash_combine(seed, std::type_index(typeid(types::array_slice)));
-                       qbb::util::hash_combine(seed, t.get());
-                       qbb::util::hash_combine(seed, rank.get());
+                       util::hash_combine(seed, std::type_index(typeid(types::array_slice)));
+                       util::hash_combine(seed, t.get());
+                       util::hash_combine(seed, rank.get());
 
                        return seed;
                    })
@@ -207,12 +204,12 @@ std::size_t hash<qbb::qubus::type>::operator()(const qbb::qubus::type& value) co
 
                 std::size_t seed = 0;
 
-                qbb::util::hash_combine(seed, std::type_index(typeid(types::struct_)));
-                qbb::util::hash_combine(seed, stype.id());
+                util::hash_combine(seed, std::type_index(typeid(types::struct_)));
+                util::hash_combine(seed, stype.id());
 
                 for (const auto& member : stype)
                 {
-                    qbb::util::hash_combine(seed, member);
+                    util::hash_combine(seed, member);
                 }
 
                 return seed;
@@ -221,13 +218,13 @@ std::size_t hash<qbb::qubus::type>::operator()(const qbb::qubus::type& value) co
     return pattern::match(value, m);
 }
 
-std::size_t hash<qbb::qubus::types::struct_::member>::
-operator()(const qbb::qubus::types::struct_::member& value) const noexcept
+std::size_t hash<qubus::types::struct_::member>::
+operator()(const qubus::types::struct_::member& value) const noexcept
 {
     std::size_t seed = 0;
 
-    qbb::util::hash_combine(seed, value.datatype);
-    qbb::util::hash_combine(seed, value.id);
+    qubus::util::hash_combine(seed, value.datatype);
+    qubus::util::hash_combine(seed, value.id);
 
     return seed;
 }

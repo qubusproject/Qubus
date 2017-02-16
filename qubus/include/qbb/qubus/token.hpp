@@ -10,8 +10,6 @@
 
 #include <tuple>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -57,7 +55,6 @@ token make_token(util::one_shot<void()> on_expiration);
 
 std::tuple <token, hpx::future<void>> make_token_with_future();
 
-}
 }
 
 #endif

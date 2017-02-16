@@ -12,8 +12,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -64,7 +62,6 @@ sequence_pattern<Values...> sequence(Values... values)
     return sequence_pattern<Values...>(values...);
 }
 
-}
 }
 }
 

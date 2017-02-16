@@ -14,8 +14,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -37,7 +35,6 @@ reference emit_array_slice_access(const reference& slice, const std::vector<llvm
 reference emit_array_slice(const reference& array, const std::vector<llvm::Value*>& offset,
                            const std::vector<llvm::Value*>& shape,
                            const std::vector<llvm::Value*>& strides, compiler& comp);
-}
 }
 }
 

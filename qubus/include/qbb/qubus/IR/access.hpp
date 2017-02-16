@@ -3,8 +3,6 @@
 
 #include <qbb/qubus/IR/expression.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -21,7 +19,6 @@ public:
     virtual ~access_expr_base() = default;
 };
 
-}
 }
 
 #endif

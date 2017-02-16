@@ -6,8 +6,6 @@
 
 #include <isl/aff.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -32,7 +30,6 @@ private:
     isl_multi_union_pw_aff* handle_;
 };
 
-}
 }
 }
 

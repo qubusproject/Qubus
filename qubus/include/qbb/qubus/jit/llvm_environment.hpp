@@ -25,8 +25,6 @@
 #include <unordered_map>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -144,7 +142,6 @@ private:
 
     // intrinsic_lookup_table instrinsic_lookup_table_;
 };
-}
 }
 }
 

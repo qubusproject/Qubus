@@ -3,8 +3,6 @@
 
 #include <qbb/qubus/pattern/variable.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -29,7 +27,6 @@ public:
 };
 
 static const any _ = any{}; 
-}
 }
 }
 

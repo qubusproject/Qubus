@@ -11,8 +11,6 @@
 #include <qbb/qubus/jit/compilation_context.hpp>
 #include <qbb/qubus/jit/reference.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -24,7 +22,6 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
 
 reference emit_unary_operator(unary_op_tag tag, const expression& arg, compiler& comp);
 
-}
 }
 }
 

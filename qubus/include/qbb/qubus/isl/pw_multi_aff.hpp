@@ -7,8 +7,6 @@
 
 #include <isl/aff.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -41,7 +39,6 @@ pw_aff pullback(pw_aff lhs, pw_multi_aff rhs);
 pw_multi_aff lexmin_pw_multi_aff(set s);
 pw_multi_aff lexmax_pw_multi_aff(set s);
 
-}
 }
 }
 

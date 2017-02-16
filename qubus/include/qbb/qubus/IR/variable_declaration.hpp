@@ -13,8 +13,6 @@
 #include <memory>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -81,19 +79,18 @@ bool operator==(const variable_declaration& lhs, const variable_declaration& rhs
 bool operator!=(const variable_declaration& lhs, const variable_declaration& rhs);
 
 }
-}
 
 namespace std
 {
 
 template<>
-struct less<qbb::qubus::variable_declaration>
+struct less<qubus::variable_declaration>
 {
     using result_type = bool;
-    using first_argument_type = qbb::qubus::variable_declaration;
+    using first_argument_type = qubus::variable_declaration;
     using second_argument_type = first_argument_type;
 
-    bool operator()(const qbb::qubus::variable_declaration& lhs, const qbb::qubus::variable_declaration& rhs) const
+    bool operator()(const qubus::variable_declaration& lhs, const qubus::variable_declaration& rhs) const
     {
         return lhs.id() < rhs.id();
     }

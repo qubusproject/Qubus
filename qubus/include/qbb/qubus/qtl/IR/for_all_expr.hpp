@@ -14,8 +14,6 @@
 #include <qbb/util/unused.hpp>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -85,7 +83,6 @@ inline std::unique_ptr<for_all_expr> for_all(std::vector<variable_declaration> l
 {
     return std::make_unique<for_all_expr>(std::move(loop_indices), std::move(alias),
                                           std::move(body));
-}
 }
 }
 }

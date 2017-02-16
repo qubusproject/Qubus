@@ -10,8 +10,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -289,7 +287,6 @@ auto sparse_tensor_t(ValueType value_type)
         sequence(member(struct_t(_, sequence(member(array_t(value_type, _), value("val")), _, _, _)),
                         value("data")),
                  member(_, value("shape"))));
-}
 }
 }
 }

@@ -9,8 +9,6 @@
 #include <utility>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -60,7 +58,6 @@ variable_scope_pattern<VariableDeclaration, Scope> variable_scope(VariableDeclar
                                                                   Scope scope)
 {
     return variable_scope_pattern<VariableDeclaration, Scope>(decl, scope);
-}
 }
 }
 }

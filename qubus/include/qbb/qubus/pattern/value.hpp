@@ -5,8 +5,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -48,7 +46,6 @@ template <typename T>
 value_pattern<T> value(T value)
 {
     return value_pattern<T>(value);
-}
 }
 }
 }

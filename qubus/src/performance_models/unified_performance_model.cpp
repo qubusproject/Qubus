@@ -12,8 +12,6 @@
 #include <unordered_map>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -110,6 +108,5 @@ unified_performance_model::try_estimate_execution_time(const computelet& c,
     QBB_ASSERT(impl_, "Uninitialized object.");
 
     return impl_->try_estimate_execution_time(c, ctx);
-}
 }
 }

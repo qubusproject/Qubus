@@ -7,8 +7,6 @@
 #include <vector>
 #include <memory>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -41,7 +39,6 @@ private:
     std::unique_ptr<symbolic_regression_impl> impl_;
 };
 
-}
 }
 
 #endif

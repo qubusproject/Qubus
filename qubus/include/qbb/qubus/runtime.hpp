@@ -17,8 +17,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -67,7 +65,6 @@ void execute(const computelet& c, Args&&... args)
     get_runtime().execute(c, std::move(ctx));
 }
 
-}
 }
 
 #endif

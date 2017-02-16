@@ -5,8 +5,6 @@
 #include <cstdlib>
 #include <type_traits>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -85,6 +83,5 @@ std::size_t host_memory_block::size() const
 void* host_memory_block::ptr() const
 {
     return data_;
-}
 }
 }

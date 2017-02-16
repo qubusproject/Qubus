@@ -8,8 +8,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -54,7 +52,6 @@ inline std::unique_ptr<local_variable_def_expr>
 local_variable_def(variable_declaration decl, std::unique_ptr<expression> initializer)
 {
     return std::make_unique<local_variable_def_expr>(std::move(decl), std::move(initializer));
-}
 }
 }
 

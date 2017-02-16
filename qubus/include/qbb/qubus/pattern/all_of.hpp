@@ -9,8 +9,6 @@
 #include <vector>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -66,7 +64,6 @@ all_of_pattern<Pattern> all_of(Pattern pattern)
     return all_of_pattern<Pattern>(std::move(pattern));
 }
 
-}
 }
 }
 

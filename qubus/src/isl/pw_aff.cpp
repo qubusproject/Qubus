@@ -1,7 +1,5 @@
 #include <qbb/qubus/isl/pw_aff.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -78,6 +76,5 @@ map map_from_pw_aff(pw_aff fn)
     return map(isl_map_from_pw_aff(fn.release()));
 }
 
-}
 }
 }

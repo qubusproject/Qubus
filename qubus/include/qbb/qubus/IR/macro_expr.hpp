@@ -9,8 +9,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
  
@@ -57,7 +55,6 @@ inline std::unique_ptr<macro_expr> make_macro(std::vector<variable_declaration> 
 
 std::unique_ptr<expression> expand_macro(const macro_expr& macro, std::vector<std::unique_ptr<expression>> args);
     
-}
 }
 
 #endif

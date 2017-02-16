@@ -6,8 +6,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -175,7 +173,6 @@ inline std::unique_ptr<binary_operator_expr> logical_or(std::unique_ptr<expressi
                                                         std::unique_ptr<expression> right)
 {
     return binary_operator(binary_op_tag::logical_or, std::move(left), std::move(right));
-}
 }
 }
 

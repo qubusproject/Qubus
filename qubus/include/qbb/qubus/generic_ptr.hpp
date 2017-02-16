@@ -5,8 +5,6 @@
 #include <typeinfo>
 #include <ostream>
 
-inline namespace qbb
-{
 namespace qubus
 {
 class generic_ptr
@@ -117,7 +115,6 @@ inline std::ostream& operator<<(std::ostream& os, const generic_ptr& value)
     value.dump(os);
 
     return os;
-}
 }
 }
 

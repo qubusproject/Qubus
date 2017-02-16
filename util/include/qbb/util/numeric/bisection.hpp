@@ -5,7 +5,7 @@
 
 #include <cmath>
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {

@@ -5,8 +5,6 @@
 
 #include <memory>
 
-inline namespace qbb
-{
 namespace qubus
 {
 class simple_statistical_performance_model_impl;
@@ -25,7 +23,6 @@ public:
 private:
     std::unique_ptr<simple_statistical_performance_model_impl> impl_;
 };
-}
 }
 
 #endif

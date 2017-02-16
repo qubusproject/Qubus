@@ -8,8 +8,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -87,7 +85,6 @@ access_qualifier_pattern<QualifiedAccess> access_qualifier(QualifiedAccess quali
     return access_qualifier<QualifiedAccess>(std::move(qualified_access));
 }
 
-}
 }
 }
 

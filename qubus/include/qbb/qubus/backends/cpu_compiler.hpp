@@ -9,8 +9,6 @@
 #include <functional>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -44,7 +42,6 @@ public:
 private:
     std::shared_ptr<cpu_compiler_impl> impl_;
 };
-}
 }
 
 #endif

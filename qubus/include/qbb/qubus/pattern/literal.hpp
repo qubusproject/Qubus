@@ -8,8 +8,6 @@
 #include <utility>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -135,7 +133,6 @@ template <typename Value>
 integer_literal_pattern<Value> integer_literal(Value value)
 {
     return integer_literal_pattern<Value>(value);
-}
 }
 }
 }

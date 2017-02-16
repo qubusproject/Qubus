@@ -14,7 +14,7 @@
 
 TEST(basic_expressions, constant_expr)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -46,7 +46,7 @@ TEST(basic_expressions, constant_expr)
 
 TEST(basic_expressions, complex_addition)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -115,7 +115,7 @@ TEST(basic_expressions, complex_addition)
 
 TEST(basic_expressions, complex_substraction)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -183,7 +183,7 @@ TEST(basic_expressions, complex_substraction)
 
 TEST(basic_expressions, complex_multiplication)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -251,7 +251,7 @@ TEST(basic_expressions, complex_multiplication)
 
 TEST(basic_expressions, complex_division)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -319,7 +319,7 @@ TEST(basic_expressions, complex_division)
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

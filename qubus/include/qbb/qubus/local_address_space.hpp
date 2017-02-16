@@ -24,8 +24,6 @@
 #include <mutex>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -116,7 +114,6 @@ public:
 private:
     std::reference_wrapper<host_address_space> host_addr_space_;
 };
-}
 }
 
 #endif

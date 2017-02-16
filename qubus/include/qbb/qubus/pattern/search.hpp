@@ -8,8 +8,6 @@
 
 #include <boost/optional.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -39,7 +37,6 @@ inline boost::optional<typename Matcher::result_type> search(const expression& e
     }
 }
 
-}
 }
 }
 

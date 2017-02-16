@@ -11,8 +11,6 @@
 
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -20,7 +18,6 @@ namespace jit
 void emit_loop(reference induction_variable, llvm::Value* lower_bound, llvm::Value* upper_bound,
                llvm::Value* increment, std::function<void()> body_emitter, llvm_environment& env,
                compilation_context& ctx);
-}
 }
 }
 

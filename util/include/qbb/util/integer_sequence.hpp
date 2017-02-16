@@ -1,7 +1,7 @@
 #ifndef QBB_UTIL_INTEGER_SEQUENCE_HPP
 #define QBB_UTIL_INTEGER_SEQUENCE_HPP
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {

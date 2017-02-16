@@ -16,8 +16,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -60,7 +58,6 @@ public:
     object create_array(type value_type, std::vector<util::index_t> shape);
     object create_struct(type struct_type, std::vector<object> members);
 };
-}
 }
 
 #endif

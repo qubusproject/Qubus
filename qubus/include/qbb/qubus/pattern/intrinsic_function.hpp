@@ -9,8 +9,6 @@
 #include <utility>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -70,7 +68,6 @@ auto intrinsic_function_n(Name name, Args... args)
     return intrinsic_function(name, sequence(args...));
 }
 
-}
 }
 }
 

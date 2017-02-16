@@ -35,8 +35,6 @@
 #include <utility>
 #include <cstdlib>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -184,6 +182,5 @@ cpu_compiler::cpu_compiler() : impl_(std::make_unique<cpu_compiler_impl>())
 std::unique_ptr<cpu_plan> cpu_compiler::compile_computelet(const function_declaration& computelet)
 {
     return impl_->compile_computelet(computelet);
-}
 }
 }

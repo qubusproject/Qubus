@@ -7,8 +7,6 @@
 
 #include <complex>
 
-inline namespace qbb
-{
 namespace qubus
 {
  
@@ -51,7 +49,6 @@ struct associated_qubus_type<std::complex<T>>
     }
 };
     
-}
 }
 
 #endif

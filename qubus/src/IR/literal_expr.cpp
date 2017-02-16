@@ -3,8 +3,6 @@
 #include <qbb/util/assert.hpp>
 #include <qbb/util/unused.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -94,11 +92,11 @@ bool operator!=(const float_literal_expr& lhs, const float_literal_expr& rhs)
     return !(lhs == rhs);
 }
 
-integer_literal_expr::integer_literal_expr(qbb::util::index_t value_) : value_{value_}
+integer_literal_expr::integer_literal_expr(util::index_t value_) : value_{value_}
 {
 }
 
-qbb::util::index_t integer_literal_expr::value() const
+util::index_t integer_literal_expr::value() const
 {
     return value_;
 }
@@ -135,6 +133,5 @@ bool operator==(const integer_literal_expr& lhs, const integer_literal_expr& rhs
 bool operator!=(const integer_literal_expr& lhs, const integer_literal_expr& rhs)
 {
     return !(lhs == rhs);
-}
 }
 }

@@ -12,8 +12,6 @@
 #include <type_traits>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -377,7 +375,6 @@ auto delta(util::index_t extent, FirstIndex first_index, SecondIndex second_inde
 
 template <typename T>
 using variable = ast::variable<T>;
-}
 }
 }
 

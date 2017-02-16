@@ -9,8 +9,6 @@
 #include <utility>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -63,7 +61,6 @@ local_variable_def_pattern<Decl, Initializer>
 local_variable_def(Decl decl, Initializer initializer)
 {
     return local_variable_def_pattern<Decl, Initializer>(decl, initializer);
-}
 }
 }
 }

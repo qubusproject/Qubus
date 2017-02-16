@@ -8,7 +8,7 @@
 #include <typeindex>
 #include <type_traits>
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {

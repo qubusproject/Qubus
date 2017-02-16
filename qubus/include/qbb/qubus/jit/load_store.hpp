@@ -9,8 +9,6 @@
 
 #include <llvm/IR/Instructions.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -20,7 +18,6 @@ llvm::LoadInst* load_from_ref(const reference& ref, llvm_environment& env,
 
 llvm::StoreInst* store_to_ref(const reference& ref, llvm::Value* value, llvm_environment& env,
                               compilation_context& ctx);
-}
 }
 }
 

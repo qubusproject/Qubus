@@ -7,8 +7,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -113,5 +111,4 @@ std::vector<analysis_id> value_range_analysis_pass::required_analyses() const
 }
 
 QUBUS_REGISTER_ANALYSIS_PASS(value_range_analysis_pass);
-}
 }

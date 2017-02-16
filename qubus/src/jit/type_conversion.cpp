@@ -14,8 +14,6 @@
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Type.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -207,7 +205,6 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
     store_to_ref(result_var_ref, result, env, ctx);
 
     return result_var_ref;
-}
 }
 }
 }

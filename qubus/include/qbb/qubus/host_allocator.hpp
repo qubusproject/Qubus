@@ -6,8 +6,6 @@
 #include <memory>
 #include <cstddef>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -20,7 +18,6 @@ public:
 
     void deallocate(memory_block& mem_block);
 };
-}
 }
 
 #endif

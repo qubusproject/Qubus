@@ -28,7 +28,7 @@
 #include <functional>
 #include <utility>
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {

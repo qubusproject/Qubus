@@ -6,14 +6,11 @@
 #include <qbb/qubus/IR/type.hpp>
 #include <qbb/qubus/IR/expression.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
     
 type typeof_(const expression& expr);
     
-}
 }
 
 #endif

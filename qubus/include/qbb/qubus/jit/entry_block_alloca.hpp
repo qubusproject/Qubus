@@ -7,8 +7,6 @@
 #include <llvm/IR/Value.h>
 #include <llvm/ADT/Twine.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -16,7 +14,6 @@ namespace jit
 llvm::AllocaInst *create_entry_block_alloca(llvm::Function *current_function, llvm::Type *type,
                                             llvm::Value *array_size = 0,
                                             const llvm::Twine &name = "");
-}
 }
 }
 

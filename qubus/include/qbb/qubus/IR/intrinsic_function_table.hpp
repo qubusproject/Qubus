@@ -8,14 +8,11 @@
 #include <string>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
 type lookup_intrinsic_result_type(const std::string& name, const std::vector<type>& arg_types);
     
-}
 }
 
 #endif

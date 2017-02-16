@@ -12,8 +12,6 @@
 #include <memory>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -62,7 +60,6 @@ inline std::unique_ptr<spawn_expr> spawn(function_declaration spawned_plan,
                                          std::vector<std::unique_ptr<expression>> arguments)
 {
     return std::make_unique<spawn_expr>(std::move(spawned_plan), std::move(arguments));
-}
 }
 }
 

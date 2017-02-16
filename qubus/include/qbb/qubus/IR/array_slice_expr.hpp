@@ -12,8 +12,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -85,7 +83,6 @@ std::unique_ptr<array_slice_expr> slice(std::unique_ptr<access_expr> array,
 std::unique_ptr<array_slice_expr> slice(std::unique_ptr<access_expr> array,
                                         std::vector<std::unique_ptr<expression>> offset,
                                         std::vector<std::unique_ptr<expression>> shape);
-}
 }
 
 #endif

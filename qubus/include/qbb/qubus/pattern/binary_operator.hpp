@@ -10,8 +10,6 @@
 #include <utility>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -167,7 +165,6 @@ auto logical_or(LHS lhs, RHS rhs)
     return binary_operator(value(binary_op_tag::logical_or), lhs, rhs);
 }
 
-}
 }
 }
 

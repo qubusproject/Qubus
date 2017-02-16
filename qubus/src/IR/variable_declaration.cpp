@@ -4,8 +4,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -80,5 +78,4 @@ bool operator!=(const variable_declaration& lhs, const variable_declaration& rhs
     return !(lhs == rhs);
 }
 
-}
 }

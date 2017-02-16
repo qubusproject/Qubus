@@ -11,8 +11,6 @@
 #include <unordered_map>
 #include <limits>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -173,7 +171,6 @@ private:
     detail::assembly_index<T, Rank> index_;
     std::array<util::index_t, Rank> shape_;
 };
-}
 }
 }
 

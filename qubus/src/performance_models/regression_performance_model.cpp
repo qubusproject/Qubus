@@ -14,8 +14,6 @@
 #include <utility>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -228,6 +226,5 @@ regression_performance_model::try_estimate_execution_time(const computelet& c,
     QBB_ASSERT(impl_, "Uninitialized object.");
 
     return impl_->try_estimate_execution_time(c, ctx);
-}
 }
 }

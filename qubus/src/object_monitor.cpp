@@ -4,8 +4,6 @@
 
 #include <mutex>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -59,5 +57,4 @@ hpx::future<token> object_monitor::acquire_write_access()
     });
 }
 
-}
 }

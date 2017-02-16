@@ -17,7 +17,7 @@
 #include <functional>
 #include <string>
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 { 
@@ -53,15 +53,15 @@ bool operator!=(const handle& lhs, const handle& rhs);
 }
 }
 
-BOOST_IS_BITWISE_SERIALIZABLE(qbb::util::handle)
+BOOST_IS_BITWISE_SERIALIZABLE(qubus::util::handle)
 
 namespace std
 {
 
 template<>
-struct hash<qbb::util::handle>
+struct hash<qubus::util::handle>
 {
-    using argument_type = qbb::util::handle;
+    using argument_type = qubus::util::handle;
     using result_type = std::size_t;
     
     result_type operator()(const argument_type& h) const
@@ -72,7 +72,7 @@ struct hash<qbb::util::handle>
 
 }
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {

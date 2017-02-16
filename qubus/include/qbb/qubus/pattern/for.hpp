@@ -11,8 +11,6 @@
 #include <functional>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -138,7 +136,6 @@ template <typename Index, typename LowerBound, typename UpperBound, typename Bod
 auto unordered_for(Index index, LowerBound lower_bound, UpperBound upper_bound, Body body)
 {
     return unordered_for(index, lower_bound, upper_bound, integer_literal(value(1)), body);
-}
 }
 }
 }

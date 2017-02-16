@@ -9,8 +9,6 @@
 #include <functional>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -128,7 +126,6 @@ template <typename Index, typename Body>
 auto for_all(Index index, Body body)
 {
     return for_all_multi(qubus::pattern::sequence(index), body);
-}
 }
 }
 }

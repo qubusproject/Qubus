@@ -9,8 +9,6 @@
 #include <qbb/qubus/jit/llvm_environment.hpp>
 #include <qbb/qubus/jit/compilation_context.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -20,7 +18,6 @@ class compiler;
 
 reference compile(const expression& expr, compiler& comp);
 
-}
 }
 }
 

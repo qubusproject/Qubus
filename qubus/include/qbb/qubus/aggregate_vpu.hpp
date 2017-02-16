@@ -6,8 +6,6 @@
 
 #include <memory>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -27,7 +25,6 @@ private:
     std::unique_ptr<scheduler> scheduler_;
 };
 
-}
 }
 
 #endif

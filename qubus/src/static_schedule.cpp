@@ -3,8 +3,6 @@
 #include <algorithm>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 static_schedule_statement::static_schedule_statement(std::string name, const expression& expr)
@@ -46,6 +44,5 @@ const isl::schedule_node& static_schedule::get_schedule_node(const expression& e
     {
         throw 0; // Error: Invalid expression
     }
-}
 }
 }

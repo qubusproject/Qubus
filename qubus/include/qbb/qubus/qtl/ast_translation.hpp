@@ -21,8 +21,6 @@
 #include <utility>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -98,13 +96,13 @@ auto translate_ast(binary_operator<Tag, LHS, RHS> node, ast_context& ctx)
     switch (node.tag())
     {
     case binary_operator_tag::plus:
-        return qbb::qubus::operator+(std::move(lhs), std::move(rhs));
+        return qubus::operator+(std::move(lhs), std::move(rhs));
     case binary_operator_tag::minus:
-        return qbb::qubus::operator-(std::move(lhs), std::move(rhs));
+        return qubus::operator-(std::move(lhs), std::move(rhs));
     case binary_operator_tag::multiplies:
-        return qbb::qubus::operator*(std::move(lhs), std::move(rhs));
+        return qubus::operator*(std::move(lhs), std::move(rhs));
     case binary_operator_tag::divides:
-        return qbb::qubus::operator/(std::move(lhs), std::move(rhs));
+        return qubus::operator/(std::move(lhs), std::move(rhs));
     }
 
     QBB_UNREACHABLE();
@@ -119,7 +117,7 @@ auto translate_ast(contraction<index, Body> node, ast_context& ctx)
 
     auto body = translate_ast(node.body(), ctx);
 
-    return qbb::qubus::qtl::sum(std::move(idx_var), std::move(body));
+    return qubus::qtl::sum(std::move(idx_var), std::move(body));
 }
 
 template <long int Rank, typename Body>
@@ -142,7 +140,7 @@ auto translate_ast(contraction<multi_index<Rank>, Body> node, ast_context& ctx)
 
     auto body = translate_ast(node.body(), ctx);
 
-    return qbb::qubus::qtl::sum(std::move(indices), std::move(multi_idx_var), std::move(body));
+    return qubus::qtl::sum(std::move(indices), std::move(multi_idx_var), std::move(body));
 }
 
 template <typename Tensor, typename... Indices>
@@ -245,9 +243,8 @@ auto translate_ast(kronecker_delta<FirstIndex, SecondIndex> node, ast_context& c
     auto first_index = translate_ast(node.first_index(), ctx);
     auto second_index = translate_ast(node.second_index(), ctx);
 
-    return qbb::qubus::qtl::kronecker_delta(node.extent(), std::move(first_index),
+    return qubus::qtl::kronecker_delta(node.extent(), std::move(first_index),
                                             std::move(second_index));
-}
 }
 }
 }

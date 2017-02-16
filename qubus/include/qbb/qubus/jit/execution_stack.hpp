@@ -11,8 +11,6 @@
 #include <new>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -136,7 +134,6 @@ private:
     void* tip_;
     std::size_t remaining_size_;
 };
-}
 }
 
 #endif

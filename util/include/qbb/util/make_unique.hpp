@@ -4,7 +4,7 @@
 #include <utility>
 #include <memory>
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {

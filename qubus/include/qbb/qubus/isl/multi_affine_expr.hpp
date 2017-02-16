@@ -8,8 +8,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -34,7 +32,6 @@ private:
     isl_multi_aff* handle_;
 };
 
-}
 }
 }
 

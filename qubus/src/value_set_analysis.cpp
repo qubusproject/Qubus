@@ -6,8 +6,6 @@
 
 #include <qbb/util/assert.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -119,5 +117,4 @@ std::vector<analysis_id> value_set_analysis_pass::required_analyses() const
 }
 
 QUBUS_REGISTER_ANALYSIS_PASS(value_set_analysis_pass);
-}
 }

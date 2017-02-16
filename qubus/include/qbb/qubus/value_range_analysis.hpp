@@ -10,8 +10,6 @@
 
 #include <memory>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -47,7 +45,6 @@ public:
 
     std::vector<analysis_id> required_analyses() const;
 };
-}
 }
 
 #endif

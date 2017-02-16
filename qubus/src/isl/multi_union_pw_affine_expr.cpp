@@ -1,7 +1,5 @@
 #include <qbb/qubus/isl/multi_union_pw_affine_expr.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -41,7 +39,6 @@ isl_multi_union_pw_aff* multi_union_pw_affine_expr::release() noexcept
 multi_union_pw_affine_expr multi_union_pw_affine_expr::from_union_map(union_map map)
 {
     return multi_union_pw_affine_expr(isl_multi_union_pw_aff_from_union_map(map.release()));
-}
 }
 }
 }

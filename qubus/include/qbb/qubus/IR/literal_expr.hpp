@@ -12,8 +12,6 @@
 #include <type_traits>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -116,11 +114,11 @@ class integer_literal_expr : public expression_base<integer_literal_expr>
 
 public:
     integer_literal_expr() = default;
-    explicit integer_literal_expr(qbb::util::index_t value_);
+    explicit integer_literal_expr(util::index_t value_);
 
     virtual ~integer_literal_expr() = default;
 
-    qbb::util::index_t value() const;
+    util::index_t value() const;
 
     integer_literal_expr* clone() const override final;
 
@@ -140,13 +138,13 @@ public:
     HPX_SERIALIZATION_POLYMORPHIC(integer_literal_expr);
 
 private:
-    qbb::util::index_t value_;
+    util::index_t value_;
 };
 
 bool operator==(const integer_literal_expr& lhs, const integer_literal_expr& rhs);
 bool operator!=(const integer_literal_expr& lhs, const integer_literal_expr& rhs);
 
-inline std::unique_ptr<integer_literal_expr> integer_literal(qbb::util::index_t value)
+inline std::unique_ptr<integer_literal_expr> integer_literal(util::index_t value)
 {
     return std::make_unique<integer_literal_expr>(value);
 }
@@ -157,7 +155,6 @@ typename std::enable_if<std::is_integral<Integral>::value,
 lit(Integral value)
 {
     return integer_literal(value);
-}
 }
 }
 

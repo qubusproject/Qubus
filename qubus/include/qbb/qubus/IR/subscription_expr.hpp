@@ -12,8 +12,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -78,7 +76,6 @@ subscription(std::unique_ptr<access_expr> indexed_expr, std::unique_ptr<expressi
     return subscription(std::move(indexed_expr), std::move(indices));
 }
 
-}
 }
 
 #endif

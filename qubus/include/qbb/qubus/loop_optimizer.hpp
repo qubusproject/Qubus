@@ -3,14 +3,11 @@
 
 #include <qbb/qubus/IR/function_declaration.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
  
 function_declaration optimize_loops(function_declaration expr);
     
-}   
 }
 
 

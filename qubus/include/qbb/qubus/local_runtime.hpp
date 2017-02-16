@@ -23,8 +23,6 @@
 #include <memory>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -98,7 +96,6 @@ local_runtime& get_local_runtime();
 local_runtime_reference init_local_runtime_on_locality(const hpx::id_type& locality);
 local_runtime_reference get_local_runtime_on_locality(const hpx::id_type& locality);
 
-}
 }
 
 

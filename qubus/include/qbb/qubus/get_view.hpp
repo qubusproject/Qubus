@@ -9,8 +9,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -18,7 +16,6 @@ template <typename View>
 hpx::future<View> get_view(object obj)
 {
     return View::construct(std::move(obj));
-}
 }
 }
 

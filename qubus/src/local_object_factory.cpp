@@ -11,26 +11,24 @@
 #include <type_traits>
 #include <utility>
 
-using server_type = hpx::components::component<qbb::qubus::local_object_factory_server>;
+using server_type = hpx::components::component<qubus::local_object_factory_server>;
 HPX_REGISTER_COMPONENT(server_type, qbb_qubus_local_object_factory_server);
 
-using create_scalar_action = qbb::qubus::local_object_factory_server::create_scalar_action;
+using create_scalar_action = qubus::local_object_factory_server::create_scalar_action;
 HPX_REGISTER_ACTION_DECLARATION(create_scalar_action,
                                 qubus_local_object_factory_create_scalar_action);
 HPX_REGISTER_ACTION(create_scalar_action, qubus_local_object_factory_create_scalar_action);
 
-using create_array_action = qbb::qubus::local_object_factory_server::create_array_action;
+using create_array_action = qubus::local_object_factory_server::create_array_action;
 HPX_REGISTER_ACTION_DECLARATION(create_array_action,
                                 qubus_local_object_factory_create_array_action);
 HPX_REGISTER_ACTION(create_array_action, qubus_local_object_factory_create_array_action);
 
-using create_struct_action = qbb::qubus::local_object_factory_server::create_struct_action;
+using create_struct_action = qubus::local_object_factory_server::create_struct_action;
 HPX_REGISTER_ACTION_DECLARATION(create_struct_action,
                                 qubus_local_object_factory_create_struct_action);
 HPX_REGISTER_ACTION(create_struct_action, qubus_local_object_factory_create_struct_action);
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -126,6 +124,5 @@ object local_object_factory::create_struct(type struct_type, std::vector<object>
 {
     return hpx::async<local_object_factory_server::create_struct_action>(
         this->get_id(), std::move(struct_type), std::move(members));
-}
 }
 }

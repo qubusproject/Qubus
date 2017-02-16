@@ -6,8 +6,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -50,11 +48,11 @@ sum_expr* sum_expr::clone() const
 {
     if (alias_)
     {
-        return new sum_expr(contraction_indices_, *alias_, qbb::qubus::clone(*body_));
+        return new sum_expr(contraction_indices_, *alias_, qubus::clone(*body_));
     }
     else
     {
-        return new sum_expr(contraction_indices_, qbb::qubus::clone(*body_));
+        return new sum_expr(contraction_indices_, qubus::clone(*body_));
     }
 }
 
@@ -104,6 +102,5 @@ bool operator!=(const sum_expr& lhs, const sum_expr& rhs)
 
 QBB_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(equal, std::equal_to<sum_expr>(), sum_expr_equal);
 
-}
 }
 }

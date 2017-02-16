@@ -13,8 +13,6 @@
 #include <string>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -107,7 +105,6 @@ function_declaration lower_top_level_sums(function_declaration decl)
     decl.substitute_body(std::move(new_body));
 
     return decl;
-}
 }
 }
 }

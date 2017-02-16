@@ -12,8 +12,6 @@
 #include <string>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -198,7 +196,6 @@ union_set detect_equalities(union_set s);
 union_set remove_redundancies(union_set s);
 union_set simplify(union_set s);
 
-}
 }
 }
 

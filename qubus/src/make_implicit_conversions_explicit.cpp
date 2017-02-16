@@ -7,8 +7,6 @@
 #include <qbb/qubus/pattern/core.hpp>
 #include <qbb/qubus/pattern/IR.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -100,6 +98,5 @@ function_declaration make_implicit_conversions_explicit(function_declaration dec
     decl.substitute_body(make_implicit_conversions_explicit(decl.body()));
     
     return decl;
-}
 }
 }

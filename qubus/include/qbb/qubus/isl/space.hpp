@@ -9,8 +9,6 @@
 
 #include <string>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -59,7 +57,6 @@ space drop_all_dims(space s, isl_dim_type type);
 
 space align_params(space s, space model);
 
-}
 }
 }
 

@@ -6,8 +6,6 @@
 #include <hpx/include/components.hpp>
 #include <hpx/include/actions.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -39,7 +37,6 @@ public:
 
 computelet make_computelet(function_declaration code);
 
-}
 }
 
 #endif

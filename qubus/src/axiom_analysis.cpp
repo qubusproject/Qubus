@@ -11,8 +11,6 @@
 #include <stack>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -242,5 +240,4 @@ std::vector<analysis_id> axiom_analysis_pass::required_analyses() const
 }
 
 QUBUS_REGISTER_ANALYSIS_PASS(axiom_analysis_pass);
-}
 }

@@ -15,8 +15,6 @@
 #include <tuple>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -53,12 +51,12 @@ std::unique_ptr<expression> generate_init_part(const expression& lhs)
     for (std::size_t i = 0; i < indices.get().size(); ++i)
     {
         init_indices.emplace_back(types::integer());
-        init_index_refs.push_back(qbb::qubus::var(init_indices.back()));
+        init_index_refs.push_back(qubus::var(init_indices.back()));
         bounds.push_back(deduce_iteration_space(indices.get()[i], lhs));
     }
 
     std::unique_ptr<expression> init_lhs = assign(
-        subscription(qbb::qubus::var(var.get()), std::move(init_index_refs)), integer_literal(0));
+        subscription(qubus::var(var.get()), std::move(init_index_refs)), integer_literal(0));
 
     for (std::size_t i = init_indices.size(); i-- > 0;)
     {
@@ -404,7 +402,6 @@ function_declaration optimize_sparse_patterns(function_declaration decl)
     decl.substitute_body(std::move(new_body));
 
     return decl;
-}
 }
 }
 }

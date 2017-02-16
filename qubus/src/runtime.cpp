@@ -4,20 +4,18 @@
 
 #include <qbb/util/unused.hpp>
 
-using server_type = hpx::components::component<qbb::qubus::runtime_server>;
+using server_type = hpx::components::component<qubus::runtime_server>;
 HPX_REGISTER_COMPONENT(server_type, qbb_qubus_runtime_server);
 
-typedef qbb::qubus::runtime_server::execute_action execute_action;
+typedef qubus::runtime_server::execute_action execute_action;
 HPX_REGISTER_ACTION_DECLARATION(execute_action, runtime_server_execute_action);
 HPX_REGISTER_ACTION(execute_action, runtime_server_execute_action);
 
-typedef qbb::qubus::runtime_server::get_object_factory_action get_object_factory_action;
+typedef qubus::runtime_server::get_object_factory_action get_object_factory_action;
 HPX_REGISTER_ACTION_DECLARATION(get_object_factory_action,
                                 runtime_server_get_object_factory_action);
 HPX_REGISTER_ACTION(get_object_factory_action, runtime_server_get_object_factory_action);
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -76,6 +74,5 @@ void init(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
 runtime get_runtime()
 {
     return hpx::agas::resolve_name("/qubus/runtime");
-}
 }
 }

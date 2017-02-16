@@ -3,8 +3,6 @@
 #include <qbb/util/assert.hpp>
 #include <qbb/util/unused.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -49,6 +47,5 @@ bool operator==(const variable_ref_expr& lhs, const variable_ref_expr& rhs)
 bool operator!=(const variable_ref_expr& lhs, const variable_ref_expr& rhs)
 {
     return !(lhs == rhs);
-}
 }
 }

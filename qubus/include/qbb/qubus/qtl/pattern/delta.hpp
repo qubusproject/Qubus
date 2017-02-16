@@ -9,8 +9,6 @@
 #include <functional>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -78,7 +76,6 @@ auto delta(FirstIndex first_index, SecondIndex second_index)
     using qubus::pattern::_;
 
     return delta(_, first_index, second_index);
-}
 }
 }
 }

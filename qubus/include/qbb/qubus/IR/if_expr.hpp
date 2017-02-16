@@ -13,8 +13,6 @@
 
 #include <boost/optional.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -94,7 +92,6 @@ inline std::unique_ptr<if_expr> if_(std::unique_ptr<expression> condition,
 {
     return std::make_unique<if_expr>(std::move(condition), std::move(then_branch),
                                      std::move(else_branch));
-}
 }
 }
 

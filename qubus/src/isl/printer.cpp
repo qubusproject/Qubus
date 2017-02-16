@@ -8,8 +8,6 @@
 
 #include <iostream>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -148,7 +146,6 @@ void printer::print_macro(isl_ast_op_type op_type)
 isl_printer* printer::native_handle() const
 {
     return handle_;
-}
 }
 }
 }

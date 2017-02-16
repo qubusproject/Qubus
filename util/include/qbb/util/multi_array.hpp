@@ -11,7 +11,7 @@
 #include <algorithm>
 #include <functional>
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {

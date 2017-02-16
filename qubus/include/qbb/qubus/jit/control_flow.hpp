@@ -9,8 +9,6 @@
 
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -18,7 +16,6 @@ namespace jit
 void emit_if_else(reference condition, std::function<void()> then_emitter,
                   std::function<void()> else_emitter, llvm_environment& env,
                   compilation_context& ctx);
-}
 }
 }
 

@@ -23,8 +23,6 @@
 
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -552,5 +550,4 @@ std::vector<analysis_id> static_schedule_analysis_pass::required_analyses() cons
 }
 
 QUBUS_REGISTER_ANALYSIS_PASS(static_schedule_analysis_pass);
-}
 }

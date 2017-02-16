@@ -5,8 +5,6 @@
 
 #include <qbb/qubus/pattern/core.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -26,7 +24,6 @@ typename Matcher::result_type fold(const expression& expr, const Matcher& matche
     return state;
 }
 
-}
 }
 }
 

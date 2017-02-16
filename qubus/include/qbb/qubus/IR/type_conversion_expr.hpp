@@ -9,8 +9,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -56,7 +54,6 @@ inline std::unique_ptr<type_conversion_expr> type_conversion(type target_type, s
     return std::make_unique<type_conversion_expr>(std::move(target_type), std::move(arg));
 }
 
-}
 }
 
 #endif

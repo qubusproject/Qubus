@@ -7,8 +7,6 @@
 
 #include <isl/aff.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -44,7 +42,6 @@ pw_aff operator-(pw_aff lhs, pw_aff rhs);
 set set_from_pw_aff(pw_aff fn);
 map map_from_pw_aff(pw_aff fn);
 
-}
 }
 }
 

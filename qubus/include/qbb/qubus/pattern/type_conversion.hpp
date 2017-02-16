@@ -9,8 +9,6 @@
 #include <utility>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -67,7 +65,6 @@ template <typename Arg>
 auto type_conversion(Arg arg)
 {
     return type_conversion(_, arg);
-}
 }
 }
 }

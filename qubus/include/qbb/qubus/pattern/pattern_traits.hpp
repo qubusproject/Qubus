@@ -4,8 +4,6 @@
 #include <utility>
 #include <type_traits>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -23,7 +21,6 @@ struct pattern_traits
     using value_type = typename std::remove_pointer<typename util::function_traits<match_type<ArgType>>::template arg<1>::type>::type::value_type;
 };
 
-}
 }
 }
 

@@ -7,8 +7,6 @@
 
 #include <string>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -39,7 +37,6 @@ public:
 private:
     isl_id* handle_;
 };
-}
 }
 }
 

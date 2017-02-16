@@ -5,8 +5,6 @@
 #include <string>
 #include <qbb/util/integers.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -14,7 +12,6 @@ std::vector<std::string> deduce_host_cpu_features();
 std::vector<std::string> get_host_cpu_features();
 util::index_t get_prefered_alignment();
 
-}   
 }
 
 #endif

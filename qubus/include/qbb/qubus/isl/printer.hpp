@@ -4,8 +4,6 @@
 #include <isl/printer.h>
 #include <isl/ast.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -50,7 +48,6 @@ private:
     isl_printer* handle_;
 };
 
-}
 }
 }
 

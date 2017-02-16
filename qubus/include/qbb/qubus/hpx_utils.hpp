@@ -6,8 +6,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -20,7 +18,6 @@ hpx::future<hpx::id_type> new_here(Args&&... args)
         hpx::id_type(hpx::components::server::construct<component_type>(
                          std::forward<Args>(args)...),
                      hpx::id_type::managed));
-}
 }
 }
 

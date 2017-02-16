@@ -5,8 +5,6 @@
 
 #include <isl/val.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -37,7 +35,6 @@ private:
     isl_val* handle_;
 };
 
-}
 }
 }
 

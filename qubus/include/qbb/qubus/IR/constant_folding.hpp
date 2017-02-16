@@ -5,14 +5,11 @@
 
 #include <memory>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
 std::unique_ptr<expression> fold_constant_expressions(const expression& expr);
 
-}
 }
 
 #endif

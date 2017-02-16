@@ -1,7 +1,5 @@
 #include <qbb/qubus/isl/constraint.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -68,6 +66,5 @@ namespace isl
         return constraint(isl_inequality_from_aff(aff_expr.release()));
     }
 
-}
 }
 }

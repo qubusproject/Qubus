@@ -8,8 +8,6 @@
 #include <llvm/IR/Mangler.h>
 #include <llvm/Support/DynamicLibrary.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -109,5 +107,4 @@ llvm::JITSymbol jit_engine::find_mangled_symbol(const std::string& name)
     return nullptr;
 }
 #endif
-}
 }

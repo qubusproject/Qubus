@@ -9,8 +9,6 @@
 
 #include <stack>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -93,6 +91,5 @@ std::unique_ptr<expression> fold_constant_expressions(const expression& expr)
     auto new_expr = expr.substitute_subexpressions(std::move(simplified_children));
 
     return fold_impl(*new_expr);
-}
 }
 }

@@ -17,8 +17,6 @@
 #include <utility>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -108,7 +106,7 @@ public:
         }
     }
 
-    static const qbb::util::implementation_table& get_implementation_table()
+    static const util::implementation_table& get_implementation_table()
     {
         return implementation_table_;
     }
@@ -118,7 +116,7 @@ public:
         return implementation_table_.number_of_implementations();
     }
 
-    virtual qbb::util::index_t type_tag() const = 0;
+    virtual util::index_t type_tag() const = 0;
 
     template <typename Archive>
     void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
@@ -128,7 +126,7 @@ public:
     HPX_SERIALIZATION_POLYMORPHIC_ABSTRACT(expression);
 
 protected:
-    static qbb::util::implementation_table implementation_table_;
+    static util::implementation_table implementation_table_;
 };
 
 bool operator==(const expression& lhs, const expression& rhs);
@@ -179,7 +177,7 @@ public:
                    [this](std::size_t index) -> decltype(auto) { return this->child(index); });
     }
 
-    qbb::util::index_t type_tag() const override final
+    util::index_t type_tag() const override final
     {
         return tag_;
     }
@@ -219,7 +217,7 @@ protected:
     }
 
 private:
-    qbb::util::index_t tag_;
+    util::index_t tag_;
     expression* parent_ = nullptr;
 
     mutable annotation_map annotations_;
@@ -231,10 +229,9 @@ std::unique_ptr<Expression> clone(const expression_base<Expression>& expr)
     return std::unique_ptr<Expression>(static_cast<const Expression&>(expr).clone());
 }
 
-extern qbb::util::multi_method<bool(const qbb::util::virtual_<expression>&,
-                                    const qbb::util::virtual_<expression>&)>
+extern util::multi_method<bool(const util::virtual_<expression>&,
+                                    const util::virtual_<expression>&)>
     equal;
-}
 }
 
 #endif

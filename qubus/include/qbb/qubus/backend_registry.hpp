@@ -7,8 +7,6 @@
 #include <map>
 #include <memory>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -30,7 +28,6 @@ public:
 private:
     std::map<std::string, std::unique_ptr<backend>> backend_dictionary_;
 };
-}
 }
 
 #endif

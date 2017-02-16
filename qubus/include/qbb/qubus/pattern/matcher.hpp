@@ -17,8 +17,6 @@
 #include <vector>
 #include <memory>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -284,7 +282,6 @@ template <typename BaseType, typename ResultType>
 auto make_matcher()
 {
     return matcher<BaseType, ResultType>();
-}
 }
 }
 }

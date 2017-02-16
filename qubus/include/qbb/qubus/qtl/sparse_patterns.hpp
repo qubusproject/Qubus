@@ -4,8 +4,6 @@
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/function_declaration.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -14,7 +12,6 @@ namespace qtl
 std::unique_ptr<expression> optimize_sparse_patterns(const expression& expr);
 function_declaration optimize_sparse_patterns(function_declaration decl);
 
-}
 }
 }
 

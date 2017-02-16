@@ -11,8 +11,6 @@
 #include <functional>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -84,7 +82,6 @@ template <typename Array, typename Offset, typename Shape, typename Strides>
 auto array_slice(Array array, Offset offset, Shape shape)
 {
     return array_slice(std::move(array), std::move(offset), std::move(shape), all_of(value(1)));
-}
 }
 }
 }

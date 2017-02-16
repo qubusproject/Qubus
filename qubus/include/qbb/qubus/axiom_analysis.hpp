@@ -11,8 +11,6 @@
 #include <unordered_map>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -93,7 +91,6 @@ public:
 
     std::vector<analysis_id> required_analyses() const;
 };
-}
 }
 
 #endif

@@ -9,8 +9,6 @@
 #include <string>
 #include <memory>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -36,7 +34,6 @@ public:
     virtual std::vector<std::unique_ptr<vpu>> create_vpus() const = 0;
 };
 
-}   
 }
 
 #endif

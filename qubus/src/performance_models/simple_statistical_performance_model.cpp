@@ -18,8 +18,6 @@
 #include <utility>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -146,6 +144,5 @@ simple_statistical_performance_model::try_estimate_execution_time(
     QBB_ASSERT(impl_, "Uninitialized object.");
 
     return impl_->try_estimate_execution_time(c, ctx);
-}
 }
 }

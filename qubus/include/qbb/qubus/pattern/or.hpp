@@ -5,8 +5,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -52,7 +50,6 @@ or_pattern<LHS, RHS> operator||(LHS lhs, RHS rhs)
     return or_pattern<LHS, RHS>(lhs, rhs);
 }
 
-}
 }
 }
 

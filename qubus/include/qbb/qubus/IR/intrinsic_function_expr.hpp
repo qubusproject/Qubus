@@ -14,8 +14,6 @@
 #include <string>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -64,7 +62,6 @@ inline std::unique_ptr<intrinsic_function_expr> intrinsic_function(std::string n
     return std::make_unique<intrinsic_function_expr>(std::move(name), std::move(args));
 }
 
-}
 }
 
 #endif

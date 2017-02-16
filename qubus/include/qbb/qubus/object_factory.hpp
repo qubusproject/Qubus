@@ -21,8 +21,6 @@
 #include <map>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -82,7 +80,6 @@ public:
     object create_sparse_tensor(type value_type, std::vector<util::index_t> shape,
                                 const sparse_tensor_layout& layout);
 };
-}
 }
 
 #endif

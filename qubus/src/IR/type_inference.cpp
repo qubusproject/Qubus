@@ -12,15 +12,13 @@
 
 #include <mutex>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
 namespace
 {
 
-qbb::util::multi_method<type(const qbb::util::virtual_<type>&, const qbb::util::virtual_<type>&)>
+util::multi_method<type(const util::virtual_<type>&, const util::virtual_<type>&)>
     common_type_ = {};
 
 type common_type_double_double(const types::double_&, const types::double_&)
@@ -158,7 +156,7 @@ type value_type(const type& tensor_type)
     return pattern::match(tensor_type, m);
 }
 
-qbb::util::multi_method<type(const qbb::util::virtual_<expression>&)> infer_type = {};
+util::multi_method<type(const util::virtual_<expression>&)> infer_type = {};
 
 type infer_type_binary_op_expr(const binary_operator_expr& expr)
 {
@@ -366,6 +364,5 @@ type typeof_(const expression& expr)
 
         return infered_type;
     }
-}
 }
 }

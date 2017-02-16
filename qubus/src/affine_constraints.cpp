@@ -12,8 +12,6 @@
 #include <functional>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -1309,5 +1307,4 @@ std::unique_ptr<expression> convert_isl_ast_expr_to_qir(const isl::ast_expr& exp
             throw 0; // TODO: Unknown node type
     }
 }*/
-}
 }

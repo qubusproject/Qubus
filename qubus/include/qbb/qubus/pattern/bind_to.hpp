@@ -7,8 +7,6 @@
 
 #include <type_traits>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -62,7 +60,6 @@ bind_directive<Pattern, T> bind_to(const Pattern& pattern, const variable<T>& va
 {
     return bind_directive<Pattern, T>(pattern, var);
 };
-}
 }
 }
 

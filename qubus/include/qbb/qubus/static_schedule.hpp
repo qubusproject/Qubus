@@ -22,8 +22,6 @@
 #include <utility>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -61,7 +59,6 @@ public:
 private:
     std::unordered_map<const expression*, isl::schedule_node> ir_schedule_map_;
 };
-}
 }
 
 #endif

@@ -2,8 +2,6 @@
 
 #include <qbb/qubus/isl/context.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -35,7 +33,6 @@ isl_local_space* local_space::release() noexcept
     handle_ = nullptr;
 
     return temp;
-}
 }
 }
 }

@@ -3,15 +3,12 @@
 
 #include <qbb/qubus/IR/function_declaration.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
 {
 
 function_declaration expand_multi_indices(function_declaration decl);
-}
 }
 }
 

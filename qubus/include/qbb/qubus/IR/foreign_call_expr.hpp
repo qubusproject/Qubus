@@ -16,8 +16,6 @@
 #include <string>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -67,7 +65,6 @@ inline std::unique_ptr<foreign_call_expr> foreign_call(foreign_computelet comput
     return std::make_unique<foreign_call_expr>(std::move(computelet), std::move(args));
 }
 
-}
 }
 
 #endif

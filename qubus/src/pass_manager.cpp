@@ -1,7 +1,5 @@
 #include <qbb/qubus/pass_manager.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -124,6 +122,5 @@ preserved_analyses_info pass_manager::run(function_declaration& fun)
     }
 
     return {};
-}
 }
 }

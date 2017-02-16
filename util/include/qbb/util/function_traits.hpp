@@ -4,7 +4,7 @@
 #include <type_traits>
 #include <tuple>
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {

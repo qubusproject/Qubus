@@ -2,8 +2,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -30,6 +28,5 @@ std::unique_ptr<memory_block> evicting_allocator::allocate(std::size_t size, std
 void evicting_allocator::deallocate(memory_block& mem_block)
 {
     underlying_allocator_->deallocate(mem_block);
-}
 }
 }

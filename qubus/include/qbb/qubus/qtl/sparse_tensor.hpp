@@ -20,8 +20,6 @@
 #include <array>
 #include <map>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -183,7 +181,6 @@ struct associated_qubus_type<qtl::ast::sparse_tensor<T, Rank>>
         return types::sparse_tensor(associated_qubus_type<T>::get());
     }
 };
-}
 }
 
 #endif

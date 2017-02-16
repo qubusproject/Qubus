@@ -12,7 +12,7 @@
 #include <utility>
 #include <type_traits>
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {
@@ -211,7 +211,7 @@ public:
 };
 
 #define QBB_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(multi_method, specialization, name)       \
-    ::qbb::util::multi_method_specialization_initializer qbb_mm_##name##_initializer(              \
+    ::qubus::util::multi_method_specialization_initializer qbb_mm_##name##_initializer(            \
         multi_method, specialization)
 
 #define QBB_DEFINE_MULTI_METHOD_SPECIALIZATION(multi_method, specialization)                       \

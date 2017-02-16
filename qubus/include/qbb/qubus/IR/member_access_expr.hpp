@@ -8,8 +8,6 @@
 
 #include <string>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -56,7 +54,6 @@ inline std::unique_ptr<member_access_expr> member_access(std::unique_ptr<access_
 bool operator==(const member_access_expr& lhs, const member_access_expr& rhs);
 bool operator!=(const member_access_expr& lhs, const member_access_expr& rhs);
 
-}
 }
 
 #endif

@@ -3,7 +3,7 @@
 
 #include <cstddef>
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {

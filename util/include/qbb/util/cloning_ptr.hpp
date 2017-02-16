@@ -8,7 +8,7 @@
 #include <utility>
 #include <type_traits>
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {
@@ -241,12 +241,12 @@ namespace std
 {
 
 template<typename T>
-struct hash<qbb::util::cloning_ptr<T>>
+struct hash<util::cloning_ptr<T>>
 {
-    using argument_type = qbb::util::cloning_ptr<T>;
+    using argument_type = util::cloning_ptr<T>;
     using result_type = size_t;
 
-    size_t operator()(const qbb::util::cloning_ptr<T>& value) const
+    size_t operator()(const util::cloning_ptr<T>& value) const
     {
         return std::hash<T*>()(value.get());
     }

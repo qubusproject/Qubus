@@ -2,8 +2,6 @@
 
 #include <isl/options.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -35,7 +33,6 @@ context_ref::context_ref(context& ctx) : handle_(ctx.native_handle())
 isl_ctx* context_ref::native_handle() const
 {
     return handle_;
-}
 }
 }
 }

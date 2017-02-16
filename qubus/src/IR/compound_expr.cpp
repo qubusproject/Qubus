@@ -2,8 +2,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -24,7 +22,7 @@ execution_order compound_expr::order() const
 
 compound_expr* compound_expr::clone() const
 {
-    return new compound_expr(order_, qbb::qubus::clone(body_));
+    return new compound_expr(order_, qubus::clone(body_));
 }
 
 const expression& compound_expr::child(std::size_t index) const
@@ -51,6 +49,5 @@ bool operator==(const compound_expr& lhs, const compound_expr& rhs)
 bool operator!=(const compound_expr& lhs, const compound_expr& rhs)
 {
     return !(lhs == rhs);
-}
 }
 }

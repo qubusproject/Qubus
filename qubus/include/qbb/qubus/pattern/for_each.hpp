@@ -6,8 +6,6 @@
 #include <qbb/qubus/pattern/IR.hpp>
 #include <qbb/qubus/pattern/core.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -22,7 +20,6 @@ inline void for_each(const expression& expr, const Matcher& matcher)
     {
         for_each(subexpr, matcher);
     }
-}
 }
 }
 }

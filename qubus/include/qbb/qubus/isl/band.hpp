@@ -10,8 +10,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -43,9 +41,8 @@ private:
     isl_band* handle_;
 };
 
-void tile_band(band& b, const std::vector<qbb::util::index_t>& sizes);
+void tile_band(band& b, const std::vector<util::index_t>& sizes);
 
-}
 }
 }
 

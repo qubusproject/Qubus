@@ -12,8 +12,6 @@
 
 #include <chrono>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -48,7 +46,6 @@ public:
     virtual boost::optional<performance_estimate>
     try_estimate_execution_time(const computelet& c, const execution_context& ctx) const = 0;
 };
-}
 }
 
 #endif

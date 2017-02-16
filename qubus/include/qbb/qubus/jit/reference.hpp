@@ -15,8 +15,6 @@
 #include <vector>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -47,7 +45,6 @@ private:
     mutable std::vector<hpx::lcos::shared_future<llvm::MDNode*>> alias_scopes_;
     mutable std::vector<hpx::lcos::shared_future<llvm::MDNode*>> noalias_sets_;
 };
-}
 }
 }
 

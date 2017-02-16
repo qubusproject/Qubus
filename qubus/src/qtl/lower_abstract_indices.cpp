@@ -16,8 +16,6 @@
 #include <array>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -97,7 +95,6 @@ function_declaration lower_abstract_indices(function_declaration decl)
     decl.substitute_body(std::move(new_body));
 
     return decl;
-}
 }
 }
 }

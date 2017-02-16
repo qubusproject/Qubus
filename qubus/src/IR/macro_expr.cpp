@@ -7,8 +7,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 macro_expr::macro_expr(std::vector<variable_declaration> params_, std::unique_ptr<expression> body_)
@@ -28,7 +26,7 @@ const expression& macro_expr::body() const
 
 macro_expr* macro_expr::clone() const
 {
-    return new macro_expr(params_, qbb::qubus::clone(*body_));
+    return new macro_expr(params_, qubus::clone(*body_));
 }
 
 const expression& macro_expr::child(std::size_t index) const
@@ -93,5 +91,4 @@ std::unique_ptr<expression> expand_macro(const macro_expr& macro, std::vector<st
     return body;
 }
 
-}
 }

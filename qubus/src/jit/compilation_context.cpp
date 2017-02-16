@@ -2,8 +2,6 @@
 
 #include <qbb/util/unused.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -63,12 +61,12 @@ compilation_context::~compilation_context()
     wait_on_pending_tasks();
 }
 
-std::map<qbb::util::handle, reference>& compilation_context::symbol_table()
+std::map<util::handle, reference>& compilation_context::symbol_table()
 {
     return symbol_table_;
 }
 
-const std::map<qbb::util::handle, reference>& compilation_context::symbol_table() const
+const std::map<util::handle, reference>& compilation_context::symbol_table() const
 {
     return symbol_table_;
 }
@@ -165,7 +163,6 @@ void compilation_context::answer_pending_global_alias_queries()
 
         query.answer(alias_scope, noalias_set);
     }
-}
 }
 }
 }

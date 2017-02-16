@@ -9,8 +9,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -72,7 +70,6 @@ schedule_node tile_band(schedule_node node, std::vector<long int> sizes);
 schedule_node graft_before(schedule_node node, schedule_node graft);
 schedule_node graft_after(schedule_node node, schedule_node graft);
 
-}
 }
 }
 

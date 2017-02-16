@@ -13,8 +13,6 @@
 
 #include <qbb/util/handle.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -83,7 +81,6 @@ public:
     }
 };
 
-}
 }
 
 #endif

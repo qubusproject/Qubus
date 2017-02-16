@@ -10,8 +10,6 @@
 #include <memory>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
  
@@ -59,7 +57,6 @@ private:
     std::map<std::string, annotation> annotations_;
 };
     
-}   
 }
 
 

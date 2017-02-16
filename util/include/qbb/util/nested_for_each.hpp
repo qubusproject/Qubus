@@ -4,7 +4,7 @@
 #include <vector>
 #include <iterator>
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {

@@ -2,8 +2,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -53,6 +51,5 @@ backend_registry::const_iterator backend_registry::begin() const
 backend_registry::const_iterator backend_registry::end() const
 {
     return backend_dictionary_.end();
-}
 }
 }

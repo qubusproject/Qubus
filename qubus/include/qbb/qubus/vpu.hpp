@@ -15,8 +15,6 @@
 #include <chrono>
 #include <memory>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -110,7 +108,6 @@ public:
     hpx::future<boost::optional<performance_estimate>>
     try_estimate_execution_time(const computelet& c, const execution_context& ctx) const override;
 };
-}
 }
 
 #endif

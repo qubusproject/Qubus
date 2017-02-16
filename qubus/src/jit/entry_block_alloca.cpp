@@ -2,8 +2,6 @@
 
 #include <llvm/IR/IRBuilder.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -15,7 +13,6 @@ llvm::AllocaInst* create_entry_block_alloca(llvm::Function* current_function, ll
     llvm::IRBuilder<> builder(&current_function->getEntryBlock(),
                               current_function->getEntryBlock().begin());
     return builder.CreateAlloca(type, array_size, name);
-}
 }
 }
 }

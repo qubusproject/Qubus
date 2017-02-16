@@ -14,8 +14,6 @@
 #include <string>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -63,7 +61,6 @@ private:
     compile_layer_type compile_layer_;
     std::vector<module_handle_type> module_handles_;
 };
-}
 }
 
 #pragma pop_macro("DEBUG")

@@ -5,8 +5,6 @@
 #include <isl/val.h>
 #include <isl/list.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -220,6 +218,5 @@ schedule_node graft_after(schedule_node node, schedule_node graft)
     return schedule_node(isl_schedule_node_graft_after(node.release(), graft.release()));
 }
 
-}
 }
 }

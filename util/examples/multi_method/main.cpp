@@ -2,11 +2,11 @@
 
 #include <boost/range/adaptor/transformed.hpp>
 
-#include <typeindex>
-#include <memory>
-#include <map>
 #include <atomic>
 #include <iostream>
+#include <map>
+#include <memory>
+#include <typeindex>
 
 #include <typeinfo> // for bad_cast
 
@@ -86,7 +86,7 @@ public:
     T as() const
     {
         using value_type = typename std::decay<T>::type;
-        
+
         if (self_->rtti() == typeid(value_type))
         {
             return static_cast<foo_wrapper<value_type>*>(self_.get())->get();
@@ -97,12 +97,12 @@ public:
         }
     }
 
-    qbb::util::index_t type_tag() const
+    qubus::util::index_t type_tag() const
     {
         return self_->tag();
     }
 
-    static const qbb::util::implementation_table& get_implementation_table()
+    static const qubus::util::implementation_table& get_implementation_table()
     {
         return implementation_table_;
     }
@@ -121,14 +121,14 @@ private:
         }
 
         virtual std::type_index rtti() const = 0;
-        virtual qbb::util::index_t tag() const = 0;
+        virtual qubus::util::index_t tag() const = 0;
     };
 
     template <typename T>
     class foo_wrapper final : public foo_interface
     {
     public:
-        explicit foo_wrapper(T value_, qbb::util::index_t tag_) : value_(value_), tag_(tag_)
+        explicit foo_wrapper(T value_, qubus::util::index_t tag_) : value_(value_), tag_(tag_)
         {
         }
 
@@ -146,22 +146,22 @@ private:
             return typeid(T);
         }
 
-        qbb::util::index_t tag() const override
+        qubus::util::index_t tag() const override
         {
             return tag_;
         }
 
     private:
         T value_;
-        qbb::util::index_t tag_;
+        qubus::util::index_t tag_;
     };
 
     std::shared_ptr<foo_interface> self_;
 
-    static qbb::util::implementation_table implementation_table_;
+    static qubus::util::implementation_table implementation_table_;
 };
 
-qbb::util::implementation_table foo::implementation_table_ = {};
+qubus::util::implementation_table foo::implementation_table_ = {};
 
 class bar
 {
@@ -183,7 +183,7 @@ public:
     T as() const
     {
         using value_type = typename std::decay<T>::type;
-        
+
         if (self_->rtti() == typeid(value_type))
         {
             return static_cast<bar_wrapper<value_type>*>(self_.get())->get();
@@ -194,12 +194,12 @@ public:
         }
     }
 
-    qbb::util::index_t type_tag() const
+    qubus::util::index_t type_tag() const
     {
         return self_->tag();
     }
 
-    static const qbb::util::implementation_table& get_implementation_table()
+    static const qubus::util::implementation_table& get_implementation_table()
     {
         return implementation_table_;
     }
@@ -218,14 +218,14 @@ private:
         }
 
         virtual std::type_index rtti() const = 0;
-        virtual qbb::util::index_t tag() const = 0;
+        virtual qubus::util::index_t tag() const = 0;
     };
 
     template <typename T>
     class bar_wrapper final : public bar_interface
     {
     public:
-        explicit bar_wrapper(T value_, qbb::util::index_t tag_) : value_(value_), tag_(tag_)
+        explicit bar_wrapper(T value_, qubus::util::index_t tag_) : value_(value_), tag_(tag_)
         {
         }
 
@@ -243,29 +243,35 @@ private:
             return typeid(T);
         }
 
-        qbb::util::index_t tag() const override
+        qubus::util::index_t tag() const override
         {
             return tag_;
         }
 
     private:
         T value_;
-        qbb::util::index_t tag_;
+        qubus::util::index_t tag_;
     };
 
     std::shared_ptr<bar_interface> self_;
 
-    static qbb::util::implementation_table implementation_table_;
+    static qubus::util::implementation_table implementation_table_;
 };
 
-qbb::util::implementation_table bar::implementation_table_ = {};
+qubus::util::implementation_table bar::implementation_table_ = {};
 
-qbb::util::sparse_multi_method<void(const qbb::util::virtual_<foo>&, const qbb::util::virtual_<foo>&)> blub = {};
+qubus::util::sparse_multi_method<void(const qubus::util::virtual_<foo>&,
+                                      const qubus::util::virtual_<foo>&)>
+    blub = {};
 
-qbb::util::sparse_multi_method<void(const qbb::util::virtual_<foo>&, const qbb::util::virtual_<foo>&, const qbb::util::virtual_<bar>&)> blab =
-    {};
+qubus::util::sparse_multi_method<void(const qubus::util::virtual_<foo>&,
+                                      const qubus::util::virtual_<foo>&,
+                                      const qubus::util::virtual_<bar>&)>
+    blab = {};
 
-qbb::util::multi_method<void(int, const qbb::util::virtual_<foo>&, const qbb::util::virtual_<bar>&)> blib = {};
+qubus::util::multi_method<void(int, const qubus::util::virtual_<foo>&,
+                               const qubus::util::virtual_<bar>&)>
+    blib = {};
 
 void blab1(const foo1&, const foo2&, const bar1&)
 {

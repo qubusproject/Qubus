@@ -8,8 +8,6 @@
 #include <utility>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -73,7 +71,6 @@ inline variable_ref_pattern<any> var()
     return var(_);
 }
 
-}
 }
 }
 

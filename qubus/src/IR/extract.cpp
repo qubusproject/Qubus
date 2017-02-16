@@ -16,8 +16,6 @@
 #include <map>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -109,6 +107,5 @@ std::unique_ptr<expression> extract_expr_as_function(const expression& expr,
     args.push_back(std::move(result));
 
     return spawn(std::move(extracted_function), std::move(args));
-}
 }
 }

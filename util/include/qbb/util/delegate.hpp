@@ -11,7 +11,7 @@
 #include <mutex>
 #include <utility>
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {
@@ -86,8 +86,8 @@ namespace std
 {
 
 template <typename Signature, typename SharedMutex>
-void swap(qbb::util::delegate<Signature, SharedMutex>& first,
-          qbb::util::delegate<Signature, SharedMutex>& second) noexcept
+void swap(qubus::util::delegate<Signature, SharedMutex>& first,
+          qubus::util::delegate<Signature, SharedMutex>& second) noexcept
 {
     first.swap(second);
 }

@@ -14,8 +14,6 @@
 #include <tuple>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -239,6 +237,5 @@ hpx::future<local_address_space::handle> local_address_space::resolve_object(con
 local_address_space::handle local_address_space::try_resolve_object(const object& obj) const
 {
     return host_addr_space_.get().try_resolve_object(obj);
-}
 }
 }

@@ -10,8 +10,6 @@
 #include <utility>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -63,7 +61,6 @@ template <typename Pattern>
 contains_pattern<Pattern> contains(Pattern pattern)
 {
     return contains_pattern<Pattern>(pattern);
-}
 }
 }
 }

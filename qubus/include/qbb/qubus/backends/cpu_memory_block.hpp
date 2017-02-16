@@ -6,8 +6,6 @@
 
 #include <cstddef>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -28,7 +26,6 @@ private:
     cpu_allocator* allocator_;
 };
 
-}
 }
 
 #endif

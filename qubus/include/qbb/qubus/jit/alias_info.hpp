@@ -13,8 +13,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 struct alias_info
@@ -28,7 +26,6 @@ struct alias_info
     hpx::lcos::shared_future<llvm::MDNode*> alias_scope;
     hpx::lcos::shared_future<llvm::MDNode*> noalias_set;
 };
-}
 }
 
 #endif

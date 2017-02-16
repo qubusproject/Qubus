@@ -3,8 +3,6 @@
 
 #include <type_traits>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -24,7 +22,6 @@ template<typename T>
 struct is_type : std::is_base_of<type_base<T>, T>
 {
 };
-}
 }
 
 #endif

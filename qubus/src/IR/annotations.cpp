@@ -1,7 +1,5 @@
 #include <qbb/qubus/IR/annotations.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 bool annotation::has_value() const
@@ -33,5 +31,4 @@ annotation annotation_map::lookup(const std::string& key) const
     }
 }
     
-}    
 }

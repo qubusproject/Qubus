@@ -19,8 +19,6 @@
 #include <tuple>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 class access
@@ -118,7 +116,6 @@ public:
 
     std::vector<analysis_id> required_analyses() const;
 };
-}
 }
 
 #endif

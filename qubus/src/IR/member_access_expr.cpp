@@ -4,8 +4,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -31,7 +29,7 @@ const access_expr& member_access_expr::qualified_access() const
 
 member_access_expr* member_access_expr::clone() const
 {
-    return new member_access_expr(qbb::qubus::clone(*object_), member_name_);
+    return new member_access_expr(qubus::clone(*object_), member_name_);
 }
 
 const expression& member_access_expr::child(std::size_t index) const
@@ -75,5 +73,4 @@ bool operator!=(const member_access_expr& lhs, const member_access_expr& rhs)
     return !(lhs == rhs);
 }
 
-}
 }

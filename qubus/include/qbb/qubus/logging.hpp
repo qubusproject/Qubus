@@ -6,8 +6,6 @@
 
 #include <ostream>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -26,7 +24,6 @@ std::ostream& operator<<(std::ostream& strm, severity_level level);
 using logger = boost::log::sources::severity_logger<severity_level>;
 
 void init_logging();
-}
 }
 
 #if BOOST_VERSION >= 105900 && BOOST_VERSION < 106000

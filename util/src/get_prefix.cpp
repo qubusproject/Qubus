@@ -2,7 +2,7 @@
 
 #include <boost/dll.hpp>
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {

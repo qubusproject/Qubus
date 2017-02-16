@@ -8,8 +8,6 @@
 #include <utility>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -60,7 +58,6 @@ template <typename Params, typename Body>
 macro_pattern<Params, Body> macro(Params params, Body body)
 {
     return macro_pattern<Params, Body>(std::move(params), std::move(body));
-}
 }
 }
 }

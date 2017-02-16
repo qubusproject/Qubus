@@ -8,8 +8,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -115,7 +113,6 @@ llvm::StoreInst* store_to_ref(const reference& ref, llvm::Value* value, llvm_env
     return store;
 }
 
-}
 }
 }
 

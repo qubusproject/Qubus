@@ -11,8 +11,6 @@
 
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -117,7 +115,6 @@ inline std::unique_ptr<for_expr> unordered_for(variable_declaration loop_index,
     return std::make_unique<for_expr>(execution_order::unordered, std::move(loop_index),
                                       std::move(lower_bound), std::move(upper_bound),
                                       std::move(increment), std::move(body));
-}
 }
 }
 

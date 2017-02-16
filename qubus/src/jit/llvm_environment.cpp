@@ -15,8 +15,6 @@
 #include <array>
 #include <tuple>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -316,7 +314,6 @@ llvm::Value* llvm_environment::lookup_symbol(const std::string& symbol) const
 std::unique_ptr<llvm::Module> llvm_environment::detach_module()
 {
     return std::move(the_module_);
-}
 }
 }
 }

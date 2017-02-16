@@ -11,8 +11,6 @@
 #include <unordered_map>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -269,5 +267,4 @@ std::vector<analysis_id> variable_access_analysis::required_analyses() const
 }
 
 QUBUS_REGISTER_ANALYSIS_PASS(variable_access_analysis);
-}
 }

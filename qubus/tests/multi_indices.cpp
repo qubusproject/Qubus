@@ -13,7 +13,7 @@
 
 TEST(multi_indices, simple_expr)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -47,7 +47,7 @@ TEST(multi_indices, simple_expr)
 
 TEST(multi_indices, index_splitting)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -117,13 +117,13 @@ TEST(multi_indices, index_splitting)
 // TODO: Should this work?
 /*TEST(multi_indices, reverse_index_splitting)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     long int N = 100;
 
-    qbb::qubus::index i("i");
-    qbb::qubus::index j("j");
-    qbb::qubus::multi_index<2> ij({i, j}, "ij");
+    qubus::index i("i");
+    qubus::index j("j");
+    qubus::multi_index<2> ij({i, j}, "ij");
 
     std::random_device rd;
 
@@ -191,7 +191,7 @@ TEST(multi_indices, index_splitting)
 
 TEST(multi_indices, multi_sum)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -273,7 +273,7 @@ TEST(multi_indices, multi_sum)
 
 TEST(multi_indices, multi_sum_index_splitting)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -358,7 +358,7 @@ TEST(multi_indices, multi_sum_index_splitting)
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

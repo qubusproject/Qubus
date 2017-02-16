@@ -11,8 +11,6 @@
 #include <vector>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -75,7 +73,6 @@ schedule get_schedule(const schedule_node& node);
 
 schedule map_schedule_node(schedule s, std::function<schedule_node(schedule_node)> callback);
 
-}
 }
 }
 

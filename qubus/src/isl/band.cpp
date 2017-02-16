@@ -1,7 +1,5 @@
 #include <qbb/qubus/isl/band.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -82,15 +80,15 @@ isl_band* band::release() noexcept
     return temp;
 }
 
-void tile_band(band& b, const std::vector<qbb::util::index_t>& sizes)
+void tile_band(band& b, const std::vector<util::index_t>& sizes)
 {
-    int n = qbb::util::integer_cast<int>(sizes.size());
+    int n = util::integer_cast<int>(sizes.size());
 
     isl_vec* sizes_ = isl_vec_alloc(b.get_ctx().native_handle(), n);
 
     for (int i = 0; i < n; ++i)
     {
-        isl_vec_set_element_si(sizes_, i, qbb::util::integer_cast<int>(sizes[i]));
+        isl_vec_set_element_si(sizes_, i, util::integer_cast<int>(sizes[i]));
     }
 
     isl_band_tile(b.native_handle(), sizes_);
@@ -107,7 +105,6 @@ isl_stat add_band_child(isl_band* child, void* user) noexcept
     children.emplace_back(child);
 
     return isl_stat_ok;
-}
 }
 }
 }

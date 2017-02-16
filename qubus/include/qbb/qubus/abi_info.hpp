@@ -10,8 +10,6 @@
 #include <cstddef>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -93,7 +91,6 @@ public:
     {
     }
 };
-}
 }
 
 #endif

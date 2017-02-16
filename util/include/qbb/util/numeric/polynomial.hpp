@@ -7,7 +7,7 @@
 #include <vector>
 #include <utility>
 
-inline namespace qbb
+namespace qubus
 {
 namespace util
 {

@@ -9,7 +9,7 @@
 
 TEST(axiom_analysis, loop_iteration_range)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration i(types::integer{});
 
@@ -35,7 +35,7 @@ TEST(axiom_analysis, loop_iteration_range)
 
 TEST(axiom_analysis, nonunit_stride_loop_iteration_range)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration i(types::integer{});
 
@@ -61,7 +61,7 @@ TEST(axiom_analysis, nonunit_stride_loop_iteration_range)
 
 TEST(axiom_analysis, if_condition_simple)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration i(types::integer{});
 
@@ -84,7 +84,7 @@ TEST(axiom_analysis, if_condition_simple)
 
 TEST(axiom_analysis, deep_nest)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration i(types::integer{});
 
@@ -110,7 +110,7 @@ TEST(axiom_analysis, deep_nest)
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

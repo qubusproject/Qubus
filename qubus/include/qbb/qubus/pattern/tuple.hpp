@@ -11,8 +11,6 @@
 #include <iterator>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -75,7 +73,6 @@ tuple_pattern<Elements...> tuple(Elements... elements)
     return tuple_pattern<Elements...>(std::make_tuple(std::move(elements)...));
 }
 
-}
 }
 }
 

@@ -4,8 +4,6 @@
 #include <memory>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -60,7 +58,6 @@ private:
 
     std::shared_ptr<pattern_interface> self_;
 };
-}
 }
 }
 

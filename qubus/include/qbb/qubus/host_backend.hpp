@@ -7,8 +7,6 @@
 #include <functional>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -23,7 +21,6 @@ public:
 
     virtual host_address_space& get_host_address_space() = 0;
 };
-}
 }
 
 #endif

@@ -16,8 +16,6 @@
 #include <qbb/qubus/pattern/IR.hpp>
 #include <qbb/qubus/pattern/core.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -677,7 +675,6 @@ reference compile(const expression& expr, compiler& comp)
     pattern::try_match(expr, m2);
 
     return result;
-}
 }
 }
 }

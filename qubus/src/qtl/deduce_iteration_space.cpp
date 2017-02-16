@@ -7,8 +7,6 @@
 
 #include <cstddef>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -75,7 +73,6 @@ std::array<std::unique_ptr<expression>, 2> deduce_iteration_space(const variable
     {
         throw 0;
     }
-}
 }
 }
 }

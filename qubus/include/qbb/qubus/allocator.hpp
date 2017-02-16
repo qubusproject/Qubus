@@ -5,8 +5,6 @@
 
 #include <memory>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -25,7 +23,6 @@ public:
 private:
 };
 
-}
 }
 
 #endif

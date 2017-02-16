@@ -4,8 +4,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -27,6 +25,5 @@ void round_robin_scheduler::add_resource(vpu& execution_resource)
     std::lock_guard<hpx::lcos::local::mutex> guard(scheduling_mutex_);
 
     execution_resources_.push_back(&execution_resource);
-}
 }
 }

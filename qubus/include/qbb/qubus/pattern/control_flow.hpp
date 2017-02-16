@@ -3,8 +3,6 @@
 
 #include <type_traits>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -24,7 +22,6 @@ auto if_then_else(const Value& value, const Pattern& pattern, const Then& then, 
     }
 }
 
-}   
 }   
 }
 

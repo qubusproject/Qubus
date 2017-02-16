@@ -8,7 +8,7 @@
 
 TEST(symbolic_regression, polynomial)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace std::literals::chrono_literals;
 
     symbolic_regression reg(1000);
@@ -55,7 +55,7 @@ TEST(symbolic_regression, polynomial)
 
 TEST(symbolic_regression, exponential)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace std::literals::chrono_literals;
 
     symbolic_regression reg(1000);
@@ -102,7 +102,7 @@ TEST(symbolic_regression, exponential)
 
 TEST(symbolic_regression, exponential_sliding)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace std::literals::chrono_literals;
 
     symbolic_regression reg(1000);
@@ -156,7 +156,7 @@ TEST(symbolic_regression, exponential_sliding)
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

@@ -6,8 +6,6 @@
 
 #include <isl/constraint.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -42,7 +40,6 @@ private:
     isl_constraint* handle_;
 };
 
-}
 }
 }
 

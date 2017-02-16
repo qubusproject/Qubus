@@ -20,8 +20,6 @@
 #include <algorithm>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -145,7 +143,6 @@ inline bool operator==(const foreign_computelet& QBB_UNUSED(lhs),
 inline bool operator!=(const foreign_computelet& lhs, const foreign_computelet& rhs)
 {
     return !(lhs == rhs);
-}
 }
 }
 

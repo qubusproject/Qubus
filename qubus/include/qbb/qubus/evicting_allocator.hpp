@@ -8,8 +8,6 @@
 #include <memory>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -27,7 +25,6 @@ private:
     std::function<bool(std::size_t)> evict_callback_;
 };
 
-}       
 }
 
 

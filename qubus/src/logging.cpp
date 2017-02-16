@@ -18,8 +18,6 @@
 #include <iomanip>
 #include <memory>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace
@@ -78,5 +76,4 @@ void init_logging()
     logging::core::get()->set_filter(severity >= normal);
 }
 
-}
 }

@@ -1,7 +1,5 @@
 #include <qbb/qubus/isl/schedule.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -178,6 +176,5 @@ schedule map_schedule_node(schedule s, std::function<schedule_node(schedule_node
     return schedule(isl_schedule_map_schedule_node_bottom_up(s.release(), &qbb_qubus_isl_map_schedule_node_thunk, &callback));
 }
 
-}
 }
 }

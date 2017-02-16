@@ -10,8 +10,6 @@
 #include <utility>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -93,7 +91,6 @@ auto logical_not(Arg arg)
     return unary_operator(value(unary_op_tag::logical_not), arg);
 }
 
-}
 }
 }
 

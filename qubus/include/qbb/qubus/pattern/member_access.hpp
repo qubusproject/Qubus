@@ -7,8 +7,6 @@
 #include <utility>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -61,7 +59,6 @@ member_access_pattern<Object, MemberName> member_access(Object object, MemberNam
     return member_access_pattern<Object, MemberName>(object, member_name);
 }
 
-}
 }
 }
 

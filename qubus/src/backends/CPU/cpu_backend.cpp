@@ -51,8 +51,6 @@
 #include <unordered_map>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -272,6 +270,5 @@ extern "C" QBB_QUBUS_EXPORT backend* init_cpu_backend(const abi_info* abi)
                    [&] { the_cpu_backend = util::make_unique<cpu_backend>(*abi); });
 
     return the_cpu_backend.get();
-}
 }
 }

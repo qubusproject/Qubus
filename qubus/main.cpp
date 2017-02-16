@@ -25,8 +25,6 @@
 
 #include <qbb/qubus/allocator.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -69,9 +67,8 @@ private:
     std::size_t total_memory_;
 };
 }
-}
 
-using namespace qbb::qubus;
+using namespace qubus;
 
 void print_vector(host_tensor_view<const double, 1> v)
 {
@@ -85,9 +82,9 @@ int hpx_main(int argc, char** argv)
 {
     hpx::cout << "Init" << hpx::endl;
 
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
-    using namespace qbb::qubus::qtl;
+    using namespace qubus::qtl;
 
     auto num_localities = hpx::get_num_localities(hpx::launch::sync);
 
@@ -176,7 +173,7 @@ int hpx_main(int argc, char** argv)
     tensor<double, 1> b(N);
     tensor<double, 1> rb(N);
 
-    qbb::qubus::index i;
+    qubus::index i;
 
     tensor_expr<double, 1> one = def_tensor (i) [1];
 
@@ -211,9 +208,9 @@ int hpx_main(int argc, char** argv)
             .finalize();
 
     {
-        qbb::qubus::index i("i");
-        qbb::qubus::index j("j");
-        qbb::qubus::index k("k");
+        qubus::index i("i");
+        qubus::index j("j");
+        qubus::index k("k");
 
         tensor<double, 2> A(N, N);
         tensor<double, 2> B(N, N);
@@ -231,13 +228,13 @@ int hpx_main(int argc, char** argv)
 
         long int M = 10000000;
 
-        std::vector<qbb::util::index_t> indices(2*M);
+        std::vector<util::index_t> indices(2*M);
 
         std::random_device rd;
 
         std::mt19937 engine(rd());
 
-        std::uniform_int_distribution<qbb::util::index_t> dist(0, N);
+        std::uniform_int_distribution<util::index_t> dist(0, N);
 
         for (long int i = 0; i < M; ++i)
         {

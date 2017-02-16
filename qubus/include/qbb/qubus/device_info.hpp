@@ -5,8 +5,6 @@
 #include <vector>
 #include <string>
 
-inline namespace qbb
-{
 namespace qubus
 {
  
@@ -21,7 +19,6 @@ public:
     virtual std::vector<std::string> get_features() = 0;
 };
 
-}
 }
 
 #endif

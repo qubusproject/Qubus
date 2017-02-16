@@ -4,8 +4,6 @@
 
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -83,7 +81,6 @@ boost::any& id::user_data()
     auto user_typed = static_cast<boost::any*>(user);
 
     return *user_typed;
-}
 }
 }
 }

@@ -13,8 +13,6 @@
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Value.h>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -492,7 +490,6 @@ reference emit_unary_operator(unary_op_tag tag, const expression& arg, compiler&
     store_to_ref(result_var_ref, result, env, ctx);
 
     return result_var_ref;
-}
 }
 }
 }

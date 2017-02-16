@@ -22,8 +22,6 @@
 #include <memory>
 #include <map>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -83,9 +81,9 @@ public:
     compilation_context(const compilation_context&) = delete;
     compilation_context& operator=(const compilation_context&) = delete;
 
-    std::map<qbb::util::handle, reference>& symbol_table();
+    std::map<util::handle, reference>& symbol_table();
 
-    const std::map<qbb::util::handle, reference>& symbol_table() const;
+    const std::map<util::handle, reference>& symbol_table() const;
 
     boost::optional<function_declaration> get_next_plan_to_compile();
 
@@ -110,7 +108,7 @@ private:
 
     llvm_environment* env_;
 
-    std::map<qbb::util::handle, reference> symbol_table_;
+    std::map<util::handle, reference> symbol_table_;
     std::vector<function_declaration> plans_to_compile_;
     std::vector<scope> scopes_;
 
@@ -118,7 +116,6 @@ private:
 
     std::vector<hpx::lcos::future<void>> pending_tasks_;
 };
-}
 }
 }
 

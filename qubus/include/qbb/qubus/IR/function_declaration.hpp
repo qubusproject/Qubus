@@ -18,8 +18,6 @@
 #include <memory>
 #include <vector>
 
-inline namespace qbb
-{
 namespace qubus
 {
 
@@ -100,7 +98,6 @@ private:
 
 bool operator==(const function_declaration& lhs, const function_declaration& rhs);
 bool operator!=(const function_declaration& lhs, const function_declaration& rhs);
-}
 }
 
 #endif

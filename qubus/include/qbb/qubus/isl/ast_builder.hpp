@@ -15,8 +15,6 @@
 
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -81,7 +79,6 @@ public:
     using ast_builder_base::ast_builder_base;
 };
 
-}
 }
 }
 

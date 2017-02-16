@@ -18,8 +18,6 @@
 #include <type_traits>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -265,7 +263,6 @@ using index = ast::index;
 
 template<long int Rank>
 using multi_index = ast::multi_index<Rank>;
-}
 }
 }
 

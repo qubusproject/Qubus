@@ -9,8 +9,6 @@
 #include <utility>
 #include <functional>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -70,7 +68,6 @@ auto subscription_n(IndexedExpr indexed_expr, Indices... indices)
     return subscription(indexed_expr, sequence(indices...));
 }
 
-}
 }
 }
 

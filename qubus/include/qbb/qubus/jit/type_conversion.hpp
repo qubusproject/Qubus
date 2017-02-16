@@ -10,8 +10,6 @@
 #include <qbb/qubus/jit/compilation_context.hpp>
 #include <qbb/qubus/jit/reference.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -21,7 +19,6 @@ class compiler;
 
 reference emit_type_conversion(const type& target_type, const expression& arg,
                                compiler& comp);
-}
 }
 }
 

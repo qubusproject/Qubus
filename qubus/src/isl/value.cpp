@@ -4,8 +4,6 @@
 
 #include <qbb/util/assert.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -53,7 +51,6 @@ isl_val* value::release() noexcept
     handle_ = nullptr;
 
     return temp;
-}
 }
 }
 }

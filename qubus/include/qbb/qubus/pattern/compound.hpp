@@ -11,8 +11,6 @@
 #include <functional>
 #include <utility>
 
-inline namespace qbb
-{
 namespace qubus
 {
 namespace pattern
@@ -103,7 +101,6 @@ auto unordered_tasks_n(Tasks... tasks)
     return unordered_tasks(sequence(tasks...));
 }
 
-}
 }
 }
 

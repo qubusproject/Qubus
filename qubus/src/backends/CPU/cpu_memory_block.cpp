@@ -1,7 +1,5 @@
 #include <qbb/qubus/backends/cpu_memory_block.hpp>
 
-inline namespace qbb
-{
 namespace qubus
 {
 cpu_memory_block::cpu_memory_block(void* data_, std::size_t size_, cpu_allocator& allocator_)
@@ -22,6 +20,5 @@ std::size_t cpu_memory_block::size() const
 void* cpu_memory_block::ptr() const
 {
     return data_;
-}
 }
 }
