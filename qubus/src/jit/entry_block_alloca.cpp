@@ -1,4 +1,4 @@
-#include <qbb/qubus/jit/entry_block_alloca.hpp>
+#include <qubus/jit/entry_block_alloca.hpp>
 
 #include <llvm/IR/IRBuilder.h>
 

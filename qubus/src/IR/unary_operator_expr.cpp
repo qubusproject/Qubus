@@ -1,6 +1,6 @@
-#include <qbb/qubus/IR/unary_operator_expr.hpp>
+#include <qubus/IR/unary_operator_expr.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <utility>
 

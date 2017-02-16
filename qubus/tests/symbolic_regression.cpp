@@ -1,6 +1,6 @@
-#include <qbb/qubus/qubus.hpp>
+#include <qubus/qubus.hpp>
 
-#include <qbb/qubus/performance_models/symbolic_regression.hpp>
+#include <qubus/performance_models/symbolic_regression.hpp>
 
 #include <hpx/hpx_init.hpp>
 

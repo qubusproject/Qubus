@@ -1,4 +1,4 @@
-#include <qbb/qubus/isl/affine_expr.hpp>
+#include <qubus/isl/affine_expr.hpp>
 
 namespace qubus
 {

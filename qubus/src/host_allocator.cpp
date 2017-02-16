@@ -1,6 +1,6 @@
-#include <qbb/qubus/host_allocator.hpp>
+#include <qubus/host_allocator.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <cstdlib>
 #include <type_traits>

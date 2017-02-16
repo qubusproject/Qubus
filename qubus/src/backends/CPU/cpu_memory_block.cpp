@@ -1,4 +1,4 @@
-#include <qbb/qubus/backends/cpu_memory_block.hpp>
+#include <qubus/backends/cpu_memory_block.hpp>
 
 namespace qubus
 {

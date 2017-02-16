@@ -1,6 +1,6 @@
-#include <qbb/qubus/isl/local_space.hpp>
+#include <qubus/isl/local_space.hpp>
 
-#include <qbb/qubus/isl/context.hpp>
+#include <qubus/isl/context.hpp>
 
 namespace qubus
 {

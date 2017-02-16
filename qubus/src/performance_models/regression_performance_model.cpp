@@ -1,13 +1,13 @@
-#include <qbb/qubus/performance_models/regression_performance_model.hpp>
+#include <qubus/performance_models/regression_performance_model.hpp>
 
-#include <qbb/qubus/performance_models/symbolic_regression.hpp>
+#include <qubus/performance_models/symbolic_regression.hpp>
 
-#include <qbb/qubus/get_view.hpp>
-#include <qbb/qubus/host_object_views.hpp>
+#include <qubus/get_view.hpp>
+#include <qubus/host_object_views.hpp>
 
 #include <hpx/include/local_lcos.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <map>
 #include <mutex>

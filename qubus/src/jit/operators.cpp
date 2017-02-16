@@ -1,14 +1,14 @@
-#include <qbb/qubus/jit/operators.hpp>
+#include <qubus/jit/operators.hpp>
 
-#include <qbb/qubus/jit/compiler.hpp>
+#include <qubus/jit/compiler.hpp>
 
-#include <qbb/qubus/jit/load_store.hpp>
-#include <qbb/qubus/jit/entry_block_alloca.hpp>
+#include <qubus/jit/load_store.hpp>
+#include <qubus/jit/entry_block_alloca.hpp>
 
-#include <qbb/qubus/pattern/core.hpp>
-#include <qbb/qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
 
-#include <qbb/qubus/IR/type_inference.hpp>
+#include <qubus/IR/type_inference.hpp>
 
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Value.h>

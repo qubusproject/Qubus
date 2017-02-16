@@ -1,11 +1,11 @@
-#include <qbb/qubus/performance_models/unified_performance_model.hpp>
+#include <qubus/performance_models/unified_performance_model.hpp>
 
-#include <qbb/qubus/performance_models/regression_performance_model.hpp>
-#include <qbb/qubus/performance_models/simple_statistical_performance_model.hpp>
+#include <qubus/performance_models/regression_performance_model.hpp>
+#include <qubus/performance_models/simple_statistical_performance_model.hpp>
 
 #include <hpx/include/local_lcos.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <algorithm>
 #include <mutex>

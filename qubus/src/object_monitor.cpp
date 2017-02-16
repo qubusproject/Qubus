@@ -1,6 +1,6 @@
-#include <qbb/qubus/object_monitor.hpp>
+#include <qubus/object_monitor.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <mutex>
 

@@ -3,7 +3,7 @@ set(qubus_isl_header_file_names affine_expr.hpp ast.hpp ast_builder.hpp constrai
                                 printer.hpp schedule.hpp set.hpp space.hpp value.hpp
                                 id.hpp band.hpp)
                
-set(qubus_isl_include_dir ${CMAKE_SOURCE_DIR}/qubus/include/qbb/qubus/isl)
+set(qubus_isl_include_dir ${CMAKE_SOURCE_DIR}/qubus/include/qubus/isl)
 
 foreach(file_name IN LISTS qubus_isl_header_file_names)
     list(APPEND qubus_isl_header_files ${qubus_isl_include_dir}/${file_name})

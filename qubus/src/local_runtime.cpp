@@ -1,12 +1,12 @@
 #include <hpx/config.hpp>
 
-#include <qbb/qubus/local_runtime.hpp>
+#include <qubus/local_runtime.hpp>
 
-#include <qbb/qubus/logging.hpp>
+#include <qubus/logging.hpp>
 
-#include <qbb/qubus/hpx_utils.hpp>
+#include <qubus/hpx_utils.hpp>
 
-#include <qbb/util/get_prefix.hpp>
+#include <qubus/util/get_prefix.hpp>
 
 #include <hpx/include/lcos.hpp>
 

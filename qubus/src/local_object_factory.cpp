@@ -1,12 +1,12 @@
-#include <qbb/qubus/local_object_factory.hpp>
+#include <qubus/local_object_factory.hpp>
 
-#include <qbb/qubus/host_object_views.hpp>
+#include <qubus/host_object_views.hpp>
 
-#include <qbb/qubus/hpx_utils.hpp>
+#include <qubus/hpx_utils.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/integers.hpp>
-#include <qbb/util/unused.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/integers.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <type_traits>
 #include <utility>

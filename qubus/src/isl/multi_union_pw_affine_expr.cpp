@@ -1,4 +1,4 @@
-#include <qbb/qubus/isl/multi_union_pw_affine_expr.hpp>
+#include <qubus/isl/multi_union_pw_affine_expr.hpp>
 
 namespace qubus
 {

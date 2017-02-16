@@ -1,12 +1,12 @@
-#include <qbb/qubus/axiom_analysis.hpp>
+#include <qubus/axiom_analysis.hpp>
 
-#include <qbb/qubus/IR/constant_folding.hpp>
+#include <qubus/IR/constant_folding.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <stack>
 #include <utility>

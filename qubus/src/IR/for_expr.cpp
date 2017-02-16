@@ -1,8 +1,8 @@
-#include <qbb/qubus/IR/for_expr.hpp>
+#include <qubus/IR/for_expr.hpp>
 
-#include <qbb/qubus/IR/literal_expr.hpp>
+#include <qubus/IR/literal_expr.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <utility>
 

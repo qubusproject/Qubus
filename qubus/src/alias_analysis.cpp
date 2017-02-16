@@ -1,16 +1,16 @@
-#include <qbb/qubus/alias_analysis.hpp>
+#include <qubus/alias_analysis.hpp>
 
-#include <qbb/qubus/affine_constraints.hpp>
+#include <qubus/affine_constraints.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
 #include <boost/range/adaptor/sliced.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/combine.hpp>
 #include <boost/range/join.hpp>
 
-#include <qbb/util/unused.hpp>
+#include <qubus/util/unused.hpp>
 
 // Basic aliasing rules:
 // 0. Direct accesses of the same variable always alias (A == B -> must_alias)

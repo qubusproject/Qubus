@@ -1,4 +1,4 @@
-#include <qbb/qubus/isl/ast.hpp>
+#include <qubus/isl/ast.hpp>
 
 namespace qubus
 {

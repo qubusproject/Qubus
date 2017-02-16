@@ -4,7 +4,7 @@
 #include <eigen3/Eigen/Core>
 #include <eigen3/Eigen/Sparse>
 
-#include <qbb/qubus/qubus.hpp>
+#include <qubus/qubus.hpp>
 
 #include <hpx/hpx_init.hpp>
 

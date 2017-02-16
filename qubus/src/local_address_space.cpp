@@ -1,14 +1,14 @@
-#include <qbb/qubus/local_address_space.hpp>
+#include <qubus/local_address_space.hpp>
 
-#include <qbb/qubus/object.hpp>
+#include <qubus/object.hpp>
 
-#include <qbb/qubus/evicting_allocator.hpp>
+#include <qubus/evicting_allocator.hpp>
 
-#include <qbb/qubus/logging.hpp>
+#include <qubus/logging.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/make_unique.hpp>
-#include <qbb/util/unused.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/make_unique.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <exception>
 #include <tuple>

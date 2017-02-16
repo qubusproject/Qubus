@@ -1,8 +1,8 @@
-#include <qbb/qubus/isl/value.hpp>
+#include <qubus/isl/value.hpp>
 
-#include <qbb/qubus/isl/context.hpp>
+#include <qubus/isl/context.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 namespace qubus
 {

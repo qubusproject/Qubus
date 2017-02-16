@@ -1,7 +1,7 @@
-#include <qbb/qubus/IR/variable_ref_expr.hpp>
+#include <qubus/IR/variable_ref_expr.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/unused.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/unused.hpp>
 
 namespace qubus
 {

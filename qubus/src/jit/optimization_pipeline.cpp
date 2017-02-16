@@ -1,4 +1,4 @@
-#include <qbb/qubus/jit/optimization_pipeline.hpp>
+#include <qubus/jit/optimization_pipeline.hpp>
 
 #include <llvm/Analysis/BasicAliasAnalysis.h>
 #include <llvm/Analysis/ScalarEvolutionAliasAnalysis.h>

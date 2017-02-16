@@ -1,6 +1,6 @@
-#include <qbb/qubus/qtl/IR/kronecker_delta_expr.hpp>
+#include <qubus/qtl/IR/kronecker_delta_expr.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <utility>
 

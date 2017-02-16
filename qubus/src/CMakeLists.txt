@@ -16,7 +16,7 @@ add_subdirectory(backends)
 set(qubus_header_file_names allocator.hpp generic_ptr.hpp loop_optimizer.hpp
                             memory_block.hpp object.hpp)
 
-set(qubus_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/../include/qbb/qubus/)
+set(qubus_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/../include/qubus/)
 
 foreach(file_name IN LISTS qubus_header_file_names)
     list(APPEND qubus_header_files ${qubus_include_dir}/${file_name})

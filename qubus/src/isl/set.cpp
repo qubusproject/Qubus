@@ -1,7 +1,7 @@
-#include <qbb/qubus/isl/set.hpp>
+#include <qubus/isl/set.hpp>
 
-#include <qbb/qubus/isl/context.hpp>
-#include <qbb/qubus/isl/pw_multi_aff.hpp>
+#include <qubus/isl/context.hpp>
+#include <qubus/isl/pw_multi_aff.hpp>
 
 namespace qubus
 {

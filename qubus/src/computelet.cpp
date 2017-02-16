@@ -1,6 +1,6 @@
-#include <qbb/qubus/computelet.hpp>
+#include <qubus/computelet.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
+#include <qubus/IR/qir.hpp>
 
 #include <utility>
 

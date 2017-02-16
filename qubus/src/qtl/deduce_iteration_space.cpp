@@ -1,9 +1,9 @@
-#include <qbb/qubus/qtl/deduce_iteration_space.hpp>
+#include <qubus/qtl/deduce_iteration_space.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/qtl/pattern/all.hpp>
+#include <qubus/qtl/pattern/all.hpp>
 
 #include <cstddef>
 

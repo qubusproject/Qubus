@@ -1,6 +1,6 @@
-#include <qbb/qubus/object_factory.hpp>
+#include <qubus/object_factory.hpp>
 
-#include <qbb/util/integers.hpp>
+#include <qubus/util/integers.hpp>
 
 #include <utility>
 

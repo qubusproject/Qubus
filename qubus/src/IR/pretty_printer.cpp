@@ -1,19 +1,19 @@
-#include <qbb/qubus/IR/pretty_printer.hpp>
+#include <qubus/IR/pretty_printer.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/IR/type_inference.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/IR/type_inference.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/qtl/pattern/all.hpp>
+#include <qubus/qtl/pattern/all.hpp>
 
-#include <qbb/util/handle.hpp>
-#include <qbb/util/multi_method.hpp>
-#include <qbb/util/unique_name_generator.hpp>
+#include <qubus/util/handle.hpp>
+#include <qubus/util/multi_method.hpp>
+#include <qubus/util/unique_name_generator.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/unreachable.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/unreachable.hpp>
 
 #include <boost/optional.hpp>
 

@@ -1,4 +1,4 @@
-#include <qbb/qubus/isl/schedule.hpp>
+#include <qubus/isl/schedule.hpp>
 
 namespace qubus
 {

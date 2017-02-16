@@ -1,6 +1,6 @@
-#include <qbb/qubus/IR/foreign_call_expr.hpp>
+#include <qubus/IR/foreign_call_expr.hpp>
 
-#include <qbb/util/unused.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <utility>
 

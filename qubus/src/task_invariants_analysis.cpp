@@ -1,11 +1,11 @@
-#include <qbb/qubus/task_invariants_analysis.hpp>
+#include <qubus/task_invariants_analysis.hpp>
 
-#include <qbb/qubus/alias_analysis.hpp>
+#include <qubus/alias_analysis.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 namespace qubus
 {

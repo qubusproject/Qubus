@@ -1,25 +1,25 @@
-#include <qbb/qubus/static_schedule_analysis.hpp>
+#include <qubus/static_schedule_analysis.hpp>
 
-#include <qbb/qubus/task_invariants_analysis.hpp>
+#include <qubus/task_invariants_analysis.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/IR/type_inference.hpp>
+#include <qubus/IR/type_inference.hpp>
 
-#include <qbb/qubus/isl/affine_expr.hpp>
-#include <qbb/qubus/isl/ast_builder.hpp>
-#include <qbb/qubus/isl/constraint.hpp>
-#include <qbb/qubus/isl/flow.hpp>
-#include <qbb/qubus/isl/map.hpp>
-#include <qbb/qubus/isl/multi_affine_expr.hpp>
-#include <qbb/qubus/isl/printer.hpp>
-#include <qbb/qubus/isl/schedule.hpp>
-#include <qbb/qubus/isl/set.hpp>
+#include <qubus/isl/affine_expr.hpp>
+#include <qubus/isl/ast_builder.hpp>
+#include <qubus/isl/constraint.hpp>
+#include <qubus/isl/flow.hpp>
+#include <qubus/isl/map.hpp>
+#include <qubus/isl/multi_affine_expr.hpp>
+#include <qubus/isl/printer.hpp>
+#include <qubus/isl/schedule.hpp>
+#include <qubus/isl/set.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/unreachable.hpp>
-#include <qbb/util/unused.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/unreachable.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <functional>
 

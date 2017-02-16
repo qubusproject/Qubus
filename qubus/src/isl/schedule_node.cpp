@@ -1,6 +1,6 @@
-#include <qbb/qubus/isl/schedule_node.hpp>
+#include <qubus/isl/schedule_node.hpp>
 
-#include <qbb/qubus/isl/space.hpp>
+#include <qubus/isl/space.hpp>
 
 #include <isl/val.h>
 #include <isl/list.h>

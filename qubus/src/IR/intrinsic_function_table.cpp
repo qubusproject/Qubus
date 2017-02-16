@@ -1,4 +1,4 @@
-#include <qbb/qubus/IR/intrinsic_function_table.hpp>
+#include <qubus/IR/intrinsic_function_table.hpp>
 
 #include <algorithm>
 #include <map>

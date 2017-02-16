@@ -1,10 +1,10 @@
-#include <qbb/qubus/IR/type.hpp>
+#include <qubus/IR/type.hpp>
 
-#include <qbb/qubus/pattern/core.hpp>
-#include <qbb/qubus/pattern/type.hpp>
+#include <qubus/pattern/core.hpp>
+#include <qubus/pattern/type.hpp>
 
-#include <qbb/util/hash.hpp>
-#include <qbb/util/multi_method.hpp>
+#include <qubus/util/hash.hpp>
+#include <qubus/util/multi_method.hpp>
 
 #include <algorithm>
 #include <mutex>

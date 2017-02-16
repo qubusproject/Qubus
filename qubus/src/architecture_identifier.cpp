@@ -1,4 +1,4 @@
-#include <qbb/qubus/architecture_identifier.hpp>
+#include <qubus/architecture_identifier.hpp>
 
 namespace qubus
 {

@@ -1,4 +1,4 @@
-#include <qbb/qubus/IR/annotations.hpp>
+#include <qubus/IR/annotations.hpp>
 
 namespace qubus
 {

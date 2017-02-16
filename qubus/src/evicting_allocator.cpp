@@ -1,4 +1,4 @@
-#include <qbb/qubus/evicting_allocator.hpp>
+#include <qubus/evicting_allocator.hpp>
 
 #include <utility>
 

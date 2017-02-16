@@ -3,9 +3,9 @@
 #include <iostream>
 //#include <eigen3/Eigen/Core>
 
-#include <qbb/qubus/qubus.hpp>
+#include <qubus/qubus.hpp>
 
-#include <qbb/qubus/qtl/all.hpp>
+#include <qubus/qtl/all.hpp>
 
 #include <hpx/hpx_init.hpp>
 #include <hpx/include/iostreams.hpp>
@@ -23,7 +23,7 @@
 // for tests
 #include <chrono>
 
-#include <qbb/qubus/allocator.hpp>
+#include <qubus/allocator.hpp>
 
 namespace qubus
 {

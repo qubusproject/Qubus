@@ -1,6 +1,6 @@
-#include <qbb/qubus/IR/array_slice_expr.hpp>
+#include <qubus/IR/array_slice_expr.hpp>
 
-#include <qbb/qubus/IR/literal_expr.hpp>
+#include <qubus/IR/literal_expr.hpp>
 
 #include <utility>
 

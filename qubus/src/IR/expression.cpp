@@ -1,9 +1,9 @@
-#include <qbb/qubus/IR/expression.hpp>
+#include <qubus/IR/expression.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
+#include <qubus/IR/qir.hpp>
 
-#include <qbb/qubus/pattern/core.hpp>
-#include <qbb/qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
 
 #include <mutex>
 #include <functional>

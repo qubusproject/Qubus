@@ -1,6 +1,6 @@
-#include <qbb/qubus/jit/loops.hpp>
+#include <qubus/jit/loops.hpp>
 
-#include <qbb/qubus/jit/load_store.hpp>
+#include <qubus/jit/load_store.hpp>
 
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Value.h>

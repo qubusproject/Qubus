@@ -1,6 +1,6 @@
-#include <qbb/qubus/jit/compilation_context.hpp>
+#include <qubus/jit/compilation_context.hpp>
 
-#include <qbb/util/unused.hpp>
+#include <qubus/util/unused.hpp>
 
 namespace qubus
 {

@@ -1,10 +1,10 @@
-#include <qbb/qubus/value_set_analysis.hpp>
+#include <qubus/value_set_analysis.hpp>
 
-#include <qbb/qubus/isl/map.hpp>
+#include <qubus/isl/map.hpp>
 
 #include <boost/range/adaptor/transformed.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 namespace qubus
 {

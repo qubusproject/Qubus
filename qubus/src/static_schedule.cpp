@@ -1,4 +1,4 @@
-#include <qbb/qubus/static_schedule.hpp>
+#include <qubus/static_schedule.hpp>
 
 #include <algorithm>
 #include <utility>

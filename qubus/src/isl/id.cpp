@@ -1,6 +1,6 @@
-#include <qbb/qubus/isl/id.hpp>
+#include <qubus/isl/id.hpp>
 
-#include <qbb/qubus/isl/context.hpp>
+#include <qubus/isl/context.hpp>
 
 #include <utility>
 

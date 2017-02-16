@@ -1,4 +1,4 @@
-#include <qbb/qubus/performance_models/simple_statistical_performance_model.hpp>
+#include <qubus/performance_models/simple_statistical_performance_model.hpp>
 
 #include <boost/accumulators/accumulators.hpp>
 #include <boost/accumulators/statistics/count.hpp>
@@ -10,8 +10,8 @@
 
 #include <hpx/include/local_lcos.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/unused.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <map>
 #include <mutex>

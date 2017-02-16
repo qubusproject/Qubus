@@ -1,7 +1,7 @@
-#include <qbb/qubus/qubus.hpp>
+#include <qubus/qubus.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/value_set_analysis.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/value_set_analysis.hpp>
 
 #include <hpx/hpx_init.hpp>
 

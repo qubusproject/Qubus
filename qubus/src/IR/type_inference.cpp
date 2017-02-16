@@ -1,14 +1,14 @@
-#include <qbb/qubus/IR/type_inference.hpp>
+#include <qubus/IR/type_inference.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/qtl/IR/all.hpp>
+#include <qubus/qtl/IR/all.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/multi_method.hpp>
-#include <qbb/util/unused.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/multi_method.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <mutex>
 

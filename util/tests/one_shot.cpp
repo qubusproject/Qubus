@@ -1,4 +1,4 @@
-#include <qbb/util/one_shot.hpp>
+#include <qubus/util/one_shot.hpp>
 
 #include <gtest/gtest.h>
 

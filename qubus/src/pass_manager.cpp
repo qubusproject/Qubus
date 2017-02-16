@@ -1,4 +1,4 @@
-#include <qbb/qubus/pass_manager.hpp>
+#include <qubus/pass_manager.hpp>
 
 namespace qubus
 {

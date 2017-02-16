@@ -1,4 +1,4 @@
-#include <qbb/qubus/IR/compound_expr.hpp>
+#include <qubus/IR/compound_expr.hpp>
 
 #include <utility>
 

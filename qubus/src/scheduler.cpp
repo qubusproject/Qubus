@@ -1,4 +1,4 @@
-#include <qbb/qubus/scheduler.hpp>
+#include <qubus/scheduler.hpp>
 
 #include <boost/optional.hpp>
 

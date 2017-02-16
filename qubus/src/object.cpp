@@ -1,6 +1,6 @@
-#include <qbb/qubus/object.hpp>
+#include <qubus/object.hpp>
 
-#include <qbb/qubus/local_runtime.hpp>
+#include <qubus/local_runtime.hpp>
 
 #include <utility>
 

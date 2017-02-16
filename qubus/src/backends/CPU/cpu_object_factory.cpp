@@ -1,4 +1,4 @@
-/*#include <qbb/qubus/backends/cpu_object_factory.hpp>
+/*#include <qubus/backends/cpu_object_factory.hpp>
 
 #include <limits>
 #include <algorithm>

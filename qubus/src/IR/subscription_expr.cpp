@@ -1,4 +1,4 @@
-#include <qbb/qubus/IR/subscription_expr.hpp>
+#include <qubus/IR/subscription_expr.hpp>
 
 #include <utility>
 

@@ -1,12 +1,12 @@
-#include <qbb/qubus/affine_constraints.hpp>
+#include <qubus/affine_constraints.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/isl/value.hpp>
+#include <qubus/isl/value.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/unreachable.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/unreachable.hpp>
 
 #include <algorithm>
 #include <functional>

@@ -1,4 +1,4 @@
-#include <qbb/qubus/performance_models/symbolic_regression.hpp>
+#include <qubus/performance_models/symbolic_regression.hpp>
 
 #include <Eigen/Core>
 #include <unsupported/Eigen/NonLinearOptimization>
@@ -7,9 +7,9 @@
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/irange.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/integers.hpp>
-#include <qbb/util/unused.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/integers.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <algorithm>
 #include <array>

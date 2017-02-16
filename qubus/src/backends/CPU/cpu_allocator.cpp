@@ -1,8 +1,8 @@
-#include <qbb/qubus/backends/cpu_allocator.hpp>
+#include <qubus/backends/cpu_allocator.hpp>
 
-#include <qbb/qubus/backends/cpu_memory_block.hpp>
+#include <qubus/backends/cpu_memory_block.hpp>
 
-#include <qbb/util/make_unique.hpp>
+#include <qubus/util/make_unique.hpp>
 
 #include <cstdlib>
 

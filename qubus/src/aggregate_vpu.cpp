@@ -1,4 +1,4 @@
-#include <qbb/qubus/aggregate_vpu.hpp>
+#include <qubus/aggregate_vpu.hpp>
 
 #include <boost/range/adaptor/indirected.hpp>
 

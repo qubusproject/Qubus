@@ -2,7 +2,7 @@
 
 #include <nonius/nonius.h++>
 
-#include <qbb/qubus/IR/qir.hpp>
+#include <qubus/IR/qir.hpp>
 
 #include <iterator>
 #include <string>

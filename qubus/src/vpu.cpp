@@ -1,4 +1,4 @@
-#include <qbb/qubus/vpu.hpp>
+#include <qubus/vpu.hpp>
 
 #include <utility>
 

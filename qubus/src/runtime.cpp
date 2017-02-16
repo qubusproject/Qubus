@@ -1,8 +1,8 @@
-#include <qbb/qubus/runtime.hpp>
+#include <qubus/runtime.hpp>
 
-#include <qbb/qubus/hpx_utils.hpp>
+#include <qubus/hpx_utils.hpp>
 
-#include <qbb/util/unused.hpp>
+#include <qubus/util/unused.hpp>
 
 using server_type = hpx::components::component<qubus::runtime_server>;
 HPX_REGISTER_COMPONENT(server_type, QUBUS_runtime_server);

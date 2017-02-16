@@ -1,6 +1,6 @@
-#include <qbb/qubus/IR/variable_declaration.hpp>
+#include <qubus/IR/variable_declaration.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <utility>
 

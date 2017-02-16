@@ -1,13 +1,13 @@
-#include <qbb/qubus/qtl/sparse_patterns.hpp>
+#include <qubus/qtl/sparse_patterns.hpp>
 
-#include <qbb/qubus/qtl/deduce_iteration_space.hpp>
+#include <qubus/qtl/deduce_iteration_space.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/qtl/pattern/all.hpp>
+#include <qubus/qtl/pattern/all.hpp>
 
-#include <qbb/util/observer_ptr.hpp>
+#include <qubus/util/observer_ptr.hpp>
 
 #include <boost/optional.hpp>
 

@@ -1,10 +1,10 @@
-#include <qbb/qubus/abi_info.hpp>
+#include <qubus/abi_info.hpp>
 
-#include <qbb/qubus/pattern/core.hpp>
-#include <qbb/qubus/pattern/type.hpp>
+#include <qubus/pattern/core.hpp>
+#include <qubus/pattern/type.hpp>
 
-#include <qbb/util/unused.hpp>
-#include <qbb/util/integers.hpp>
+#include <qubus/util/unused.hpp>
+#include <qubus/util/integers.hpp>
 
 namespace qubus
 {

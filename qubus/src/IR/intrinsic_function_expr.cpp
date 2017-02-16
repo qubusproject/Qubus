@@ -1,4 +1,4 @@
-#include <qbb/qubus/IR/intrinsic_function_expr.hpp>
+#include <qubus/IR/intrinsic_function_expr.hpp>
 
 #include <utility>
 

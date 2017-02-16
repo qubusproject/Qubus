@@ -1,10 +1,10 @@
-#include <qbb/qubus/isl/printer.hpp>
+#include <qubus/isl/printer.hpp>
 
-#include <qbb/qubus/isl/set.hpp>
-#include <qbb/qubus/isl/map.hpp>
-#include <qbb/qubus/isl/ast.hpp>
-#include <qbb/qubus/isl/context.hpp>
-#include <qbb/qubus/isl/flow.hpp>
+#include <qubus/isl/set.hpp>
+#include <qubus/isl/map.hpp>
+#include <qubus/isl/ast.hpp>
+#include <qubus/isl/context.hpp>
+#include <qubus/isl/flow.hpp>
 
 #include <iostream>
 

@@ -1,4 +1,4 @@
-#include <qbb/qubus/IR/spawn_expr.hpp>
+#include <qubus/IR/spawn_expr.hpp>
 
 #include <utility>
 

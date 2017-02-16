@@ -1,4 +1,4 @@
-#include <qbb/util/multi_method.hpp>
+#include <qubus/util/multi_method.hpp>
 
 #include <boost/range/adaptor/transformed.hpp>
 

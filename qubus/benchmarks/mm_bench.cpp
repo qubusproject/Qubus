@@ -3,7 +3,7 @@
 #include <iostream>
 #include <eigen3/Eigen/Core>
 
-#include <qbb/qubus/qubus.hpp>
+#include <qubus/qubus.hpp>
 
 #include <hpx/hpx_init.hpp>
 

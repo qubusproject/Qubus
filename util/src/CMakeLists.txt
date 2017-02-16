@@ -4,9 +4,9 @@ set(util_header_file_names assert.hpp function_traits.hpp handle.hpp integer_seq
                            hash.hpp benchmark.hpp
                            detail/dispatch_table.hpp detail/virtual.hpp
                            meta/contains.hpp meta/expand.hpp meta/type_sequence.hpp meta/unique.hpp
-                           numeric/bisection.hpp)
+                           numeric/bisection.hpp box.hpp)
 
-set(util_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/../include/qbb/util/)
+set(util_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/../include/qubus/util/)
 
 foreach(file_name IN LISTS util_header_file_names)
     list(APPEND util_header_files ${util_include_dir}/${file_name})
@@ -17,7 +17,7 @@ set(util_source_files handle.cpp unique_name_generator.cpp dll.cpp get_prefix.cp
 find_package(Boost COMPONENTS filesystem REQUIRED)
 find_package(Threads REQUIRED)
 
-add_library(qbb_util ${util_header_files} ${util_source_files} ../include/qbb/util/box.hpp)
+add_library(qbb_util ${util_header_files} ${util_source_files})
 target_compile_options(qbb_util PUBLIC -std=c++14)
 target_include_directories(qbb_util PUBLIC ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/util/include/>)
 target_link_libraries(qbb_util PUBLIC Threads::Threads ${Boost_LIBRARIES})

@@ -1,11 +1,11 @@
-#include <qbb/qubus/jit/llvm_environment.hpp>
+#include <qubus/jit/llvm_environment.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
-#include <qbb/qubus/pattern/type.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
+#include <qubus/pattern/type.hpp>
 
-#include <qbb/util/integers.hpp>
-#include <qbb/util/make_unique.hpp>
+#include <qubus/util/integers.hpp>
+#include <qubus/util/make_unique.hpp>
 
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/Linker/Linker.h>

@@ -1,6 +1,6 @@
-#include <qbb/qubus/IR/local_variable_def_expr.hpp>
+#include <qubus/IR/local_variable_def_expr.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <utility>
 

@@ -1,4 +1,4 @@
-#include <qbb/util/dense_hash_map.hpp>
+#include <qubus/util/dense_hash_map.hpp>
 
 #include <gtest/gtest.h>
 

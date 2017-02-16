@@ -1,4 +1,4 @@
-#include <qbb/qubus/IR/construct_expr.hpp>
+#include <qubus/IR/construct_expr.hpp>
 
 #include <utility>
 

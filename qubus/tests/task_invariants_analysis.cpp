@@ -1,7 +1,7 @@
-#include <qbb/qubus/qubus.hpp>
+#include <qubus/qubus.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/task_invariants_analysis.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/task_invariants_analysis.hpp>
 
 #include <hpx/hpx_init.hpp>
 

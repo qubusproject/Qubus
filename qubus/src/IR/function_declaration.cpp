@@ -1,6 +1,6 @@
-#include <qbb/qubus/IR/function_declaration.hpp>
+#include <qubus/IR/function_declaration.hpp>
 
-#include <qbb/qubus/IR/type_inference.hpp>
+#include <qubus/IR/type_inference.hpp>
 
 #include <utility>
 

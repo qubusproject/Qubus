@@ -1,4 +1,4 @@
-#include <qbb/qubus/isl/flow.hpp>
+#include <qubus/isl/flow.hpp>
 
 namespace qubus
 {

@@ -1,4 +1,4 @@
-#include <qbb/qubus/backend_registry.hpp>
+#include <qubus/backend_registry.hpp>
 
 #include <utility>
 

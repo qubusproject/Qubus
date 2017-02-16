@@ -1,8 +1,8 @@
-#include <qbb/qubus/qtl/IR/sum_expr.hpp>
+#include <qubus/qtl/IR/sum_expr.hpp>
 
-#include <qbb/qubus/IR/type.hpp>
+#include <qubus/IR/type.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <utility>
 

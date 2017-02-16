@@ -1,10 +1,10 @@
-#include <qbb/qubus/qubus.hpp>
+#include <qubus/qubus.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/alias_analysis.hpp>
-#include <qbb/qubus/variable_access_analysis.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/alias_analysis.hpp>
+#include <qubus/variable_access_analysis.hpp>
 
-#include <qbb/qubus/IR/pretty_printer.hpp>
+#include <qubus/IR/pretty_printer.hpp>
 
 #include <hpx/hpx_init.hpp>
 

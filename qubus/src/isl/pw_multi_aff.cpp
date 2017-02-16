@@ -1,4 +1,4 @@
-#include <qbb/qubus/isl/pw_multi_aff.hpp>
+#include <qubus/isl/pw_multi_aff.hpp>
 
 namespace qubus
 {

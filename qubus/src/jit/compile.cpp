@@ -1,20 +1,20 @@
-#include <qbb/qubus/jit/compile.hpp>
+#include <qubus/jit/compile.hpp>
 
-#include <qbb/qubus/jit/compiler.hpp>
+#include <qubus/jit/compiler.hpp>
 
-#include <qbb/qubus/jit/array_access.hpp>
-#include <qbb/qubus/jit/control_flow.hpp>
-#include <qbb/qubus/jit/entry_block_alloca.hpp>
-#include <qbb/qubus/jit/load_store.hpp>
-#include <qbb/qubus/jit/loops.hpp>
-#include <qbb/qubus/jit/operators.hpp>
-#include <qbb/qubus/jit/type_conversion.hpp>
+#include <qubus/jit/array_access.hpp>
+#include <qubus/jit/control_flow.hpp>
+#include <qubus/jit/entry_block_alloca.hpp>
+#include <qubus/jit/load_store.hpp>
+#include <qubus/jit/loops.hpp>
+#include <qubus/jit/operators.hpp>
+#include <qubus/jit/type_conversion.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/IR/type_inference.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/IR/type_inference.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
 namespace qubus
 {

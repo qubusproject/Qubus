@@ -1,6 +1,6 @@
-#include <qbb/qubus/jit/compiler.hpp>
+#include <qubus/jit/compiler.hpp>
 
-#include <qbb/qubus/jit/compile.hpp>
+#include <qubus/jit/compile.hpp>
 
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
@@ -8,9 +8,9 @@
 
 #include <boost/optional.hpp>
 
-#include <qbb/util/make_unique.hpp>
-#include <qbb/util/assert.hpp>
-#include <qbb/util/unused.hpp>
+#include <qubus/util/make_unique.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <memory>
 #include <vector>

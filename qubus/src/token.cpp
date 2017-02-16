@@ -1,6 +1,6 @@
-#include <qbb/qubus/token.hpp>
+#include <qubus/token.hpp>
 
-#include <qbb/qubus/hpx_utils.hpp>
+#include <qubus/hpx_utils.hpp>
 
 using server_type = hpx::components::component<qubus::token_server>;
 HPX_REGISTER_COMPONENT(server_type, qubus_token_server);

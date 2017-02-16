@@ -1,27 +1,27 @@
 #include <hpx/config.hpp>
 
-#include <qbb/qubus/backends/cpu_backend.hpp>
+#include <qubus/backends/cpu_backend.hpp>
 
-#include <qbb/qubus/backend.hpp>
-#include <qbb/qubus/host_backend.hpp>
+#include <qubus/backend.hpp>
+#include <qubus/host_backend.hpp>
 
-#include <qbb/qubus/abi_info.hpp>
-#include <qbb/qubus/local_address_space.hpp>
-#include <qbb/qubus/performance_models/unified_performance_model.hpp>
+#include <qubus/abi_info.hpp>
+#include <qubus/local_address_space.hpp>
+#include <qubus/performance_models/unified_performance_model.hpp>
 
-#include <qbb/qubus/host_allocator.hpp>
+#include <qubus/host_allocator.hpp>
 
-#include <qbb/qubus/backends/cpu_compiler.hpp>
+#include <qubus/backends/cpu_compiler.hpp>
 
-#include <qbb/qubus/backends/cpu_allocator.hpp>
+#include <qubus/backends/cpu_allocator.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/IR/type_inference.hpp>
+#include <qubus/IR/type_inference.hpp>
 
-#include <qbb/util/make_unique.hpp>
+#include <qubus/util/make_unique.hpp>
 
 #include <qubus/qubus_export.h>
 
@@ -30,15 +30,15 @@
 #include <hpx/include/lcos.hpp>
 #include <hpx/include/threads.hpp>
 
-#include <qbb/qubus/hpx_utils.hpp>
+#include <qubus/hpx_utils.hpp>
 
 #include <boost/optional.hpp>
 #include <boost/signals2.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/make_unique.hpp>
-#include <qbb/util/optional_ref.hpp>
-#include <qbb/util/unused.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/make_unique.hpp>
+#include <qubus/util/optional_ref.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <algorithm>
 #include <chrono>

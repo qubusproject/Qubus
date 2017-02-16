@@ -1,7 +1,7 @@
 #ifndef QUBUS_CPU_ALLOCATOR_HPP
 #define QUBUS_CPU_ALLOCATOR_HPP
 
-#include <qbb/qubus/memory_block.hpp>
+#include <qubus/memory_block.hpp>
 
 #include <memory>
 #include <new>

@@ -1,4 +1,4 @@
-#include <qbb/qubus/isl/band.hpp>
+#include <qubus/isl/band.hpp>
 
 namespace qubus
 {

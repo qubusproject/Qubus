@@ -1,4 +1,4 @@
-#include <qbb/qubus/jit/load_store.hpp>
+#include <qubus/jit/load_store.hpp>
 
 #include <llvm/IR/Metadata.h>
 

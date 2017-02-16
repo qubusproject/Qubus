@@ -1,4 +1,4 @@
-#include <qbb/qubus/jit/reference.hpp>
+#include <qubus/jit/reference.hpp>
 
 namespace qubus
 {

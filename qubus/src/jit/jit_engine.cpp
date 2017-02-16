@@ -1,4 +1,4 @@
-#include <qbb/qubus/jit/jit_engine.hpp>
+#include <qubus/jit/jit_engine.hpp>
 
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/Orc/CompileUtils.h>

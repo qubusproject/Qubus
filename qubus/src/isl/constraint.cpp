@@ -1,4 +1,4 @@
-#include <qbb/qubus/isl/constraint.hpp>
+#include <qubus/isl/constraint.hpp>
 
 namespace qubus
 {

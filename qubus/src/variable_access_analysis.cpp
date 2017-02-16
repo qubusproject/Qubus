@@ -1,11 +1,11 @@
-#include <qbb/qubus/variable_access_analysis.hpp>
+#include <qubus/variable_access_analysis.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/util/optional_ref.hpp>
-#include <qbb/util/assert.hpp>
-#include <qbb/util/unreachable.hpp>
+#include <qubus/util/optional_ref.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/unreachable.hpp>
 
 #include <stack>
 #include <unordered_map>
