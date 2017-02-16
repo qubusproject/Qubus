@@ -7,25 +7,16 @@
 #pragma push_macro("DEBUG")
 #undef DEBUG
 
-#include <llvm/ExecutionEngine/ExecutionEngine.h>
-#include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
-#include <llvm/ExecutionEngine/Orc/CompileUtils.h>
-#include <llvm/ExecutionEngine/Orc/IRCompileLayer.h>
-#include <llvm/ExecutionEngine/Orc/LambdaResolver.h>
-#include <llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h>
-#include <llvm/IR/Mangler.h>
-#include <llvm/Support/DynamicLibrary.h>
 #include <llvm/ExecutionEngine/JITEventListener.h>
 
 #include <llvm/Support/TargetSelect.h>
 #include <llvm/Analysis/TargetTransformInfo.h>
 
 #include <llvm/Transforms/Utils/Cloning.h>
-#include <llvm/IR/Module.h>
-#include <llvm/IR/Type.h>
 
 #pragma pop_macro("DEBUG")
 
+#include <qbb/qubus/jit/jit_engine.hpp>
 #include <qbb/qubus/jit/optimization_pipeline.hpp>
 
 #include <llvm/IR/Verifier.h>
@@ -33,9 +24,10 @@
 
 #include <llvm/Support/raw_os_ostream.h>
 #include <llvm/Support/FormattedStream.h>
+
 #include <llvm/Support/Host.h>
 
-#include <qbb/qubus/backends/cpuinfo.hpp>
+#include <qbb/qubus/jit/cpuinfo.hpp>
 #include <qbb/qubus/jit/llvm_environment.hpp>
 #include <qbb/qubus/jit/compiler.hpp>
 #include <qbb/qubus/jit/execution_stack.hpp>
@@ -70,134 +62,6 @@ public:
 private:
     std::function<void(void const*, void*)> entry_;
     std::unique_ptr<jit::module> module_;
-};
-
-class jit_engine
-{
-public:
-    using object_layer_type = llvm::orc::ObjectLinkingLayer<>;
-    using compile_layer_type = llvm::orc::IRCompileLayer<object_layer_type>;
-    using module_handle_type = compile_layer_type::ModuleSetHandleT;
-
-    explicit jit_engine(std::unique_ptr<llvm::TargetMachine> target_machine_)
-    : target_machine_(std::move(target_machine_)),
-      data_layout_(get_target_machine().createDataLayout()),
-      compile_layer_(object_layer_, llvm::orc::SimpleCompiler(get_target_machine()))
-    {
-        llvm::sys::DynamicLibrary::LoadLibraryPermanently(nullptr);
-    }
-
-    llvm::TargetMachine& get_target_machine()
-    {
-        return *target_machine_;
-    }
-
-    module_handle_type add_module(std::unique_ptr<llvm::Module> module)
-    {
-#if LLVM_VERSION_MAJOR < 4
-        auto resolver = llvm::orc::createLambdaResolver(
-            [&](const std::string& name)
-            {
-                if (auto symbol = find_mangled_symbol(name))
-                    return llvm::RuntimeDyld::SymbolInfo(symbol.getAddress(), symbol.getFlags());
-                return llvm::RuntimeDyld::SymbolInfo(nullptr);
-            },
-            [](const std::string& S)
-            {
-                return nullptr;
-            });
-#else
-        auto resolver = llvm::orc::createLambdaResolver(
-                [&](const std::string& name)
-                {
-                    if (auto symbol = find_mangled_symbol(name))
-                        return symbol;
-                    return llvm::JITSymbol(nullptr);
-                },
-                [](const std::string& S)
-                {
-                    return nullptr;
-                });
-#endif
-
-        auto handle = compile_layer_.addModuleSet(make_singleton_set(std::move(module)),
-                                                  std::make_unique<llvm::SectionMemoryManager>(),
-                                                  std::move(resolver));
-
-        module_handles_.push_back(handle);
-        return handle;
-    }
-
-    void remove_module(module_handle_type handle)
-    {
-        module_handles_.erase(std::find(module_handles_.begin(), module_handles_.end(), handle));
-        compile_layer_.removeModuleSet(handle);
-    }
-
-#if LLVM_VERSION_MAJOR < 4
-    llvm::orc::JITSymbol find_symbol(const std::string name)
-    {
-        return find_mangled_symbol(mangle(name));
-    }
-#else
-    llvm::JITSymbol find_symbol(const std::string name)
-    {
-        return find_mangled_symbol(mangle(name));
-    }
-#endif
-
-private:
-    std::string mangle(const std::string& name)
-    {
-        std::string mangled_name;
-        {
-            llvm::raw_string_ostream mangled_name_stream(mangled_name);
-            llvm::Mangler::getNameWithPrefix(mangled_name_stream, name, data_layout_);
-        }
-        return mangled_name;
-    }
-
-    template <typename T>
-    static std::vector<T> make_singleton_set(T t)
-    {
-        std::vector<T> vec;
-        vec.push_back(std::move(t));
-        return vec;
-    }
-
-#if LLVM_VERSION_MAJOR < 4
-    llvm::orc::JITSymbol find_mangled_symbol(const std::string& name)
-    {
-        for (auto handle : llvm::make_range(module_handles_.begin(), module_handles_.end()))
-            if (auto symbol = compile_layer_.findSymbolIn(handle, name, true))
-                return symbol;
-
-        // If we can't find the symbol in the JIT, try looking in the host process.
-        if (auto sym_addr = llvm::RTDyldMemoryManager::getSymbolAddressInProcess(name))
-            return llvm::orc::JITSymbol(sym_addr, llvm::JITSymbolFlags::Exported);
-
-        return nullptr;
-    }
-#else
-    llvm::JITSymbol find_mangled_symbol(const std::string& name)
-    {
-        for (auto handle : llvm::make_range(module_handles_.begin(), module_handles_.end()))
-            if (auto symbol = compile_layer_.findSymbolIn(handle, name, true))
-                return symbol;
-
-        // If we can't find the symbol in the JIT, try looking in the host process.
-        if (auto sym_addr = llvm::RTDyldMemoryManager::getSymbolAddressInProcess(name))
-            return llvm::JITSymbol(sym_addr, llvm::JITSymbolFlags::Exported);
-
-        return nullptr;
-    }
-#endif
-
-    std::unique_ptr<llvm::TargetMachine> target_machine_;
-    llvm::DataLayout data_layout_;
-    object_layer_type object_layer_;
-    compile_layer_type compile_layer_;
-    std::vector<module_handle_type> module_handles_;
 };
 
 std::unique_ptr<cpu_plan> compile(function_declaration entry_point, jit::compiler& comp,
@@ -271,25 +135,9 @@ public:
 
         llvm::EngineBuilder builder;
 
-        std::vector<std::string> available_features;
-        llvm::StringMap<bool> features;
+        auto available_features = get_host_cpu_features();
 
-        if (llvm::sys::getHostCPUFeatures(features))
-        {
-            for (const auto& feature : features)
-            {
-                if (feature.getValue())
-                {
-                    available_features.push_back(feature.getKey());
-                }
-            }
-        }
-        else
-        {
-            builder.setMCPU(llvm::sys::getHostCPUName());
-
-            available_features = deduce_host_cpu_features();
-        }
+        builder.setMCPU(llvm::sys::getHostCPUName());
 
         builder.setMAttrs(available_features);
         builder.setOptLevel(llvm::CodeGenOpt::Aggressive);

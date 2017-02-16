@@ -64,12 +64,12 @@ public:
 
     const T& get() const
     {
-        return value_;
+        return *value_;
     }
 
     T& get()
     {
-        return value_;
+        return *value_;
     }
 
     static hpx::future<cpu_scalar_view<T>> construct(object obj)
@@ -98,6 +98,17 @@ private:
     T* value_;
 
     std::shared_ptr<host_view_context> ctx_;
+};
+
+template <typename T>
+struct object_view_traits<cpu_scalar_view<T>>
+{
+static constexpr bool is_immutable = std::is_const<T>::value;
+
+static type associated_type()
+{
+    return associated_qubus_type<T>::get();
+}
 };
 
 template <typename T>

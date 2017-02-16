@@ -23,6 +23,11 @@ public:
     {
         return arguments_;
     }
+
+    const std::vector<object>& args() const
+    {
+        return arguments_;
+    }
     
     void push_back_arg(object arg)
     {
@@ -30,6 +35,11 @@ public:
     }
 
     std::vector<object>& results()
+    {
+        return results_;
+    }
+
+    const std::vector<object>& results() const
     {
         return results_;
     }

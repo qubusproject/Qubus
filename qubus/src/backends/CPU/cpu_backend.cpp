@@ -7,6 +7,7 @@
 
 #include <qbb/qubus/abi_info.hpp>
 #include <qbb/qubus/local_address_space.hpp>
+#include <qbb/qubus/performance_models/unified_performance_model.hpp>
 
 #include <qbb/qubus/host_allocator.hpp>
 
@@ -40,6 +41,7 @@
 #include <qbb/util/unused.hpp>
 
 #include <algorithm>
+#include <chrono>
 #include <cstdlib>
 #include <functional>
 #include <iostream>
@@ -57,8 +59,7 @@ namespace qubus
 class cpu_runtime
 {
 public:
-    cpu_runtime()
-    : scratch_mem_(8 * 1024 * 1024), current_stack_ptr_(scratch_mem_.data())
+    cpu_runtime() : scratch_mem_(8 * 1024 * 1024), current_stack_ptr_(scratch_mem_.data())
     {
     }
 
@@ -160,6 +161,8 @@ public:
 
         hpx::shared_future<void> task_done = hpx::dataflow(
             [this, &compilation, c, ctx](hpx::future<std::vector<hpx::future<token>>>) mutable {
+                auto task_start = std::chrono::steady_clock::now();
+
                 std::vector<void*> task_args;
 
                 std::vector<host_address_space::handle> pages;
@@ -185,16 +188,33 @@ public:
                 cpu_runtime runtime;
 
                 compilation.execute(task_args, runtime);
+
+                auto task_end = std::chrono::steady_clock::now();
+
+                auto task_duration =
+                    std::chrono::duration_cast<std::chrono::microseconds>(task_end - task_start);
+
+                perf_model_.sample_execution_time(c, ctx, std::move(task_duration));
             },
             std::move(deps_ready));
 
         return hpx::make_ready_future();
     }
 
+    hpx::future<boost::optional<performance_estimate>>
+    try_estimate_execution_time(const computelet& c, const execution_context& ctx) const override
+    {
+        auto estimate = perf_model_.try_estimate_execution_time(c, ctx);
+
+        return hpx::make_ready_future(std::move(estimate));
+    }
+
 private:
     caching_cpu_comiler compiler_;
     host_address_space* address_space_;
     abi_info abi_;
+
+    mutable unified_performance_model perf_model_;
 };
 
 class cpu_backend final : public host_backend

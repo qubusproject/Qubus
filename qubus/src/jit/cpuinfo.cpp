@@ -1,4 +1,6 @@
-#include <qbb/qubus/backends/cpuinfo.hpp>
+#include <qbb/qubus/jit/cpuinfo.hpp>
+
+#include <llvm/Support/Host.h>
 
 #include <boost/range/iterator_range_core.hpp>
 
@@ -82,6 +84,29 @@ std::vector<std::string> deduce_host_cpu_features()
 #error "deduce_host_cpu_features is not implemented for this architecture."
 
 #endif
+
+std::vector<std::string> get_host_cpu_features()
+{
+    std::vector<std::string> available_features;
+    llvm::StringMap<bool> features;
+
+    if (llvm::sys::getHostCPUFeatures(features))
+    {
+        for (const auto& feature : features)
+        {
+            if (feature.getValue())
+            {
+                available_features.push_back(feature.getKey());
+            }
+        }
+    }
+    else
+    {
+        available_features = deduce_host_cpu_features();
+    }
+
+    return  available_features;
+}
 
 #if defined(__x86_64__) && defined(__linux__)
 
