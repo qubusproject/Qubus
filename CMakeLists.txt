@@ -1,7 +1,7 @@
 cmake_minimum_required (VERSION 3.5.0)
 enable_testing()
 
-project(QBB)
+project(Qubus)
 
 set(QUBUS_VERSION 0.1.0)
 

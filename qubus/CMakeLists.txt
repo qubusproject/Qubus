@@ -1,5 +1,3 @@
-project(qubus)
-
 include(Qubus_SetOutputName)
 
 find_package(HPX 0.9.12 REQUIRED)
