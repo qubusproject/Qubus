@@ -1,4 +1,4 @@
-option(UTIL_BUILD_TESTS "build the util test suite" OFF)
+option(QUBUS_UTIL_BUILD_TESTS "build the Qubus util test suite" OFF)
 
 function(util_add_test name src_file)
   add_executable(${name} ${src_file})

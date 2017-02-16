@@ -14,7 +14,7 @@ build:clang:release:
   - export CXX=clang++
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
   stage: build
   tags:
@@ -43,7 +43,7 @@ build:gcc:release:
   - export CXX=g++
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
   stage: build
   tags:
@@ -72,7 +72,7 @@ build:clang:debug:
   - export CXX=clang++
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=Debug -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - cmake -DCMAKE_BUILD_TYPE=Debug -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
   stage: build
   tags:
@@ -101,7 +101,7 @@ build:gcc:debug:
   - export CXX=g++
   - mkdir build
   - cd build
-  - cmake -DCMAKE_BUILD_TYPE=Debug  -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DUTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - cmake -DCMAKE_BUILD_TYPE=Debug  -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
   stage: build
   tags:
