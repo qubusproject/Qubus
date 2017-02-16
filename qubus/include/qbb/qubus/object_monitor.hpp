@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_OBJECT_MONITOR_HPP
-#define QBB_QUBUS_OBJECT_MONITOR_HPP
+#ifndef QUBUS_OBJECT_MONITOR_HPP
+#define QUBUS_OBJECT_MONITOR_HPP
 
 #include <qbb/qubus/token.hpp>
 

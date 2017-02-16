@@ -12,7 +12,7 @@
 #include <utility>
 
 using server_type = hpx::components::component<qubus::local_object_factory_server>;
-HPX_REGISTER_COMPONENT(server_type, qbb_qubus_local_object_factory_server);
+HPX_REGISTER_COMPONENT(server_type, QUBUS_local_object_factory_server);
 
 using create_scalar_action = qubus::local_object_factory_server::create_scalar_action;
 HPX_REGISTER_ACTION_DECLARATION(create_scalar_action,

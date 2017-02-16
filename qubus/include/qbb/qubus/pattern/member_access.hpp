@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_PATTERN_MEMBER_ACCESS_HPP
-#define QBB_QUBUS_PATTERN_MEMBER_ACCESS_HPP
+#ifndef QUBUS_PATTERN_MEMBER_ACCESS_HPP
+#define QUBUS_PATTERN_MEMBER_ACCESS_HPP
 
 #include <qbb/qubus/IR/member_access_expr.hpp>
 #include <qbb/qubus/pattern/variable.hpp>

@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_AGGREGATE_VPU_HPP
-#define QBB_QUBUS_AGGREGATE_VPU_HPP
+#ifndef QUBUS_AGGREGATE_VPU_HPP
+#define QUBUS_AGGREGATE_VPU_HPP
 
 #include <qbb/qubus/scheduler.hpp>
 #include <qbb/qubus/vpu.hpp>

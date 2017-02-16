@@ -23,7 +23,7 @@
 
 #include <qbb/util/make_unique.hpp>
 
-#include <qubus/qbb_qubus_export.h>
+#include <qubus/qubus_export.h>
 
 #include <hpx/async.hpp>
 
@@ -80,13 +80,13 @@ private:
     char* current_stack_ptr_;
 };
 
-extern "C" QBB_QUBUS_EXPORT void* qbb_qubus_cpurt_alloc_scatch_mem(cpu_runtime* runtime,
+extern "C" QUBUS_EXPORT void* QUBUS_cpurt_alloc_scatch_mem(cpu_runtime* runtime,
                                                                    util::index_t size)
 {
     return runtime->alloc_scratch_mem(size);
 }
 
-extern "C" QBB_QUBUS_EXPORT void qbb_qubus_cpurt_dealloc_scratch_mem(cpu_runtime* runtime,
+extern "C" QUBUS_EXPORT void QUBUS_cpurt_dealloc_scratch_mem(cpu_runtime* runtime,
                                                                      util::index_t size)
 {
     runtime->dealloc_scratch_mem(size);
@@ -251,12 +251,12 @@ private:
     std::unique_ptr<host_address_space> address_space_;
 };
 
-extern "C" QBB_QUBUS_EXPORT unsigned int cpu_backend_get_backend_type()
+extern "C" QUBUS_EXPORT unsigned int cpu_backend_get_backend_type()
 {
     return static_cast<unsigned int>(backend_type::host);
 }
 
-extern "C" QBB_QUBUS_EXPORT unsigned long int cpu_backend_get_api_version()
+extern "C" QUBUS_EXPORT unsigned long int cpu_backend_get_api_version()
 {
     return 0;
 }
@@ -264,7 +264,7 @@ extern "C" QBB_QUBUS_EXPORT unsigned long int cpu_backend_get_api_version()
 std::unique_ptr<cpu_backend> the_cpu_backend;
 std::once_flag cpu_backend_init_flag;
 
-extern "C" QBB_QUBUS_EXPORT backend* init_cpu_backend(const abi_info* abi)
+extern "C" QUBUS_EXPORT backend* init_cpu_backend(const abi_info* abi)
 {
     std::call_once(cpu_backend_init_flag,
                    [&] { the_cpu_backend = util::make_unique<cpu_backend>(*abi); });

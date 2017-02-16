@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_JIT_CONTROL_FLOW_HPP
-#define QBB_QUBUS_JIT_CONTROL_FLOW_HPP
+#ifndef QUBUS_JIT_CONTROL_FLOW_HPP
+#define QUBUS_JIT_CONTROL_FLOW_HPP
 
 #include <hpx/config.hpp>
 

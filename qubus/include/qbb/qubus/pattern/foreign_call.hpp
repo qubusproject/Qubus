@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_PATTERN_FOREIGN_CALL_HPP
-#define QBB_QUBUS_PATTERN_FOREIGN_CALL_HPP
+#ifndef QUBUS_PATTERN_FOREIGN_CALL_HPP
+#define QUBUS_PATTERN_FOREIGN_CALL_HPP
 
 #include <qbb/qubus/IR/foreign_call_expr.hpp>
 

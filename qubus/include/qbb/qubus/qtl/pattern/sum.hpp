@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_QTL_PATTERN_SUM_HPP
-#define QBB_QUBUS_QTL_PATTERN_SUM_HPP
+#ifndef QUBUS_QTL_PATTERN_SUM_HPP
+#define QUBUS_QTL_PATTERN_SUM_HPP
 
 #include <qbb/qubus/qtl/IR/sum_expr.hpp>
 

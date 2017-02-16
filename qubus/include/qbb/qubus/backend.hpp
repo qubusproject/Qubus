@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_BACKEND_HPP
-#define QBB_QUBUS_BACKEND_HPP
+#ifndef QUBUS_BACKEND_HPP
+#define QUBUS_BACKEND_HPP
 
 #include <hpx/config.hpp>
 

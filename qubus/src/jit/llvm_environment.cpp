@@ -111,7 +111,7 @@ void llvm_environment::init_alloc_scratch_mem()
     llvm::FunctionType* FT = llvm::FunctionType::get(generic_ptr, param_types, false);
 
     alloc_scratch_mem_ = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
-                                                "qbb_qubus_cpurt_alloc_scatch_mem", &module());
+                                                "QUBUS_cpurt_alloc_scatch_mem", &module());
 
     alloc_scratch_mem_->setDoesNotCapture(1);
     alloc_scratch_mem_->setDoesNotAlias(1);
@@ -129,7 +129,7 @@ void llvm_environment::init_dealloc_scratch_mem()
     llvm::FunctionType* FT = llvm::FunctionType::get(void_type, param_types, false);
 
     dealloc_scratch_mem_ = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
-                                                  "qbb_qubus_cpurt_dealloc_scratch_mem", &module());
+                                                  "QUBUS_cpurt_dealloc_scratch_mem", &module());
 
     dealloc_scratch_mem_->setDoesNotCapture(1);
     dealloc_scratch_mem_->setDoesNotAlias(1);

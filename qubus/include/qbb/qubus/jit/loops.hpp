@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_JIT_LOOPS_HPP
-#define QBB_QUBUS_JIT_LOOPS_HPP
+#ifndef QUBUS_JIT_LOOPS_HPP
+#define QUBUS_JIT_LOOPS_HPP
 
 #include <hpx/config.hpp>
 

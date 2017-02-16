@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_TENSOR_VAR_HPP
-#define QBB_QUBUS_TENSOR_VAR_HPP
+#ifndef QUBUS_TENSOR_VAR_HPP
+#define QUBUS_TENSOR_VAR_HPP
 
 #include <qbb/qubus/local_runtime.hpp>
 

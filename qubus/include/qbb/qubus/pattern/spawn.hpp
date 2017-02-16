@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_PATTERN_SPAWN_HPP
-#define QBB_QUBUS_PATTERN_SPAWN_HPP
+#ifndef QUBUS_PATTERN_SPAWN_HPP
+#define QUBUS_PATTERN_SPAWN_HPP
 
 #include <qbb/qubus/IR/spawn_expr.hpp>
 

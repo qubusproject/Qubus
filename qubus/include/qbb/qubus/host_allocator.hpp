@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_HOST_ALLOCATOR_HPP
-#define QBB_QUBUS_HOST_ALLOCATOR_HPP
+#ifndef QUBUS_HOST_ALLOCATOR_HPP
+#define QUBUS_HOST_ALLOCATOR_HPP
 
 #include <qbb/qubus/allocator.hpp>
 

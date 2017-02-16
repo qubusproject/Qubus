@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_MEMBER_ACCESS_EXPR_HPP
-#define QBB_QUBUS_MEMBER_ACCESS_EXPR_HPP
+#ifndef QUBUS_MEMBER_ACCESS_EXPR_HPP
+#define QUBUS_MEMBER_ACCESS_EXPR_HPP
 
 #include <qbb/qubus/IR/access_qualifier.hpp>
 #include <qbb/util/unused.hpp>

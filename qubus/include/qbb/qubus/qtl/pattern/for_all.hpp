@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_QTL_PATTERN_FOR_ALL_HPP
-#define QBB_QUBUS_QTL_PATTERN_FOR_ALL_HPP
+#ifndef QUBUS_QTL_PATTERN_FOR_ALL_HPP
+#define QUBUS_QTL_PATTERN_FOR_ALL_HPP
 
 #include <qbb/qubus/qtl/IR/for_all_expr.hpp>
 

@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_QTL_PATTERN_INDEX_HPP
-#define QBB_QUBUS_QTL_PATTERN_INDEX_HPP
+#ifndef QUBUS_QTL_PATTERN_INDEX_HPP
+#define QUBUS_QTL_PATTERN_INDEX_HPP
 
 #include <qbb/qubus/IR/type.hpp>
 #include <qbb/qubus/IR/variable_declaration.hpp>

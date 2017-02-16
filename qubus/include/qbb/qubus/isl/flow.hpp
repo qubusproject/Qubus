@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_ISL_FLOW_HPP
-#define QBB_QUBUS_ISL_FLOW_HPP
+#ifndef QUBUS_ISL_FLOW_HPP
+#define QUBUS_ISL_FLOW_HPP
 
 #include <qbb/qubus/isl/map.hpp>
 #include <qbb/qubus/isl/schedule.hpp>

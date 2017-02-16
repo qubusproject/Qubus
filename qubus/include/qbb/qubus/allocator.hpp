@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_ALLOCATOR_HPP
-#define QBB_QUBUS_ALLOCATOR_HPP
+#ifndef QUBUS_ALLOCATOR_HPP
+#define QUBUS_ALLOCATOR_HPP
 
 #include <qbb/qubus/memory_block.hpp>
 

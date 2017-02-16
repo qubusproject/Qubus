@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_DEVICE_INFO_HPP
-#define QBB_QUBUS_DEVICE_INFO_HPP
+#ifndef QUBUS_DEVICE_INFO_HPP
+#define QUBUS_DEVICE_INFO_HPP
 
 #include <cstddef>
 #include <vector>

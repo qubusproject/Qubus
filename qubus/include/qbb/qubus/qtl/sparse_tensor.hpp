@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_SPARSE_TENSOR_HPP_H
-#define QBB_QUBUS_SPARSE_TENSOR_HPP_H
+#ifndef QUBUS_SPARSE_TENSOR_HPP_H
+#define QUBUS_SPARSE_TENSOR_HPP_H
 
 #include <hpx/config.hpp>
 

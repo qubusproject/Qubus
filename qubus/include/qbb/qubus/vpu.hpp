@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_VPU_HPP
-#define QBB_QUBUS_VPU_HPP
+#ifndef QUBUS_VPU_HPP
+#define QUBUS_VPU_HPP
 
 #include <qbb/qubus/performance_models/performance_model.hpp>
 

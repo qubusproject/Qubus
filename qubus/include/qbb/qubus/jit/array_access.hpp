@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_JIT_ARRAY_ACCESS_HPP
-#define QBB_QUBUS_JIT_ARRAY_ACCESS_HPP
+#ifndef QUBUS_JIT_ARRAY_ACCESS_HPP
+#define QUBUS_JIT_ARRAY_ACCESS_HPP
 
 #include <hpx/config.hpp>
 

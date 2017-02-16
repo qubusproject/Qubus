@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_PATTERN_CONSTRUCT_HPP
-#define QBB_QUBUS_PATTERN_CONSTRUCT_HPP
+#ifndef QUBUS_PATTERN_CONSTRUCT_HPP
+#define QUBUS_PATTERN_CONSTRUCT_HPP
 
 #include <qbb/qubus/IR/construct_expr.hpp>
 

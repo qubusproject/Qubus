@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_ASSEMBLY_TENSOR_HPP
-#define QBB_QUBUS_ASSEMBLY_TENSOR_HPP
+#ifndef QUBUS_ASSEMBLY_TENSOR_HPP
+#define QUBUS_ASSEMBLY_TENSOR_HPP
 
 #include <qbb/util/integers.hpp>
 

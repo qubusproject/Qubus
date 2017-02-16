@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_ISL_PW_AFF_HPP
-#define QBB_QUBUS_ISL_PW_AFF_HPP
+#ifndef QUBUS_ISL_PW_AFF_HPP
+#define QUBUS_ISL_PW_AFF_HPP
 
 #include <qbb/qubus/isl/set.hpp>
 #include <qbb/qubus/isl/map.hpp>

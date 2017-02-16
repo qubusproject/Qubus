@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_IF_EXPR_HPP
-#define QBB_QUBUS_IF_EXPR_HPP
+#ifndef QUBUS_IF_EXPR_HPP
+#define QUBUS_IF_EXPR_HPP
 
 #include <hpx/config.hpp>
 

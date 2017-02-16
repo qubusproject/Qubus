@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_PATTERN_VARIABLE_REF_HPP
-#define QBB_QUBUS_PATTERN_VARIABLE_REF_HPP
+#ifndef QUBUS_PATTERN_VARIABLE_REF_HPP
+#define QUBUS_PATTERN_VARIABLE_REF_HPP
 
 #include <qbb/qubus/IR/variable_ref_expr.hpp>
 #include <qbb/qubus/pattern/variable.hpp>

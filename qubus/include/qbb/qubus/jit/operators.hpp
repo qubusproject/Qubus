@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_JIT_OPERATORS_HPP
-#define QBB_QUBUS_JIT_OPERATORS_HPP
+#ifndef QUBUS_JIT_OPERATORS_HPP
+#define QUBUS_JIT_OPERATORS_HPP
 
 #include <hpx/config.hpp>
 

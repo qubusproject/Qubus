@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_PATTERN_FOR_EACH_HPP
-#define QBB_QUBUS_PATTERN_FOR_EACH_HPP
+#ifndef QUBUS_PATTERN_FOR_EACH_HPP
+#define QUBUS_PATTERN_FOR_EACH_HPP
 
 #include <qbb/qubus/IR/qir.hpp>
 

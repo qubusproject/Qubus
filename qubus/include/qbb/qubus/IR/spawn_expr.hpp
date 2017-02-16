@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_SPAWN_EXPR_HPP
-#define QBB_QUBUS_SPAWN_EXPR_HPP
+#ifndef QUBUS_SPAWN_EXPR_HPP
+#define QUBUS_SPAWN_EXPR_HPP
 
 #include <hpx/config.hpp>
 

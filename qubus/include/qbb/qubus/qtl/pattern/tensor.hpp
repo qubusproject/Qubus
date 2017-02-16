@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_QTL_PATTERN_TENSOR_HPP
-#define QBB_QUBUS_QTL_PATTERN_TENSOR_HPP
+#ifndef QUBUS_QTL_PATTERN_TENSOR_HPP
+#define QUBUS_QTL_PATTERN_TENSOR_HPP
 
 #include <qbb/qubus/IR/type.hpp>
 #include <qbb/qubus/IR/variable_ref_expr.hpp>

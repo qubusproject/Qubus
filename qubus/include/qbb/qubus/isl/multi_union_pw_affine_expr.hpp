@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_ISL_MULTI_UNION_PW_AFFINE_EXPR_HPP
-#define QBB_QUBUS_ISL_MULTI_UNION_PW_AFFINE_EXPR_HPP
+#ifndef QUBUS_ISL_MULTI_UNION_PW_AFFINE_EXPR_HPP
+#define QUBUS_ISL_MULTI_UNION_PW_AFFINE_EXPR_HPP
 
 #include <qbb/qubus/isl/map.hpp>
 #include <qbb/qubus/isl/affine_expr.hpp>

@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_FOREIGN_CALL_EXPR_HPP
-#define QBB_QUBUS_FOREIGN_CALL_EXPR_HPP
+#ifndef QUBUS_FOREIGN_CALL_EXPR_HPP
+#define QUBUS_FOREIGN_CALL_EXPR_HPP
 
 #include <qbb/qubus/foreign_computelet.hpp>
 

@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_SCHEDULER_HPP
-#define QBB_QUBUS_SCHEDULER_HPP
+#ifndef QUBUS_SCHEDULER_HPP
+#define QUBUS_SCHEDULER_HPP
 
 #include <hpx/config.hpp>
 

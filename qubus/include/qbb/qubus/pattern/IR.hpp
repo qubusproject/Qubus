@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_PATTERN_IR_HPP
-#define QBB_QUBUS_PATTERN_IR_HPP
+#ifndef QUBUS_PATTERN_IR_HPP
+#define QUBUS_PATTERN_IR_HPP
 
 #include <qbb/qubus/pattern/binary_operator.hpp>
 #include <qbb/qubus/pattern/unary_operator.hpp>

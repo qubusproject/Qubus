@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_ISL_ID_HPP
-#define QBB_QUBUS_ISL_ID_HPP
+#ifndef QUBUS_ISL_ID_HPP
+#define QUBUS_ISL_ID_HPP
 
 #include <isl/id.h>
 

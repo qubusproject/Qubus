@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_HPP
-#define QBB_QUBUS_HPP
+#ifndef QUBUS_HPP
+#define QUBUS_HPP
 
 #include <qbb/qubus/runtime.hpp>
 

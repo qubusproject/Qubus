@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_ABI_INFO_HPP
-#define QBB_QUBUS_ABI_INFO_HPP
+#ifndef QUBUS_ABI_INFO_HPP
+#define QUBUS_ABI_INFO_HPP
 
 #include <qbb/qubus/IR/type.hpp>
 

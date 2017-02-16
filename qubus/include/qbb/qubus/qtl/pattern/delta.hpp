@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_QTL_PATTERN_DELTA_HPP
-#define QBB_QUBUS_QTL_PATTERN_DELTA_HPP
+#ifndef QUBUS_QTL_PATTERN_DELTA_HPP
+#define QUBUS_QTL_PATTERN_DELTA_HPP
 
 #include <qbb/qubus/qtl/IR/kronecker_delta_expr.hpp>
 

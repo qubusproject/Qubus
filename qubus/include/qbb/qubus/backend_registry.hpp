@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_BACKEND_REGISTRY_HPP
-#define QBB_QUBUS_BACKEND_REGISTRY_HPP
+#ifndef QUBUS_BACKEND_REGISTRY_HPP
+#define QUBUS_BACKEND_REGISTRY_HPP
 
 #include <qbb/qubus/backend.hpp>
 

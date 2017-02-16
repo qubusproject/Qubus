@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_HPX_UTILS_HPP
-#define QBB_QUBUS_HPX_UTILS_HPP
+#ifndef QUBUS_HPX_UTILS_HPP
+#define QUBUS_HPX_UTILS_HPP
 
 #include <hpx/include/lcos.hpp>
 #include <hpx/include/components.hpp>

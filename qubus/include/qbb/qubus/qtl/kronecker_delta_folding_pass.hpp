@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_KRONECKER_DELTA_FOLDING_PASS_HPP
-#define QBB_QUBUS_KRONECKER_DELTA_FOLDING_PASS_HPP
+#ifndef QUBUS_KRONECKER_DELTA_FOLDING_PASS_HPP
+#define QUBUS_KRONECKER_DELTA_FOLDING_PASS_HPP
 
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/function_declaration.hpp>

@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_ISL_SET_HPP
-#define QBB_QUBUS_ISL_SET_HPP
+#ifndef QUBUS_ISL_SET_HPP
+#define QUBUS_ISL_SET_HPP
 
 #include <qbb/qubus/isl/space.hpp>
 #include <qbb/qubus/isl/constraint.hpp>

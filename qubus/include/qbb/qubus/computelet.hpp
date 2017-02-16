@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_COMPUTELET_HPP
-#define QBB_QUBUS_COMPUTELET_HPP
+#ifndef QUBUS_COMPUTELET_HPP
+#define QUBUS_COMPUTELET_HPP
 
 #include <qbb/qubus/IR/function_declaration.hpp>
 

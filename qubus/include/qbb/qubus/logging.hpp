@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_LOGGING_HPP
-#define QBB_QUBUS_LOGGING_HPP
+#ifndef QUBUS_LOGGING_HPP
+#define QUBUS_LOGGING_HPP
 
 #include <boost/log/common.hpp>
 #include <boost/version.hpp>

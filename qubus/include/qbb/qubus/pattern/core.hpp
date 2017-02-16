@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_PATTERN_CORE_HPP
-#define QBB_QUBUS_PATTERN_CORE_HPP
+#ifndef QUBUS_PATTERN_CORE_HPP
+#define QUBUS_PATTERN_CORE_HPP
 
 #include <qbb/qubus/pattern/matcher.hpp>
 #include <qbb/qubus/pattern/match.hpp>

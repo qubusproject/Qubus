@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_PATTERN_PATTERN_HPP
-#define QBB_QUBUS_PATTERN_PATTERN_HPP
+#ifndef QUBUS_PATTERN_PATTERN_HPP
+#define QUBUS_PATTERN_PATTERN_HPP
 
 #include <memory>
 #include <utility>

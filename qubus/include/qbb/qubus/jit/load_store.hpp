@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_JIT_LOAD_STORE_HPP
-#define QBB_QUBUS_JIT_LOAD_STORE_HPP
+#ifndef QUBUS_JIT_LOAD_STORE_HPP
+#define QUBUS_JIT_LOAD_STORE_HPP
 
 #include <hpx/config.hpp>
 

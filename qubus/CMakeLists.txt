@@ -8,7 +8,7 @@ add_subdirectory(src)
 add_subdirectory(tests)
 add_subdirectory(benchmarks)
 
-generate_export_header(qubus BASE_NAME QBB_QUBUS)
+generate_export_header(qubus BASE_NAME QUBUS)
 
 add_executable(qubus_test main.cpp)
 target_link_libraries(qubus_test PRIVATE qubus qubus_qtl)

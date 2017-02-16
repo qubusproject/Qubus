@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_LOCAL_VARIABLE_DEF_EXPR_HPP
-#define QBB_QUBUS_LOCAL_VARIABLE_DEF_EXPR_HPP
+#ifndef QUBUS_LOCAL_VARIABLE_DEF_EXPR_HPP
+#define QUBUS_LOCAL_VARIABLE_DEF_EXPR_HPP
 
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/expression_traits.hpp>

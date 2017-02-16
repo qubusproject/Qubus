@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_CPU_COMPILER_HPP
-#define QBB_QUBUS_CPU_COMPILER_HPP
+#ifndef QUBUS_CPU_COMPILER_HPP
+#define QUBUS_CPU_COMPILER_HPP
 
 #include <hpx/config.hpp>
 

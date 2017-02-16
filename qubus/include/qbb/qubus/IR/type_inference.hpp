@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_TYPE_INFERENCE_HPP
-#define QBB_QUBUS_TYPE_INFERENCE_HPP
+#ifndef QUBUS_TYPE_INFERENCE_HPP
+#define QUBUS_TYPE_INFERENCE_HPP
 
 #include <hpx/config.hpp>
 

@@ -3,7 +3,7 @@
 #include <utility>
 
 using server_type = hpx::components::component<qubus::qtl::ast::id_type_server>;
-HPX_REGISTER_COMPONENT(server_type, qbb_qubus_qtl_ast_id_type_server);
+HPX_REGISTER_COMPONENT(server_type, QUBUS_qtl_ast_id_type_server);
 
 namespace qubus
 {

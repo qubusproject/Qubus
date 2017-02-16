@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_LOCAL_RUNTIME_HPP
-#define QBB_QUBUS_LOCAL_RUNTIME_HPP
+#ifndef QUBUS_LOCAL_RUNTIME_HPP
+#define QUBUS_LOCAL_RUNTIME_HPP
 
 #include <hpx/config.hpp>
 

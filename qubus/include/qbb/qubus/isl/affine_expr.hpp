@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_ISL_AFFINE_EXPR_HPP
-#define QBB_QUBUS_ISL_AFFINE_EXPR_HPP
+#ifndef QUBUS_ISL_AFFINE_EXPR_HPP
+#define QUBUS_ISL_AFFINE_EXPR_HPP
 
 #include <qbb/qubus/isl/local_space.hpp>
 #include <qbb/qubus/isl/value.hpp>

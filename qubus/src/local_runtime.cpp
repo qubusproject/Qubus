@@ -14,7 +14,7 @@
 #include <utility>
 
 using server_type = hpx::components::component<qubus::local_runtime_reference_server>;
-HPX_REGISTER_COMPONENT(server_type, qbb_qubus_local_runtime_reference_server);
+HPX_REGISTER_COMPONENT(server_type, QUBUS_local_runtime_reference_server);
 
 typedef qubus::local_runtime_reference_server::get_local_object_factory_action get_local_object_factory_action;
 HPX_REGISTER_ACTION_DECLARATION(get_local_object_factory_action);
@@ -159,7 +159,7 @@ local_runtime_reference get_local_runtime_on_locality(const hpx::id_type& locali
 
 }
 
-HPX_REGISTER_ACTION(qubus::init_local_runtime_remote_action, qbb_qubus_init_local_runtime_remote_action);
-HPX_REGISTER_ACTION(qubus::get_local_runtime_remote_action, qbb_qubus_get_local_runtime_remote_action);
+HPX_REGISTER_ACTION(qubus::init_local_runtime_remote_action, QUBUS_init_local_runtime_remote_action);
+HPX_REGISTER_ACTION(qubus::get_local_runtime_remote_action, QUBUS_get_local_runtime_remote_action);
 
 

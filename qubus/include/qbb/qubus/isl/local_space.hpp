@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_ISL_LOCAL_SPACE_HPP
-#define QBB_QUBUS_ISL_LOCAL_SPACE_HPP
+#ifndef QUBUS_ISL_LOCAL_SPACE_HPP
+#define QUBUS_ISL_LOCAL_SPACE_HPP
 
 #include <qbb/qubus/isl/space.hpp>
 

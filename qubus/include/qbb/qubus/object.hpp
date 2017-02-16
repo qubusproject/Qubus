@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_OBJECT_HPP
-#define QBB_QUBUS_OBJECT_HPP
+#ifndef QUBUS_OBJECT_HPP
+#define QUBUS_OBJECT_HPP
 
 #include <qbb/qubus/local_address_space.hpp>
 

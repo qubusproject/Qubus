@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_OBJECT_FACTORY_HPP
-#define QBB_QUBUS_OBJECT_FACTORY_HPP
+#ifndef QUBUS_OBJECT_FACTORY_HPP
+#define QUBUS_OBJECT_FACTORY_HPP
 
 #include <hpx/config.hpp>
 

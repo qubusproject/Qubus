@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_CPU_MEMORY_BLOCK_HPP
-#define QBB_QUBUS_CPU_MEMORY_BLOCK_HPP
+#ifndef QUBUS_CPU_MEMORY_BLOCK_HPP
+#define QUBUS_CPU_MEMORY_BLOCK_HPP
 
 #include <qbb/qubus/backends/cpu_allocator.hpp>
 #include <qbb/qubus/memory_block.hpp>

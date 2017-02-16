@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_EXECUTION_STACK_HPP
-#define QBB_QUBUS_EXECUTION_STACK_HPP
+#ifndef QUBUS_EXECUTION_STACK_HPP
+#define QUBUS_EXECUTION_STACK_HPP
 
 #include <qbb/util/align.hpp>
 #include <qbb/util/make_unique.hpp>

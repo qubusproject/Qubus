@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_GET_VIEW_HPP
-#define QBB_QUBUS_GET_VIEW_HPP
+#ifndef QUBUS_GET_VIEW_HPP
+#define QUBUS_GET_VIEW_HPP
 
 #include <qbb/qubus/host_object_views.hpp>
 

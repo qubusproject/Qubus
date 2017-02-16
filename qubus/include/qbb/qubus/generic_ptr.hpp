@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_GENERIC_PTR_HPP
-#define QBB_QUBUS_GENERIC_PTR_HPP
+#ifndef QUBUS_GENERIC_PTR_HPP
+#define QUBUS_GENERIC_PTR_HPP
 
 #include <memory>
 #include <typeinfo>

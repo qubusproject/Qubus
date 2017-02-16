@@ -1,5 +1,5 @@
-#ifndef QBB_QUBUS_JIT_ENTRY_BLOCK_ALLOCA_HPP
-#define QBB_QUBUS_JIT_ENTRY_BLOCK_ALLOCA_HPP
+#ifndef QUBUS_JIT_ENTRY_BLOCK_ALLOCA_HPP
+#define QUBUS_JIT_ENTRY_BLOCK_ALLOCA_HPP
 
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Function.h>
