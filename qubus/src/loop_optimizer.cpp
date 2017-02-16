@@ -107,7 +107,7 @@ isl::union_map pad_schedule_map(isl::union_map schedule_map)
 
 struct scop
 {
-    scop(isl::union_set domain, isl::set QBB_UNUSED(param_constraints), isl::union_map schedule,
+    scop(isl::union_set domain, isl::set QUBUS_UNUSED(param_constraints), isl::union_map schedule,
          isl::union_map write_accesses, isl::union_map read_accesses,
          std::map<std::string, std::unique_ptr<expression>> symbol_table,
          std::map<std::string, variable_declaration> tensor_table)
@@ -1658,7 +1658,7 @@ std::unique_ptr<expression> generate_code_from_scop(const scop& s)
 
     isl_union_set_dump(aliases.native_handle());*/
 
-    /*builder.set_before_each_for([&](isl::ast_builder_ref QBB_UNUSED(builder))
+    /*builder.set_before_each_for([&](isl::ast_builder_ref QUBUS_UNUSED(builder))
                                 {
                                     return isl::id(isl_ctx, "test");
                                 });*/

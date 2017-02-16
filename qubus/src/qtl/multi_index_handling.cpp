@@ -116,7 +116,7 @@ std::unique_ptr<expression> expand_multi_indices(const expression& expr)
             //                                };
             //                            }
             //
-            //                            QBB_ASSERT(expanded_delta, "Invalid expression.");
+            //                            QUBUS_ASSERT(expanded_delta, "Invalid expression.");
             //
             //                            return *expanded_delta;
             //                        })

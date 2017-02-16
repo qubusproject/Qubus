@@ -29,7 +29,7 @@ value::~value()
 
 long int value::as_integer() const
 {
-    QBB_ASSERT(is_int(), "Value should contain an integer.");
+    QUBUS_ASSERT(is_int(), "Value should contain an integer.");
     
     return isl_val_get_num_si(native_handle());
 }

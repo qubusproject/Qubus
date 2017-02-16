@@ -119,7 +119,7 @@ public:
     virtual util::index_t type_tag() const = 0;
 
     template <typename Archive>
-    void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
+    void serialize(Archive& QUBUS_UNUSED(ar), unsigned QUBUS_UNUSED(version))
     {
     }
 

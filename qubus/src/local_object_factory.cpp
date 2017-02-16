@@ -39,7 +39,7 @@ local_object_factory_server::local_object_factory_server(local_address_space* ad
 
 hpx::future<hpx::id_type> local_object_factory_server::create_scalar(type data_type)
 {
-    QBB_ASSERT(data_type.is_primitive(), "The type of scalars has to be primitive.");
+    QUBUS_ASSERT(data_type.is_primitive(), "The type of scalars has to be primitive.");
 
     object obj = new_here<object_server>(data_type);
 

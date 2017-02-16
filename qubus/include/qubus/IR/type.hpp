@@ -36,7 +36,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
+    void serialize(Archive& QUBUS_UNUSED(ar), unsigned QUBUS_UNUSED(version))
     {
     }
 };
@@ -132,7 +132,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar& self_;
     }
@@ -151,7 +151,7 @@ private:
         virtual std::unique_ptr<type_interface> clone() const = 0;
 
         template <typename Archive>
-        void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
+        void serialize(Archive& QUBUS_UNUSED(ar), unsigned QUBUS_UNUSED(version))
         {
         }
 
@@ -198,7 +198,7 @@ private:
         }
 
         template <typename Archive>
-        void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+        void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
         {
             ar& hpx::serialization::base_object<type_interface>(*this);
 
@@ -233,7 +233,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
+    void serialize(Archive& QUBUS_UNUSED(ar), unsigned QUBUS_UNUSED(version))
     {
     }
 };
@@ -247,7 +247,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
+    void serialize(Archive& QUBUS_UNUSED(ar), unsigned QUBUS_UNUSED(version))
     {
     }
 };
@@ -261,7 +261,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
+    void serialize(Archive& QUBUS_UNUSED(ar), unsigned QUBUS_UNUSED(version))
     {
     }
 };
@@ -275,7 +275,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
+    void serialize(Archive& QUBUS_UNUSED(ar), unsigned QUBUS_UNUSED(version))
     {
     }
 };
@@ -289,7 +289,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
+    void serialize(Archive& QUBUS_UNUSED(ar), unsigned QUBUS_UNUSED(version))
     {
     }
 };
@@ -316,7 +316,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar& rank_;
     }
@@ -345,7 +345,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar& real_type_;
     }
@@ -380,7 +380,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar& value_type_;
         ar& rank_;
@@ -417,7 +417,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar& value_type_;
         ar& rank_;
@@ -440,7 +440,7 @@ public:
         }
 
         template <typename Archive>
-        void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+        void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
         {
             ar& datatype;
             ar& id;
@@ -492,7 +492,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar& id_;
         ar& members_;

@@ -57,7 +57,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar & size_;
         ar & alignment_;
@@ -87,7 +87,7 @@ public:
                                   const std::vector<util::index_t>& shape) const;
 
     template <typename Archive>
-    void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
+    void serialize(Archive& QUBUS_UNUSED(ar), unsigned QUBUS_UNUSED(version))
     {
     }
 };

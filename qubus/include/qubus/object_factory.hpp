@@ -34,7 +34,7 @@ struct sparse_tensor_layout
     }
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar& num_chunks;
         ar& nnz;

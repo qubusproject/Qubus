@@ -27,7 +27,7 @@ public:
     template<typename T>
     const T as() const
     {
-        QBB_ASSERT(has_value(), "Annotation has no value.");
+        QUBUS_ASSERT(has_value(), "Annotation has no value.");
 
         return boost::any_cast<T>(*value_);
     }
@@ -35,7 +35,7 @@ public:
     template<typename T>
     T as()
     {
-        QBB_ASSERT(has_value(), "Annotation has no value.");
+        QUBUS_ASSERT(has_value(), "Annotation has no value.");
 
         return boost::any_cast<T>(*value_);
     }

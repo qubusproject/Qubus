@@ -138,7 +138,7 @@ public:
             linear_index = shape_[i] * linear_index + indices_[i];
         }
 
-        QBB_ASSERT(linear_index >= 0, "Linear index can't be negative.");
+        QUBUS_ASSERT(linear_index >= 0, "Linear index can't be negative.");
 
         return data_[linear_index];
     }
@@ -157,7 +157,7 @@ public:
             linear_index = shape_[i] * linear_index + indices_[i];
         }
 
-        QBB_ASSERT(linear_index >= 0, "Linear index can't be negative.");
+        QUBUS_ASSERT(linear_index >= 0, "Linear index can't be negative.");
 
         return data_[linear_index];
     }

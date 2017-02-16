@@ -44,7 +44,7 @@ public:
         virtual const void* get_data() const = 0;
 
         template <typename Archive>
-        void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
+        void serialize(Archive& QUBUS_UNUSED(ar), unsigned QUBUS_UNUSED(version))
         {
         }
 
@@ -81,7 +81,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar& versions_;
     }
@@ -114,7 +114,7 @@ private:
         }
 
         template <typename Archive>
-        void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+        void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
         {
             ar& hpx::serialization::base_object<foreign_computelet::version>(*this);
 
@@ -134,8 +134,8 @@ private:
     std::vector<std::shared_ptr<version>> versions_;
 };
 
-inline bool operator==(const foreign_computelet& QBB_UNUSED(lhs),
-                       const foreign_computelet& QBB_UNUSED(rhs))
+inline bool operator==(const foreign_computelet& QUBUS_UNUSED(lhs),
+                       const foreign_computelet& QUBUS_UNUSED(rhs))
 {
     return false;
 }

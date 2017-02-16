@@ -60,7 +60,7 @@ object_factory runtime::get_object_factory() const
     return hpx::async<runtime_server::get_object_factory_action>(this->get_id());
 }
 
-void init(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
+void init(int QUBUS_UNUSED(argc), char** QUBUS_UNUSED(argv))
 {
     auto global_runtime = hpx::agas::resolve_name(hpx::launch::sync, "/qubus/runtime");
 

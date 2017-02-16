@@ -161,10 +161,10 @@ try_generate_slice_region(const std::vector<affine_expr>& vars,
 {
     const auto rank = shape.size();
 
-    QBB_ASSERT(rank == vars.size(), "The number of variables need to match the rank.");
-    QBB_ASSERT(rank == offset.size(), "The number of offsets need to match the rank.");
-    QBB_ASSERT(rank == shape.size(), "The number of extends need to match the rank.");
-    QBB_ASSERT(rank == strides.size(), "The number of strides need to match the rank.");
+    QUBUS_ASSERT(rank == vars.size(), "The number of variables need to match the rank.");
+    QUBUS_ASSERT(rank == offset.size(), "The number of offsets need to match the rank.");
+    QUBUS_ASSERT(rank == shape.size(), "The number of extends need to match the rank.");
+    QUBUS_ASSERT(rank == strides.size(), "The number of strides need to match the rank.");
 
     if (rank == 0)
         return boost::none;
@@ -345,9 +345,9 @@ alias_result basic_alias_analysis_result::alias(const access& first_access,
 }
 
 basic_alias_analysis_result
-basic_alias_analysis_pass::run(const expression& QBB_UNUSED(root),
-                               analysis_manager& QBB_UNUSED(manager),
-                               pass_resource_manager& QBB_UNUSED(resource_manager)) const
+basic_alias_analysis_pass::run(const expression& QUBUS_UNUSED(root),
+                               analysis_manager& QUBUS_UNUSED(manager),
+                               pass_resource_manager& QUBUS_UNUSED(resource_manager)) const
 {
     return basic_alias_analysis_result();
 }

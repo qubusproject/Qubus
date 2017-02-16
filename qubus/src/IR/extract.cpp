@@ -63,7 +63,7 @@ std::unique_ptr<expression> extract_expr_as_function(const expression& expr,
 
     auto body = substitite_env_vars(expr, expr_env.parameters(), params);
 
-    QBB_ASSERT(params.size() == expr_env.parameters().size(), "");
+    QUBUS_ASSERT(params.size() == expr_env.parameters().size(), "");
 
     std::vector<variable_declaration> in_params;
     std::vector<variable_declaration> out_params;

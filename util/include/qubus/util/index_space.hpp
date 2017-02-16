@@ -55,12 +55,12 @@ public:
     {
     }
 
-    IndexType& operator[](long int QBB_UNUSED(dim))
+    IndexType& operator[](long int QUBUS_UNUSED(dim))
     {
         return value_;
     }
 
-    const IndexType& operator[](long int QBB_UNUSED(dim)) const
+    const IndexType& operator[](long int QUBUS_UNUSED(dim)) const
     {
         return value_;
     }
@@ -278,7 +278,7 @@ public:
 
     index_space_iterator<IndexType, Rank>& operator++()
     {
-        QBB_ASSERT(index_space_, "Invalid iterator.");
+        QUBUS_ASSERT(index_space_, "Invalid iterator.");
 
         if (index_space_->rank() > 0)
         {
@@ -363,7 +363,7 @@ index_space_iterator<IndexType, Rank> begin(const index_space<IndexType, Rank>& 
 }
 
 template <typename IndexType, long int Rank>
-index_space_iterator<IndexType, Rank> end(const index_space<IndexType, Rank>& QBB_UNUSED(space))
+index_space_iterator<IndexType, Rank> end(const index_space<IndexType, Rank>& QUBUS_UNUSED(space))
 {
     return index_space_iterator<IndexType, Rank>();
 }

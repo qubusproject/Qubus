@@ -33,8 +33,8 @@ inline Destination integer_cast(const Source& source)
     }
     catch (const boost::bad_numeric_cast&)
     {
-        QBB_ASSERT(true, "bad integer cast");
-        QBB_UNREACHABLE();
+        QUBUS_ASSERT(true, "bad integer cast");
+        QUBUS_UNREACHABLE();
     }
 #else
     return static_cast<Destination>(source);
@@ -50,7 +50,7 @@ inline index_t to_index(const Source source)
 template <typename Source>
 inline index_t to_uindex(const Source source)
 {
-    QBB_ASSERT(source >= 0, "conversion of negative integer to unsigned index");
+    QUBUS_ASSERT(source >= 0, "conversion of negative integer to unsigned index");
 
     return integer_cast<index_t>(source);
 }

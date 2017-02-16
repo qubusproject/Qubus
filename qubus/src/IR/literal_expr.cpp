@@ -20,7 +20,7 @@ double_literal_expr* double_literal_expr::clone() const
     return new double_literal_expr(value_);
 }
 
-const expression& double_literal_expr::child(std::size_t QBB_UNUSED(index)) const
+const expression& double_literal_expr::child(std::size_t QUBUS_UNUSED(index)) const
 {
     throw 0;
 }
@@ -63,7 +63,7 @@ float_literal_expr* float_literal_expr::clone() const
     return new float_literal_expr(value_);
 }
 
-const expression& float_literal_expr::child(std::size_t QBB_UNUSED(index)) const
+const expression& float_literal_expr::child(std::size_t QUBUS_UNUSED(index)) const
 {
     throw 0;
 }
@@ -106,7 +106,7 @@ integer_literal_expr* integer_literal_expr::clone() const
     return new integer_literal_expr(value_);
 }
 
-const expression& integer_literal_expr::child(std::size_t QBB_UNUSED(index)) const
+const expression& integer_literal_expr::child(std::size_t QUBUS_UNUSED(index)) const
 {
     throw 0;
 }

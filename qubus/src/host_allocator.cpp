@@ -49,8 +49,8 @@ std::unique_ptr<memory_block> host_allocator::allocate(std::size_t size, std::si
 {
     void* data;
 
-    QBB_ASSERT(is_multiple_of(alignment, sizeof(void*)), "The alignment needs to be a multiple of sizeof(void*).");
-    QBB_ASSERT(is_power_of_two(alignment), "The alignment needs to be a power of two.");
+    QUBUS_ASSERT(is_multiple_of(alignment, sizeof(void*)), "The alignment needs to be a multiple of sizeof(void*).");
+    QUBUS_ASSERT(is_power_of_two(alignment), "The alignment needs to be a power of two.");
 
     if (posix_memalign(&data, alignment, size))
     {

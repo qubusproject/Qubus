@@ -20,7 +20,7 @@ variable_ref_expr* variable_ref_expr::clone() const
     return new variable_ref_expr(declaration_);
 }
 
-const expression& variable_ref_expr::child(std::size_t QBB_UNUSED(index)) const
+const expression& variable_ref_expr::child(std::size_t QUBUS_UNUSED(index)) const
 {
     throw 0;
 }

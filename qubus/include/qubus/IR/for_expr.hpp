@@ -52,7 +52,7 @@ public:
         std::vector<std::unique_ptr<expression>> new_children) const override final;
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar& order_;
         ar& loop_index_;

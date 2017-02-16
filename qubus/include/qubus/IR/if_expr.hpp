@@ -41,7 +41,7 @@ public:
         std::vector<std::unique_ptr<expression>> new_children) const override final;
 
     template <typename Archive>
-    void save(Archive& ar, unsigned QBB_UNUSED(version)) const
+    void save(Archive& ar, unsigned QUBUS_UNUSED(version)) const
     {
         ar << condition_;
         ar << then_branch_;
@@ -50,7 +50,7 @@ public:
     }
 
     template <typename Archive>
-    void load(Archive& ar, unsigned QBB_UNUSED(version))
+    void load(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar >> condition_;
         ar >> then_branch_;

@@ -100,7 +100,7 @@ bool operator!=(const sum_expr& lhs, const sum_expr& rhs)
     return !(lhs == rhs);
 }
 
-QBB_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(equal, std::equal_to<sum_expr>(), sum_expr_equal);
+QUBUS_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(equal, std::equal_to<sum_expr>(), sum_expr_equal);
 
 }
 }

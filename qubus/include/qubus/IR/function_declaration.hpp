@@ -48,7 +48,7 @@ public:
     annotation_map& annotations();
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar & name_;
         ar & params_;
@@ -88,7 +88,7 @@ public:
     annotation_map& annotations();
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar & info_;
     }

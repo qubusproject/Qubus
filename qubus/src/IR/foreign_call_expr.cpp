@@ -50,7 +50,7 @@ std::unique_ptr<expression> foreign_call_expr::substitute_subexpressions(
     return std::make_unique<foreign_call_expr>(computelet_, std::move(new_children));
 }
 
-bool operator==(const foreign_call_expr& QBB_UNUSED(lhs), const foreign_call_expr& QBB_UNUSED(rhs))
+bool operator==(const foreign_call_expr& QUBUS_UNUSED(lhs), const foreign_call_expr& QUBUS_UNUSED(rhs))
 {
     return false;
 }

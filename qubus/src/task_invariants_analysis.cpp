@@ -31,7 +31,7 @@ bool is_referencing_invariant_object(const expression& obj, const expression& co
                            modified_object.get().try_as<access_expr>();
                        const access_expr* obj_access = obj.try_as<access_expr>();
 
-                       QBB_ASSERT(modifing_access && obj_access, "Invalid object during access.");
+                       QUBUS_ASSERT(modifing_access && obj_access, "Invalid object during access.");
 
                        auto query_result = basic_alias_analysis.alias(access(*obj_access),
                                                                       access(*modifing_access));
@@ -45,7 +45,7 @@ bool is_referencing_invariant_object(const expression& obj, const expression& co
                 auto modifing_access = variable_ref(var.get());
                 const access_expr* obj_access = obj.try_as<access_expr>();
 
-                QBB_ASSERT(obj_access, "Invalid object during access.");
+                QUBUS_ASSERT(obj_access, "Invalid object during access.");
 
                 // FIXME: Currently, we use the non-caching variant of the basic alias analysis algorithm
                 //        since the cache gets confused by temporary expression objects.

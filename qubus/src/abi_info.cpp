@@ -13,7 +13,7 @@ abi_info::abi_info()
 {
 }
 
-std::size_t abi_info::get_align_of(const type& QBB_UNUSED(primitive_type)) const
+std::size_t abi_info::get_align_of(const type& QUBUS_UNUSED(primitive_type)) const
 {
     return 32;
 }

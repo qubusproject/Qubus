@@ -50,7 +50,7 @@ public:
 
         value_type value(std::forward<Args>(args)...);
 
-        QBB_ASSERT(value.first != empty_key_, "The empty key is not a valid key.");
+        QUBUS_ASSERT(value.first != empty_key_, "The empty key is not a valid key.");
 
         auto guessed_bucket_id = hasher()(value.first) % bucket_count();
         auto bucket_id = guessed_bucket_id;
@@ -74,7 +74,7 @@ public:
             bucket_id = (bucket_id + 1) % bucket_count();
         } while(bucket_id != guessed_bucket_id);
 
-        QBB_UNREACHABLE();
+        QUBUS_UNREACHABLE();
     }
 
     iterator erase(const_iterator pos)
@@ -96,7 +96,7 @@ public:
 
     std::size_t erase(const key_type& key)
     {
-        QBB_ASSERT(key != empty_key_, "The empty key is not a valid key.");
+        QUBUS_ASSERT(key != empty_key_, "The empty key is not a valid key.");
 
         auto bucket_id = find_bucket(key);
 
@@ -112,7 +112,7 @@ public:
 
     iterator find(const key_type& key)
     {
-        QBB_ASSERT(key != empty_key_, "The empty key is not a valid key.");
+        QUBUS_ASSERT(key != empty_key_, "The empty key is not a valid key.");
 
         auto bucket_id = find_bucket(key);
 
@@ -128,7 +128,7 @@ public:
 
     const_iterator find(const key_type& key) const
     {
-        QBB_ASSERT(key != empty_key_, "The empty key is not a valid key.");
+        QUBUS_ASSERT(key != empty_key_, "The empty key is not a valid key.");
 
         auto bucket_id = find_bucket(key);
 
@@ -144,7 +144,7 @@ public:
 
     mapped_type& at(const key_type& key)
     {
-        QBB_ASSERT(key != empty_key_, "The empty key is not a valid key.");
+        QUBUS_ASSERT(key != empty_key_, "The empty key is not a valid key.");
 
         auto pos = find(key);
 
@@ -160,7 +160,7 @@ public:
 
     const mapped_type& at(const key_type& key) const
     {
-        QBB_ASSERT(key != empty_key_, "The empty key is not a valid key.");
+        QUBUS_ASSERT(key != empty_key_, "The empty key is not a valid key.");
 
         auto pos = find(key);
 
@@ -226,7 +226,7 @@ private:
 
     auto find_bucket(const key_type& key) const
     {
-        QBB_ASSERT(key != empty_key_, "The empty key is not a valid key.");
+        QUBUS_ASSERT(key != empty_key_, "The empty key is not a valid key.");
 
         auto guessed_bucket_id = hasher()(key) % bucket_count();
         auto bucket_id = guessed_bucket_id;

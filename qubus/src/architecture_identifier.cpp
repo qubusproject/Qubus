@@ -20,6 +20,6 @@ bool is_same_architecture_host(const host_architecture_identifier&, const host_a
 }
 }
 
-QBB_DEFINE_MULTI_METHOD_SPECIALIZATION(is_same_architecture, is_same_architecture_host);
+QUBUS_DEFINE_MULTI_METHOD_SPECIALIZATION(is_same_architecture, is_same_architecture_host);
 
 }

@@ -80,7 +80,7 @@ bool operator!=(const kronecker_delta_expr& lhs, const kronecker_delta_expr& rhs
     return !(lhs == rhs);
 }
 
-QBB_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(equal, std::equal_to<kronecker_delta_expr>(), kronecker_delta_expr_equal);
+QUBUS_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(equal, std::equal_to<kronecker_delta_expr>(), kronecker_delta_expr_equal);
 
 }
 }

@@ -240,7 +240,7 @@ public:
             }
             else
             {
-                QBB_ASSERT(idx.indices.size() == 1,
+                QUBUS_ASSERT(idx.indices.size() == 1,
                            "Unnamed multi-indices are currently not supported.");
 
                 subscripts.push_back(var(idx.indices[0]));
@@ -261,7 +261,7 @@ public:
             }
             else
             {
-                QBB_ASSERT(idx.indices.size() == 1,
+                QUBUS_ASSERT(idx.indices.size() == 1,
                            "Unnamed multi-indices are currently not supported.");
 
                 expr = for_all(idx.indices[0], std::move(expr));

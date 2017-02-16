@@ -50,7 +50,7 @@ public:
     lru_cache(std::function<value_type(const key_type&)> fn_, std::size_t capacity_)
     : fn_(std::move(fn_)), capacity_(std::move(capacity_))
     {
-        QBB_ASSERT(capacity_ != 0, "Cache capacity needs to be non-zero.");
+        QUBUS_ASSERT(capacity_ != 0, "Cache capacity needs to be non-zero.");
     }
 
     value_type operator()(const key_type& k) const
@@ -75,7 +75,7 @@ public:
 private:
     void insert(const key_type& k, const value_type& v) const
     {
-        QBB_ASSERT(container_.size() <= capacity_, "Cache entry count exceeds the capacity.");
+        QUBUS_ASSERT(container_.size() <= capacity_, "Cache entry count exceeds the capacity.");
 
         if (container_.size() == capacity_)
         {

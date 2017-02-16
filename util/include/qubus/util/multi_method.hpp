@@ -5,12 +5,12 @@
 #include <qubus/util/detail/virtual.hpp>
 #include <qubus/util/function_traits.hpp>
 
-#include <functional>
-#include <typeindex>
 #include <array>
+#include <functional>
 #include <memory>
-#include <utility>
 #include <type_traits>
+#include <typeindex>
+#include <utility>
 
 namespace qubus
 {
@@ -164,10 +164,8 @@ public:
 private:
     void init_dispatch_table(bool updated_specializations) const
     {
-        std::call_once(initialization_flag_, [this]()
-                       {
-                           dispatch_table_.reset(new DispatchTable());
-                       });
+        std::call_once(initialization_flag_,
+                       [this]() { dispatch_table_.reset(new DispatchTable()); });
 
         dispatch_table_->build_dispatch_table(*specializations_, updated_specializations);
     }
@@ -175,8 +173,7 @@ private:
     template <typename F, std::size_t... Indices>
     void add_specialization_impl(F specialization, index_sequence<Indices...>)
     {
-        specialization_t thunk = [=](remove_virtual<Args>... args)
-        {
+        specialization_t thunk = [=](remove_virtual<Args>... args) {
             return specialization(unwrap_arg<Args, arg_type<F, Indices>>(args)...);
         };
 
@@ -210,13 +207,13 @@ public:
     }
 };
 
-#define QBB_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(multi_method, specialization, name)       \
-    ::qubus::util::multi_method_specialization_initializer qbb_mm_##name##_initializer(            \
+#define QUBUS_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(multi_method, specialization, name)     \
+    ::qubus::util::multi_method_specialization_initializer qubus_mm_##name##_initializer(          \
         multi_method, specialization)
 
-#define QBB_DEFINE_MULTI_METHOD_SPECIALIZATION(multi_method, specialization)                       \
-    QBB_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(multi_method, specialization,                 \
-                                                     multi_method##_##specialization)
+#define QUBUS_DEFINE_MULTI_METHOD_SPECIALIZATION(multi_method, specialization)                     \
+    QUBUS_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(multi_method, specialization,               \
+                                                       multi_method##_##specialization)
 }
 }
 

@@ -80,7 +80,7 @@ private:
 class simple_statistical_performance_model_impl
 {
 public:
-    void sample_execution_time(const computelet& QBB_UNUSED(c), const execution_context& ctx,
+    void sample_execution_time(const computelet& QUBUS_UNUSED(c), const execution_context& ctx,
                                std::chrono::microseconds execution_time)
     {
         std::lock_guard<hpx::lcos::local::mutex> guard(accumulators_mutex_);
@@ -98,7 +98,7 @@ public:
     }
 
     boost::optional<performance_estimate>
-    try_estimate_execution_time(const computelet& QBB_UNUSED(c), const execution_context& ctx) const
+    try_estimate_execution_time(const computelet& QUBUS_UNUSED(c), const execution_context& ctx) const
     {
         std::lock_guard<hpx::lcos::local::mutex> guard(accumulators_mutex_);
 
@@ -132,7 +132,7 @@ simple_statistical_performance_model::~simple_statistical_performance_model() = 
 void simple_statistical_performance_model::sample_execution_time(
     const computelet& c, const execution_context& ctx, std::chrono::microseconds execution_time)
 {
-    QBB_ASSERT(impl_, "Uninitialized object.");
+    QUBUS_ASSERT(impl_, "Uninitialized object.");
 
     impl_->sample_execution_time(c, ctx, std::move(execution_time));
 }
@@ -141,7 +141,7 @@ boost::optional<performance_estimate>
 simple_statistical_performance_model::try_estimate_execution_time(
     const computelet& c, const execution_context& ctx) const
 {
-    QBB_ASSERT(impl_, "Uninitialized object.");
+    QUBUS_ASSERT(impl_, "Uninitialized object.");
 
     return impl_->try_estimate_execution_time(c, ctx);
 }

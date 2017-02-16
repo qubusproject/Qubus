@@ -178,7 +178,7 @@ public:
             case opcode::halt:
                 return stack[sp - 1];
             default:
-                QBB_UNREACHABLE_BECAUSE("Invalid opcode.");
+                QUBUS_UNREACHABLE_BECAUSE("Invalid opcode.");
             }
         }
     }
@@ -427,7 +427,7 @@ long int determine_number_of_expressions(const model_expression& root)
         number_of_expressions += determine_number_of_expressions(child);
     }
 
-    QBB_ASSERT(number_of_expressions >= 0, "The number of expressions should be non-negative.");
+    QUBUS_ASSERT(number_of_expressions >= 0, "The number of expressions should be non-negative.");
 
     return number_of_expressions;
 }
@@ -477,7 +477,7 @@ public:
 
     const model_expression& child(long int index) const override
     {
-        QBB_ASSERT(0 <= index && index < 2, "Invalid child index.");
+        QUBUS_ASSERT(0 <= index && index < 2, "Invalid child index.");
 
         switch (index)
         {
@@ -486,13 +486,13 @@ public:
         case 1:
             return *rhs_;
         default:
-            QBB_UNREACHABLE_BECAUSE("Invalid child index.");
+            QUBUS_UNREACHABLE_BECAUSE("Invalid child index.");
         }
     }
 
     model_expression& child(long int index) override
     {
-        QBB_ASSERT(0 <= index && index < 2, "Invalid child index.");
+        QUBUS_ASSERT(0 <= index && index < 2, "Invalid child index.");
 
         switch (index)
         {
@@ -501,7 +501,7 @@ public:
         case 1:
             return *rhs_;
         default:
-            QBB_UNREACHABLE_BECAUSE("Invalid child index.");
+            QUBUS_UNREACHABLE_BECAUSE("Invalid child index.");
         }
     }
 
@@ -525,7 +525,7 @@ public:
         }
         else
         {
-            QBB_UNREACHABLE_BECAUSE("old_child is not a child of this node.");
+            QUBUS_UNREACHABLE_BECAUSE("old_child is not a child of this node.");
         }
     }
 
@@ -674,27 +674,27 @@ public:
 
     const model_expression& child(long int index) const override
     {
-        QBB_ASSERT(0 <= index && index < 1, "Invalid child index.");
+        QUBUS_ASSERT(0 <= index && index < 1, "Invalid child index.");
 
         switch (index)
         {
         case 0:
             return *arg_;
         default:
-            QBB_UNREACHABLE_BECAUSE("Invalid child index.");
+            QUBUS_UNREACHABLE_BECAUSE("Invalid child index.");
         }
     }
 
     model_expression& child(long int index) override
     {
-        QBB_ASSERT(0 <= index && index < 1, "Invalid child index.");
+        QUBUS_ASSERT(0 <= index && index < 1, "Invalid child index.");
 
         switch (index)
         {
         case 0:
             return *arg_;
         default:
-            QBB_UNREACHABLE_BECAUSE("Invalid child index.");
+            QUBUS_UNREACHABLE_BECAUSE("Invalid child index.");
         }
     }
 
@@ -713,7 +713,7 @@ public:
         }
         else
         {
-            QBB_UNREACHABLE_BECAUSE("old_child is not a child of this node.");
+            QUBUS_UNREACHABLE_BECAUSE("old_child is not a child of this node.");
         }
     }
 
@@ -801,7 +801,7 @@ class parameter_expression final : public model_expression
 public:
     explicit parameter_expression(long int index_) : index_(std::move(index_))
     {
-        QBB_ASSERT(this->index_ >= 0, "Invalid index.");
+        QUBUS_ASSERT(this->index_ >= 0, "Invalid index.");
     }
 
     long int arity() const override
@@ -811,12 +811,12 @@ public:
 
     const model_expression& child(long int index) const override
     {
-        QBB_UNREACHABLE_BECAUSE("Invalid child index.");
+        QUBUS_UNREACHABLE_BECAUSE("Invalid child index.");
     }
 
     model_expression& child(long int index) override
     {
-        QBB_UNREACHABLE_BECAUSE("Invalid child index.");
+        QUBUS_UNREACHABLE_BECAUSE("Invalid child index.");
     }
 
     std::unique_ptr<model_expression> clone() const override
@@ -824,10 +824,10 @@ public:
         return std::make_unique<parameter_expression>(index_);
     }
 
-    void substitute_child(const model_expression& QBB_UNUSED(old_child),
-                          std::unique_ptr<model_expression> QBB_UNUSED(new_child)) override
+    void substitute_child(const model_expression& QUBUS_UNUSED(old_child),
+                          std::unique_ptr<model_expression> QUBUS_UNUSED(new_child)) override
     {
-        QBB_UNREACHABLE_BECAUSE("old_child is not a child of this node.");
+        QUBUS_UNREACHABLE_BECAUSE("old_child is not a child of this node.");
     }
 
     long int index() const
@@ -841,15 +841,15 @@ public:
     }
 
     double evaluate(const Eigen::VectorXd& parameters,
-                    const std::vector<double>& QBB_UNUSED(arguments)) const override
+                    const std::vector<double>& QUBUS_UNUSED(arguments)) const override
     {
-        QBB_ASSERT(index_ < parameters.size(), "Invalid index.");
+        QUBUS_ASSERT(index_ < parameters.size(), "Invalid index.");
 
         return parameters(util::integer_cast<Eigen::Index>(index_));
     }
 
-    double df(const Eigen::VectorXd& QBB_UNUSED(parameters),
-              const std::vector<double>& QBB_UNUSED(arguments), long int index) const override
+    double df(const Eigen::VectorXd& QUBUS_UNUSED(parameters),
+              const std::vector<double>& QUBUS_UNUSED(arguments), long int index) const override
     {
         return index_ == index ? 1.0 : 0.0;
     }
@@ -890,7 +890,7 @@ public:
 
     std::string dump(const Eigen::VectorXd& parameters) const override
     {
-        QBB_ASSERT(index_ < parameters.size(), "Invalid index.");
+        QUBUS_ASSERT(index_ < parameters.size(), "Invalid index.");
 
         return std::to_string(parameters(util::integer_cast<Eigen::Index>(index_)));
     }
@@ -904,7 +904,7 @@ class variable_expression final : public model_expression
 public:
     explicit variable_expression(long int index_) : index_(std::move(index_))
     {
-        QBB_ASSERT(this->index_ >= 0, "Invalid index.");
+        QUBUS_ASSERT(this->index_ >= 0, "Invalid index.");
     }
 
     long int arity() const override
@@ -914,12 +914,12 @@ public:
 
     const model_expression& child(long int index) const override
     {
-        QBB_UNREACHABLE_BECAUSE("Invalid child index.");
+        QUBUS_UNREACHABLE_BECAUSE("Invalid child index.");
     }
 
     model_expression& child(long int index) override
     {
-        QBB_UNREACHABLE_BECAUSE("Invalid child index.");
+        QUBUS_UNREACHABLE_BECAUSE("Invalid child index.");
     }
 
     std::unique_ptr<model_expression> clone() const override
@@ -927,23 +927,23 @@ public:
         return std::make_unique<variable_expression>(index_);
     }
 
-    void substitute_child(const model_expression& QBB_UNUSED(old_child),
-                          std::unique_ptr<model_expression> QBB_UNUSED(new_child)) override
+    void substitute_child(const model_expression& QUBUS_UNUSED(old_child),
+                          std::unique_ptr<model_expression> QUBUS_UNUSED(new_child)) override
     {
-        QBB_UNREACHABLE_BECAUSE("old_child is not a child of this node.");
+        QUBUS_UNREACHABLE_BECAUSE("old_child is not a child of this node.");
     }
 
-    double evaluate(const Eigen::VectorXd& QBB_UNUSED(parameters),
+    double evaluate(const Eigen::VectorXd& QUBUS_UNUSED(parameters),
                     const std::vector<double>& arguments) const override
     {
-        QBB_ASSERT(index_ < arguments.size(), "Invalid index.");
+        QUBUS_ASSERT(index_ < arguments.size(), "Invalid index.");
 
         return arguments[util::integer_cast<std::size_t>(index_)];
     }
 
-    double df(const Eigen::VectorXd& QBB_UNUSED(parameters),
-              const std::vector<double>& QBB_UNUSED(arguments),
-              long int QBB_UNUSED(index)) const override
+    double df(const Eigen::VectorXd& QUBUS_UNUSED(parameters),
+              const std::vector<double>& QUBUS_UNUSED(arguments),
+              long int QUBUS_UNUSED(index)) const override
     {
         return 0.0;
     }
@@ -983,7 +983,7 @@ public:
         }
     }
 
-    std::string dump(const Eigen::VectorXd& QBB_UNUSED(parameters)) const override
+    std::string dump(const Eigen::VectorXd& QUBUS_UNUSED(parameters)) const override
     {
         return "a" + std::to_string(index_);
     }
@@ -1007,7 +1007,7 @@ long int determine_number_of_parameters(const model_expression& root)
             std::max(number_of_parameters, determine_number_of_parameters(child));
     }
 
-    QBB_ASSERT(number_of_parameters >= 0, "The number of parameters has to be non-negative.");
+    QUBUS_ASSERT(number_of_parameters >= 0, "The number of parameters has to be non-negative.");
 
     return number_of_parameters;
 }
@@ -1017,7 +1017,7 @@ std::unique_ptr<model_expression>
 generate_random_expression(Engine& engine, long int number_of_arguments,
                            long int& number_of_parameters, long int depth = 0)
 {
-    QBB_ASSERT(number_of_arguments > 0, "The expression has to contain at least one argument.");
+    QUBUS_ASSERT(number_of_arguments > 0, "The expression has to contain at least one argument.");
 
     enum expression_type
     {
@@ -1133,10 +1133,10 @@ generate_random_expression(Engine& engine, long int number_of_arguments,
         return std::make_unique<function_expression>(function_expression::tag::log, std::move(arg));
     }
     case number_of_types:
-        QBB_UNREACHABLE_BECAUSE("number_of_types is not an actual expression type.");
+        QUBUS_UNREACHABLE_BECAUSE("number_of_types is not an actual expression type.");
     }
 
-    QBB_UNREACHABLE();
+    QUBUS_UNREACHABLE();
 }
 
 template <typename Engine>
@@ -1168,7 +1168,7 @@ const model_expression& select_random_node(const model_expression& expr, Engine&
         }
     }
 
-    QBB_UNREACHABLE_BECAUSE("The algorithm should have reached the selected node long ago.");
+    QUBUS_UNREACHABLE_BECAUSE("The algorithm should have reached the selected node long ago.");
 }
 
 void remove_dead_parameters(model_expression& expr)
@@ -1271,7 +1271,7 @@ std::unique_ptr<model_expression> wrap_expression(const model_expression& expr, 
     case 1:
         return std::make_unique<function_expression>(function_expression::tag::log, clone(expr));
     default:
-        QBB_UNREACHABLE_BECAUSE("No case left.");
+        QUBUS_UNREACHABLE_BECAUSE("No case left.");
     }
 }
 
@@ -1298,7 +1298,7 @@ combine_expressions(const model_expression& mother, const model_expression& fath
         return std::make_unique<binary_operator_expression>(
             binary_operator_expression::tag::divides, clone(mother), clone(father));
     default:
-        QBB_UNREACHABLE_BECAUSE("No case left.");
+        QUBUS_UNREACHABLE_BECAUSE("No case left.");
     }
 }
 
@@ -1319,7 +1319,7 @@ public:
       number_of_parameters_(determine_number_of_parameters(*this->root_)),
       dataset_(&dataset_)
     {
-        QBB_ASSERT(determine_depth(*this->root_) <= max_depth,
+        QUBUS_ASSERT(determine_depth(*this->root_) <= max_depth,
                    "The depth is larger than expected.");
 
         static_assert(max_depth < compiled_expression::stack_size,
@@ -1388,7 +1388,7 @@ public:
 
     const model_expression& expr() const
     {
-        QBB_ASSERT(root_, "Invalid object.");
+        QUBUS_ASSERT(root_, "Invalid object.");
 
         return *root_;
     }
@@ -1428,14 +1428,14 @@ public:
 
         auto count = static_cast<rep>(result);
 
-        QBB_ASSERT(count >= 0, "Invalid duration.");
+        QUBUS_ASSERT(count >= 0, "Invalid duration.");
 
         return std::chrono::microseconds(std::move(count));
     }
 
     int operator()(const Eigen::VectorXd& parameters, Eigen::VectorXd& result) const
     {
-        QBB_ASSERT(number_of_parameters_ == parameters.size(), "Unexpected number of parameters.");
+        QUBUS_ASSERT(number_of_parameters_ == parameters.size(), "Unexpected number of parameters.");
 
         for (long int i = 0; i < result.size(); ++i)
         {
@@ -1451,8 +1451,8 @@ public:
 
     int df(const Eigen::VectorXd& parameters, Eigen::MatrixXd& result) const
     {
-        QBB_ASSERT(result.rows() == dataset_->size(), "Unexpected number of results.");
-        QBB_ASSERT(result.cols() == parameters.size(), "Unexpected number of variables.");
+        QUBUS_ASSERT(result.rows() == dataset_->size(), "Unexpected number of results.");
+        QUBUS_ASSERT(result.cols() == parameters.size(), "Unexpected number of variables.");
 
         for (long int i = 0; i < result.rows(); ++i)
         {
@@ -1567,7 +1567,7 @@ private:
 
         norm /= model_.data_set().size();
 
-        QBB_ASSERT(norm >= 0, "A norm shall be non-negative.");
+        QUBUS_ASSERT(norm >= 0, "A norm shall be non-negative.");
 
         double max_norm = std::numeric_limits<std::chrono::microseconds::rep>::max() / 2;
 
@@ -1582,7 +1582,7 @@ private:
 
         accuracy_ = std::chrono::microseconds(static_cast<std::chrono::microseconds::rep>(norm));
 
-        QBB_ASSERT(accuracy_.count() >= 0, "An accuary shall be non-negative.");
+        QUBUS_ASSERT(accuracy_.count() >= 0, "An accuary shall be non-negative.");
     }
 
     void update_fitness()
@@ -1619,7 +1619,7 @@ perform_genetic_programming_step(std::vector<regression_model<Dataset>> old_gene
         return lhs.fitness() < rhs.fitness();
     };
 
-    QBB_ASSERT(std::is_sorted(old_generation.begin(), old_generation.end(), fitness_comperator),
+    QUBUS_ASSERT(std::is_sorted(old_generation.begin(), old_generation.end(), fitness_comperator),
                "The old generation has to be sorted.");
 
     const auto population_size = old_generation.size();
@@ -1749,13 +1749,13 @@ perform_genetic_programming_step(std::vector<regression_model<Dataset>> old_gene
             break;
         }
         default:
-            QBB_UNREACHABLE_BECAUSE("No case left.");
+            QUBUS_UNREACHABLE_BECAUSE("No case left.");
         }
     }
 
     std::sort(new_generation.begin(), new_generation.end(), fitness_comperator);
 
-    QBB_ASSERT(std::is_sorted(new_generation.begin(), new_generation.end(), fitness_comperator),
+    QUBUS_ASSERT(std::is_sorted(new_generation.begin(), new_generation.end(), fitness_comperator),
                "The new generation has to be sorted.");
 
     return new_generation;

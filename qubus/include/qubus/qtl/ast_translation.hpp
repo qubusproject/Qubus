@@ -82,7 +82,7 @@ struct ast_context
 };
 
 template <typename T>
-auto translate_ast(literal<T> node, ast_context& QBB_UNUSED(ctx))
+auto translate_ast(literal<T> node, ast_context& QUBUS_UNUSED(ctx))
 {
     return lit(node.value());
 }
@@ -105,7 +105,7 @@ auto translate_ast(binary_operator<Tag, LHS, RHS> node, ast_context& ctx)
         return qubus::operator/(std::move(lhs), std::move(rhs));
     }
 
-    QBB_UNREACHABLE();
+    QUBUS_UNREACHABLE();
 }
 
 template <typename Body>

@@ -208,7 +208,7 @@ construct_schedule(std::unordered_map<const expression*, static_schedule>& sched
                        auto lower_bound_constraint = greater_equal(iterator, *lower_bound);
                        auto upper_bound_constraint = less(iterator, *upper_bound);
 
-                       QBB_ASSERT(is_const(*increment),
+                       QUBUS_ASSERT(is_const(*increment),
                                   "The increment needs to be constant to form a static schedule.");
                        auto increment_constraint =
                            equal_to(iterator % *increment, ctx.affine_ctx().create_literal(0));
@@ -243,13 +243,13 @@ construct_schedule(std::unordered_map<const expression*, static_schedule>& sched
 
                                    auto sched_space = stmt_sched.get_space();
 
-                                   QBB_ASSERT(is_variable(iterator),
+                                   QUBUS_ASSERT(is_variable(iterator),
                                               "The iterator should be a variable.");
 
                                    auto iter_pos = sched_space.find_dim_by_name(
                                        isl_dim_in, get_variable_name(iterator));
 
-                                   QBB_ASSERT(iter_pos >= 0, "Invalid iteration position.");
+                                   QUBUS_ASSERT(iter_pos >= 0, "Invalid iteration position.");
 
                                    auto c = isl::constraint::equality(sched_space);
                                    c.set_coefficient(isl_dim_in, iter_pos, 1);
@@ -451,7 +451,7 @@ construct_schedule(std::unordered_map<const expression*, static_schedule>& sched
                            {
                                auto child_count = domain_seq.size();
 
-                               QBB_ASSERT(child_count == construct_children.size(),
+                               QUBUS_ASSERT(child_count == construct_children.size(),
                                           "Wrong number of constructors.");
 
                                auto node = [&] {
@@ -462,7 +462,7 @@ construct_schedule(std::unordered_map<const expression*, static_schedule>& sched
                                    case execution_order::unordered:
                                        return insert_set(pos, domain_seq);
                                    default:
-                                       QBB_UNREACHABLE();
+                                       QUBUS_UNREACHABLE();
                                    }
                                }();
 

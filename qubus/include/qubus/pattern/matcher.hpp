@@ -25,15 +25,15 @@ namespace pattern
 namespace detail
 {
 template <typename ResultType, typename Action, typename BaseType>
-ResultType call_action(Action& action, const BaseType& QBB_UNUSED(value),
-                       std::false_type QBB_UNUSED(has_self_param))
+ResultType call_action(Action& action, const BaseType& QUBUS_UNUSED(value),
+                       std::false_type QUBUS_UNUSED(has_self_param))
 {
     return ResultType(action());
 }
 
 template <typename ResultType, typename Action, typename BaseType>
 ResultType call_action(Action& action, const BaseType& value,
-                       std::true_type QBB_UNUSED(has_self_param))
+                       std::true_type QUBUS_UNUSED(has_self_param))
 {
     return ResultType(action(value));
 }

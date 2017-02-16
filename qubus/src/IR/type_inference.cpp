@@ -291,7 +291,7 @@ type infer_type_construct_expr(const construct_expr& expr)
     return expr.result_type();
 }
 
-type infer_type_kronecker_delta_expr(const qtl::kronecker_delta_expr& QBB_UNUSED(expr))
+type infer_type_kronecker_delta_expr(const qtl::kronecker_delta_expr& QUBUS_UNUSED(expr))
 {
     return types::integer();
 }
@@ -303,7 +303,7 @@ type infer_type_member_access_expr(const member_access_expr& expr)
     return obj_type[expr.member_name()];
 }
 
-type infer_type_foreign_call_expr(const foreign_call_expr& QBB_UNUSED(expr))
+type infer_type_foreign_call_expr(const foreign_call_expr& QUBUS_UNUSED(expr))
 {
     return types::unknown{};
 }

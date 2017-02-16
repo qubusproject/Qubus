@@ -113,8 +113,8 @@ const char* translate_binary_op_tag(binary_op_tag tag)
     case binary_op_tag::logical_or:
         return "||";
     default:
-        QBB_ASSERT(false, "default case should never be reached");
-        QBB_UNREACHABLE();
+        QUBUS_ASSERT(false, "default case should never be reached");
+        QUBUS_UNREACHABLE();
     }
 }
 
@@ -129,8 +129,8 @@ const char* translate_unary_op_tag(unary_op_tag tag)
     case unary_op_tag::logical_not:
         return "*";
     default:
-        QBB_ASSERT(false, "default case should never be reached");
-        QBB_UNREACHABLE();
+        QUBUS_ASSERT(false, "default case should never be reached");
+        QUBUS_UNREACHABLE();
     }
 }
 

@@ -15,7 +15,7 @@ variable_declaration_info::variable_declaration_info()
 variable_declaration_info::variable_declaration_info(type var_type_, variable_intent intent_)
 : var_type_(var_type_), intent_(intent_)
 {
-    QBB_ASSERT(static_cast<bool>(this->var_type_), "Invalid variable type.");
+    QUBUS_ASSERT(static_cast<bool>(this->var_type_), "Invalid variable type.");
 }
 
 const type& variable_declaration_info::var_type() const

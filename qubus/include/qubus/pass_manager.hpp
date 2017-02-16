@@ -78,7 +78,7 @@ public:
     {
         auto typed_self = dynamic_cast<const analysis_result_wrapper<T>*>(self_.get());
 
-        QBB_ASSERT(typed_self != nullptr, "Unexpected analysis result type.");
+        QUBUS_ASSERT(typed_self != nullptr, "Unexpected analysis result type.");
 
         return typed_self->value();
     }
@@ -88,7 +88,7 @@ public:
     {
         auto typed_self = dynamic_cast<analysis_result_wrapper<T>*>(self_.get());
 
-        QBB_ASSERT(typed_self != nullptr, "Unexpected analysis result type.");
+        QUBUS_ASSERT(typed_self != nullptr, "Unexpected analysis result type.");
 
         return typed_self->value();
     }

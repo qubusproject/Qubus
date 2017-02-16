@@ -40,7 +40,7 @@ public:
     friend std::ostream& operator<<(std::ostream& os, const handle& value);
 
     template<typename Archive>
-    void serialize(Archive& ar, unsigned int QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned int QUBUS_UNUSED(version))
     {
         ar & id_;
     }

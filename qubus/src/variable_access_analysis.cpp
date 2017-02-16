@@ -55,7 +55,7 @@ decompose_access(const access_expr& access)
         return {*direct_access, std::move(qualifiers)};
     }
 
-    QBB_UNREACHABLE_BECAUSE("'access' is of an unknown access type.");
+    QUBUS_UNREACHABLE_BECAUSE("'access' is of an unknown access type.");
 }
 }
 
@@ -149,7 +149,7 @@ public:
     {
         auto search_result = location_index_.find(&location);
 
-        QBB_ASSERT(search_result != location_index_.end(), "Invalid location during query.");
+        QUBUS_ASSERT(search_result != location_index_.end(), "Invalid location during query.");
 
         return *search_result->second;
     }

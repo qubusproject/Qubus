@@ -5,17 +5,17 @@
 
 #ifdef __GNUC__
 
-#define QBB_UNREACHABLE()                                                                          \
+#define QUBUS_UNREACHABLE()                                                                        \
     do                                                                                             \
     {                                                                                              \
-        QBB_ASSERT(false, "Reached unreachable location.");                                        \
+        QUBUS_ASSERT(false, "Reached unreachable location.");                                      \
         __builtin_unreachable();                                                                   \
     } while (false)
 
-#define QBB_UNREACHABLE_BECAUSE(MESSAGE)                                                           \
+#define QUBUS_UNREACHABLE_BECAUSE(MESSAGE)                                                         \
     do                                                                                             \
     {                                                                                              \
-        QBB_ASSERT(false, "Reached unreachable location: " MESSAGE);                               \
+        QUBUS_ASSERT(false, "Reached unreachable location: " MESSAGE);                             \
         __builtin_unreachable();                                                                   \
     } while (false)
 #else

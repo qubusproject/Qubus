@@ -96,7 +96,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar& self_;
     }
@@ -119,7 +119,7 @@ private:
         virtual util::index_t tag() const = 0;
 
         template <typename Archive>
-        void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
+        void serialize(Archive& QUBUS_UNUSED(ar), unsigned QUBUS_UNUSED(version))
         {
         }
 
@@ -160,7 +160,7 @@ private:
         }
 
         template <typename Archive>
-        void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+        void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
         {
             ar& hpx::serialization::base_object<architecture_identifier_interface>(*this);
 
@@ -198,7 +198,7 @@ class host_architecture_identifier : public architecture_identifier_base<host_ar
 {
 public:
     template <typename Archive>
-    void serialize(Archive& QBB_UNUSED(ar), unsigned QBB_UNUSED(version))
+    void serialize(Archive& QUBUS_UNUSED(ar), unsigned QUBUS_UNUSED(version))
     {
     }
 };

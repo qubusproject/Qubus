@@ -3,15 +3,15 @@
 
 #ifdef __GNUC__
 
-#define QBB_UNUSED(x) x __attribute__((unused))
+#define QUBUS_UNUSED(x) x __attribute__((unused))
 
 #ifdef NDEBUG
 
-#define QBB_UNUSED_RELEASE(x) QBB_UNUSED(x)
+#define QUBUS_UNUSED_RELEASE(x) QUBUS_UNUSED(x)
 
 #else
 
-#define QBB_UNUSED_RELEASE(x) x
+#define QUBUS_UNUSED_RELEASE(x) x
 
 #endif
 

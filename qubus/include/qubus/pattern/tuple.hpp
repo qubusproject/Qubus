@@ -61,7 +61,7 @@ private:
     template<std::size_t... Indices>
     void reset_impl(std::index_sequence<Indices...>) const
     {
-        auto QBB_UNUSED(dummy) = {(std::get<Indices>(elements_).reset(), 0)...};
+        auto QUBUS_UNUSED(dummy) = {(std::get<Indices>(elements_).reset(), 0)...};
     }
 
     std::tuple<Elements...> elements_;

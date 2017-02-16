@@ -27,8 +27,8 @@ public:
     lfu_cache(std::function<value_type(const key_type&)> fn_, std::size_t capacity_, long int threshold_)
     : fn_(std::move(fn_)), capacity_(std::move(capacity_)), threshold_(std::move(threshold_))
     {
-        QBB_ASSERT(capacity_ != 0, "Cache capacity needs to be non-zero.");
-        QBB_ASSERT(threshold_ >= 0, "Use count threashold needs to be positive.");
+        QUBUS_ASSERT(capacity_ != 0, "Cache capacity needs to be non-zero.");
+        QUBUS_ASSERT(threshold_ >= 0, "Use count threashold needs to be positive.");
     }
 
     value_type operator()(const key_type& k) const
@@ -74,7 +74,7 @@ private:
 
     void insert(const key_type& k, const value_type& v) const
     {
-        QBB_ASSERT(eviction_queue_.size() <= capacity_, "Cache entry count exceeds the capacity.");
+        QUBUS_ASSERT(eviction_queue_.size() <= capacity_, "Cache entry count exceeds the capacity.");
 
         if (eviction_queue_.size() == capacity_)
         {
@@ -85,7 +85,7 @@ private:
         auto handle = eviction_queue_.push(std::make_tuple(1, k, v));
         key_entry_map_.insert(typename key_entry_map_type::value_type(k, handle));
 
-        QBB_ASSERT(eviction_queue_.size() == key_entry_map_.size(), "Inconsistent number of cache entries.");
+        QUBUS_ASSERT(eviction_queue_.size() == key_entry_map_.size(), "Inconsistent number of cache entries.");
     }
 
     std::function<value_type(const key_type&)> fn_;

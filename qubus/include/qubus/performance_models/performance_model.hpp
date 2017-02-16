@@ -21,7 +21,7 @@ struct performance_estimate
     std::chrono::microseconds accuracy;
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar & runtime;
         ar & accuracy;

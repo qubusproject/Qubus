@@ -73,7 +73,7 @@ address_space::handle address_space::allocate_object_page(const object& obj, lon
     std::tie(pos, addr_was_free) =
         entry_table_.emplace(addr, std::make_shared<address_entry>(addr, std::move(data)));
 
-    QBB_ASSERT(addr_was_free, "Address is spuriously occupied.");
+    QUBUS_ASSERT(addr_was_free, "Address is spuriously occupied.");
 
     return address_space::handle(pos->second);
 }
