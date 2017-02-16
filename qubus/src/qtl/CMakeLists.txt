@@ -1,6 +1,6 @@
 set(qubus_qtl_header_file_names )
 
-set(qubus_qtl_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/../include/qbb/qubus/qtl/)
+set(qubus_qtl_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/../include/qubus/qtl/)
 
 foreach(file_name IN LISTS qubus_qtl_header_file_names)
     list(APPEND qubus_qtl_header_files ${qubus_qtl_include_dir}/${file_name})
