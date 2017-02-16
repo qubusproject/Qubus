@@ -5,7 +5,7 @@
 #include <qubus/util/unused.hpp>
 
 using server_type = hpx::components::component<qubus::runtime_server>;
-HPX_REGISTER_COMPONENT(server_type, QUBUS_runtime_server);
+HPX_REGISTER_COMPONENT(server_type, qubus_runtime_server);
 
 typedef qubus::runtime_server::execute_action execute_action;
 HPX_REGISTER_ACTION_DECLARATION(execute_action, runtime_server_execute_action);

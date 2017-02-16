@@ -3,7 +3,7 @@
 #include <utility>
 
 using server_type = hpx::components::component<qubus::remote_vpu_server>;
-HPX_REGISTER_COMPONENT(server_type, QUBUS_remote_vpu_server);
+HPX_REGISTER_COMPONENT(server_type, qubus_remote_vpu_server);
 
 using execute_action = qubus::remote_vpu_server::execute_action;
 HPX_REGISTER_ACTION_DECLARATION(execute_action, remote_vpu_server_execute_action);
@@ -17,7 +17,7 @@ HPX_REGISTER_ACTION(try_estimate_execution_time_action,
                     remote_vpu_server_try_estimate_execution_time_action);
 
 using view_server_type = hpx::components::component<qubus::remote_vpu_reference_server>;
-HPX_REGISTER_COMPONENT(view_server_type, QUBUS_remote_vpu_reference_server);
+HPX_REGISTER_COMPONENT(view_server_type, qubus_remote_vpu_reference_server);
 
 using ref_execute_action = qubus::remote_vpu_reference_server::execute_action;
 HPX_REGISTER_ACTION_DECLARATION(ref_execute_action, remote_vpu_reference_server_execute_action);

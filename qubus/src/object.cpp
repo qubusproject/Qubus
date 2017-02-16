@@ -5,7 +5,7 @@
 #include <utility>
 
 using server_type = hpx::components::component<qubus::object_server>;
-HPX_REGISTER_COMPONENT(server_type, QUBUS_object_server);
+HPX_REGISTER_COMPONENT(server_type, qubus_object_server);
 
 using object_type_action = qubus::object_server::object_type_action;
 HPX_REGISTER_ACTION_DECLARATION(object_type_action, qubus_object_server_type_action);

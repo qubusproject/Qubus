@@ -14,7 +14,7 @@
 #include <utility>
 
 using server_type = hpx::components::component<qubus::local_runtime_reference_server>;
-HPX_REGISTER_COMPONENT(server_type, QUBUS_local_runtime_reference_server);
+HPX_REGISTER_COMPONENT(server_type, qubus_local_runtime_reference_server);
 
 typedef qubus::local_runtime_reference_server::get_local_object_factory_action get_local_object_factory_action;
 HPX_REGISTER_ACTION_DECLARATION(get_local_object_factory_action);
