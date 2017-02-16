@@ -1,5 +1,5 @@
-#ifndef QBB_HOST_BACKEND_HPP
-#define QBB_HOST_BACKEND_HPP
+#ifndef QUBUS_HOST_BACKEND_HPP
+#define QUBUS_HOST_BACKEND_HPP
 
 #include <qubus/backend.hpp>
 #include <qubus/local_address_space.hpp>

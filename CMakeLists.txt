@@ -25,8 +25,8 @@ set(CMAKE_MODULE_PATH ${PROJECT_SOURCE_DIR}/cmake)
 
 message(STATUS "The cmake module path is: ${CMAKE_MODULE_PATH}")
 
-set(QBB_ROOT_DIR ${PROJECT_SOURCE_DIR})
-set(QBB_EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external)
+set(QUBUS_ROOT_DIR ${PROJECT_SOURCE_DIR})
+set(QUBUS_EXTERNAL_DIR ${CMAKE_SOURCE_DIR}/external)
 
 SET(CPACK_PACKAGE_DESCRIPTION_SUMMARY "Qubus is an autoparallelizing framework for tensor arithmetic
                                        supporting distributed and heterogeneous execution environments")
@@ -65,23 +65,23 @@ if(QUBUS_ENABLE_ADDRESS_SANITIZER)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 endif()
 
-option(QBB_RUN_IWYU "Toggle if CMake should run include-what-you-use during compilation." OFF)
+option(QUBUS_RUN_IWYU "Toggle if CMake should run include-what-you-use during compilation." OFF)
 
-if (QBB_RUN_IWYU)
+if (QUBUS_RUN_IWYU)
   set(CMAKE_CXX_INCLUDE_WHAT_YOU_USE include-what-you-use)
 endif()
 
 if (NOT CMAKE_VERSION VERSION_LESS 3.6.0)
-    option(QBB_RUN_CLANG_TIDY "Toggle if CMake (>= 3.6.0) should run clang-tidy during compilation." OFF)
+    option(QUBUS_RUN_CLANG_TIDY "Toggle if CMake (>= 3.6.0) should run clang-tidy during compilation." OFF)
 endif()
 
-if (QBB_RUN_CLANG_TIDY)
+if (QUBUS_RUN_CLANG_TIDY)
     set(CMAKE_CXX_CLANG_TIDY clang-tidy;-p;${CMAKE_BINARY_DIR})
 endif()
 
-option(QBB_ANALYSE_COVERAGE "Enable code coverage analysis support." OFF)
+option(QUBUS_ANALYSE_COVERAGE "Enable code coverage analysis support." OFF)
 
-if (QBB_ANALYSE_COVERAGE)
+if (QUBUS_ANALYSE_COVERAGE)
     if(CMAKE_COMPILER_IS_GNUCXX)
         include(CodeCoverage)
         add_custom_target(ctest COMMAND ${CMAKE_CTEST_COMMAND})

@@ -1,5 +1,5 @@
-#ifndef QBB_PATTERN_ALL_OF_HPP
-#define QBB_PATTERN_ALL_OF_HPP
+#ifndef QUBUS_PATTERN_ALL_OF_HPP
+#define QUBUS_PATTERN_ALL_OF_HPP
 
 #include <qubus/pattern/variable.hpp>
 #include <qubus/pattern/pattern_traits.hpp>

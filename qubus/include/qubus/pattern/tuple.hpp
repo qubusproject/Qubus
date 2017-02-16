@@ -1,5 +1,5 @@
-#ifndef QBB_PATTERN_TUPLE_HPP
-#define QBB_PATTERN_TUPLE_HPP
+#ifndef QUBUS_PATTERN_TUPLE_HPP
+#define QUBUS_PATTERN_TUPLE_HPP
 
 #include <qubus/pattern/variable.hpp>
 
