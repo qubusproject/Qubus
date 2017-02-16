@@ -79,6 +79,20 @@ if (QBB_RUN_CLANG_TIDY)
     set(CMAKE_CXX_CLANG_TIDY clang-tidy;-p;${CMAKE_BINARY_DIR})
 endif()
 
+option(QBB_ANALYSE_COVERAGE "Enable code coverage analysis support." OFF)
+
+if (QBB_ANALYSE_COVERAGE)
+    if(CMAKE_COMPILER_IS_GNUCXX)
+        include(CodeCoverage)
+        add_custom_target(ctest COMMAND ${CMAKE_CTEST_COMMAND})
+        setup_target_for_coverage(coverage ctest coverage)
+        add_compile_options(--coverage)
+        link_libraries(--coverage)
+    else()
+        message(WARNING "Code coverage analysis is only supported with GCC.")
+    endif()
+endif()
+
 add_subdirectory(util)
 add_subdirectory(qubus)
 
