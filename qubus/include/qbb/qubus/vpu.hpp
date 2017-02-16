@@ -69,7 +69,7 @@ public:
 
     remote_vpu(hpx::future<hpx::id_type>&& id);
 
-    hpx::future<void> execute(computelet c, execution_context ctx) const;
+    hpx::future<void> execute(computelet c, execution_context ctx) const override;
     hpx::future<boost::optional<performance_estimate>>
     try_estimate_execution_time(const computelet& c, const execution_context& ctx) const override;
 };
@@ -106,7 +106,7 @@ public:
 
     remote_vpu_reference(hpx::future<hpx::id_type>&& id);
 
-    hpx::future<void> execute(computelet c, execution_context ctx) const;
+    hpx::future<void> execute(computelet c, execution_context ctx) const override;
     hpx::future<boost::optional<performance_estimate>>
     try_estimate_execution_time(const computelet& c, const execution_context& ctx) const override;
 };
