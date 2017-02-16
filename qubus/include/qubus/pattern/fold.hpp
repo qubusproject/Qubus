@@ -1,5 +1,5 @@
-#ifndef QBB_PATTERN_FOLD_HPP_HPP
-#define QBB_PATTERN_FOLD_HPP_HPP
+#ifndef QUBUS_PATTERN_FOLD_HPP_HPP
+#define QUBUS_PATTERN_FOLD_HPP_HPP
 
 #include <qubus/IR/qir.hpp>
 
