@@ -1,6 +1,6 @@
 #include <qbb/qubus/isl/affine_expr.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

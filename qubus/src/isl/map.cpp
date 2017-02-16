@@ -2,7 +2,7 @@
 
 #include <qbb/qubus/isl/context.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

@@ -5,7 +5,7 @@
 #include <isl/val.h>
 #include <isl/list.h>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

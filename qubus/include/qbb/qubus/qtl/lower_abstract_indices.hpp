@@ -4,7 +4,7 @@
 #include <qbb/qubus/IR/expression.hpp>
 #include <qbb/qubus/IR/function_declaration.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

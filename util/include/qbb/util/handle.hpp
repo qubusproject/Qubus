@@ -17,7 +17,7 @@
 #include <functional>
 #include <string>
 
-namespace qbb
+inline namespace qbb
 {
 namespace util
 { 
@@ -72,7 +72,7 @@ struct hash<qbb::util::handle>
 
 }
 
-namespace qbb
+inline namespace qbb
 {
 namespace util
 {

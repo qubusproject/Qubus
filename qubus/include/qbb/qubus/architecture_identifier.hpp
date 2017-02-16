@@ -16,7 +16,7 @@
 #include <typeinfo>
 #include <typeindex>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

@@ -5,7 +5,7 @@
 #include <typeinfo>
 #include <ostream>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

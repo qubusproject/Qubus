@@ -5,7 +5,7 @@
 
 #include <qbb/qubus/pattern/core.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

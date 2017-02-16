@@ -3,7 +3,7 @@
 #include <qbb/util/assert.hpp>
 #include <qbb/util/unused.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

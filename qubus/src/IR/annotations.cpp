@@ -1,6 +1,6 @@
 #include <qbb/qubus/IR/annotations.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

@@ -23,7 +23,7 @@
 #include <llvm/Transforms/IPO/InferFunctionAttrs.h>
 #include <llvm/Transforms/Vectorize.h>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

@@ -7,7 +7,7 @@
 #include <llvm/IR/Value.h>
 #include <llvm/ADT/Twine.h>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

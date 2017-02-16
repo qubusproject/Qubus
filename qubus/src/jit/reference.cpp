@@ -1,6 +1,6 @@
 #include <qbb/qubus/jit/reference.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

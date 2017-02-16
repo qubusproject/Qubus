@@ -2,7 +2,7 @@
 
 #include <isl/options.h>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

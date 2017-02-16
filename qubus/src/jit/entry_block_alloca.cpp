@@ -2,7 +2,7 @@
 
 #include <llvm/IR/IRBuilder.h>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

@@ -1,7 +1,7 @@
 #ifndef QBB_QUBUS_PATTERN_MATCH_HPP
 #define QBB_QUBUS_PATTERN_MATCH_HPP
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

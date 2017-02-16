@@ -8,7 +8,7 @@
 #include <memory>
 #include <functional>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

@@ -8,7 +8,7 @@
 #include <llvm/IR/Mangler.h>
 #include <llvm/Support/DynamicLibrary.h>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

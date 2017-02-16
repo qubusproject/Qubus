@@ -3,7 +3,7 @@
 
 #include <qbb/qubus/IR/expression.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

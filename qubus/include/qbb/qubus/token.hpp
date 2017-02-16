@@ -10,7 +10,7 @@
 
 #include <tuple>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

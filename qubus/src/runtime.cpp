@@ -16,7 +16,7 @@ HPX_REGISTER_ACTION_DECLARATION(get_object_factory_action,
                                 runtime_server_get_object_factory_action);
 HPX_REGISTER_ACTION(get_object_factory_action, runtime_server_get_object_factory_action);
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

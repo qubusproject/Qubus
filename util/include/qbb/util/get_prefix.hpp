@@ -5,7 +5,7 @@
 
 #include <string>
 
-namespace qbb
+inline namespace qbb
 {
 namespace util
 {

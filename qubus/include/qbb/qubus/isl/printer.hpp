@@ -4,7 +4,7 @@
 #include <isl/printer.h>
 #include <isl/ast.h>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

@@ -5,7 +5,7 @@
 #include <functional>
 #include <cstring>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

@@ -3,7 +3,7 @@
 
 #include <isl/ctx.h>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

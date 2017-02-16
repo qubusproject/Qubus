@@ -20,7 +20,7 @@
 //    2.2 Accesses of disjoint array regions for the same array-like (sub)-object never alias
 // 3. Accesses of the same object through the same members always alias.
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

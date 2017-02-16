@@ -6,7 +6,7 @@
 
 #include <isl/constraint.h>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

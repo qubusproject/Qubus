@@ -6,7 +6,7 @@
 
 #include <isl/aff.h>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

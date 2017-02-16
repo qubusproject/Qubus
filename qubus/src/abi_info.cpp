@@ -6,7 +6,7 @@
 #include <qbb/util/unused.hpp>
 #include <qbb/util/integers.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

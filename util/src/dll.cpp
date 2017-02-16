@@ -10,7 +10,7 @@
 #include <unistd.h>
 #endif
 
-namespace qbb
+inline namespace qbb
 {
 namespace util
 {

@@ -1,6 +1,6 @@
 #include <qbb/qubus/isl/ast_builder.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

@@ -3,7 +3,7 @@
 
 #include <qbb/qubus/pattern/variable.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

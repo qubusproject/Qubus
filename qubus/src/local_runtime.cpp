@@ -24,7 +24,7 @@ typedef qbb::qubus::local_runtime_reference_server::get_local_vpu_action get_loc
 HPX_REGISTER_ACTION_DECLARATION(get_local_vpu_action);
 HPX_REGISTER_ACTION(get_local_vpu_action);
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

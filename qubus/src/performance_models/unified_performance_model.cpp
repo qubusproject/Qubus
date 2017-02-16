@@ -12,7 +12,7 @@
 #include <unordered_map>
 #include <utility>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

@@ -6,7 +6,7 @@
 #include <llvm/IR/Value.h>
 #include <llvm/IR/BasicBlock.h>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

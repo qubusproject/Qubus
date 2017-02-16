@@ -6,7 +6,7 @@
 #include <hpx/include/components.hpp>
 #include <hpx/include/actions.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

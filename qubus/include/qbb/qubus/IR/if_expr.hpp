@@ -13,7 +13,7 @@
 
 #include <boost/optional.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

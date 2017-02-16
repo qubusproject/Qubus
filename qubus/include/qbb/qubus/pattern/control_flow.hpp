@@ -3,7 +3,7 @@
 
 #include <type_traits>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

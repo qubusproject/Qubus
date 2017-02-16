@@ -5,7 +5,7 @@
 
 #include <cmath>
 
-namespace qbb
+inline namespace qbb
 {
 namespace util
 {

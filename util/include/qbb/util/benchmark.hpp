@@ -1,7 +1,7 @@
 #ifndef QBB_UTIL_BENCHMARK_HPP
 #define QBB_UTIL_BENCHMARK_HPP
 
-namespace qbb
+inline namespace qbb
 {
 namespace util
 {

@@ -5,7 +5,7 @@
 
 #include <isl/local_space.h>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

@@ -1,6 +1,6 @@
 #include <qbb/qubus/isl/pw_aff.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

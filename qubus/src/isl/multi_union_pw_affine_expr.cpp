@@ -1,6 +1,6 @@
 #include <qbb/qubus/isl/multi_union_pw_affine_expr.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

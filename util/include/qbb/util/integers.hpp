@@ -11,7 +11,7 @@
 #include <qbb/util/assert.hpp>
 #include <qbb/util/unreachable.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace util
 {

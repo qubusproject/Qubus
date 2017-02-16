@@ -11,7 +11,7 @@
 #include <qbb/qubus/jit/compilation_context.hpp>
 #include <qbb/qubus/jit/reference.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

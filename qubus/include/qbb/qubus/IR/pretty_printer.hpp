@@ -7,7 +7,7 @@
 #include <qbb/qubus/IR/function_declaration.hpp>
 #include <qbb/qubus/IR/type.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

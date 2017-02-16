@@ -11,7 +11,7 @@ typedef qbb::qubus::computelet_server::code_action code_action;
 HPX_REGISTER_ACTION_DECLARATION(code_action);
 HPX_REGISTER_ACTION(code_action);
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

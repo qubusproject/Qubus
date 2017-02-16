@@ -13,7 +13,7 @@
 
 #include <qbb/util/handle.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

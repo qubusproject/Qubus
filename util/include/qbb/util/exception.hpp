@@ -3,7 +3,7 @@
 
 #include <system_error>
 
-namespace qbb
+inline namespace qbb
 {
 namespace util
 {

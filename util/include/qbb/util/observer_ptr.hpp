@@ -1,7 +1,7 @@
 #ifndef QBB_UTIL_OBSERVER_PTR_HPP
 #define QBB_UTIL_OBSERVER_PTR_HPP
 
-namespace qbb
+inline namespace qbb
 {
 namespace util
 {

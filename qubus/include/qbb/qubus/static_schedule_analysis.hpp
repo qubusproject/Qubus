@@ -9,7 +9,7 @@
 
 #include <qbb/util/optional_ref.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

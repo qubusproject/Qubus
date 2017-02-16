@@ -20,7 +20,7 @@
 #include <array>
 #include <map>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

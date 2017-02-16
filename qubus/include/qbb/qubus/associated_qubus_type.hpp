@@ -7,7 +7,7 @@
 
 #include <complex>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

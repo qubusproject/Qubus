@@ -1,6 +1,6 @@
 #include <qbb/qubus/pass_manager.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

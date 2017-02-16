@@ -3,7 +3,7 @@
 
 #include <qbb/qubus/IR/access.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

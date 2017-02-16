@@ -1,6 +1,6 @@
 #include <qbb/qubus/isl/constraint.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

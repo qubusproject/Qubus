@@ -35,7 +35,7 @@
 #include <utility>
 #include <cstdlib>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

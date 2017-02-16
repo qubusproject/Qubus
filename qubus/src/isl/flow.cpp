@@ -1,6 +1,6 @@
 #include <qbb/qubus/isl/flow.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

@@ -13,7 +13,7 @@
 
 #include <vector>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

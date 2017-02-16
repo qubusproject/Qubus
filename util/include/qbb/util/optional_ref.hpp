@@ -4,7 +4,7 @@
 #include <boost/optional.hpp>
 #include <type_traits>
 
-namespace qbb
+inline namespace qbb
 {
 namespace util
 {

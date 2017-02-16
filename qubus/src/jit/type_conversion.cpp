@@ -14,7 +14,7 @@
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Type.h>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

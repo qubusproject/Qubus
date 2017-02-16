@@ -30,7 +30,7 @@ HPX_REGISTER_ACTION_DECLARATION(ref_try_estimate_execution_time_action,
 HPX_REGISTER_ACTION(ref_try_estimate_execution_time_action,
                     remote_vpu_reference_server_try_estimate_execution_time_action);
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

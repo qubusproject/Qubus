@@ -5,7 +5,7 @@
 #include <string>
 #include <qbb/util/integers.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

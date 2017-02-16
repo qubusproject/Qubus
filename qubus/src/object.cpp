@@ -23,7 +23,7 @@ using components_action = qbb::qubus::object_server::components_action;
 HPX_REGISTER_ACTION_DECLARATION(components_action, qubus_object_server_components_action);
 HPX_REGISTER_ACTION(components_action, qubus_object_server_components_action);
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

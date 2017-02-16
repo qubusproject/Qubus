@@ -11,7 +11,7 @@
 #include <unordered_map>
 #include <limits>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

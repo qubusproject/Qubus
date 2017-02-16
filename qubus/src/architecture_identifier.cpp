@@ -1,6 +1,6 @@
 #include <qbb/qubus/architecture_identifier.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

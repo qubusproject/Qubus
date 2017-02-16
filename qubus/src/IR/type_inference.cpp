@@ -12,7 +12,7 @@
 
 #include <mutex>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

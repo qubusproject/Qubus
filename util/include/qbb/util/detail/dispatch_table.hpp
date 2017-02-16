@@ -22,7 +22,7 @@
 #include <condition_variable>
 #include <atomic>
 
-namespace qbb
+inline namespace qbb
 {
 namespace util
 {

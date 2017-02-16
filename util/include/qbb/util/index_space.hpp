@@ -13,7 +13,7 @@
 #include <type_traits>
 #include <numeric>
 
-namespace qbb
+inline namespace qbb
 {
 namespace util
 {

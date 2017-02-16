@@ -5,7 +5,7 @@
 #include <sstream>
 #include <iomanip>
 
-namespace qbb
+inline namespace qbb
 {
 namespace util
 {

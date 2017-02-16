@@ -7,7 +7,7 @@
 #include <qbb/qubus/pattern/core.hpp>
 #include <qbb/qubus/pattern/IR.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

@@ -21,7 +21,7 @@
 #include <unordered_set>
 #include <vector>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

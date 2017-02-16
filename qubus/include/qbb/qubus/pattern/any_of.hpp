@@ -6,7 +6,7 @@
 #include <utility>
 #include <cstddef>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

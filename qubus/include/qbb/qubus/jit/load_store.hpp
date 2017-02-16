@@ -9,7 +9,7 @@
 
 #include <llvm/IR/Instructions.h>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

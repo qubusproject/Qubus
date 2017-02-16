@@ -11,7 +11,7 @@
 #include <stdexcept>
 #include <algorithm>
 
-namespace qbb
+inline namespace qbb
 {
 namespace util
 {

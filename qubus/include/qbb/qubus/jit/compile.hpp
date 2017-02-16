@@ -9,7 +9,7 @@
 #include <qbb/qubus/jit/llvm_environment.hpp>
 #include <qbb/qubus/jit/compilation_context.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

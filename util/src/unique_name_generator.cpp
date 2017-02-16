@@ -1,6 +1,6 @@
 #include <qbb/util/unique_name_generator.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace util
 {

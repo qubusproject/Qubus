@@ -29,7 +29,7 @@ HPX_REGISTER_ACTION_DECLARATION(create_struct_action,
                                 qubus_local_object_factory_create_struct_action);
 HPX_REGISTER_ACTION(create_struct_action, qubus_local_object_factory_create_struct_action);
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

@@ -42,7 +42,7 @@
 #include <qbb/qubus/IR/pretty_printer.hpp>
 #include <qbb/qubus/isl/printer.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {
@@ -1712,7 +1712,7 @@ function_declaration optimize_loops(function_declaration decl)
 #else
 #include <qbb/qubus/loop_optimizer.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

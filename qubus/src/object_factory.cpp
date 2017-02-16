@@ -20,7 +20,7 @@ HPX_REGISTER_ACTION_DECLARATION(create_sparse_tensor_action,
                                 qubus_object_factory_create_sparse_tensor_action);
 HPX_REGISTER_ACTION(create_sparse_tensor_action, qubus_object_factory_create_sparse_tensor_action);
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

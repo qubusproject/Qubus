@@ -13,7 +13,7 @@
 #include <memory>
 #include <string>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

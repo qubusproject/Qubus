@@ -5,7 +5,7 @@
 using server_type = hpx::components::component<qbb::qubus::token_server>;
 HPX_REGISTER_COMPONENT(server_type, qubus_token_server);
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

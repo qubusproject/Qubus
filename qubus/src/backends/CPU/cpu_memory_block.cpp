@@ -1,6 +1,6 @@
 #include <qbb/qubus/backends/cpu_memory_block.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

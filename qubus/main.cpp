@@ -25,7 +25,7 @@
 
 #include <qbb/qubus/allocator.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

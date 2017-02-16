@@ -4,7 +4,7 @@
 
 #include <qbb/util/assert.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

@@ -3,7 +3,7 @@
 
 #include <llvm/IR/LegacyPassManager.h>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

@@ -6,7 +6,7 @@
 #include <qbb/qubus/IR/type.hpp>
 #include <qbb/qubus/IR/expression.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

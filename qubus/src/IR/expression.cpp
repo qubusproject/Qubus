@@ -8,7 +8,7 @@
 #include <mutex>
 #include <functional>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

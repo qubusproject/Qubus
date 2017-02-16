@@ -18,7 +18,7 @@
 #include <type_traits>
 #include <utility>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

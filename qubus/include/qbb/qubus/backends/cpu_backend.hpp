@@ -3,7 +3,7 @@
 
 #include <qbb/qubus/backend.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {

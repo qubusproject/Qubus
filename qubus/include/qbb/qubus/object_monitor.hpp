@@ -5,7 +5,7 @@
 
 #include <hpx/include/lcos.hpp>
 
-namespace qbb
+inline namespace qbb
 {
 namespace qubus
 {
