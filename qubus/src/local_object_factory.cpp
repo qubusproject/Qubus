@@ -4,15 +4,20 @@
 
 #include <qbb/qubus/hpx_utils.hpp>
 
-#include <qbb/util/integers.hpp>
 #include <qbb/util/assert.hpp>
+#include <qbb/util/integers.hpp>
 #include <qbb/util/unused.hpp>
 
-#include <utility>
 #include <type_traits>
+#include <utility>
 
 using server_type = hpx::components::component<qbb::qubus::local_object_factory_server>;
 HPX_REGISTER_COMPONENT(server_type, qbb_qubus_local_object_factory_server);
+
+using create_scalar_action = qbb::qubus::local_object_factory_server::create_scalar_action;
+HPX_REGISTER_ACTION_DECLARATION(create_scalar_action,
+                                qubus_local_object_factory_create_scalar_action);
+HPX_REGISTER_ACTION(create_scalar_action, qubus_local_object_factory_create_scalar_action);
 
 using create_array_action = qbb::qubus::local_object_factory_server::create_array_action;
 HPX_REGISTER_ACTION_DECLARATION(create_array_action,
@@ -32,6 +37,24 @@ namespace qubus
 local_object_factory_server::local_object_factory_server(local_address_space* address_space_)
 : address_space_(address_space_)
 {
+}
+
+hpx::future<hpx::id_type> local_object_factory_server::create_scalar(type data_type)
+{
+    QBB_ASSERT(data_type.is_primitive(), "The type of scalars has to be primitive.");
+
+    object obj = new_here<object_server>(data_type);
+
+    auto size = abi_.get_size_of(data_type);
+    auto alignment = abi_.get_align_of(data_type);
+
+    auto instance = address_space_->allocate_object_page(obj, size, alignment);
+
+    auto obj_ptr = hpx::get_ptr<object_server>(hpx::launch::sync, obj.get_id());
+
+    obj_ptr->register_instance(std::move(instance));
+
+    return hpx::make_ready_future(obj.get());
 }
 
 hpx::future<hpx::id_type>
@@ -85,6 +108,12 @@ hpx::future<hpx::id_type> local_object_factory_server::create_struct(type struct
 local_object_factory::local_object_factory(hpx::future<hpx::id_type>&& id)
 : base_type(std::move(id))
 {
+}
+
+object local_object_factory::create_scalar(type data_type)
+{
+    return hpx::async<local_object_factory_server::create_scalar_action>(this->get_id(),
+                                                                         std::move(data_type));
 }
 
 object local_object_factory::create_array(type value_type, std::vector<util::index_t> shape)
