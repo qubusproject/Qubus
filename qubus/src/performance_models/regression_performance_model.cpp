@@ -103,7 +103,7 @@ std::vector<hpx::naming::gid_type> generate_key_from_ctx(const execution_context
 
     for (const auto& obj : ctx.args())
     {
-        auto datatype = obj.object_type();
+        const auto& datatype = obj.object_type();
 
         if (!(datatype == types::integer{} || datatype == types::float_{} ||
               datatype == types::double_{}))

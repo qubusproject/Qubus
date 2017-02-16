@@ -1,11 +1,13 @@
 #include <qbb/qubus/performance_models/unified_performance_model.hpp>
 
+#include <qbb/qubus/performance_models/regression_performance_model.hpp>
 #include <qbb/qubus/performance_models/simple_statistical_performance_model.hpp>
 
 #include <hpx/include/local_lcos.hpp>
 
 #include <qbb/util/assert.hpp>
 
+#include <algorithm>
 #include <mutex>
 #include <unordered_map>
 #include <utility>
@@ -14,6 +16,33 @@ namespace qbb
 {
 namespace qubus
 {
+
+namespace
+{
+std::unique_ptr<performance_model> create_performance_model(const computelet& c)
+{
+    auto code = c.code().get();
+
+    const auto& params = code.params();
+
+    auto has_scalar_params = std::any_of(params.begin(), params.end(), [](const auto& param) {
+        const auto& datatype = param.var_type();
+
+        return datatype == types::integer{} || datatype == types::float_{} ||
+               datatype == types::double_{};
+    });
+
+    if (has_scalar_params)
+    {
+        return std::make_unique<regression_performance_model>();
+    }
+    else
+    {
+        return std::make_unique<simple_statistical_performance_model>();
+    }
+}
+}
+
 class unified_performance_model_impl
 {
 public:
@@ -28,10 +57,7 @@ public:
 
         if (search_result == kernel_models_.end())
         {
-            search_result =
-                kernel_models_
-                    .emplace(kernel_id, std::make_unique<simple_statistical_performance_model>())
-                    .first;
+            search_result = kernel_models_.emplace(kernel_id, create_performance_model(c)).first;
         }
 
         search_result->second->sample_execution_time(c, ctx, std::move(execution_time));
