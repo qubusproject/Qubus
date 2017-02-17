@@ -1,7 +1,5 @@
-#include <qbb/qubus/jit/reference.hpp>
+#include <qubus/jit/reference.hpp>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -41,7 +39,6 @@ void reference::add_alias_info(const alias_info& info) const
 {
     alias_scopes_.push_back(info.alias_scope);
     noalias_sets_.push_back(info.noalias_set);
-}
 }
 }
 }

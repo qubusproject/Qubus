@@ -1,7 +1,7 @@
-#include <qbb/qubus/qubus.hpp>
+#include <qubus/qubus.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/task_invariants_analysis.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/task_invariants_analysis.hpp>
 
 #include <hpx/hpx_init.hpp>
 
@@ -9,7 +9,7 @@
 
 TEST(task_invariants_analysis, loop_bound_and_ind_var)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration var(types::array(types::double_{}, 1));
 
@@ -44,7 +44,7 @@ TEST(task_invariants_analysis, loop_bound_and_ind_var)
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

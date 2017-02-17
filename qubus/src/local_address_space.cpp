@@ -1,21 +1,19 @@
-#include <qbb/qubus/local_address_space.hpp>
+#include <qubus/local_address_space.hpp>
 
-#include <qbb/qubus/object.hpp>
+#include <qubus/object.hpp>
 
-#include <qbb/qubus/evicting_allocator.hpp>
+#include <qubus/evicting_allocator.hpp>
 
-#include <qbb/qubus/logging.hpp>
+#include <qubus/logging.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/make_unique.hpp>
-#include <qbb/util/unused.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/make_unique.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <exception>
 #include <tuple>
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -75,7 +73,7 @@ address_space::handle address_space::allocate_object_page(const object& obj, lon
     std::tie(pos, addr_was_free) =
         entry_table_.emplace(addr, std::make_shared<address_entry>(addr, std::move(data)));
 
-    QBB_ASSERT(addr_was_free, "Address is spuriously occupied.");
+    QUBUS_ASSERT(addr_was_free, "Address is spuriously occupied.");
 
     return address_space::handle(pos->second);
 }
@@ -239,6 +237,5 @@ hpx::future<local_address_space::handle> local_address_space::resolve_object(con
 local_address_space::handle local_address_space::try_resolve_object(const object& obj) const
 {
     return host_addr_space_.get().try_resolve_object(obj);
-}
 }
 }

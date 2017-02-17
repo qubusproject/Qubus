@@ -1,44 +1,44 @@
 #include <hpx/config.hpp>
 
-#include <qbb/qubus/backends/cpu_backend.hpp>
+#include <qubus/backends/cpu_backend.hpp>
 
-#include <qbb/qubus/backend.hpp>
-#include <qbb/qubus/host_backend.hpp>
+#include <qubus/backend.hpp>
+#include <qubus/host_backend.hpp>
 
-#include <qbb/qubus/abi_info.hpp>
-#include <qbb/qubus/local_address_space.hpp>
-#include <qbb/qubus/performance_models/unified_performance_model.hpp>
+#include <qubus/abi_info.hpp>
+#include <qubus/local_address_space.hpp>
+#include <qubus/performance_models/unified_performance_model.hpp>
 
-#include <qbb/qubus/host_allocator.hpp>
+#include <qubus/host_allocator.hpp>
 
-#include <qbb/qubus/backends/cpu_compiler.hpp>
+#include <qubus/backends/cpu_compiler.hpp>
 
-#include <qbb/qubus/backends/cpu_allocator.hpp>
+#include <qubus/backends/cpu_allocator.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/IR/type_inference.hpp>
+#include <qubus/IR/type_inference.hpp>
 
-#include <qbb/util/make_unique.hpp>
+#include <qubus/util/make_unique.hpp>
 
-#include <qubus/qbb_qubus_export.h>
+#include <qubus/qubus_export.h>
 
 #include <hpx/async.hpp>
 
 #include <hpx/include/lcos.hpp>
 #include <hpx/include/threads.hpp>
 
-#include <qbb/qubus/hpx_utils.hpp>
+#include <qubus/hpx_utils.hpp>
 
 #include <boost/optional.hpp>
 #include <boost/signals2.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/make_unique.hpp>
-#include <qbb/util/optional_ref.hpp>
-#include <qbb/util/unused.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/make_unique.hpp>
+#include <qubus/util/optional_ref.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <algorithm>
 #include <chrono>
@@ -51,8 +51,6 @@
 #include <unordered_map>
 #include <vector>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -82,13 +80,13 @@ private:
     char* current_stack_ptr_;
 };
 
-extern "C" QBB_QUBUS_EXPORT void* qbb_qubus_cpurt_alloc_scatch_mem(cpu_runtime* runtime,
+extern "C" QUBUS_EXPORT void* QUBUS_cpurt_alloc_scatch_mem(cpu_runtime* runtime,
                                                                    util::index_t size)
 {
     return runtime->alloc_scratch_mem(size);
 }
 
-extern "C" QBB_QUBUS_EXPORT void qbb_qubus_cpurt_dealloc_scratch_mem(cpu_runtime* runtime,
+extern "C" QUBUS_EXPORT void QUBUS_cpurt_dealloc_scratch_mem(cpu_runtime* runtime,
                                                                      util::index_t size)
 {
     runtime->dealloc_scratch_mem(size);
@@ -253,12 +251,12 @@ private:
     std::unique_ptr<host_address_space> address_space_;
 };
 
-extern "C" QBB_QUBUS_EXPORT unsigned int cpu_backend_get_backend_type()
+extern "C" QUBUS_EXPORT unsigned int cpu_backend_get_backend_type()
 {
     return static_cast<unsigned int>(backend_type::host);
 }
 
-extern "C" QBB_QUBUS_EXPORT unsigned long int cpu_backend_get_api_version()
+extern "C" QUBUS_EXPORT unsigned long int cpu_backend_get_api_version()
 {
     return 0;
 }
@@ -266,12 +264,11 @@ extern "C" QBB_QUBUS_EXPORT unsigned long int cpu_backend_get_api_version()
 std::unique_ptr<cpu_backend> the_cpu_backend;
 std::once_flag cpu_backend_init_flag;
 
-extern "C" QBB_QUBUS_EXPORT backend* init_cpu_backend(const abi_info* abi)
+extern "C" QUBUS_EXPORT backend* init_cpu_backend(const abi_info* abi)
 {
     std::call_once(cpu_backend_init_flag,
                    [&] { the_cpu_backend = util::make_unique<cpu_backend>(*abi); });
 
     return the_cpu_backend.get();
-}
 }
 }

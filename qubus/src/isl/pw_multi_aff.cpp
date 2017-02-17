@@ -1,7 +1,5 @@
-#include <qbb/qubus/isl/pw_multi_aff.hpp>
+#include <qubus/isl/pw_multi_aff.hpp>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -68,6 +66,5 @@ pw_multi_aff lexmax_pw_multi_aff(set s)
     return pw_multi_aff(isl_set_lexmax_pw_multi_aff(s.release()));
 }
 
-}
 }
 }

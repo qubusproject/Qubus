@@ -1,7 +1,7 @@
-#include <qbb/qubus/qubus.hpp>
+#include <qubus/qubus.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/static_schedule_analysis.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/static_schedule_analysis.hpp>
 
 #include <hpx/hpx_init.hpp>
 
@@ -9,7 +9,7 @@
 
 TEST(static_schedule_analysis, empty_loop)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration i(types::integer{});
 
@@ -40,7 +40,7 @@ TEST(static_schedule_analysis, empty_loop)
 
 TEST(static_schedule_analysis, zero_init)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration i(types::integer{});
 
@@ -79,7 +79,7 @@ TEST(static_schedule_analysis, zero_init)
 
 TEST(static_schedule_analysis, strip_mined_loop)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration i(types::integer{});
     variable_declaration ii(types::integer{});
@@ -122,7 +122,7 @@ TEST(static_schedule_analysis, strip_mined_loop)
 
 TEST(static_schedule_analysis, multiple_statements)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration i(types::integer{});
     variable_declaration N(types::integer{});
@@ -166,7 +166,7 @@ TEST(static_schedule_analysis, multiple_statements)
 
 TEST(static_schedule_analysis, loop_with_guard)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration i(types::integer{});
     variable_declaration N(types::integer{});
@@ -209,7 +209,7 @@ TEST(static_schedule_analysis, loop_with_guard)
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

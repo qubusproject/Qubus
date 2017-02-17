@@ -1,21 +1,19 @@
-#include <qbb/qubus/IR/deduce_expression_environment.hpp>
+#include <qubus/IR/deduce_expression_environment.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
+#include <qubus/IR/qir.hpp>
 
-#include <qbb/qubus/pattern/core.hpp>
-#include <qbb/qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
 
 #include <boost/range/adaptor/map.hpp>
 
-#include <qbb/util/box.hpp>
+#include <qubus/util/box.hpp>
 
 #include <utility>
 #include <map>
 #include <vector>
 #include <stack>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -169,6 +167,5 @@ expression_environment deduce_expression_environment(const expression& expr)
     }
 
     return env;
-}
 }
 }

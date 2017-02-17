@@ -1,11 +1,9 @@
-#include <qbb/qubus/IR/type_conversion_expr.hpp>
+#include <qubus/IR/type_conversion_expr.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -26,7 +24,7 @@ const expression& type_conversion_expr::arg() const
 
 type_conversion_expr* type_conversion_expr::clone() const
 {
-    return new type_conversion_expr(target_type_, qbb::qubus::clone(*arg_));
+    return new type_conversion_expr(target_type_, qubus::clone(*arg_));
 }
 
 const expression& type_conversion_expr::child(std::size_t index) const
@@ -65,5 +63,4 @@ bool operator!=(const type_conversion_expr& lhs, const type_conversion_expr& rhs
     return !(lhs == rhs);
 }
 
-}
 }

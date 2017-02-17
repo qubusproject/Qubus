@@ -1,11 +1,9 @@
-#include <qbb/qubus/IR/local_variable_def_expr.hpp>
+#include <qubus/IR/local_variable_def_expr.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -27,7 +25,7 @@ const expression& local_variable_def_expr::initializer() const
 
 local_variable_def_expr* local_variable_def_expr::clone() const
 {
-    return new local_variable_def_expr(decl_, qbb::qubus::clone(*initializer_));
+    return new local_variable_def_expr(decl_, qubus::clone(*initializer_));
 }
 
 const expression& local_variable_def_expr::child(std::size_t index) const
@@ -64,6 +62,5 @@ bool operator==(const local_variable_def_expr& lhs, const local_variable_def_exp
 bool operator!=(const local_variable_def_expr& lhs, const local_variable_def_expr& rhs)
 {
     return !(lhs == rhs);
-}
 }
 }

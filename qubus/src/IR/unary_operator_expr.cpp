@@ -1,11 +1,9 @@
-#include <qbb/qubus/IR/unary_operator_expr.hpp>
+#include <qubus/IR/unary_operator_expr.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -30,7 +28,7 @@ const expression& unary_operator_expr::arg() const
 
 unary_operator_expr* unary_operator_expr::clone() const
 {
-    return new unary_operator_expr(tag_, qbb::qubus::clone(*arg_));
+    return new unary_operator_expr(tag_, qubus::clone(*arg_));
 }
 
 const expression& unary_operator_expr::child(std::size_t index) const
@@ -69,5 +67,4 @@ bool operator!=(const unary_operator_expr& lhs, const unary_operator_expr& rhs)
     return !(lhs == rhs);
 }
 
-}
 }

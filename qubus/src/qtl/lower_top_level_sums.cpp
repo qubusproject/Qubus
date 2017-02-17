@@ -1,11 +1,11 @@
-#include <qbb/qubus/qtl/lower_top_level_sums.hpp>
+#include <qubus/qtl/lower_top_level_sums.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
+#include <qubus/IR/qir.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/qtl/pattern/all.hpp>
+#include <qubus/qtl/pattern/all.hpp>
 
 #include <boost/range/adaptor/reversed.hpp>
 
@@ -13,8 +13,6 @@
 #include <string>
 #include <vector>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -107,7 +105,6 @@ function_declaration lower_top_level_sums(function_declaration decl)
     decl.substitute_body(std::move(new_body));
 
     return decl;
-}
 }
 }
 }

@@ -1,11 +1,9 @@
-#include <qbb/qubus/object_monitor.hpp>
+#include <qubus/object_monitor.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <mutex>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -59,5 +57,4 @@ hpx::future<token> object_monitor::acquire_write_access()
     });
 }
 
-}
 }

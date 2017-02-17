@@ -1,7 +1,5 @@
-#include <qbb/qubus/isl/multi_affine_expr.hpp>
+#include <qubus/isl/multi_affine_expr.hpp>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -52,6 +50,5 @@ namespace isl
     }
 
 
-}
 }
 }

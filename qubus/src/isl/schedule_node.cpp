@@ -1,12 +1,10 @@
-#include <qbb/qubus/isl/schedule_node.hpp>
+#include <qubus/isl/schedule_node.hpp>
 
-#include <qbb/qubus/isl/space.hpp>
+#include <qubus/isl/space.hpp>
 
 #include <isl/val.h>
 #include <isl/list.h>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -220,6 +218,5 @@ schedule_node graft_after(schedule_node node, schedule_node graft)
     return schedule_node(isl_schedule_node_graft_after(node.release(), graft.release()));
 }
 
-}
 }
 }

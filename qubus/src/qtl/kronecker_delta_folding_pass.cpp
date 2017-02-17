@@ -1,18 +1,16 @@
-#include <qbb/qubus/qtl/kronecker_delta_folding_pass.hpp>
+#include <qubus/qtl/kronecker_delta_folding_pass.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/qtl/pattern/all.hpp>
+#include <qubus/qtl/pattern/all.hpp>
 
 #include <boost/optional.hpp>
 
 #include <algorithm>
 #include <vector>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -199,7 +197,6 @@ function_declaration fold_kronecker_deltas(function_declaration decl)
     decl.substitute_body(fold_kronecker_deltas(decl.body()));
 
     return decl;
-}
 }
 }
 }

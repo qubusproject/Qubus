@@ -1,11 +1,11 @@
-#include <qbb/qubus/jit/llvm_environment.hpp>
+#include <qubus/jit/llvm_environment.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
-#include <qbb/qubus/pattern/type.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
+#include <qubus/pattern/type.hpp>
 
-#include <qbb/util/integers.hpp>
-#include <qbb/util/make_unique.hpp>
+#include <qubus/util/integers.hpp>
+#include <qubus/util/make_unique.hpp>
 
 #include <llvm/IR/LLVMContext.h>
 #include <llvm/Linker/Linker.h>
@@ -15,8 +15,6 @@
 #include <array>
 #include <tuple>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -113,7 +111,7 @@ void llvm_environment::init_alloc_scratch_mem()
     llvm::FunctionType* FT = llvm::FunctionType::get(generic_ptr, param_types, false);
 
     alloc_scratch_mem_ = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
-                                                "qbb_qubus_cpurt_alloc_scatch_mem", &module());
+                                                "QUBUS_cpurt_alloc_scatch_mem", &module());
 
     alloc_scratch_mem_->setDoesNotCapture(1);
     alloc_scratch_mem_->setDoesNotAlias(1);
@@ -131,7 +129,7 @@ void llvm_environment::init_dealloc_scratch_mem()
     llvm::FunctionType* FT = llvm::FunctionType::get(void_type, param_types, false);
 
     dealloc_scratch_mem_ = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
-                                                  "qbb_qubus_cpurt_dealloc_scratch_mem", &module());
+                                                  "QUBUS_cpurt_dealloc_scratch_mem", &module());
 
     dealloc_scratch_mem_->setDoesNotCapture(1);
     dealloc_scratch_mem_->setDoesNotAlias(1);
@@ -316,7 +314,6 @@ llvm::Value* llvm_environment::lookup_symbol(const std::string& symbol) const
 std::unique_ptr<llvm::Module> llvm_environment::detach_module()
 {
     return std::move(the_module_);
-}
 }
 }
 }

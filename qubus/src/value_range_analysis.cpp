@@ -1,14 +1,12 @@
-#include <qbb/qubus/value_range_analysis.hpp>
+#include <qubus/value_range_analysis.hpp>
 
-#include <qbb/qubus/affine_constraints.hpp>
+#include <qubus/affine_constraints.hpp>
 
-#include <qbb/qubus/isl/ast_builder.hpp>
-#include <qbb/qubus/isl/map.hpp>
+#include <qubus/isl/ast_builder.hpp>
+#include <qubus/isl/map.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -113,5 +111,4 @@ std::vector<analysis_id> value_range_analysis_pass::required_analyses() const
 }
 
 QUBUS_REGISTER_ANALYSIS_PASS(value_range_analysis_pass);
-}
 }

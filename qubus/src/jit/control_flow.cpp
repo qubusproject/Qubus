@@ -1,13 +1,11 @@
-#include <qbb/qubus/jit/control_flow.hpp>
+#include <qubus/jit/control_flow.hpp>
 
-#include <qbb/qubus/jit/load_store.hpp>
+#include <qubus/jit/load_store.hpp>
 
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Value.h>
 #include <llvm/IR/BasicBlock.h>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -42,7 +40,6 @@ void emit_if_else(reference condition, std::function<void()> then_emitter,
     builder_.CreateBr(merge);
 
     builder_.SetInsertPoint(merge);
-}
 }
 }
 }

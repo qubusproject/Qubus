@@ -1,7 +1,7 @@
-#include <qbb/qubus/backends/cpu_compiler.hpp>
+#include <qubus/backends/cpu_compiler.hpp>
 
-#include <qbb/qubus/loop_optimizer.hpp>
-#include <qbb/qubus/make_implicit_conversions_explicit.hpp>
+#include <qubus/loop_optimizer.hpp>
+#include <qubus/make_implicit_conversions_explicit.hpp>
 
 // Workaround for LLVM's definition of DEBUG
 #pragma push_macro("DEBUG")
@@ -16,8 +16,8 @@
 
 #pragma pop_macro("DEBUG")
 
-#include <qbb/qubus/jit/jit_engine.hpp>
-#include <qbb/qubus/jit/optimization_pipeline.hpp>
+#include <qubus/jit/jit_engine.hpp>
+#include <qubus/jit/optimization_pipeline.hpp>
 
 #include <llvm/IR/Verifier.h>
 #include <llvm/IR/DataLayout.h>
@@ -27,16 +27,14 @@
 
 #include <llvm/Support/Host.h>
 
-#include <qbb/qubus/jit/cpuinfo.hpp>
-#include <qbb/qubus/jit/llvm_environment.hpp>
-#include <qbb/qubus/jit/compiler.hpp>
-#include <qbb/qubus/jit/execution_stack.hpp>
+#include <qubus/jit/cpuinfo.hpp>
+#include <qubus/jit/llvm_environment.hpp>
+#include <qubus/jit/compiler.hpp>
+#include <qubus/jit/execution_stack.hpp>
 
 #include <utility>
 #include <cstdlib>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -184,6 +182,5 @@ cpu_compiler::cpu_compiler() : impl_(std::make_unique<cpu_compiler_impl>())
 std::unique_ptr<cpu_plan> cpu_compiler::compile_computelet(const function_declaration& computelet)
 {
     return impl_->compile_computelet(computelet);
-}
 }
 }

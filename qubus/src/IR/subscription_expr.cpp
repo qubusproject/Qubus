@@ -1,9 +1,7 @@
-#include <qbb/qubus/IR/subscription_expr.hpp>
+#include <qubus/IR/subscription_expr.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -24,7 +22,7 @@ const access_expr& subscription_expr::qualified_access() const
 
 subscription_expr* subscription_expr::clone() const
 {
-    return new subscription_expr(qbb::qubus::clone(*indexed_expr_), qbb::qubus::clone(indices_));
+    return new subscription_expr(qubus::clone(*indexed_expr_), qubus::clone(indices_));
 }
 
 const expression& subscription_expr::child(std::size_t index) const
@@ -81,5 +79,4 @@ bool operator!=(const subscription_expr& lhs, const subscription_expr& rhs)
     return !(lhs == rhs);
 }
 
-}
 }

@@ -1,10 +1,10 @@
-#include <qbb/util/dense_hash_map.hpp>
+#include <qubus/util/dense_hash_map.hpp>
 
 #include <gtest/gtest.h>
 
 TEST(dense_hash_map, init)
 {
-    qbb::util::dense_hash_map<int, int> map(0, 50);
+    qubus::util::dense_hash_map<int, int> map(0, 50);
 
     EXPECT_EQ(map.load_factor(), 0);
     EXPECT_EQ(map.size(), 0);
@@ -16,7 +16,7 @@ TEST(dense_hash_map, init)
 
 TEST(dense_hash_map, insert)
 {
-    qbb::util::dense_hash_map<int, int> map(0);
+    qubus::util::dense_hash_map<int, int> map(0);
 
     auto pos_and_inserted = map.insert(std::make_pair(1, 42));
 
@@ -32,7 +32,7 @@ TEST(dense_hash_map, insert)
 
 TEST(dense_hash_map, emplace)
 {
-    qbb::util::dense_hash_map<int, int> map(0);
+    qubus::util::dense_hash_map<int, int> map(0);
 
     auto pos_and_inserted = map.emplace(1, 42);
 
@@ -48,7 +48,7 @@ TEST(dense_hash_map, emplace)
 
 TEST(dense_hash_map, reinsert)
 {
-    qbb::util::dense_hash_map<int, int> map(0);
+    qubus::util::dense_hash_map<int, int> map(0);
 
     auto pos_and_inserted = map.insert(std::make_pair(1, 42));
 
@@ -71,7 +71,7 @@ TEST(dense_hash_map, reinsert)
 
 TEST(dense_hash_map, find)
 {
-    qbb::util::dense_hash_map<int, int> map(0);
+    qubus::util::dense_hash_map<int, int> map(0);
 
     auto pos_and_inserted = map.insert(std::make_pair(1, 42));
 
@@ -94,7 +94,7 @@ TEST(dense_hash_map, find)
 
 TEST(dense_hash_map, at)
 {
-    qbb::util::dense_hash_map<int, int> map(0);
+    qubus::util::dense_hash_map<int, int> map(0);
 
     auto pos_and_inserted = map.insert(std::make_pair(1, 42));
 
@@ -113,7 +113,7 @@ TEST(dense_hash_map, at)
 
 TEST(dense_hash_map, erase)
 {
-    qbb::util::dense_hash_map<int, int> map(0);
+    qubus::util::dense_hash_map<int, int> map(0);
 
     auto pos_and_inserted = map.insert(std::make_pair(1, 42));
 
@@ -132,7 +132,7 @@ TEST(dense_hash_map, erase)
 
 TEST(dense_hash_map, erase_key)
 {
-    qbb::util::dense_hash_map<int, int> map(0);
+    qubus::util::dense_hash_map<int, int> map(0);
 
     map.insert(std::make_pair(1, 42));
 
@@ -146,7 +146,7 @@ TEST(dense_hash_map, erase_key)
 
 TEST(dense_hash_map, auto_resize)
 {
-    qbb::util::dense_hash_map<long int, long int> map(0, 20);
+    qubus::util::dense_hash_map<long int, long int> map(0, 20);
 
     ASSERT_EQ(map.bucket_count(), 20);
     ASSERT_LT(map.max_load_factor(), 1);

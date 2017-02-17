@@ -6,7 +6,7 @@ set(qubus_ir_header_file_names annotations.hpp binary_operator_expr.hpp compound
                                variable_ref_expr.hpp variable_declaration.hpp function_declaration.hpp
                                qir.hpp)
 
-set(qubus_ir_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../include/qbb/qubus/IR/)
+set(qubus_ir_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../include/qubus/IR/)
 
 foreach(file_name IN LISTS qubus_ir_header_file_names)
     list(APPEND qubus_ir_header_files ${qubus_ir_include_dir}/${file_name})
@@ -29,7 +29,7 @@ set(qubus_pattern_header_file_names any.hpp binary_operator.hpp bind_to.hpp comp
                                     type_conversion.hpp unary_operator.hpp variable.hpp value.hpp
                                     variable_ref.hpp)
 
-set(qubus_pattern_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../include/qbb/qubus/pattern/)
+set(qubus_pattern_include_dir ${CMAKE_CURRENT_SOURCE_DIR}/../../include/qubus/pattern/)
 
 foreach(file_name IN LISTS qubus_pattern_header_file_names)
     list(APPEND qubus_pattern_header_files ${qubus_pattern_include_dir}/${file_name})
@@ -39,7 +39,7 @@ add_library(qubus_ir SHARED ${qubus_pattern_header_files} ${qubus_ir_header_file
 
 target_include_directories(qubus_ir PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 target_compile_options(qubus_ir PUBLIC -std=c++14)
-target_link_libraries(qubus_ir PUBLIC qbb_util)
+target_link_libraries(qubus_ir PUBLIC qubus_util)
 hpx_setup_target(qubus_ir)
 qubus_set_output_name(qubus_ir qubus_ir)
 

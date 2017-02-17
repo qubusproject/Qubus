@@ -1,10 +1,10 @@
-#include <qbb/qubus/qubus.hpp>
+#include <qubus/qubus.hpp>
 
-#include <qbb/qubus/qtl/all.hpp>
+#include <qubus/qtl/all.hpp>
 
 #include <hpx/hpx_init.hpp>
 
-#include <qbb/util/unused.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <complex>
 #include <random>
@@ -14,7 +14,7 @@
 
 TEST(contractions, simple_contraction)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -105,7 +105,7 @@ TEST(contractions, simple_contraction)
 
 TEST(contractions, complex_matrix_multiplication)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -196,7 +196,7 @@ TEST(contractions, complex_matrix_multiplication)
 
 TEST(contractions, reduction_to_r1)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -284,7 +284,7 @@ TEST(contractions, reduction_to_r1)
 
 TEST(contractions, matrix_vector_product)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -364,7 +364,7 @@ TEST(contractions, matrix_vector_product)
 
 TEST(contractions, basis_change_r2)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -463,7 +463,7 @@ TEST(contractions, basis_change_r2)
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

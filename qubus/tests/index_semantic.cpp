@@ -1,10 +1,10 @@
-#include <qbb/qubus/qubus.hpp>
+#include <qubus/qubus.hpp>
 
-#include <qbb/qubus/qtl/all.hpp>
+#include <qubus/qtl/all.hpp>
 
 #include <hpx/hpx_init.hpp>
 
-#include <qbb/util/unused.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <vector>
 #include <random>
@@ -14,7 +14,7 @@
 
 TEST(index_semantic, basic_index_semantic)
 {
-using namespace qbb::qubus;
+using namespace qubus;
 
 qtl::index i, j;
 qtl::index k = i; // k is an alias of i.
@@ -40,7 +40,7 @@ EXPECT_NE(i, j);
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

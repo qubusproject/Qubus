@@ -1,12 +1,10 @@
-#include <qbb/qubus/token.hpp>
+#include <qubus/token.hpp>
 
-#include <qbb/qubus/hpx_utils.hpp>
+#include <qubus/hpx_utils.hpp>
 
-using server_type = hpx::components::component<qbb::qubus::token_server>;
+using server_type = hpx::components::component<qubus::token_server>;
 HPX_REGISTER_COMPONENT(server_type, qubus_token_server);
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -64,6 +62,5 @@ std::tuple<token, hpx::future<void>> make_token_with_future()
     return std::make_tuple(std::move(token), std::move(expiration_future));
 }
 
-}
 }
 

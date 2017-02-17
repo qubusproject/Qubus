@@ -1,6 +1,6 @@
-#include <qbb/qubus/jit/compiler.hpp>
+#include <qubus/jit/compiler.hpp>
 
-#include <qbb/qubus/jit/compile.hpp>
+#include <qubus/jit/compile.hpp>
 
 #include <llvm/IR/Module.h>
 #include <llvm/IR/Type.h>
@@ -8,16 +8,14 @@
 
 #include <boost/optional.hpp>
 
-#include <qbb/util/make_unique.hpp>
-#include <qbb/util/assert.hpp>
-#include <qbb/util/unused.hpp>
+#include <qubus/util/make_unique.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <memory>
 #include <vector>
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -212,7 +210,7 @@ compiler::compiler()
 
 reference compiler::compile(const expression& expr)
 {
-    return ::qbb::qubus::jit::compile(expr, *this);
+    return ::qubus::jit::compile(expr, *this);
 }
 
 void compiler::compile(const function_declaration& func)
@@ -263,7 +261,6 @@ std::unique_ptr<module> compile(const function_declaration& func, compiler& comp
     comp.reset();
 
     return mod;
-}
 }
 }
 }

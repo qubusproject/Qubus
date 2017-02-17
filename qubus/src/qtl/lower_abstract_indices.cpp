@@ -1,23 +1,21 @@
-#include <qbb/qubus/qtl/lower_abstract_indices.hpp>
+#include <qubus/qtl/lower_abstract_indices.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
-#include <qbb/qubus/pattern/substitute.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
+#include <qubus/pattern/substitute.hpp>
 
-#include <qbb/qubus/qtl/pattern/all.hpp>
+#include <qubus/qtl/pattern/all.hpp>
 
-#include <qbb/qubus/qtl/deduce_iteration_space.hpp>
+#include <qubus/qtl/deduce_iteration_space.hpp>
 
-#include <qbb/util/handle.hpp>
+#include <qubus/util/handle.hpp>
 
 #include <boost/optional.hpp>
 
 #include <array>
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -97,7 +95,6 @@ function_declaration lower_abstract_indices(function_declaration decl)
     decl.substitute_body(std::move(new_body));
 
     return decl;
-}
 }
 }
 }

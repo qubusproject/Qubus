@@ -1,22 +1,20 @@
-#include <qbb/qubus/qtl/multi_index_handling.hpp>
+#include <qubus/qtl/multi_index_handling.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
+#include <qubus/IR/qir.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/qtl/pattern/all.hpp>
+#include <qubus/qtl/pattern/all.hpp>
 
 #include <boost/optional.hpp>
 #include <boost/range/combine.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <map>
 #include <vector>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -118,7 +116,7 @@ std::unique_ptr<expression> expand_multi_indices(const expression& expr)
             //                                };
             //                            }
             //
-            //                            QBB_ASSERT(expanded_delta, "Invalid expression.");
+            //                            QUBUS_ASSERT(expanded_delta, "Invalid expression.");
             //
             //                            return *expanded_delta;
             //                        })
@@ -187,7 +185,6 @@ function_declaration expand_multi_indices(function_declaration decl)
     auto new_body = expand_multi_indices(decl.body());
 
     return function_declaration(decl.name(), decl.params(), decl.result(), std::move(new_body));
-}
 }
 }
 }

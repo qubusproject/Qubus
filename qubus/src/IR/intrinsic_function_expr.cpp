@@ -1,9 +1,7 @@
-#include <qbb/qubus/IR/intrinsic_function_expr.hpp>
+#include <qubus/IR/intrinsic_function_expr.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -20,7 +18,7 @@ const std::string& intrinsic_function_expr::name() const
 
 intrinsic_function_expr* intrinsic_function_expr::clone() const
 {
-    return new intrinsic_function_expr(name_, qbb::qubus::clone(args_));
+    return new intrinsic_function_expr(name_, qubus::clone(args_));
 }
 
 const expression& intrinsic_function_expr::child(std::size_t index) const
@@ -47,6 +45,5 @@ bool operator==(const intrinsic_function_expr& lhs, const intrinsic_function_exp
 bool operator!=(const intrinsic_function_expr& lhs, const intrinsic_function_expr& rhs)
 {
     return !(lhs == rhs);
-}
 }
 }

@@ -3,7 +3,7 @@
 #include <iostream>
 #include <eigen3/Eigen/Core>
 
-#include <qbb/qubus/qubus.hpp>
+#include <qubus/qubus.hpp>
 
 #include <hpx/hpx_init.hpp>
 
@@ -53,11 +53,11 @@ double run_benchmark(F f, OnStop on_stop)
     return avg_time;
 }
 
-using namespace qbb::qubus;
+using namespace qubus;
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     std::ofstream bench_data("bench_data.dat");
 
@@ -68,9 +68,9 @@ int hpx_main(int argc, char** argv)
         bench_data << N << "   ";
 
         {
-            qbb::qubus::index i("i");
-            qbb::qubus::index j("j");
-            qbb::qubus::index k("k");
+            qubus::index i("i");
+            qubus::index j("j");
+            qubus::index k("k");
 
             tensor<double, 2> A(N, N);
             tensor<double, 2> B(N, N);

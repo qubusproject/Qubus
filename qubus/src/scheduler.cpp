@@ -1,11 +1,9 @@
-#include <qbb/qubus/scheduler.hpp>
+#include <qubus/scheduler.hpp>
 
 #include <boost/optional.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -27,6 +25,5 @@ void round_robin_scheduler::add_resource(vpu& execution_resource)
     std::lock_guard<hpx::lcos::local::mutex> guard(scheduling_mutex_);
 
     execution_resources_.push_back(&execution_resource);
-}
 }
 }

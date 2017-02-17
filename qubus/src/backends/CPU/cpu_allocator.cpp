@@ -1,13 +1,11 @@
-#include <qbb/qubus/backends/cpu_allocator.hpp>
+#include <qubus/backends/cpu_allocator.hpp>
 
-#include <qbb/qubus/backends/cpu_memory_block.hpp>
+#include <qubus/backends/cpu_memory_block.hpp>
 
-#include <qbb/util/make_unique.hpp>
+#include <qubus/util/make_unique.hpp>
 
 #include <cstdlib>
 
-namespace qbb
-{
 namespace qubus
 {
 std::unique_ptr<memory_block> cpu_allocator::allocate(std::size_t size, std::size_t alignment)
@@ -25,6 +23,5 @@ std::unique_ptr<memory_block> cpu_allocator::allocate(std::size_t size, std::siz
 void cpu_allocator::deallocate(memory_block& mem_block)
 {
     std::free(mem_block.ptr());
-}
 }
 }

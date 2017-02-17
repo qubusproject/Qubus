@@ -1,7 +1,7 @@
-#include <qbb/qubus/qubus.hpp>
+#include <qubus/qubus.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/value_set_analysis.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/value_set_analysis.hpp>
 
 #include <hpx/hpx_init.hpp>
 
@@ -9,7 +9,7 @@
 
 TEST(value_set_anaylsis, simple_array_access_in_loop_nest)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration var(types::array(types::double_{}, 1));
 
@@ -41,7 +41,7 @@ TEST(value_set_anaylsis, simple_array_access_in_loop_nest)
 
 TEST(value_set_anaylsis, array_access_in_loop_nest)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration var(types::array(types::double_{}, 1));
 
@@ -73,7 +73,7 @@ TEST(value_set_anaylsis, array_access_in_loop_nest)
 
 TEST(value_set_anaylsis, dependent_loops)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration var(types::array(types::double_{}, 1));
 
@@ -105,7 +105,7 @@ TEST(value_set_anaylsis, dependent_loops)
 
 TEST(value_set_anaylsis, blocking)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     variable_declaration var(types::array(types::double_{}, 1));
 
@@ -150,7 +150,7 @@ TEST(value_set_anaylsis, blocking)
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

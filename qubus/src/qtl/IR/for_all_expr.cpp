@@ -1,11 +1,9 @@
-#include <qbb/qubus/qtl/IR/for_all_expr.hpp>
+#include <qubus/qtl/IR/for_all_expr.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -20,7 +18,7 @@ for_all_expr::for_all_expr(std::vector<variable_declaration> loop_indices_,
                            std::unique_ptr<expression> body_)
 : loop_indices_(std::move(loop_indices_)), body_(take_over_child(body_))
 {
-    QBB_ASSERT(this->loop_indices_.size() > 0,
+    QUBUS_ASSERT(this->loop_indices_.size() > 0,
                "A for all loops needs to declare at least one index.");
 }
 
@@ -28,7 +26,7 @@ for_all_expr::for_all_expr(std::vector<variable_declaration> loop_indices_,
                            variable_declaration alias_, std::unique_ptr<expression> body_)
 : loop_indices_(std::move(loop_indices_)), alias_(std::move(alias_)), body_(take_over_child(body_))
 {
-    QBB_ASSERT(this->loop_indices_.size() > 0,
+    QUBUS_ASSERT(this->loop_indices_.size() > 0,
                "A for all loops needs to declare at least one index.");
 }
 
@@ -51,11 +49,11 @@ for_all_expr* for_all_expr::clone() const
 {
     if (alias_)
     {
-        return new for_all_expr(loop_indices_, *alias_, qbb::qubus::clone(*body_));
+        return new for_all_expr(loop_indices_, *alias_, qubus::clone(*body_));
     }
     else
     {
-        return new for_all_expr(loop_indices_, qbb::qubus::clone(*body_));
+        return new for_all_expr(loop_indices_, qubus::clone(*body_));
     }
 }
 
@@ -102,8 +100,7 @@ bool operator!=(const for_all_expr& lhs, const for_all_expr& rhs)
     return !(lhs == rhs);
 }
 
-QBB_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(equal, std::equal_to<for_all_expr>(), for_all_expr_equal);
+QUBUS_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(equal, std::equal_to<for_all_expr>(), for_all_expr_equal);
 
-}
 }
 }

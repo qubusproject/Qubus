@@ -1,13 +1,11 @@
-#include <qbb/qubus/abi_info.hpp>
+#include <qubus/abi_info.hpp>
 
-#include <qbb/qubus/pattern/core.hpp>
-#include <qbb/qubus/pattern/type.hpp>
+#include <qubus/pattern/core.hpp>
+#include <qubus/pattern/type.hpp>
 
-#include <qbb/util/unused.hpp>
-#include <qbb/util/integers.hpp>
+#include <qubus/util/unused.hpp>
+#include <qubus/util/integers.hpp>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -15,7 +13,7 @@ abi_info::abi_info()
 {
 }
 
-std::size_t abi_info::get_align_of(const type& QBB_UNUSED(primitive_type)) const
+std::size_t abi_info::get_align_of(const type& QUBUS_UNUSED(primitive_type)) const
 {
     return 32;
 }
@@ -87,6 +85,5 @@ array_layout abi_info::get_array_layout(const type& value_type,
     auto data_offset = shape_offset + shape_size + data_padding;
     
     return array_layout(current_size, block_alignment, shape_offset, shape_size, data_offset, data_size);
-}
 }
 }

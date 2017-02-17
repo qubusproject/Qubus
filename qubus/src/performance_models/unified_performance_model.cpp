@@ -1,19 +1,17 @@
-#include <qbb/qubus/performance_models/unified_performance_model.hpp>
+#include <qubus/performance_models/unified_performance_model.hpp>
 
-#include <qbb/qubus/performance_models/regression_performance_model.hpp>
-#include <qbb/qubus/performance_models/simple_statistical_performance_model.hpp>
+#include <qubus/performance_models/regression_performance_model.hpp>
+#include <qubus/performance_models/simple_statistical_performance_model.hpp>
 
 #include <hpx/include/local_lcos.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <algorithm>
 #include <mutex>
 #include <unordered_map>
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -98,7 +96,7 @@ void unified_performance_model::sample_execution_time(const computelet& c,
                                                       const execution_context& ctx,
                                                       std::chrono::microseconds execution_time)
 {
-    QBB_ASSERT(impl_, "Uninitialized object.");
+    QUBUS_ASSERT(impl_, "Uninitialized object.");
 
     impl_->sample_execution_time(c, ctx, std::move(execution_time));
 }
@@ -107,9 +105,8 @@ boost::optional<performance_estimate>
 unified_performance_model::try_estimate_execution_time(const computelet& c,
                                                        const execution_context& ctx) const
 {
-    QBB_ASSERT(impl_, "Uninitialized object.");
+    QUBUS_ASSERT(impl_, "Uninitialized object.");
 
     return impl_->try_estimate_execution_time(c, ctx);
-}
 }
 }

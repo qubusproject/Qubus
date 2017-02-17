@@ -1,16 +1,16 @@
-#include <qbb/qubus/alias_analysis.hpp>
+#include <qubus/alias_analysis.hpp>
 
-#include <qbb/qubus/affine_constraints.hpp>
+#include <qubus/affine_constraints.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
 #include <boost/range/adaptor/sliced.hpp>
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/combine.hpp>
 #include <boost/range/join.hpp>
 
-#include <qbb/util/unused.hpp>
+#include <qubus/util/unused.hpp>
 
 // Basic aliasing rules:
 // 0. Direct accesses of the same variable always alias (A == B -> must_alias)
@@ -20,8 +20,6 @@
 //    2.2 Accesses of disjoint array regions for the same array-like (sub)-object never alias
 // 3. Accesses of the same object through the same members always alias.
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -163,10 +161,10 @@ try_generate_slice_region(const std::vector<affine_expr>& vars,
 {
     const auto rank = shape.size();
 
-    QBB_ASSERT(rank == vars.size(), "The number of variables need to match the rank.");
-    QBB_ASSERT(rank == offset.size(), "The number of offsets need to match the rank.");
-    QBB_ASSERT(rank == shape.size(), "The number of extends need to match the rank.");
-    QBB_ASSERT(rank == strides.size(), "The number of strides need to match the rank.");
+    QUBUS_ASSERT(rank == vars.size(), "The number of variables need to match the rank.");
+    QUBUS_ASSERT(rank == offset.size(), "The number of offsets need to match the rank.");
+    QUBUS_ASSERT(rank == shape.size(), "The number of extends need to match the rank.");
+    QUBUS_ASSERT(rank == strides.size(), "The number of strides need to match the rank.");
 
     if (rank == 0)
         return boost::none;
@@ -347,9 +345,9 @@ alias_result basic_alias_analysis_result::alias(const access& first_access,
 }
 
 basic_alias_analysis_result
-basic_alias_analysis_pass::run(const expression& QBB_UNUSED(root),
-                               analysis_manager& QBB_UNUSED(manager),
-                               pass_resource_manager& QBB_UNUSED(resource_manager)) const
+basic_alias_analysis_pass::run(const expression& QUBUS_UNUSED(root),
+                               analysis_manager& QUBUS_UNUSED(manager),
+                               pass_resource_manager& QUBUS_UNUSED(resource_manager)) const
 {
     return basic_alias_analysis_result();
 }
@@ -408,5 +406,4 @@ std::vector<analysis_id> alias_analysis_pass::required_analyses() const
 
 QUBUS_REGISTER_ANALYSIS_PASS(basic_alias_analysis_pass);
 QUBUS_REGISTER_ANALYSIS_PASS(alias_analysis_pass);
-}
 }

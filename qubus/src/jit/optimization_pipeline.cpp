@@ -1,4 +1,4 @@
-#include <qbb/qubus/jit/optimization_pipeline.hpp>
+#include <qubus/jit/optimization_pipeline.hpp>
 
 #include <llvm/Analysis/BasicAliasAnalysis.h>
 #include <llvm/Analysis/ScalarEvolutionAliasAnalysis.h>
@@ -23,8 +23,6 @@
 #include <llvm/Transforms/IPO/InferFunctionAttrs.h>
 #include <llvm/Transforms/Vectorize.h>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -406,6 +404,5 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
     manager.add(createMergeFunctionsPass());
 }
 #endif
-}
 }
 }

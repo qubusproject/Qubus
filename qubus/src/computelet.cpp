@@ -1,18 +1,16 @@
-#include <qbb/qubus/computelet.hpp>
+#include <qubus/computelet.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
+#include <qubus/IR/qir.hpp>
 
 #include <utility>
 
-using server_type = hpx::components::component<qbb::qubus::computelet_server>;
-HPX_REGISTER_COMPONENT(server_type, qbb_qubus_computelet_server);
+using server_type = hpx::components::component<qubus::computelet_server>;
+HPX_REGISTER_COMPONENT(server_type, qubus_computelet_server);
 
-typedef qbb::qubus::computelet_server::code_action code_action;
+typedef qubus::computelet_server::code_action code_action;
 HPX_REGISTER_ACTION_DECLARATION(code_action);
 HPX_REGISTER_ACTION(code_action);
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -45,5 +43,4 @@ computelet make_computelet(function_declaration code)
     return hpx::new_<computelet_server>(hpx::find_here(), std::move(code));
 }
 
-}
 }

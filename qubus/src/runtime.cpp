@@ -1,23 +1,21 @@
-#include <qbb/qubus/runtime.hpp>
+#include <qubus/runtime.hpp>
 
-#include <qbb/qubus/hpx_utils.hpp>
+#include <qubus/hpx_utils.hpp>
 
-#include <qbb/util/unused.hpp>
+#include <qubus/util/unused.hpp>
 
-using server_type = hpx::components::component<qbb::qubus::runtime_server>;
-HPX_REGISTER_COMPONENT(server_type, qbb_qubus_runtime_server);
+using server_type = hpx::components::component<qubus::runtime_server>;
+HPX_REGISTER_COMPONENT(server_type, qubus_runtime_server);
 
-typedef qbb::qubus::runtime_server::execute_action execute_action;
+typedef qubus::runtime_server::execute_action execute_action;
 HPX_REGISTER_ACTION_DECLARATION(execute_action, runtime_server_execute_action);
 HPX_REGISTER_ACTION(execute_action, runtime_server_execute_action);
 
-typedef qbb::qubus::runtime_server::get_object_factory_action get_object_factory_action;
+typedef qubus::runtime_server::get_object_factory_action get_object_factory_action;
 HPX_REGISTER_ACTION_DECLARATION(get_object_factory_action,
                                 runtime_server_get_object_factory_action);
 HPX_REGISTER_ACTION(get_object_factory_action, runtime_server_get_object_factory_action);
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -62,7 +60,7 @@ object_factory runtime::get_object_factory() const
     return hpx::async<runtime_server::get_object_factory_action>(this->get_id());
 }
 
-void init(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
+void init(int QUBUS_UNUSED(argc), char** QUBUS_UNUSED(argv))
 {
     auto global_runtime = hpx::agas::resolve_name(hpx::launch::sync, "/qubus/runtime");
 
@@ -76,6 +74,5 @@ void init(int QBB_UNUSED(argc), char** QBB_UNUSED(argv))
 runtime get_runtime()
 {
     return hpx::agas::resolve_name("/qubus/runtime");
-}
 }
 }

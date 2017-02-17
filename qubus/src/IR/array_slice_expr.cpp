@@ -1,11 +1,9 @@
-#include <qbb/qubus/IR/array_slice_expr.hpp>
+#include <qubus/IR/array_slice_expr.hpp>
 
-#include <qbb/qubus/IR/literal_expr.hpp>
+#include <qubus/IR/literal_expr.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -32,8 +30,8 @@ const access_expr& array_slice_expr::qualified_access() const
 
 array_slice_expr* array_slice_expr::clone() const
 {
-    return new array_slice_expr(qbb::qubus::clone(*array_), qbb::qubus::clone(offset_),
-                                qbb::qubus::clone(shape_), qbb::qubus::clone(strides_));
+    return new array_slice_expr(qubus::clone(*array_), qubus::clone(offset_),
+                                qubus::clone(shape_), qubus::clone(strides_));
 }
 
 const expression& array_slice_expr::child(std::size_t index) const
@@ -144,6 +142,5 @@ std::unique_ptr<array_slice_expr> slice(std::unique_ptr<access_expr> array,
 
     return std::make_unique<array_slice_expr>(std::move(array), std::move(offset), std::move(shape),
                                               std::move(strides));
-}
 }
 }

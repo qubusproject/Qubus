@@ -1,10 +1,10 @@
-#include <qbb/qubus/qubus.hpp>
+#include <qubus/qubus.hpp>
 
-#include <qbb/qubus/qtl/all.hpp>
+#include <qubus/qtl/all.hpp>
 
 #include <hpx/hpx_init.hpp>
 
-#include <qbb/util/unused.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <complex>
 #include <random>
@@ -14,7 +14,7 @@
 
 TEST(qm_patterns, commutator)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -105,7 +105,7 @@ TEST(qm_patterns, commutator)
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

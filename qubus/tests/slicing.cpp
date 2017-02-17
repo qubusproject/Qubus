@@ -1,6 +1,6 @@
-#include <qbb/qubus/qubus.hpp>
+#include <qubus/qubus.hpp>
 
-#include <qbb/qubus/qtl/all.hpp>
+#include <qubus/qtl/all.hpp>
 
 #include <hpx/hpx_init.hpp>
 
@@ -8,7 +8,7 @@
 
 TEST(slicing, simple_slice)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 100;
@@ -54,7 +54,7 @@ TEST(slicing, simple_slice)
 
 TEST(slicing, recursive_slicing)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
     using namespace qtl;
 
     long int N = 16;
@@ -114,7 +114,7 @@ TEST(slicing, recursive_slicing)
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

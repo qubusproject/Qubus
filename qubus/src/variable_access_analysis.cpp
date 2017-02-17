@@ -1,18 +1,16 @@
-#include <qbb/qubus/variable_access_analysis.hpp>
+#include <qubus/variable_access_analysis.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/util/optional_ref.hpp>
-#include <qbb/util/assert.hpp>
-#include <qbb/util/unreachable.hpp>
+#include <qubus/util/optional_ref.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/unreachable.hpp>
 
 #include <stack>
 #include <unordered_map>
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -57,7 +55,7 @@ decompose_access(const access_expr& access)
         return {*direct_access, std::move(qualifiers)};
     }
 
-    QBB_UNREACHABLE_BECAUSE("'access' is of an unknown access type.");
+    QUBUS_UNREACHABLE_BECAUSE("'access' is of an unknown access type.");
 }
 }
 
@@ -151,7 +149,7 @@ public:
     {
         auto search_result = location_index_.find(&location);
 
-        QBB_ASSERT(search_result != location_index_.end(), "Invalid location during query.");
+        QUBUS_ASSERT(search_result != location_index_.end(), "Invalid location during query.");
 
         return *search_result->second;
     }
@@ -269,5 +267,4 @@ std::vector<analysis_id> variable_access_analysis::required_analyses() const
 }
 
 QUBUS_REGISTER_ANALYSIS_PASS(variable_access_analysis);
-}
 }

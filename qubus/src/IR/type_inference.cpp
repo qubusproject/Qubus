@@ -1,26 +1,24 @@
-#include <qbb/qubus/IR/type_inference.hpp>
+#include <qubus/IR/type_inference.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/qtl/IR/all.hpp>
+#include <qubus/qtl/IR/all.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/multi_method.hpp>
-#include <qbb/util/unused.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/multi_method.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <mutex>
 
-namespace qbb
-{
 namespace qubus
 {
 
 namespace
 {
 
-qbb::util::multi_method<type(const qbb::util::virtual_<type>&, const qbb::util::virtual_<type>&)>
+util::multi_method<type(const util::virtual_<type>&, const util::virtual_<type>&)>
     common_type_ = {};
 
 type common_type_double_double(const types::double_&, const types::double_&)
@@ -158,7 +156,7 @@ type value_type(const type& tensor_type)
     return pattern::match(tensor_type, m);
 }
 
-qbb::util::multi_method<type(const qbb::util::virtual_<expression>&)> infer_type = {};
+util::multi_method<type(const util::virtual_<expression>&)> infer_type = {};
 
 type infer_type_binary_op_expr(const binary_operator_expr& expr)
 {
@@ -293,7 +291,7 @@ type infer_type_construct_expr(const construct_expr& expr)
     return expr.result_type();
 }
 
-type infer_type_kronecker_delta_expr(const qtl::kronecker_delta_expr& QBB_UNUSED(expr))
+type infer_type_kronecker_delta_expr(const qtl::kronecker_delta_expr& QUBUS_UNUSED(expr))
 {
     return types::integer();
 }
@@ -305,7 +303,7 @@ type infer_type_member_access_expr(const member_access_expr& expr)
     return obj_type[expr.member_name()];
 }
 
-type infer_type_foreign_call_expr(const foreign_call_expr& QBB_UNUSED(expr))
+type infer_type_foreign_call_expr(const foreign_call_expr& QUBUS_UNUSED(expr))
 {
     return types::unknown{};
 }
@@ -366,6 +364,5 @@ type typeof_(const expression& expr)
 
         return infered_type;
     }
-}
 }
 }

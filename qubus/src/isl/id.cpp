@@ -1,11 +1,9 @@
-#include <qbb/qubus/isl/id.hpp>
+#include <qubus/isl/id.hpp>
 
-#include <qbb/qubus/isl/context.hpp>
+#include <qubus/isl/context.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -83,7 +81,6 @@ boost::any& id::user_data()
     auto user_typed = static_cast<boost::any*>(user);
 
     return *user_typed;
-}
 }
 }
 }

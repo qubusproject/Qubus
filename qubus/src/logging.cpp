@@ -1,4 +1,4 @@
-#include <qbb/qubus/logging.hpp>
+#include <qubus/logging.hpp>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/log/core.hpp>
@@ -18,8 +18,6 @@
 #include <iomanip>
 #include <memory>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace
@@ -78,5 +76,4 @@ void init_logging()
     logging::core::get()->set_filter(severity >= normal);
 }
 
-}
 }

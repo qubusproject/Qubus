@@ -1,8 +1,8 @@
-#include <qbb/util/get_prefix.hpp>
+#include <qubus/util/get_prefix.hpp>
 
 #include <boost/dll.hpp>
 
-namespace qbb
+namespace qubus
 {
 namespace util
 {

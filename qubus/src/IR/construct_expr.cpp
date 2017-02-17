@@ -1,9 +1,7 @@
-#include <qbb/qubus/IR/construct_expr.hpp>
+#include <qubus/IR/construct_expr.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -19,7 +17,7 @@ const type& construct_expr::result_type() const
 
 construct_expr* construct_expr::clone() const
 {
-    return new construct_expr(result_type_, qbb::qubus::clone(parameters_));
+    return new construct_expr(result_type_, qubus::clone(parameters_));
 }
 
 const expression& construct_expr::child(std::size_t index) const
@@ -55,6 +53,5 @@ bool operator!=(const construct_expr& lhs, const construct_expr& rhs)
     return !(lhs == rhs);
 }
 
-}
 }
 

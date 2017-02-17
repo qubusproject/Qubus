@@ -1,12 +1,10 @@
-/*#include <qbb/qubus/backends/cpu_object_factory.hpp>
+/*#include <qubus/backends/cpu_object_factory.hpp>
 
 #include <limits>
 #include <algorithm>
 #include <functional>
 #include <cstring>
 
-namespace qbb
-{
 namespace qubus
 {
     
@@ -36,5 +34,4 @@ std::unique_ptr<memory_block> cpu_object_factory::create_array(type value_type, 
     return mem_block;
 }
 
-}
 }*/

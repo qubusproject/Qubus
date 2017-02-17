@@ -1,11 +1,9 @@
-#include <qbb/qubus/qtl/IR/kronecker_delta_expr.hpp>
+#include <qubus/qtl/IR/kronecker_delta_expr.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace qtl
@@ -36,8 +34,8 @@ const expression& kronecker_delta_expr::second_index() const
 
 kronecker_delta_expr* kronecker_delta_expr::clone() const
 {
-    return new kronecker_delta_expr(extent_, qbb::qubus::clone(*first_index_),
-                                    qbb::qubus::clone(*second_index_));
+    return new kronecker_delta_expr(extent_, qubus::clone(*first_index_),
+                                    qubus::clone(*second_index_));
 }
 
 const expression& kronecker_delta_expr::child(std::size_t index) const
@@ -82,8 +80,7 @@ bool operator!=(const kronecker_delta_expr& lhs, const kronecker_delta_expr& rhs
     return !(lhs == rhs);
 }
 
-QBB_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(equal, std::equal_to<kronecker_delta_expr>(), kronecker_delta_expr_equal);
+QUBUS_DEFINE_MULTI_METHOD_SPECIALIZATION_WITH_NAME(equal, std::equal_to<kronecker_delta_expr>(), kronecker_delta_expr_equal);
 
-}
 }
 }

@@ -1,1 +1,1 @@
-#include <qbb/qubus/allocator.hpp>
+#include <qubus/allocator.hpp>

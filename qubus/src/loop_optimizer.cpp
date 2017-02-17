@@ -1,32 +1,32 @@
 #if 0
-#include <qbb/qubus/loop_optimizer.hpp>
+#include <qubus/loop_optimizer.hpp>
 
-#include <qbb/qubus/lower_abstract_indices.hpp>
+#include <qubus/lower_abstract_indices.hpp>
 
-#include <qbb/qubus/IR/pretty_printer.hpp>
+#include <qubus/IR/pretty_printer.hpp>
 
-#include <qbb/qubus/IR/extract.hpp>
+#include <qubus/IR/extract.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/isl/ast_builder.hpp>
-#include <qbb/qubus/isl/constraint.hpp>
-#include <qbb/qubus/isl/context.hpp>
-#include <qbb/qubus/isl/flow.hpp>
-#include <qbb/qubus/isl/map.hpp>
-#include <qbb/qubus/isl/multi_union_pw_affine_expr.hpp>
-#include <qbb/qubus/isl/pw_multi_aff.hpp>
-#include <qbb/qubus/isl/schedule.hpp>
-#include <qbb/qubus/isl/set.hpp>
+#include <qubus/isl/ast_builder.hpp>
+#include <qubus/isl/constraint.hpp>
+#include <qubus/isl/context.hpp>
+#include <qubus/isl/flow.hpp>
+#include <qubus/isl/map.hpp>
+#include <qubus/isl/multi_union_pw_affine_expr.hpp>
+#include <qubus/isl/pw_multi_aff.hpp>
+#include <qubus/isl/schedule.hpp>
+#include <qubus/isl/set.hpp>
 
-#include <qbb/util/integers.hpp>
-#include <qbb/util/numeric/bisection.hpp>
-#include <qbb/util/numeric/polynomial.hpp>
-#include <qbb/util/unique_name_generator.hpp>
-#include <qbb/util/unused.hpp>
-#include <qbb/util/cloning_ptr.hpp>
+#include <qubus/util/integers.hpp>
+#include <qubus/util/numeric/bisection.hpp>
+#include <qubus/util/numeric/polynomial.hpp>
+#include <qubus/util/unique_name_generator.hpp>
+#include <qubus/util/unused.hpp>
+#include <qubus/util/cloning_ptr.hpp>
 
 #include <boost/algorithm/string/predicate.hpp>
 #include <boost/range/algorithm.hpp>
@@ -39,11 +39,9 @@
 #include <vector>
 
 #include <iostream>
-#include <qbb/qubus/IR/pretty_printer.hpp>
-#include <qbb/qubus/isl/printer.hpp>
+#include <qubus/IR/pretty_printer.hpp>
+#include <qubus/isl/printer.hpp>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -109,7 +107,7 @@ isl::union_map pad_schedule_map(isl::union_map schedule_map)
 
 struct scop
 {
-    scop(isl::union_set domain, isl::set QBB_UNUSED(param_constraints), isl::union_map schedule,
+    scop(isl::union_set domain, isl::set QUBUS_UNUSED(param_constraints), isl::union_map schedule,
          isl::union_map write_accesses, isl::union_map read_accesses,
          std::map<std::string, std::unique_ptr<expression>> symbol_table,
          std::map<std::string, variable_declaration> tensor_table)
@@ -1660,7 +1658,7 @@ std::unique_ptr<expression> generate_code_from_scop(const scop& s)
 
     isl_union_set_dump(aliases.native_handle());*/
 
-    /*builder.set_before_each_for([&](isl::ast_builder_ref QBB_UNUSED(builder))
+    /*builder.set_before_each_for([&](isl::ast_builder_ref QUBUS_UNUSED(builder))
                                 {
                                     return isl::id(isl_ctx, "test");
                                 });*/
@@ -1708,18 +1706,14 @@ function_declaration optimize_loops(function_declaration decl)
     return decl;
 }
 }
-}
 #else
-#include <qbb/qubus/loop_optimizer.hpp>
+#include <qubus/loop_optimizer.hpp>
 
-namespace qbb
-{
 namespace qubus
 {
 function_declaration optimize_loops(function_declaration decl)
 {
     throw 0;
-}
 }
 }
 #endif

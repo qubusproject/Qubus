@@ -1,13 +1,11 @@
-#include <qbb/qubus/value_set_analysis.hpp>
+#include <qubus/value_set_analysis.hpp>
 
-#include <qbb/qubus/isl/map.hpp>
+#include <qubus/isl/map.hpp>
 
 #include <boost/range/adaptor/transformed.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -24,7 +22,7 @@ std::vector<value_set> value_set_analysis_result::determine_value_sets(
     boost::any_range<const expression&, boost::forward_traversal_tag> expressions,
     const expression& context) const
 {
-    QBB_ASSERT(axiom_analysis_ != nullptr, "Invalid value_set_analysis_result object.");
+    QUBUS_ASSERT(axiom_analysis_ != nullptr, "Invalid value_set_analysis_result object.");
 
     auto ctx = std::make_shared<affine_expr_context>([this, &context](const expression& expr) {
         return task_invariants_analysis_->is_invariant(expr, context);
@@ -99,7 +97,7 @@ value_set value_set_analysis_result::determine_value_set(const expression& expr,
 
     auto value_sets = determine_value_sets(expressions | transformed(unwrap_reference()), context);
 
-    QBB_ASSERT(value_sets.size() == 1, "Expecting only one value set.");
+    QUBUS_ASSERT(value_sets.size() == 1, "Expecting only one value set.");
 
     return value_sets[0];
 }
@@ -119,5 +117,4 @@ std::vector<analysis_id> value_set_analysis_pass::required_analyses() const
 }
 
 QUBUS_REGISTER_ANALYSIS_PASS(value_set_analysis_pass);
-}
 }

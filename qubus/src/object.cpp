@@ -1,30 +1,28 @@
-#include <qbb/qubus/object.hpp>
+#include <qubus/object.hpp>
 
-#include <qbb/qubus/local_runtime.hpp>
+#include <qubus/local_runtime.hpp>
 
 #include <utility>
 
-using server_type = hpx::components::component<qbb::qubus::object_server>;
-HPX_REGISTER_COMPONENT(server_type, qbb_qubus_object_server);
+using server_type = hpx::components::component<qubus::object_server>;
+HPX_REGISTER_COMPONENT(server_type, qubus_object_server);
 
-using object_type_action = qbb::qubus::object_server::object_type_action;
+using object_type_action = qubus::object_server::object_type_action;
 HPX_REGISTER_ACTION_DECLARATION(object_type_action, qubus_object_server_type_action);
 HPX_REGISTER_ACTION(object_type_action, qubus_object_server_type_action);
 
-using acquire_read_access_action = qbb::qubus::object_server::acquire_read_access_action;
+using acquire_read_access_action = qubus::object_server::acquire_read_access_action;
 HPX_REGISTER_ACTION_DECLARATION(acquire_read_access_action, qubus_object_server_acquire_read_access_action);
 HPX_REGISTER_ACTION(acquire_read_access_action, qubus_object_server_acquire_read_access_action);
 
-using acquire_write_access_action = qbb::qubus::object_server::acquire_write_access_action;
+using acquire_write_access_action = qubus::object_server::acquire_write_access_action;
 HPX_REGISTER_ACTION_DECLARATION(acquire_write_access_action, qubus_object_server_acquire_write_access_action);
 HPX_REGISTER_ACTION(acquire_write_access_action, qubus_object_server_acquire_write_access_action);
 
-using components_action = qbb::qubus::object_server::components_action;
+using components_action = qubus::object_server::components_action;
 HPX_REGISTER_ACTION_DECLARATION(components_action, qubus_object_server_components_action);
 HPX_REGISTER_ACTION(components_action, qubus_object_server_components_action);
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -109,6 +107,5 @@ hpx::future<token> object::acquire_write_access()
 std::vector<object> object::components() const
 {
     return hpx::async<object_server::components_action>(this->get_id()).get();
-}
 }
 }

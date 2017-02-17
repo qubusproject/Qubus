@@ -1,9 +1,7 @@
-#include <qbb/qubus/IR/spawn_expr.hpp>
+#include <qubus/IR/spawn_expr.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -19,7 +17,7 @@ const function_declaration& spawn_expr::spawned_plan() const
 
 spawn_expr* spawn_expr::clone() const
 {
-    return new spawn_expr(spawned_plan_, qbb::qubus::clone(arguments_));
+    return new spawn_expr(spawned_plan_, qubus::clone(arguments_));
 }
 
 const expression& spawn_expr::child(std::size_t index) const
@@ -53,6 +51,5 @@ bool operator==(const spawn_expr& lhs, const spawn_expr& rhs)
 bool operator!=(const spawn_expr& lhs, const spawn_expr& rhs)
 {
     return !(lhs == rhs);
-}
 }
 }

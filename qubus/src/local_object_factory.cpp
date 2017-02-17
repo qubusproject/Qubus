@@ -1,36 +1,34 @@
-#include <qbb/qubus/local_object_factory.hpp>
+#include <qubus/local_object_factory.hpp>
 
-#include <qbb/qubus/host_object_views.hpp>
+#include <qubus/host_object_views.hpp>
 
-#include <qbb/qubus/hpx_utils.hpp>
+#include <qubus/hpx_utils.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/integers.hpp>
-#include <qbb/util/unused.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/integers.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <type_traits>
 #include <utility>
 
-using server_type = hpx::components::component<qbb::qubus::local_object_factory_server>;
-HPX_REGISTER_COMPONENT(server_type, qbb_qubus_local_object_factory_server);
+using server_type = hpx::components::component<qubus::local_object_factory_server>;
+HPX_REGISTER_COMPONENT(server_type, qubus_local_object_factory_server);
 
-using create_scalar_action = qbb::qubus::local_object_factory_server::create_scalar_action;
+using create_scalar_action = qubus::local_object_factory_server::create_scalar_action;
 HPX_REGISTER_ACTION_DECLARATION(create_scalar_action,
                                 qubus_local_object_factory_create_scalar_action);
 HPX_REGISTER_ACTION(create_scalar_action, qubus_local_object_factory_create_scalar_action);
 
-using create_array_action = qbb::qubus::local_object_factory_server::create_array_action;
+using create_array_action = qubus::local_object_factory_server::create_array_action;
 HPX_REGISTER_ACTION_DECLARATION(create_array_action,
                                 qubus_local_object_factory_create_array_action);
 HPX_REGISTER_ACTION(create_array_action, qubus_local_object_factory_create_array_action);
 
-using create_struct_action = qbb::qubus::local_object_factory_server::create_struct_action;
+using create_struct_action = qubus::local_object_factory_server::create_struct_action;
 HPX_REGISTER_ACTION_DECLARATION(create_struct_action,
                                 qubus_local_object_factory_create_struct_action);
 HPX_REGISTER_ACTION(create_struct_action, qubus_local_object_factory_create_struct_action);
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -41,7 +39,7 @@ local_object_factory_server::local_object_factory_server(local_address_space* ad
 
 hpx::future<hpx::id_type> local_object_factory_server::create_scalar(type data_type)
 {
-    QBB_ASSERT(data_type.is_primitive(), "The type of scalars has to be primitive.");
+    QUBUS_ASSERT(data_type.is_primitive(), "The type of scalars has to be primitive.");
 
     object obj = new_here<object_server>(data_type);
 
@@ -126,6 +124,5 @@ object local_object_factory::create_struct(type struct_type, std::vector<object>
 {
     return hpx::async<local_object_factory_server::create_struct_action>(
         this->get_id(), std::move(struct_type), std::move(members));
-}
 }
 }

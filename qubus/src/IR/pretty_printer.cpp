@@ -1,19 +1,19 @@
-#include <qbb/qubus/IR/pretty_printer.hpp>
+#include <qubus/IR/pretty_printer.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/IR/type_inference.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/IR/type_inference.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/qtl/pattern/all.hpp>
+#include <qubus/qtl/pattern/all.hpp>
 
-#include <qbb/util/handle.hpp>
-#include <qbb/util/multi_method.hpp>
-#include <qbb/util/unique_name_generator.hpp>
+#include <qubus/util/handle.hpp>
+#include <qubus/util/multi_method.hpp>
+#include <qubus/util/unique_name_generator.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/unreachable.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/unreachable.hpp>
 
 #include <boost/optional.hpp>
 
@@ -23,8 +23,6 @@
 #include <mutex>
 #include <vector>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -39,7 +37,7 @@ public:
     pretty_printer_context(const pretty_printer_context&) = delete;
     pretty_printer_context& operator=(const pretty_printer_context&) = delete;
 
-    const std::string& get_name_for_handle(const qbb::util::handle& h) const
+    const std::string& get_name_for_handle(const util::handle& h) const
     {
         auto iter = symbol_table_.find(h);
 
@@ -73,8 +71,8 @@ public:
     }
 
 private:
-    mutable std::map<qbb::util::handle, std::string> symbol_table_;
-    qbb::util::unique_name_generator name_generator;
+    mutable std::map<util::handle, std::string> symbol_table_;
+    util::unique_name_generator name_generator;
     std::vector<function_declaration> functions_to_print_;
 };
 
@@ -115,8 +113,8 @@ const char* translate_binary_op_tag(binary_op_tag tag)
     case binary_op_tag::logical_or:
         return "||";
     default:
-        QBB_ASSERT(false, "default case should never be reached");
-        QBB_UNREACHABLE();
+        QUBUS_ASSERT(false, "default case should never be reached");
+        QUBUS_UNREACHABLE();
     }
 }
 
@@ -131,8 +129,8 @@ const char* translate_unary_op_tag(unary_op_tag tag)
     case unary_op_tag::logical_not:
         return "*";
     default:
-        QBB_ASSERT(false, "default case should never be reached");
-        QBB_UNREACHABLE();
+        QUBUS_ASSERT(false, "default case should never be reached");
+        QUBUS_UNREACHABLE();
     }
 }
 
@@ -176,7 +174,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
     pattern::variable<double> dval;
     pattern::variable<float> fval;
-    pattern::variable<qbb::util::index_t> ival;
+    pattern::variable<util::index_t> ival;
 
     pattern::variable<variable_declaration> decl;
     pattern::variable<function_declaration> plan;
@@ -746,6 +744,5 @@ void pretty_print(const function_declaration& decl, bool print_types)
 void pretty_print_type(const type& t)
 {
     print_type(t);
-}
 }
 }

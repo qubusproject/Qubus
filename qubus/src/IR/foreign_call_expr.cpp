@@ -1,11 +1,9 @@
-#include <qbb/qubus/IR/foreign_call_expr.hpp>
+#include <qubus/IR/foreign_call_expr.hpp>
 
-#include <qbb/util/unused.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -26,7 +24,7 @@ const foreign_computelet& foreign_call_expr::computelet() const
 
 foreign_call_expr* foreign_call_expr::clone() const
 {
-    return new foreign_call_expr(computelet_, qbb::qubus::clone(args_));
+    return new foreign_call_expr(computelet_, qubus::clone(args_));
 }
 
 const expression& foreign_call_expr::child(std::size_t index) const
@@ -52,7 +50,7 @@ std::unique_ptr<expression> foreign_call_expr::substitute_subexpressions(
     return std::make_unique<foreign_call_expr>(computelet_, std::move(new_children));
 }
 
-bool operator==(const foreign_call_expr& QBB_UNUSED(lhs), const foreign_call_expr& QBB_UNUSED(rhs))
+bool operator==(const foreign_call_expr& QUBUS_UNUSED(lhs), const foreign_call_expr& QUBUS_UNUSED(rhs))
 {
     return false;
 }
@@ -62,5 +60,4 @@ bool operator!=(const foreign_call_expr& lhs, const foreign_call_expr& rhs)
     return !(lhs == rhs);
 }
 
-}
 }

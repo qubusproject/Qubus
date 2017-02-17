@@ -1,7 +1,7 @@
 #include <hpx/config.hpp>
 
-#include <qbb/qubus/qubus.hpp>
-#include <qbb/qubus/qtl/all.hpp>
+#include <qubus/qubus.hpp>
+#include <qubus/qtl/all.hpp>
 
 #include <hpx/hpx_init.hpp>
 
@@ -50,11 +50,11 @@ double run_benchmark(F f, OnStop on_stop)
     return avg_time;
 }
 
-using namespace qbb::qubus;
+using namespace qubus;
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     std::ofstream bench_data("bench_data.dat");
 

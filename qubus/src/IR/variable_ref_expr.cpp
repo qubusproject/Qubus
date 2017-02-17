@@ -1,10 +1,8 @@
-#include <qbb/qubus/IR/variable_ref_expr.hpp>
+#include <qubus/IR/variable_ref_expr.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/unused.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/unused.hpp>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -22,7 +20,7 @@ variable_ref_expr* variable_ref_expr::clone() const
     return new variable_ref_expr(declaration_);
 }
 
-const expression& variable_ref_expr::child(std::size_t QBB_UNUSED(index)) const
+const expression& variable_ref_expr::child(std::size_t QUBUS_UNUSED(index)) const
 {
     throw 0;
 }
@@ -49,6 +47,5 @@ bool operator==(const variable_ref_expr& lhs, const variable_ref_expr& rhs)
 bool operator!=(const variable_ref_expr& lhs, const variable_ref_expr& rhs)
 {
     return !(lhs == rhs);
-}
 }
 }

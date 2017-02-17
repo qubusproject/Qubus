@@ -1,7 +1,5 @@
-#include <qbb/qubus/isl/flow.hpp>
+#include <qubus/isl/flow.hpp>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -121,7 +119,6 @@ int compute_flow(union_map sink, union_map must_source, union_map may_source, un
     may_no_source = union_map(may_no_source_);
 
     return result;
-}
 }
 }
 }

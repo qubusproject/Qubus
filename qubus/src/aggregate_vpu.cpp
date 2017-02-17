@@ -1,11 +1,9 @@
-#include <qbb/qubus/aggregate_vpu.hpp>
+#include <qubus/aggregate_vpu.hpp>
 
 #include <boost/range/adaptor/indirected.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -79,6 +77,5 @@ aggregate_vpu::try_estimate_execution_time(const computelet& c, const execution_
             });
 
     return estimate;
-}
 }
 }

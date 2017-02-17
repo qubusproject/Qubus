@@ -1,14 +1,12 @@
-#include <qbb/qubus/make_implicit_conversions_explicit.hpp>
+#include <qubus/make_implicit_conversions_explicit.hpp>
 
-#include <qbb/qubus/IR/type_inference.hpp>
+#include <qubus/IR/type_inference.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
+#include <qubus/IR/qir.hpp>
 
-#include <qbb/qubus/pattern/core.hpp>
-#include <qbb/qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -100,6 +98,5 @@ function_declaration make_implicit_conversions_explicit(function_declaration dec
     decl.substitute_body(make_implicit_conversions_explicit(decl.body()));
     
     return decl;
-}
 }
 }

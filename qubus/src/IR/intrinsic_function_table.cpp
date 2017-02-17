@@ -1,4 +1,4 @@
-#include <qbb/qubus/IR/intrinsic_function_table.hpp>
+#include <qubus/IR/intrinsic_function_table.hpp>
 
 #include <algorithm>
 #include <map>
@@ -6,8 +6,6 @@
 #include <mutex>
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -161,6 +159,5 @@ type lookup_intrinsic_result_type(const std::string& name, const std::vector<typ
     std::call_once(intrinsic_function_table_init_flag, init_intrinsic_function_table);
 
     return intrinsic_function_table_->lookup_result_type(name, arg_types);
-}
 }
 }

@@ -1,9 +1,7 @@
-#include <qbb/qubus/isl/map.hpp>
+#include <qubus/isl/map.hpp>
 
-#include <qbb/qubus/isl/context.hpp>
+#include <qubus/isl/context.hpp>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -583,6 +581,5 @@ isl_stat add_map(isl_map* m, void* user) noexcept
 }
 }
 
-}
 }
 }

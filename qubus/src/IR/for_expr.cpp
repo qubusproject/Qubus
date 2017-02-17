@@ -1,13 +1,11 @@
-#include <qbb/qubus/IR/for_expr.hpp>
+#include <qubus/IR/for_expr.hpp>
 
-#include <qbb/qubus/IR/literal_expr.hpp>
+#include <qubus/IR/literal_expr.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -77,9 +75,9 @@ const expression& for_expr::increment() const
 
 for_expr* for_expr::clone() const
 {
-    return new for_expr(order_, loop_index_, qbb::qubus::clone(*lower_bound_),
-                        qbb::qubus::clone(*upper_bound_), qbb::qubus::clone(*increment_),
-                        qbb::qubus::clone(*body_));
+    return new for_expr(order_, loop_index_, qubus::clone(*lower_bound_),
+                        qubus::clone(*upper_bound_), qubus::clone(*increment_),
+                        qubus::clone(*body_));
 }
 
 const expression& for_expr::child(std::size_t index) const
@@ -132,6 +130,5 @@ bool operator==(const for_expr& lhs, const for_expr& rhs)
 bool operator!=(const for_expr& lhs, const for_expr& rhs)
 {
     return !(lhs == rhs);
-}
 }
 }

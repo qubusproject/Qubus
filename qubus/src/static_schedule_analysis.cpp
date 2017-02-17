@@ -1,30 +1,28 @@
-#include <qbb/qubus/static_schedule_analysis.hpp>
+#include <qubus/static_schedule_analysis.hpp>
 
-#include <qbb/qubus/task_invariants_analysis.hpp>
+#include <qubus/task_invariants_analysis.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/IR/type_inference.hpp>
+#include <qubus/IR/type_inference.hpp>
 
-#include <qbb/qubus/isl/affine_expr.hpp>
-#include <qbb/qubus/isl/ast_builder.hpp>
-#include <qbb/qubus/isl/constraint.hpp>
-#include <qbb/qubus/isl/flow.hpp>
-#include <qbb/qubus/isl/map.hpp>
-#include <qbb/qubus/isl/multi_affine_expr.hpp>
-#include <qbb/qubus/isl/printer.hpp>
-#include <qbb/qubus/isl/schedule.hpp>
-#include <qbb/qubus/isl/set.hpp>
+#include <qubus/isl/affine_expr.hpp>
+#include <qubus/isl/ast_builder.hpp>
+#include <qubus/isl/constraint.hpp>
+#include <qubus/isl/flow.hpp>
+#include <qubus/isl/map.hpp>
+#include <qubus/isl/multi_affine_expr.hpp>
+#include <qubus/isl/printer.hpp>
+#include <qubus/isl/schedule.hpp>
+#include <qubus/isl/set.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/unreachable.hpp>
-#include <qbb/util/unused.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/unreachable.hpp>
+#include <qubus/util/unused.hpp>
 
 #include <functional>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -210,7 +208,7 @@ construct_schedule(std::unordered_map<const expression*, static_schedule>& sched
                        auto lower_bound_constraint = greater_equal(iterator, *lower_bound);
                        auto upper_bound_constraint = less(iterator, *upper_bound);
 
-                       QBB_ASSERT(is_const(*increment),
+                       QUBUS_ASSERT(is_const(*increment),
                                   "The increment needs to be constant to form a static schedule.");
                        auto increment_constraint =
                            equal_to(iterator % *increment, ctx.affine_ctx().create_literal(0));
@@ -245,13 +243,13 @@ construct_schedule(std::unordered_map<const expression*, static_schedule>& sched
 
                                    auto sched_space = stmt_sched.get_space();
 
-                                   QBB_ASSERT(is_variable(iterator),
+                                   QUBUS_ASSERT(is_variable(iterator),
                                               "The iterator should be a variable.");
 
                                    auto iter_pos = sched_space.find_dim_by_name(
                                        isl_dim_in, get_variable_name(iterator));
 
-                                   QBB_ASSERT(iter_pos >= 0, "Invalid iteration position.");
+                                   QUBUS_ASSERT(iter_pos >= 0, "Invalid iteration position.");
 
                                    auto c = isl::constraint::equality(sched_space);
                                    c.set_coefficient(isl_dim_in, iter_pos, 1);
@@ -453,7 +451,7 @@ construct_schedule(std::unordered_map<const expression*, static_schedule>& sched
                            {
                                auto child_count = domain_seq.size();
 
-                               QBB_ASSERT(child_count == construct_children.size(),
+                               QUBUS_ASSERT(child_count == construct_children.size(),
                                           "Wrong number of constructors.");
 
                                auto node = [&] {
@@ -464,7 +462,7 @@ construct_schedule(std::unordered_map<const expression*, static_schedule>& sched
                                    case execution_order::unordered:
                                        return insert_set(pos, domain_seq);
                                    default:
-                                       QBB_UNREACHABLE();
+                                       QUBUS_UNREACHABLE();
                                    }
                                }();
 
@@ -552,5 +550,4 @@ std::vector<analysis_id> static_schedule_analysis_pass::required_analyses() cons
 }
 
 QUBUS_REGISTER_ANALYSIS_PASS(static_schedule_analysis_pass);
-}
 }

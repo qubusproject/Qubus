@@ -1,11 +1,9 @@
-#include <qbb/qubus/IR/if_expr.hpp>
+#include <qubus/IR/if_expr.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -47,12 +45,12 @@ if_expr* if_expr::clone() const
 {
     if (else_branch_)
     {
-        return new if_expr(qbb::qubus::clone(*condition_), qbb::qubus::clone(*then_branch_),
-                           qbb::qubus::clone(**else_branch_));
+        return new if_expr(qubus::clone(*condition_), qubus::clone(*then_branch_),
+                           qubus::clone(**else_branch_));
     }
     else
     {
-        return new if_expr(qbb::qubus::clone(*condition_), qbb::qubus::clone(*then_branch_));
+        return new if_expr(qubus::clone(*condition_), qubus::clone(*then_branch_));
     }
 }
 
@@ -121,6 +119,5 @@ bool operator==(const if_expr& lhs, const if_expr& rhs)
 bool operator!=(const if_expr& lhs, const if_expr& rhs)
 {
     return !(lhs == rhs);
-}
 }
 }

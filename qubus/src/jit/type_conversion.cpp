@@ -1,21 +1,19 @@
-#include <qbb/qubus/jit/type_conversion.hpp>
+#include <qubus/jit/type_conversion.hpp>
 
-#include <qbb/qubus/jit/compiler.hpp>
+#include <qubus/jit/compiler.hpp>
 
-#include <qbb/qubus/jit/load_store.hpp>
-#include <qbb/qubus/jit/entry_block_alloca.hpp>
+#include <qubus/jit/load_store.hpp>
+#include <qubus/jit/entry_block_alloca.hpp>
 
-#include <qbb/qubus/pattern/core.hpp>
-#include <qbb/qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
 
-#include <qbb/qubus/IR/type_inference.hpp>
+#include <qubus/IR/type_inference.hpp>
 
 #include <llvm/IR/Instructions.h>
 #include <llvm/IR/Value.h>
 #include <llvm/IR/Type.h>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -207,7 +205,6 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
     store_to_ref(result_var_ref, result, env, ctx);
 
     return result_var_ref;
-}
 }
 }
 }

@@ -1,7 +1,5 @@
-#include <qbb/qubus/isl/ast.hpp>
+#include <qubus/isl/ast.hpp>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -206,7 +204,6 @@ isl_stat add_child(isl_ast_node* child, void* user) noexcept
     children.emplace_back(child);
 
     return isl_stat_ok;
-}
 }
 }
 }

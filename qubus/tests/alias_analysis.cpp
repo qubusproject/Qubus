@@ -1,10 +1,10 @@
-#include <qbb/qubus/qubus.hpp>
+#include <qubus/qubus.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/alias_analysis.hpp>
-#include <qbb/qubus/variable_access_analysis.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/alias_analysis.hpp>
+#include <qubus/variable_access_analysis.hpp>
 
-#include <qbb/qubus/IR/pretty_printer.hpp>
+#include <qubus/IR/pretty_printer.hpp>
 
 #include <hpx/hpx_init.hpp>
 
@@ -12,7 +12,7 @@
 
 TEST(alias_analysis, basic_alias_analysis)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     pass_resource_manager resource_manager;
     analysis_manager analysis_man(resource_manager);
@@ -26,32 +26,32 @@ TEST(alias_analysis, basic_alias_analysis)
     auto A = variable_ref(variable_declaration(types::integer{}));
     auto B = variable_ref(variable_declaration(types::integer{}));
 
-    EXPECT_EQ(result.alias(qbb::qubus::access(*A), qbb::qubus::access(*A), false),
+    EXPECT_EQ(result.alias(qubus::access(*A), qubus::access(*A), false),
               alias_result::must_alias);
 
-    EXPECT_EQ(result.alias(qbb::qubus::access(*B), qbb::qubus::access(*B), false),
+    EXPECT_EQ(result.alias(qubus::access(*B), qubus::access(*B), false),
               alias_result::must_alias);
 
-    EXPECT_EQ(result.alias(qbb::qubus::access(*A), qbb::qubus::access(*B), false),
+    EXPECT_EQ(result.alias(qubus::access(*A), qubus::access(*B), false),
               alias_result::noalias);
 
     auto A_memb1 = member_access(clone(*A), "memb1");
     auto A_memb2 = member_access(clone(*A), "memb2");
     auto B_memb = member_access(clone(*B), "memb");
 
-    EXPECT_EQ(result.alias(qbb::qubus::access(*A_memb1), qbb::qubus::access(*A_memb2), false),
+    EXPECT_EQ(result.alias(qubus::access(*A_memb1), qubus::access(*A_memb2), false),
               alias_result::noalias);
 
-    EXPECT_EQ(result.alias(qbb::qubus::access(*B_memb), qbb::qubus::access(*B_memb), false),
+    EXPECT_EQ(result.alias(qubus::access(*B_memb), qubus::access(*B_memb), false),
               alias_result::must_alias);
 
-    EXPECT_EQ(result.alias(qbb::qubus::access(*A_memb1), qbb::qubus::access(*B_memb), false),
+    EXPECT_EQ(result.alias(qubus::access(*A_memb1), qubus::access(*B_memb), false),
               alias_result::noalias);
 }
 
 TEST(alias_analysis, array_alias_analysis)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     pass_resource_manager resource_manager;
     analysis_manager analysis_man(resource_manager);
@@ -87,7 +87,7 @@ TEST(alias_analysis, array_alias_analysis)
 
 TEST(alias_analysis, slice_alias_analysis)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     pass_resource_manager resource_manager;
     analysis_manager analysis_man(resource_manager);
@@ -135,7 +135,7 @@ TEST(alias_analysis, slice_alias_analysis)
 
 TEST(alias_analysis, slice_with_overlap_alias_analysis)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     pass_resource_manager resource_manager;
     analysis_manager analysis_man(resource_manager);
@@ -184,7 +184,7 @@ TEST(alias_analysis, slice_with_overlap_alias_analysis)
 
 TEST(alias_analysis, 2d_slice_alias_analysis)
 {
-    using namespace qbb::qubus;
+    using namespace qubus;
 
     pass_resource_manager resource_manager;
     analysis_manager analysis_man(resource_manager);
@@ -241,7 +241,7 @@ TEST(alias_analysis, 2d_slice_alias_analysis)
 
 int hpx_main(int argc, char** argv)
 {
-    qbb::qubus::init(argc, argv);
+    qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
 

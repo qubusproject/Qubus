@@ -1,4 +1,4 @@
-#include <qbb/util/dll.hpp>
+#include <qubus/util/dll.hpp>
 
 #include <array>
 
@@ -10,7 +10,7 @@
 #include <unistd.h>
 #endif
 
-namespace qbb
+namespace qubus
 {
 namespace util
 {

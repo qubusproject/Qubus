@@ -1,19 +1,17 @@
-#include <qbb/qubus/affine_constraints.hpp>
+#include <qubus/affine_constraints.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/isl/value.hpp>
+#include <qubus/isl/value.hpp>
 
-#include <qbb/util/assert.hpp>
-#include <qbb/util/unreachable.hpp>
+#include <qubus/util/assert.hpp>
+#include <qubus/util/unreachable.hpp>
 
 #include <algorithm>
 #include <functional>
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -55,7 +53,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar& name_;
     }
@@ -145,7 +143,7 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
         ar& name_;
     }
@@ -235,9 +233,9 @@ public:
     }
 
     template <typename Archive>
-    void serialize(Archive& ar, unsigned QBB_UNUSED(version))
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
     {
-        QBB_UNREACHABLE_BECAUSE("This type should never participate in serialization.");
+        QUBUS_UNREACHABLE_BECAUSE("This type should never participate in serialization.");
     }
 
     HPX_SERIALIZATION_POLYMORPHIC(affine_expr_wrapper);
@@ -350,12 +348,12 @@ isl::affine_expr convert_to_isl_aff_expr(const expression& expr, const isl::spac
                                 return lhs_expr / rhs_expr;
                             case binary_op_tag::modulus:
                             {
-                                QBB_ASSERT(is_cst(rhs_expr), "The right-hand side has to be a literal value.");
+                                QUBUS_ASSERT(is_cst(rhs_expr), "The right-hand side has to be a literal value.");
 
                                 return lhs_expr % rhs_expr.constant_value();
                             }
                             default:
-                                QBB_UNREACHABLE();
+                                QUBUS_UNREACHABLE();
                             }
                         })
                  .case_(unary_operator(utag, arg),
@@ -369,7 +367,7 @@ isl::affine_expr convert_to_isl_aff_expr(const expression& expr, const isl::spac
                             case unary_op_tag::negate:
                                 return -arg_expr;
                             default:
-                                QBB_UNREACHABLE();
+                                QUBUS_UNREACHABLE();
                             }
                         })
                  .case_(integer_literal(ival),
@@ -383,14 +381,14 @@ isl::affine_expr convert_to_isl_aff_expr(const expression& expr, const isl::spac
                         [&] {
                             int pos = s.find_dim_by_name(isl_dim_param, name.get());
 
-                            QBB_ASSERT(pos >= 0, "Invalid parameter.");
+                            QUBUS_ASSERT(pos >= 0, "Invalid parameter.");
 
                             return isl::affine_expr(s, isl_dim_param, pos);
                         })
                  .case_(affine_variable(name), [&] {
                      int pos = s.find_dim_by_name(isl_dim_set, name.get());
 
-                     QBB_ASSERT(pos >= 0, "Invalid variable.");
+                     QUBUS_ASSERT(pos >= 0, "Invalid variable.");
 
                      return isl::affine_expr(s, isl_dim_set, pos);
                  });
@@ -561,7 +559,7 @@ isl::affine_expr affine_expr::convert(isl::context& isl_ctx) const
 
 affine_expr operator+(affine_expr lhs, affine_expr rhs)
 {
-    QBB_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
+    QUBUS_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
 
     auto new_expr = std::move(lhs.expr_) + std::move(rhs.expr_);
 
@@ -570,7 +568,7 @@ affine_expr operator+(affine_expr lhs, affine_expr rhs)
 
 affine_expr operator-(affine_expr lhs, affine_expr rhs)
 {
-    QBB_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
+    QUBUS_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
 
     auto new_expr = std::move(lhs.expr_) - std::move(rhs.expr_);
 
@@ -579,10 +577,10 @@ affine_expr operator-(affine_expr lhs, affine_expr rhs)
 
 affine_expr operator*(affine_expr lhs, affine_expr rhs)
 {
-    QBB_ASSERT(is_const(lhs) || is_const(rhs),
+    QUBUS_ASSERT(is_const(lhs) || is_const(rhs),
                "At least one of the operands needs to be constant to form an affine expression.");
 
-    QBB_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
+    QUBUS_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
 
     auto new_expr = std::move(lhs.expr_) * std::move(rhs.expr_);
 
@@ -591,9 +589,9 @@ affine_expr operator*(affine_expr lhs, affine_expr rhs)
 
 affine_expr operator/(affine_expr lhs, affine_expr rhs)
 {
-    QBB_ASSERT(is_const(rhs), "The divisor needs to be constant to form an affine expression");
+    QUBUS_ASSERT(is_const(rhs), "The divisor needs to be constant to form an affine expression");
 
-    QBB_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
+    QUBUS_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
 
     auto new_expr = std::move(lhs.expr_) / std::move(rhs.expr_);
 
@@ -602,9 +600,9 @@ affine_expr operator/(affine_expr lhs, affine_expr rhs)
 
 affine_expr operator%(affine_expr lhs, affine_expr rhs)
 {
-    QBB_ASSERT(is_const(rhs), "The divisor needs to be constant to form an affine expression");
+    QUBUS_ASSERT(is_const(rhs), "The divisor needs to be constant to form an affine expression");
 
-    QBB_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
+    QUBUS_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
 
     auto new_expr = std::move(lhs.expr_) % std::move(rhs.expr_);
 
@@ -805,7 +803,7 @@ isl::set affine_constraint::convert(isl::context& isl_ctx) const
 
 affine_constraint operator&&(affine_constraint lhs, affine_constraint rhs)
 {
-    QBB_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
+    QUBUS_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
 
     auto new_expr = logical_and(std::move(lhs.expr_), std::move(rhs.expr_));
 
@@ -814,7 +812,7 @@ affine_constraint operator&&(affine_constraint lhs, affine_constraint rhs)
 
 affine_constraint operator||(affine_constraint lhs, affine_constraint rhs)
 {
-    QBB_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
+    QUBUS_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
 
     auto new_expr = logical_or(std::move(lhs.expr_), std::move(rhs.expr_));
 
@@ -830,7 +828,7 @@ affine_constraint operator!(affine_constraint arg)
 
 affine_constraint equal_to(affine_expr lhs, affine_expr rhs)
 {
-    QBB_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
+    QUBUS_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
 
     auto new_expr = equal_to(std::make_unique<affine_expr_wrapper>(std::move(lhs)),
                              std::make_unique<affine_expr_wrapper>(std::move(rhs)));
@@ -840,7 +838,7 @@ affine_constraint equal_to(affine_expr lhs, affine_expr rhs)
 
 affine_constraint not_equal_to(affine_expr lhs, affine_expr rhs)
 {
-    QBB_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
+    QUBUS_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
 
     auto new_expr = not_equal_to(std::make_unique<affine_expr_wrapper>(std::move(lhs)),
                                  std::make_unique<affine_expr_wrapper>(std::move(rhs)));
@@ -850,7 +848,7 @@ affine_constraint not_equal_to(affine_expr lhs, affine_expr rhs)
 
 affine_constraint less(affine_expr lhs, affine_expr rhs)
 {
-    QBB_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
+    QUBUS_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
 
     auto new_expr = less(std::make_unique<affine_expr_wrapper>(std::move(lhs)),
                          std::make_unique<affine_expr_wrapper>(std::move(rhs)));
@@ -860,7 +858,7 @@ affine_constraint less(affine_expr lhs, affine_expr rhs)
 
 affine_constraint greater(affine_expr lhs, affine_expr rhs)
 {
-    QBB_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
+    QUBUS_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
 
     auto new_expr = greater(std::make_unique<affine_expr_wrapper>(std::move(lhs)),
                             std::make_unique<affine_expr_wrapper>(std::move(rhs)));
@@ -870,7 +868,7 @@ affine_constraint greater(affine_expr lhs, affine_expr rhs)
 
 affine_constraint less_equal(affine_expr lhs, affine_expr rhs)
 {
-    QBB_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
+    QUBUS_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
 
     auto new_expr = less_equal(std::make_unique<affine_expr_wrapper>(std::move(lhs)),
                                std::make_unique<affine_expr_wrapper>(std::move(rhs)));
@@ -880,7 +878,7 @@ affine_constraint less_equal(affine_expr lhs, affine_expr rhs)
 
 affine_constraint greater_equal(affine_expr lhs, affine_expr rhs)
 {
-    QBB_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
+    QUBUS_ASSERT(lhs.ctx_ == rhs.ctx_, "The context of lhs and rhs should be identical.");
 
     auto new_expr = greater_equal(std::make_unique<affine_expr_wrapper>(std::move(lhs)),
                                   std::make_unique<affine_expr_wrapper>(std::move(rhs)));
@@ -1192,10 +1190,10 @@ std::unique_ptr<expression> convert_isl_ast_expr_to_qir(const isl::ast_expr& exp
             return logical_or(convert_isl_ast_expr_to_qir(expr.get_arg(0), ctx),
                               convert_isl_ast_expr_to_qir(expr.get_arg(1), ctx));
         default:
-            QBB_UNREACHABLE_BECAUSE("Invalid operation type.");
+            QUBUS_UNREACHABLE_BECAUSE("Invalid operation type.");
         };
     default:
-        QBB_UNREACHABLE_BECAUSE("Invalid expression type.");
+        QUBUS_UNREACHABLE_BECAUSE("Invalid expression type.");
     }
 }
 
@@ -1309,5 +1307,4 @@ std::unique_ptr<expression> convert_isl_ast_expr_to_qir(const isl::ast_expr& exp
             throw 0; // TODO: Unknown node type
     }
 }*/
-}
 }

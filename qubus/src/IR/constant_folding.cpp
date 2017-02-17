@@ -1,16 +1,14 @@
-#include <qbb/qubus/IR/constant_folding.hpp>
+#include <qubus/IR/constant_folding.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/IR/type_inference.hpp>
+#include <qubus/IR/type_inference.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
+#include <qubus/IR/qir.hpp>
 
 #include <stack>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -93,6 +91,5 @@ std::unique_ptr<expression> fold_constant_expressions(const expression& expr)
     auto new_expr = expr.substitute_subexpressions(std::move(simplified_children));
 
     return fold_impl(*new_expr);
-}
 }
 }

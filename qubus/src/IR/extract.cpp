@@ -1,23 +1,21 @@
-#include <qbb/qubus/IR/extract.hpp>
+#include <qubus/IR/extract.hpp>
 
-#include <qbb/qubus/IR/deduce_expression_environment.hpp>
+#include <qubus/IR/deduce_expression_environment.hpp>
 
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
+#include <qubus/IR/qir.hpp>
 
 #include <boost/optional.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
-#include <qbb/qubus/IR/pretty_printer.hpp>
+#include <qubus/IR/pretty_printer.hpp>
 
 #include <map>
 #include <vector>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -65,7 +63,7 @@ std::unique_ptr<expression> extract_expr_as_function(const expression& expr,
 
     auto body = substitite_env_vars(expr, expr_env.parameters(), params);
 
-    QBB_ASSERT(params.size() == expr_env.parameters().size(), "");
+    QUBUS_ASSERT(params.size() == expr_env.parameters().size(), "");
 
     std::vector<variable_declaration> in_params;
     std::vector<variable_declaration> out_params;
@@ -109,6 +107,5 @@ std::unique_ptr<expression> extract_expr_as_function(const expression& expr,
     args.push_back(std::move(result));
 
     return spawn(std::move(extracted_function), std::move(args));
-}
 }
 }

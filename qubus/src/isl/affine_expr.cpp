@@ -1,7 +1,5 @@
-#include <qbb/qubus/isl/affine_expr.hpp>
+#include <qubus/isl/affine_expr.hpp>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -138,6 +136,5 @@ bool is_cst(const affine_expr& aff)
     return isl_aff_is_cst(aff.native_handle());
 }
 
-}
 }
 }

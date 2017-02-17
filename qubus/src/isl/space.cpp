@@ -1,9 +1,7 @@
-#include <qbb/qubus/isl/space.hpp>
+#include <qubus/isl/space.hpp>
 
-#include <qbb/qubus/isl/context.hpp>
+#include <qubus/isl/context.hpp>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace isl
@@ -110,7 +108,6 @@ space drop_all_dims(space s, isl_dim_type type)
 space align_params(space s, space model)
 {
     return space(isl_space_align_params(s.release(), model.release()));
-}
 }
 }
 }

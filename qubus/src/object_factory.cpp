@@ -1,27 +1,25 @@
-#include <qbb/qubus/object_factory.hpp>
+#include <qubus/object_factory.hpp>
 
-#include <qbb/util/integers.hpp>
+#include <qubus/util/integers.hpp>
 
 #include <utility>
 
-using server_type = hpx::components::component<qbb::qubus::object_factory_server>;
-HPX_REGISTER_COMPONENT(server_type, qbb_qubus_object_factory_server);
+using server_type = hpx::components::component<qubus::object_factory_server>;
+HPX_REGISTER_COMPONENT(server_type, qubus_object_factory_server);
 
-using create_scalar_action = qbb::qubus::object_factory_server::create_scalar_action;
+using create_scalar_action = qubus::object_factory_server::create_scalar_action;
 HPX_REGISTER_ACTION_DECLARATION(create_scalar_action, qubus_object_factory_create_scalar_action);
 HPX_REGISTER_ACTION(create_scalar_action, qubus_object_factory_create_scalar_action);
 
-using create_array_action = qbb::qubus::object_factory_server::create_array_action;
+using create_array_action = qubus::object_factory_server::create_array_action;
 HPX_REGISTER_ACTION_DECLARATION(create_array_action, qubus_object_factory_create_array_action);
 HPX_REGISTER_ACTION(create_array_action, qubus_object_factory_create_array_action);
 
-using create_sparse_tensor_action = qbb::qubus::object_factory_server::create_sparse_tensor_action;
+using create_sparse_tensor_action = qubus::object_factory_server::create_sparse_tensor_action;
 HPX_REGISTER_ACTION_DECLARATION(create_sparse_tensor_action,
                                 qubus_object_factory_create_sparse_tensor_action);
 HPX_REGISTER_ACTION(create_sparse_tensor_action, qubus_object_factory_create_sparse_tensor_action);
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -125,6 +123,5 @@ object object_factory::create_sparse_tensor(type value_type, std::vector<util::i
 {
     return hpx::async<object_factory_server::create_sparse_tensor_action>(
         this->get_id(), std::move(value_type), std::move(shape), std::move(layout));
-}
 }
 }

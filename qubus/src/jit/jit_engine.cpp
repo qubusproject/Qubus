@@ -1,4 +1,4 @@
-#include <qbb/qubus/jit/jit_engine.hpp>
+#include <qubus/jit/jit_engine.hpp>
 
 #include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/Orc/CompileUtils.h>
@@ -8,8 +8,6 @@
 #include <llvm/IR/Mangler.h>
 #include <llvm/Support/DynamicLibrary.h>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -109,5 +107,4 @@ llvm::JITSymbol jit_engine::find_mangled_symbol(const std::string& name)
     return nullptr;
 }
 #endif
-}
 }

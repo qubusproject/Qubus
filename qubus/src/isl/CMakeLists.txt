@@ -3,7 +3,7 @@ set(qubus_isl_header_file_names affine_expr.hpp ast.hpp ast_builder.hpp constrai
                                 printer.hpp schedule.hpp set.hpp space.hpp value.hpp
                                 id.hpp band.hpp)
                
-set(qubus_isl_include_dir ${CMAKE_SOURCE_DIR}/qubus/include/qbb/qubus/isl)
+set(qubus_isl_include_dir ${CMAKE_SOURCE_DIR}/qubus/include/qubus/isl)
 
 foreach(file_name IN LISTS qubus_isl_header_file_names)
     list(APPEND qubus_isl_header_files ${qubus_isl_include_dir}/${file_name})
@@ -22,7 +22,7 @@ add_library(qubus_isl SHARED ${qubus_isl_header_files} ${qubus_isl_source_files}
 target_include_directories(qubus_isl PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 
 target_compile_options(qubus_isl PUBLIC -std=c++14)
-target_link_libraries(qubus_isl PUBLIC isl::isl qbb_util)
+target_link_libraries(qubus_isl PUBLIC isl::isl qubus_util)
 
 set_property(TARGET qubus_isl PROPERTY VERSION ${QUBUS_VERSION})
 set_property(TARGET qubus_isl PROPERTY SOVERSION 0)

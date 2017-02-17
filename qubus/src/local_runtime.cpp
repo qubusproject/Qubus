@@ -1,31 +1,29 @@
 #include <hpx/config.hpp>
 
-#include <qbb/qubus/local_runtime.hpp>
+#include <qubus/local_runtime.hpp>
 
-#include <qbb/qubus/logging.hpp>
+#include <qubus/logging.hpp>
 
-#include <qbb/qubus/hpx_utils.hpp>
+#include <qubus/hpx_utils.hpp>
 
-#include <qbb/util/get_prefix.hpp>
+#include <qubus/util/get_prefix.hpp>
 
 #include <hpx/include/lcos.hpp>
 
 #include <memory>
 #include <utility>
 
-using server_type = hpx::components::component<qbb::qubus::local_runtime_reference_server>;
-HPX_REGISTER_COMPONENT(server_type, qbb_qubus_local_runtime_reference_server);
+using server_type = hpx::components::component<qubus::local_runtime_reference_server>;
+HPX_REGISTER_COMPONENT(server_type, qubus_local_runtime_reference_server);
 
-typedef qbb::qubus::local_runtime_reference_server::get_local_object_factory_action get_local_object_factory_action;
+typedef qubus::local_runtime_reference_server::get_local_object_factory_action get_local_object_factory_action;
 HPX_REGISTER_ACTION_DECLARATION(get_local_object_factory_action);
 HPX_REGISTER_ACTION(get_local_object_factory_action)
 
-typedef qbb::qubus::local_runtime_reference_server::get_local_vpu_action get_local_vpu_action;
+typedef qubus::local_runtime_reference_server::get_local_vpu_action get_local_vpu_action;
 HPX_REGISTER_ACTION_DECLARATION(get_local_vpu_action);
 HPX_REGISTER_ACTION(get_local_vpu_action);
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -160,9 +158,8 @@ local_runtime_reference get_local_runtime_on_locality(const hpx::id_type& locali
 }
 
 }
-}
 
-HPX_REGISTER_ACTION(qbb::qubus::init_local_runtime_remote_action, qbb_qubus_init_local_runtime_remote_action);
-HPX_REGISTER_ACTION(qbb::qubus::get_local_runtime_remote_action, qbb_qubus_get_local_runtime_remote_action);
+HPX_REGISTER_ACTION(qubus::init_local_runtime_remote_action, QUBUS_init_local_runtime_remote_action);
+HPX_REGISTER_ACTION(qubus::get_local_runtime_remote_action, QUBUS_get_local_runtime_remote_action);
 
 

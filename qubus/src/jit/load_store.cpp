@@ -1,4 +1,4 @@
-#include <qbb/qubus/jit/load_store.hpp>
+#include <qubus/jit/load_store.hpp>
 
 #include <llvm/IR/Metadata.h>
 
@@ -8,8 +8,6 @@
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 namespace jit
@@ -115,7 +113,6 @@ llvm::StoreInst* store_to_ref(const reference& ref, llvm::Value* value, llvm_env
     return store;
 }
 
-}
 }
 }
 

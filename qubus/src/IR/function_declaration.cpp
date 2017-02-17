@@ -1,11 +1,9 @@
-#include <qbb/qubus/IR/function_declaration.hpp>
+#include <qubus/IR/function_declaration.hpp>
 
-#include <qbb/qubus/IR/type_inference.hpp>
+#include <qubus/IR/type_inference.hpp>
 
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -118,6 +116,5 @@ bool operator==(const function_declaration& lhs, const function_declaration& rhs
 bool operator!=(const function_declaration& lhs, const function_declaration& rhs)
 {
     return !(lhs == rhs);
-}
 }
 }

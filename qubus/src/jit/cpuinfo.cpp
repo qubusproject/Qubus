@@ -1,4 +1,4 @@
-#include <qbb/qubus/jit/cpuinfo.hpp>
+#include <qubus/jit/cpuinfo.hpp>
 
 #include <llvm/Support/Host.h>
 
@@ -8,8 +8,6 @@
 #include <regex>
 #include <map>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -121,5 +119,4 @@ util::index_t get_prefered_alignment()
 
 #endif
 
-}
 }

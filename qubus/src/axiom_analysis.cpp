@@ -1,18 +1,16 @@
-#include <qbb/qubus/axiom_analysis.hpp>
+#include <qubus/axiom_analysis.hpp>
 
-#include <qbb/qubus/IR/constant_folding.hpp>
+#include <qubus/IR/constant_folding.hpp>
 
-#include <qbb/qubus/IR/qir.hpp>
-#include <qbb/qubus/pattern/IR.hpp>
-#include <qbb/qubus/pattern/core.hpp>
+#include <qubus/IR/qir.hpp>
+#include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
-#include <qbb/util/assert.hpp>
+#include <qubus/util/assert.hpp>
 
 #include <stack>
 #include <utility>
 
-namespace qbb
-{
 namespace qubus
 {
 
@@ -146,7 +144,7 @@ std::unique_ptr<axiom_scope> generate_axiom_scope_tree(const expression& ctx,
 
     auto root = pattern::match(ctx, m);
 
-    QBB_ASSERT(root->arity() == ctx.arity(), "Unexpected number of subscopes.");
+    QUBUS_ASSERT(root->arity() == ctx.arity(), "Unexpected number of subscopes.");
 
     return root;
 }
@@ -201,7 +199,7 @@ std::vector<axiom> axiom_analysis_result::get_valid_axioms(const expression& ctx
 {
     auto search_result = axiom_scope_index_.find(&ctx);
 
-    QBB_ASSERT(search_result != axiom_scope_index_.end(), "Invalid context.");
+    QUBUS_ASSERT(search_result != axiom_scope_index_.end(), "Invalid context.");
 
     auto root = search_result->second;
 
@@ -242,5 +240,4 @@ std::vector<analysis_id> axiom_analysis_pass::required_analyses() const
 }
 
 QUBUS_REGISTER_ANALYSIS_PASS(axiom_analysis_pass);
-}
 }
