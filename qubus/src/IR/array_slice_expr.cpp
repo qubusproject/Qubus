@@ -39,25 +39,18 @@ const expression& array_slice_expr::child(std::size_t index) const
     auto rank = shape_.size();
 
     if (index == 0)
-    {
         return *array_;
-    }
-    else if (index - 1 < rank)
-    {
+
+    if (index - 1 < rank)
         return *offset_[index - 1];
-    }
-    else if (index - rank - 1 < rank)
-    {
+
+    if (index - rank - 1 < rank)
         return *shape_[index - rank - 1];
-    }
-    else if (index - 2 * rank - 1 < rank)
-    {
+
+    if (index - 2 * rank - 1 < rank)
         return *strides_[index - 2 * rank - 1];
-    }
-    else
-    {
-        throw 0;
-    }
+
+    throw 0;
 }
 
 std::size_t array_slice_expr::arity() const
@@ -68,7 +61,7 @@ std::size_t array_slice_expr::arity() const
 std::unique_ptr<expression> array_slice_expr::substitute_subexpressions(
     std::vector<std::unique_ptr<expression>> new_children) const
 {
-    if (new_children.size() < 1)
+    if (new_children.empty())
         throw 0;
 
     std::unique_ptr<access_expr> array(dynamic_cast<access_expr*>(new_children[0].release()));

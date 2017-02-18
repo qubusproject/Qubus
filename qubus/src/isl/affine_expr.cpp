@@ -88,12 +88,12 @@ affine_expr operator-(affine_expr lhs, affine_expr rhs)
 
 affine_expr operator-(affine_expr lhs, int rhs)
 {
-    return lhs + -rhs;
+    return std::move(lhs) + -rhs;
 }
 
 affine_expr operator-(int lhs, affine_expr rhs)
 {
-    return lhs + -rhs;
+    return lhs + -std::move(rhs);
 }
 
 affine_expr operator*(affine_expr lhs, affine_expr rhs)
@@ -133,7 +133,7 @@ affine_expr align_params(affine_expr aff, space model)
 
 bool is_cst(const affine_expr& aff)
 {
-    return isl_aff_is_cst(aff.native_handle());
+    return isl_aff_is_cst(aff.native_handle()) != 0;
 }
 
 }

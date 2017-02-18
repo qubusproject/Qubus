@@ -21,57 +21,57 @@ namespace
 util::multi_method<type(const util::virtual_<type>&, const util::virtual_<type>&)>
     common_type_ = {};
 
-type common_type_double_double(const types::double_&, const types::double_&)
+type common_type_double_double(const types::double_& /*unused*/, const types::double_& /*unused*/)
 {
     return types::double_{};
 }
 
-type common_type_float_float(const types::float_&, const types::float_&)
+type common_type_float_float(const types::float_& /*unused*/, const types::float_& /*unused*/)
 {
     return types::float_{};
 }
 
-type common_type_integer_integer(const types::integer&, const types::integer&)
+type common_type_integer_integer(const types::integer& /*unused*/, const types::integer& /*unused*/)
 {
     return types::integer{};
 }
 
-type common_type_bool_bool(const types::bool_&, const types::bool_&)
+type common_type_bool_bool(const types::bool_& /*unused*/, const types::bool_& /*unused*/)
 {
     return types::bool_{};
 }
 
-type common_type_index_index(const types::index&, const types::index&)
+type common_type_index_index(const types::index& /*unused*/, const types::index& /*unused*/)
 {
     return types::index{};
 }
 
-type common_type_double_integer(const types::double_&, const types::integer&)
+type common_type_double_integer(const types::double_& /*unused*/, const types::integer& /*unused*/)
 {
     return types::double_{};
 }
 
-type common_type_integer_double(const types::integer&, const types::double_&)
+type common_type_integer_double(const types::integer& /*unused*/, const types::double_& /*unused*/)
 {
     return types::double_{};
 }
 
-type common_type_float_integer(const types::float_&, const types::integer&)
+type common_type_float_integer(const types::float_& /*unused*/, const types::integer& /*unused*/)
 {
     return types::float_{};
 }
 
-type common_type_integer_float(const types::integer&, const types::float_&)
+type common_type_integer_float(const types::integer& /*unused*/, const types::float_& /*unused*/)
 {
     return types::float_{};
 }
 
-type common_type_double_float(const types::double_&, const types::float_&)
+type common_type_double_float(const types::double_& /*unused*/, const types::float_& /*unused*/)
 {
     return types::double_{};
 }
 
-type common_type_float_double(const types::float_&, const types::double_&)
+type common_type_float_double(const types::float_& /*unused*/, const types::double_& /*unused*/)
 {
     return types::double_{};
 }
@@ -192,17 +192,17 @@ type infer_type_sum_expr(const qtl::sum_expr& expr)
     return body_type;
 }
 
-type infer_type_for_all_expr(const qtl::for_all_expr&)
+type infer_type_for_all_expr(const qtl::for_all_expr& /*unused*/)
 {
     return types::unknown{};
 }
 
-type infer_type_for_expr(const for_expr&)
+type infer_type_for_expr(const for_expr& /*unused*/)
 {
     return types::unknown{};
 }
 
-type infer_type_if_expr(const if_expr&)
+type infer_type_if_expr(const if_expr& /*unused*/)
 {
     return types::unknown{};
 }
@@ -239,17 +239,17 @@ type infer_type_type_conversion_expr(const type_conversion_expr& expr)
     return expr.target_type();
 }
 
-type infer_type_double_literal_expr(const double_literal_expr&)
+type infer_type_double_literal_expr(const double_literal_expr& /*unused*/)
 {
     return types::double_{};
 }
 
-type infer_type_float_literal_expr(const float_literal_expr&)
+type infer_type_float_literal_expr(const float_literal_expr& /*unused*/)
 {
     return types::float_{};
 }
 
-type infer_type_integer_literal_expr(const integer_literal_expr&)
+type infer_type_integer_literal_expr(const integer_literal_expr& /*unused*/)
 {
     return types::integer{};
 }
@@ -266,7 +266,7 @@ type infer_type_intrinsic_function_expr(const intrinsic_function_expr& expr)
     return lookup_intrinsic_result_type(expr.name(), arg_types);
 }
 
-type infer_type_compound_expr(const compound_expr&)
+type infer_type_compound_expr(const compound_expr& /*unused*/)
 {
     return types::unknown{};
 }
@@ -276,12 +276,12 @@ type infer_type_variable_ref_expr(const variable_ref_expr& expr)
     return expr.declaration().var_type();
 }
 
-type infer_type_spawn_expr(const spawn_expr&)
+type infer_type_spawn_expr(const spawn_expr& /*unused*/)
 {
     return types::unknown{};
 }
 
-type infer_type_local_variable_def_expr(const local_variable_def_expr&)
+type infer_type_local_variable_def_expr(const local_variable_def_expr& /*unused*/)
 {
     return types::unknown{};
 }

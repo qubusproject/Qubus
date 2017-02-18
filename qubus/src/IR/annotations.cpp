@@ -22,13 +22,9 @@ annotation annotation_map::lookup(const std::string& key) const
     auto iter = annotations_.find(key);
     
     if(iter != annotations_.end())
-    {
         return iter->second;
-    }
-    else
-    {
-        return annotation{};
-    }
+
+    return annotation{};
 }
     
 }

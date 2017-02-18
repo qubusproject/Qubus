@@ -27,10 +27,12 @@ public:
     basic_set(const context& ctx_, const std::string& desc_);
 
     basic_set(const basic_set& other);
+    basic_set(basic_set&& other) noexcept = default;
 
     ~basic_set();
 
-    basic_set& operator=(basic_set other);
+    basic_set& operator=(const basic_set& other);
+    basic_set& operator=(basic_set&& other) noexcept = default;
 
     isl_basic_set* native_handle() const;
 
@@ -70,12 +72,14 @@ public:
     set(basic_set other);
 
     set(const set& other);
+    set(set&& other) noexcept = default;
 
     set(const context& ctx_, const std::string& desc_);
 
     ~set();
     
     set& operator=(const set& other);
+    set& operator=(set&& other) noexcept = default;
 
     isl_set* native_handle() const;
 
@@ -158,12 +162,14 @@ public:
     union_set(set other);
 
     union_set(const union_set& other);
+    union_set(union_set&& other) noexcept = default;
 
     union_set(const context& ctx_, const std::string& desc_);
 
     ~union_set();
     
     union_set& operator=(const union_set& other);
+    union_set& operator=(union_set&& other) noexcept = default;
 
     std::vector<set> get_sets() const;
 

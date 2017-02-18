@@ -19,27 +19,27 @@ util::sparse_multi_method<bool(const util::virtual_<type>&,
                                     const util::virtual_<type>&)>
     type_eq = {};
 
-bool type_eq_double(const types::double_&, const types::double_&)
+bool type_eq_double(const types::double_& /*unused*/, const types::double_& /*unused*/)
 {
     return true;
 }
 
-bool type_eq_float(const types::float_&, const types::float_&)
+bool type_eq_float(const types::float_& /*unused*/, const types::float_& /*unused*/)
 {
     return true;
 }
 
-bool type_eq_integer(const types::integer&, const types::integer&)
+bool type_eq_integer(const types::integer& /*unused*/, const types::integer& /*unused*/)
 {
     return true;
 }
 
-bool type_eq_bool(const types::bool_&, const types::bool_&)
+bool type_eq_bool(const types::bool_& /*unused*/, const types::bool_& /*unused*/)
 {
     return true;
 }
 
-bool type_eq_index(const types::index&, const types::index&)
+bool type_eq_index(const types::index& /*unused*/, const types::index& /*unused*/)
 {
     return true;
 }
@@ -64,7 +64,7 @@ bool type_eq_struct(const types::struct_& lhs, const types::struct_& rhs)
     return lhs.id() == rhs.id();
 }
 
-bool type_eq_default(const type&, const type&)
+bool type_eq_default(const type& /*unused*/, const type& /*unused*/)
 {
     return false;
 }
@@ -109,13 +109,9 @@ const type& struct_::operator[](const std::string& id) const
                              [&id](const member& value) { return value.id == id; });
 
     if (iter != members_.end())
-    {
         return iter->datatype;
-    }
-    else
-    {
-        throw 0;
-    }
+
+    throw 0;
 }
 
 std::size_t struct_::member_index(const std::string& id) const
@@ -124,19 +120,15 @@ std::size_t struct_::member_index(const std::string& id) const
                              [&id](const member& value) { return value.id == id; });
 
     if (iter != members_.end())
-    {
         return iter - members_.begin();
-    }
-    else
-    {
-        throw 0;
-    }
+
+    throw 0;
 }
 
 type sparse_tensor(type value_type)
 {
     auto sell_tensor_type = types::struct_(
-        "sell_tensor", {types::struct_::member(types::array(value_type, 1), "val"),
+        "sell_tensor", {types::struct_::member(types::array(std::move(value_type), 1), "val"),
                         types::struct_::member(types::array(types::integer(), 1), "col"),
                         types::struct_::member(types::array(types::integer(), 1), "cs"),
                         types::struct_::member(types::array(types::integer(), 1), "cl")});

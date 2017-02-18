@@ -22,6 +22,7 @@ public:
     affine_expr(local_space domain, isl_dim_type type, unsigned int pos);
 
     affine_expr(const affine_expr& other);
+    affine_expr(affine_expr&& other) noexcept = default;
 
     ~affine_expr();
 

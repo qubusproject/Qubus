@@ -48,7 +48,7 @@ set pw_aff::domain() const
 
 bool pw_aff::is_cst() const
 {
-    return isl_pw_aff_is_cst(handle_);
+    return isl_pw_aff_is_cst(handle_)  != 0;
 }
 
 pw_aff pw_aff::from_val(set domain, value val)

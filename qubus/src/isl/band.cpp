@@ -25,7 +25,7 @@ context_ref band::get_ctx() const
 
 bool band::has_children() const
 {
-    return isl_band_has_children(handle_);
+    return isl_band_has_children(handle_)  != 0;
 }
 
 namespace
