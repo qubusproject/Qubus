@@ -7,17 +7,12 @@
 #include <qubus/memory_block.hpp>
 
 #include <qubus/util/delegate.hpp>
-#include <qubus/util/dense_hash_map.hpp>
 #include <qubus/util/handle.hpp>
 #include <qubus/util/integers.hpp>
 
 #include <hpx/include/lcos.hpp>
 #include <hpx/include/local_lcos.hpp>
 
-#include <boost/bimap.hpp>
-#include <boost/bimap/unordered_set_of.hpp>
-
-#include <atomic>
 #include <functional>
 #include <map>
 #include <memory>

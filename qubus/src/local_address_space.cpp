@@ -7,7 +7,6 @@
 #include <qubus/logging.hpp>
 
 #include <qubus/util/assert.hpp>
-#include <qubus/util/make_unique.hpp>
 #include <qubus/util/unused.hpp>
 
 #include <exception>
