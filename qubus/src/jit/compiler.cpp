@@ -50,7 +50,7 @@ void compile_function(const function_declaration& plan, compiler& comp)
 
     llvm::Function* compiled_plan;
 
-    if (!(compiled_plan = env.module().getFunction(plan.name())))
+    if ((compiled_plan = env.module().getFunction(plan.name())) == nullptr)
     {
         compiled_plan =
             llvm::Function::Create(FT, llvm::Function::PrivateLinkage, plan.name(), &env.module());
@@ -108,7 +108,7 @@ void compile_entry_point(const function_declaration& plan, compiler& comp,
     llvm::FunctionType* FT =
         llvm::FunctionType::get(llvm::Type::getVoidTy(env.ctx()), param_types, false);
 
-    std::string entry_point_name = namespace_;
+    const std::string& entry_point_name = namespace_;
 
     llvm::Function* kernel = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
                                                     entry_point_name, &env.module());
@@ -204,7 +204,7 @@ void module::finish()
 }
 
 compiler::compiler()
-: ctx_(std::make_unique<llvm::LLVMContext>())
+: ctx_(std::make_unique<llvm::LLVMContext>()), current_module_(nullptr)
 {
 }
 

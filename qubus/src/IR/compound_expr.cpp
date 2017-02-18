@@ -11,7 +11,7 @@ compound_expr::compound_expr(std::vector<std::unique_ptr<expression>> body_)
 }
 
 compound_expr::compound_expr(execution_order order_, std::vector<std::unique_ptr<expression>> body_)
-: order_(std::move(order_)), body_(take_over_children(body_))
+: order_(order_), body_(take_over_children(body_))
 {
 }
 

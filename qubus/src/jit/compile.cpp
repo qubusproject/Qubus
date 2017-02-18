@@ -601,7 +601,7 @@ reference compile(const expression& expr, compiler& comp)
                             })
                         .case_(value_type,
                                [&] {
-                                   if (expressions.get().size() != 0)
+                                   if (!expressions.get().empty())
                                        throw 0;
 
                                    auto var_ptr = create_entry_block_alloca(

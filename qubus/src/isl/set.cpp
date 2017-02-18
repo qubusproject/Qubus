@@ -21,14 +21,36 @@ basic_set::basic_set(const basic_set& other) : handle_{isl_basic_set_copy(other.
 {
 }
 
-basic_set::~basic_set()
+basic_set::basic_set(basic_set&& other) noexcept : handle_(other.release())
 {
-    isl_basic_set_free(handle_);
 }
 
-basic_set& basic_set::operator=(basic_set other)
+basic_set::~basic_set()
 {
-    isl_basic_set_free(handle_);
+    if (handle_ != nullptr)
+    {
+        isl_basic_set_free(handle_);
+    }
+}
+
+basic_set& basic_set::operator=(const basic_set& other)
+{
+    if (handle_ != nullptr)
+    {
+        isl_basic_set_free(handle_);
+    }
+
+    handle_ = isl_basic_set_copy(other.native_handle());
+
+    return *this;
+}
+
+basic_set& basic_set::operator=(basic_set&& other) noexcept
+{
+    if (handle_ != nullptr)
+    {
+        isl_basic_set_free(handle_);
+    }
 
     handle_ = other.release();
 
@@ -71,7 +93,7 @@ basic_set basic_set::universe(space s)
 
 bool operator==(const basic_set& lhs, const basic_set& rhs)
 {
-    return isl_basic_set_is_equal(lhs.native_handle(), rhs.native_handle());
+    return isl_basic_set_is_equal(lhs.native_handle(), rhs.native_handle()) != 0;
 }
 
 bool operator!=(const basic_set& lhs, const basic_set& rhs)
@@ -81,12 +103,12 @@ bool operator!=(const basic_set& lhs, const basic_set& rhs)
 
 bool is_subset(const basic_set& lhs, const basic_set& rhs)
 {
-    return isl_basic_set_is_subset(lhs.native_handle(), rhs.native_handle());
+    return isl_basic_set_is_subset(lhs.native_handle(), rhs.native_handle()) != 0;
 }
 
 bool is_empty(const basic_set& s)
 {
-    return isl_basic_set_is_empty(s.native_handle());
+    return isl_basic_set_is_empty(s.native_handle()) != 0;
 }
 
 basic_set flat_product(basic_set lhs, basic_set rhs)
@@ -121,6 +143,11 @@ set::set(const set& other) : handle_{isl_set_copy(other.native_handle())}
 {
 }
 
+set::set(set&& other) noexcept
+: handle_(other.release())
+{
+}
+
 set::set(const context& ctx_, const std::string& desc_)
 : handle_{isl_set_read_from_str(ctx_.native_handle(), desc_.c_str())}
 {
@@ -128,7 +155,10 @@ set::set(const context& ctx_, const std::string& desc_)
 
 set::~set()
 {
-    isl_set_free(handle_);
+    if (handle_ != nullptr)
+    {
+        isl_set_free(handle_);
+    }
 }
 
 isl_set* set::native_handle() const
@@ -147,10 +177,25 @@ isl_set* set::release() noexcept
 
 set& set::operator=(const set& other)
 {
-    isl_set_free(handle_);
+    if (handle_ != nullptr)
+    {
+        isl_set_free(handle_);
+    }
     
     handle_ = isl_set_copy(other.handle_);
     
+    return *this;
+}
+
+set& set::operator=(set&& other) noexcept
+{
+    if (handle_ != nullptr)
+    {
+        isl_set_free(handle_);
+    }
+
+    handle_ = other.release();
+
     return *this;
 }
 
@@ -191,7 +236,7 @@ boost::string_ref set::get_dim_name(isl_dim_type type, int pos) const
 
 bool set::bounded() const
 {
-    return isl_set_is_bounded(handle_);
+    return isl_set_is_bounded(handle_) != 0;
 }
 
 set set::universe(space s)
@@ -231,7 +276,7 @@ set complement(set arg)
 
 bool operator==(const set& lhs, const set& rhs)
 {
-    return isl_set_is_equal(lhs.native_handle(), rhs.native_handle());
+    return isl_set_is_equal(lhs.native_handle(), rhs.native_handle()) != 0;
 }
 
 bool operator!=(const set& lhs, const set& rhs)
@@ -241,17 +286,17 @@ bool operator!=(const set& lhs, const set& rhs)
 
 bool is_subset(const set& lhs, const set& rhs)
 {
-    return isl_set_is_subset(lhs.native_handle(), rhs.native_handle());
+    return isl_set_is_subset(lhs.native_handle(), rhs.native_handle()) != 0;
 }
 
 bool is_strict_subset(const set& lhs, const set& rhs)
 {
-    return isl_set_is_strict_subset(lhs.native_handle(), rhs.native_handle());
+    return isl_set_is_strict_subset(lhs.native_handle(), rhs.native_handle()) != 0;
 }
 
 bool is_empty(const set& s)
 {
-    return isl_set_is_empty(s.native_handle());
+    return isl_set_is_empty(s.native_handle()) != 0;
 }
 
 set get_params(set s)
@@ -325,6 +370,10 @@ union_set::union_set(const union_set& other) : handle_(isl_union_set_copy(other.
 {
 }
 
+union_set::union_set(union_set&& other) noexcept : handle_(other.release())
+{
+}
+
 union_set::union_set(const context& ctx_, const std::string& desc_)
 : handle_{isl_union_set_read_from_str(ctx_.native_handle(), desc_.c_str())}
 {
@@ -332,15 +381,33 @@ union_set::union_set(const context& ctx_, const std::string& desc_)
 
 union_set::~union_set()
 {
-    isl_union_set_free(handle_);
+    if (handle_ != nullptr)
+    {
+        isl_union_set_free(handle_);
+    }
 }
 
 union_set& union_set::operator=(const union_set& other)
 {
-    isl_union_set_free(handle_);
+    if (handle_ != nullptr)
+    {
+        isl_union_set_free(handle_);
+    }
     
     handle_ = isl_union_set_copy(other.handle_);
     
+    return *this;
+}
+
+union_set& union_set::operator=(union_set&& other) noexcept
+{
+    if (handle_ != nullptr)
+    {
+        isl_union_set_free(handle_);
+    }
+
+    handle_ = other.release();
+
     return *this;
 }
 
@@ -389,17 +456,17 @@ union_set intersect(union_set lhs, union_set rhs)
 
 bool is_subset(const union_set& lhs, const union_set& rhs)
 {
-    return isl_union_set_is_subset(lhs.native_handle(), rhs.native_handle());
+    return isl_union_set_is_subset(lhs.native_handle(), rhs.native_handle()) != 0;
 }
 
 bool is_strict_subset(const union_set& lhs, const union_set& rhs)
 {
-    return isl_union_set_is_strict_subset(lhs.native_handle(), rhs.native_handle());
+    return isl_union_set_is_strict_subset(lhs.native_handle(), rhs.native_handle())  != 0;
 }
 
 bool operator==(const union_set& lhs, const union_set& rhs)
 {
-    return isl_union_set_is_equal(lhs.native_handle(), rhs.native_handle());
+    return isl_union_set_is_equal(lhs.native_handle(), rhs.native_handle())  != 0;
 }
 
 bool operator!=(const union_set& lhs, const union_set& rhs)
@@ -409,7 +476,7 @@ bool operator!=(const union_set& lhs, const union_set& rhs)
 
 bool is_empty(const union_set& s)
 {
-    return isl_union_set_is_empty(s.native_handle());
+    return isl_union_set_is_empty(s.native_handle())  != 0;
 }
 
 union_set add_set(union_set uset, set s)

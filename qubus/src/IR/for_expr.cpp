@@ -28,7 +28,7 @@ for_expr::for_expr(variable_declaration loop_index_, std::unique_ptr<expression>
 for_expr::for_expr(execution_order order_, variable_declaration loop_index_,
                    std::unique_ptr<expression> lower_bound_,
                    std::unique_ptr<expression> upper_bound_, std::unique_ptr<expression> body_)
-: for_expr(std::move(order_), std::move(loop_index_), std::move(lower_bound_),
+: for_expr(order_, std::move(loop_index_), std::move(lower_bound_),
            std::move(upper_bound_), integer_literal(1), std::move(body_))
 {
 }
@@ -37,7 +37,7 @@ for_expr::for_expr(execution_order order_, variable_declaration loop_index_,
                    std::unique_ptr<expression> lower_bound_,
                    std::unique_ptr<expression> upper_bound_, std::unique_ptr<expression> increment_,
                    std::unique_ptr<expression> body_)
-: order_(std::move(order_)), loop_index_(std::move(loop_index_)),
+: order_(order_), loop_index_(std::move(loop_index_)),
   lower_bound_(take_over_child(lower_bound_)), upper_bound_(take_over_child(upper_bound_)),
   increment_(take_over_child(increment_)), body_(take_over_child(body_))
 {
@@ -83,25 +83,18 @@ for_expr* for_expr::clone() const
 const expression& for_expr::child(std::size_t index) const
 {
     if (index == 0)
-    {
         return *lower_bound_;
-    }
-    else if (index == 1)
-    {
+
+    if (index == 1)
         return *upper_bound_;
-    }
-    else if (index == 2)
-    {
+
+    if (index == 2)
         return *increment_;
-    }
-    else if (index == 3)
-    {
+
+    if (index == 3)
         return *body_;
-    }
-    else
-    {
-        throw 0;
-    }
+
+    throw 0;
 }
 
 std::size_t for_expr::arity() const

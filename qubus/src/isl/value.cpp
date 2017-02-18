@@ -36,7 +36,7 @@ long int value::as_integer() const
 
 bool value::is_int() const
 {
-    return isl_val_is_int(native_handle());
+    return isl_val_is_int(native_handle()) != 0;
 }
 
 isl_val* value::native_handle() const

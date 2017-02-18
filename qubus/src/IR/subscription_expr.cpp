@@ -28,17 +28,12 @@ subscription_expr* subscription_expr::clone() const
 const expression& subscription_expr::child(std::size_t index) const
 {
     if (index == 0)
-    {
         return *indexed_expr_;
-    }
-    else if (index - 1 < indices_.size())
-    {
+
+    if (index - 1 < indices_.size())
         return *indices_[index - 1];
-    }
-    else
-    {
-        throw 0;
-    }
+
+    throw 0;
 }
 
 std::size_t subscription_expr::arity() const
@@ -49,7 +44,7 @@ std::size_t subscription_expr::arity() const
 std::unique_ptr<expression> subscription_expr::substitute_subexpressions(
         std::vector<std::unique_ptr<expression>> new_children) const
 {
-    if (new_children.size() < 1)
+    if (new_children.empty())
         throw 0;
 
     std::unique_ptr<access_expr> indexed_access(dynamic_cast<access_expr*>(new_children[0].release()));

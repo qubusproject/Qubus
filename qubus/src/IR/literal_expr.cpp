@@ -33,7 +33,7 @@ std::size_t double_literal_expr::arity() const
 std::unique_ptr<expression> double_literal_expr::substitute_subexpressions(
         std::vector<std::unique_ptr<expression>> new_children) const
 {
-    if (new_children.size() != 0)
+    if (!new_children.empty())
         throw 0;
 
     return std::make_unique<double_literal_expr>(value_);
@@ -76,7 +76,7 @@ std::size_t float_literal_expr::arity() const
 std::unique_ptr<expression> float_literal_expr::substitute_subexpressions(
         std::vector<std::unique_ptr<expression>> new_children) const
 {
-    if (new_children.size() != 0)
+    if (!new_children.empty())
         throw 0;
 
     return std::make_unique<float_literal_expr>(value_);
@@ -119,7 +119,7 @@ std::size_t integer_literal_expr::arity() const
 std::unique_ptr<expression> integer_literal_expr::substitute_subexpressions(
         std::vector<std::unique_ptr<expression>> new_children) const
 {
-    if (new_children.size() != 0)
+    if (!new_children.empty())
         throw 0;
 
     return std::make_unique<integer_literal_expr>(value_);

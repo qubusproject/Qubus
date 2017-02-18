@@ -49,7 +49,7 @@ int schedule_node::n_children() const
 
 bool schedule_node::has_children() const
 {
-    return isl_schedule_node_has_children(handle_);
+    return isl_schedule_node_has_children(handle_)  != 0;
 }
 
 schedule_node schedule_node::parent() const
@@ -69,7 +69,7 @@ int schedule_node::band_n_member() const
 
 bool schedule_node::band_is_permutable() const
 {
-    return isl_schedule_node_band_get_permutable(handle_);
+    return isl_schedule_node_band_get_permutable(handle_)  != 0;
 }
 
 void schedule_node::band_member_set_coincident(int pos, bool is_coincident)

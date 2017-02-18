@@ -4,7 +4,7 @@
 
 #include <link.h>
 #include <dlfcn.h>
-#include <limits.h>
+#include <climits>
 
 #ifdef __unix__ 
 #include <unistd.h>
@@ -24,7 +24,7 @@ dll::dll(const std::string& filename)
     
     handle_ = dlopen(filename.c_str(), RTLD_LAZY | RTLD_GLOBAL);
     
-    if(!handle_)
+    if(handle_ == nullptr)
     {
         throw exception(dlerror());
     }
@@ -62,12 +62,12 @@ boost::filesystem::path dll::get_directory() const
    
     dlerror();
     
-    if (dlinfo(handle_, RTLD_DI_ORIGIN, directory) < 0)
+    if (dlinfo(handle_, RTLD_DI_ORIGIN, static_cast<char*>(directory)) < 0)
     {
         throw exception(dlerror());
     }
     
-    return boost::filesystem::path(directory);
+    return boost::filesystem::path(static_cast<char*>(directory));
 }
 
 #else

@@ -42,20 +42,16 @@ public:
         auto iter = symbol_table_.find(h);
 
         if (iter != symbol_table_.end())
-        {
             return iter->second;
-        }
-        else
-        {
-            iter = symbol_table_.emplace(h, name_generator.get()).first;
 
-            return iter->second;
-        }
+        iter = symbol_table_.emplace(h, name_generator.get()).first;
+
+        return iter->second;
     }
 
     void add_function_to_print(function_declaration fn)
     {
-        functions_to_print_.push_back(fn);
+        functions_to_print_.push_back(std::move(fn));
     }
 
     boost::optional<function_declaration> get_next_function_to_print()

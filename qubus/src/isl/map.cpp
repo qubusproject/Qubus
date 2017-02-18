@@ -165,7 +165,7 @@ context_ref map::get_ctx() const
 
 bool operator==(const basic_map& lhs, const basic_map& rhs)
 {
-    return isl_basic_map_is_equal(lhs.native_handle(), rhs.native_handle());
+    return isl_basic_map_is_equal(lhs.native_handle(), rhs.native_handle()) != 0;
 }
 
 bool operator!=(const basic_map& lhs, const basic_map& rhs)
@@ -185,7 +185,7 @@ set map::range() const
 
 bool map::is_injective() const
 {
-    return isl_map_is_injective(handle_);
+    return isl_map_is_injective(handle_) != 0;
 }
 
 std::string map::get_tuple_name(isl_dim_type type) const
@@ -260,7 +260,7 @@ map map::from_affine_expr(affine_expr expr)
 
 bool operator==(const map& lhs, const map& rhs)
 {
-    return isl_map_is_equal(lhs.native_handle(), rhs.native_handle());
+    return isl_map_is_equal(lhs.native_handle(), rhs.native_handle()) != 0;
 }
 
 bool operator!=(const map& lhs, const map& rhs)
@@ -454,7 +454,7 @@ union_set union_map::range() const
 
 bool union_map::is_injective() const
 {
-    return isl_union_map_is_injective(handle_);
+    return isl_union_map_is_injective(handle_) != 0;
 }
 
 isl_union_map* union_map::native_handle() const
@@ -478,7 +478,7 @@ union_map union_map::empty(space s)
 
 bool operator==(const union_map& lhs, const union_map& rhs)
 {
-    return isl_union_map_is_equal(lhs.native_handle(), rhs.native_handle());
+    return isl_union_map_is_equal(lhs.native_handle(), rhs.native_handle()) != 0;
 }
 
 bool operator!=(const union_map& lhs, const union_map& rhs)

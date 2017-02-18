@@ -154,14 +154,10 @@ ast_node ast_node::if_get_then() const
 
 boost::optional<ast_node> ast_node::if_get_else() const
 {
-    if (isl_ast_node_if_has_else(root_))
-    {
+    if (isl_ast_node_if_has_else(root_) != 0)
         return ast_node(isl_ast_node_if_get_else(root_));
-    }
-    else
-    {
-        return {};
-    }
+
+    return {};
 }
 
 ast_expr ast_node::user_get_expr() const

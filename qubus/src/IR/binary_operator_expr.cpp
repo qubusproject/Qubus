@@ -40,17 +40,12 @@ binary_operator_expr* binary_operator_expr::clone() const
 const expression& binary_operator_expr::child(std::size_t index) const
 {
     if (index == 0)
-    {
         return *left_;
-    }
-    else if (index == 1)
-    {
+
+    if (index == 1)
         return *right_;
-    }
-    else
-    {
-        throw 0;
-    }
+
+    throw 0;
 }
 
 std::size_t binary_operator_expr::arity() const

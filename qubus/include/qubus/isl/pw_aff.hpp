@@ -31,7 +31,7 @@ public:
 
     bool is_cst() const;
 
-    static pw_aff from_val(set domain, value v);
+    static pw_aff from_val(set domain, value val);
 private:
     isl_pw_aff* handle_;
 };

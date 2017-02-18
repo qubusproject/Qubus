@@ -87,7 +87,7 @@ public:
     handle_factory& operator=(const handle_factory&) = delete;
     
     handle create() const;
-    void release(handle h) const;
+    void release(handle value) const;
 private:
     mutable std::atomic<std::uintptr_t> next_free_id_{0};
 };

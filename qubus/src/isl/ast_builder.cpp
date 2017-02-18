@@ -98,7 +98,7 @@ extern "C" isl_ast_node* isl_after_each_for_callback(isl_ast_node* node, isl_ast
 
 void ast_builder_base::set_before_each_for(std::function<id(ast_builder_ref)> callback)
 {
-    static std::function<id(ast_builder_ref)> callback_ = callback;
+    static std::function<id(ast_builder_ref)> callback_ = std::move(callback);
     
     handle_ = isl_ast_build_set_before_each_for(handle_, isl_before_each_for_callback, &callback_);
 }
