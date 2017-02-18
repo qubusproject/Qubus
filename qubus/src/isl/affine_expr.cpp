@@ -23,14 +23,24 @@ affine_expr::affine_expr(const affine_expr& other) : handle_{isl_aff_copy(other.
 {
 }
 
+affine_expr::affine_expr(affine_expr&& other) noexcept : handle_(other.release())
+{
+}
+
 affine_expr::~affine_expr()
 {
-    isl_aff_free(handle_);
+    if (handle_ != nullptr)
+    {
+        isl_aff_free(handle_);
+    }
 }
 
 affine_expr& affine_expr::operator=(affine_expr other)
 {
-    isl_aff_free(handle_);
+    if (handle_ != nullptr)
+    {
+        isl_aff_free(handle_);
+    }
 
     handle_ = other.release();
 

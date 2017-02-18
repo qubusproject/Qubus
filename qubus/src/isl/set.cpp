@@ -21,16 +21,38 @@ basic_set::basic_set(const basic_set& other) : handle_{isl_basic_set_copy(other.
 {
 }
 
+basic_set::basic_set(basic_set&& other) noexcept : handle_(other.release())
+{
+}
+
 basic_set::~basic_set()
 {
-    isl_basic_set_free(handle_);
+    if (handle_ != nullptr)
+    {
+        isl_basic_set_free(handle_);
+    }
 }
 
 basic_set& basic_set::operator=(const basic_set& other)
 {
-    isl_basic_set_free(handle_);
+    if (handle_ != nullptr)
+    {
+        isl_basic_set_free(handle_);
+    }
 
     handle_ = isl_basic_set_copy(other.native_handle());
+
+    return *this;
+}
+
+basic_set& basic_set::operator=(basic_set&& other) noexcept
+{
+    if (handle_ != nullptr)
+    {
+        isl_basic_set_free(handle_);
+    }
+
+    handle_ = other.release();
 
     return *this;
 }
@@ -121,6 +143,11 @@ set::set(const set& other) : handle_{isl_set_copy(other.native_handle())}
 {
 }
 
+set::set(set&& other) noexcept
+: handle_(other.release())
+{
+}
+
 set::set(const context& ctx_, const std::string& desc_)
 : handle_{isl_set_read_from_str(ctx_.native_handle(), desc_.c_str())}
 {
@@ -128,7 +155,10 @@ set::set(const context& ctx_, const std::string& desc_)
 
 set::~set()
 {
-    isl_set_free(handle_);
+    if (handle_ != nullptr)
+    {
+        isl_set_free(handle_);
+    }
 }
 
 isl_set* set::native_handle() const
@@ -147,10 +177,25 @@ isl_set* set::release() noexcept
 
 set& set::operator=(const set& other)
 {
-    isl_set_free(handle_);
+    if (handle_ != nullptr)
+    {
+        isl_set_free(handle_);
+    }
     
     handle_ = isl_set_copy(other.handle_);
     
+    return *this;
+}
+
+set& set::operator=(set&& other) noexcept
+{
+    if (handle_ != nullptr)
+    {
+        isl_set_free(handle_);
+    }
+
+    handle_ = other.release();
+
     return *this;
 }
 
@@ -325,6 +370,10 @@ union_set::union_set(const union_set& other) : handle_(isl_union_set_copy(other.
 {
 }
 
+union_set::union_set(union_set&& other) noexcept : handle_(other.release())
+{
+}
+
 union_set::union_set(const context& ctx_, const std::string& desc_)
 : handle_{isl_union_set_read_from_str(ctx_.native_handle(), desc_.c_str())}
 {
@@ -332,15 +381,33 @@ union_set::union_set(const context& ctx_, const std::string& desc_)
 
 union_set::~union_set()
 {
-    isl_union_set_free(handle_);
+    if (handle_ != nullptr)
+    {
+        isl_union_set_free(handle_);
+    }
 }
 
 union_set& union_set::operator=(const union_set& other)
 {
-    isl_union_set_free(handle_);
+    if (handle_ != nullptr)
+    {
+        isl_union_set_free(handle_);
+    }
     
     handle_ = isl_union_set_copy(other.handle_);
     
+    return *this;
+}
+
+union_set& union_set::operator=(union_set&& other) noexcept
+{
+    if (handle_ != nullptr)
+    {
+        isl_union_set_free(handle_);
+    }
+
+    handle_ = other.release();
+
     return *this;
 }
 
