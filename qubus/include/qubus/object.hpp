@@ -31,12 +31,15 @@ public:
     type object_type() const;
     hpx::id_type id() const;
 
+    bool has_data() const;
+
     token acquire_read_access();
     token acquire_write_access();
 
     std::vector<object> components() const;
 
     HPX_DEFINE_COMPONENT_ACTION(object_server, object_type, object_type_action);
+    HPX_DEFINE_COMPONENT_ACTION(object_server, has_data, has_data_action);
     HPX_DEFINE_COMPONENT_ACTION(object_server, acquire_read_access, acquire_read_access_action);
     HPX_DEFINE_COMPONENT_ACTION(object_server, acquire_write_access, acquire_write_access_action);
     HPX_DEFINE_COMPONENT_ACTION(object_server, components, components_action);
@@ -64,6 +67,8 @@ public:
     type object_type() const;
 
     hpx::id_type id() const;
+
+    bool has_data() const;
 
     hpx::future<token> acquire_read_access();
     hpx::future<token> acquire_write_access();

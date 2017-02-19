@@ -11,6 +11,10 @@ using object_type_action = qubus::object_server::object_type_action;
 HPX_REGISTER_ACTION_DECLARATION(object_type_action, qubus_object_server_type_action);
 HPX_REGISTER_ACTION(object_type_action, qubus_object_server_type_action);
 
+using has_data_action = qubus::object_server::has_data_action;
+HPX_REGISTER_ACTION_DECLARATION(has_data_action, qubus_object_server_has_data_action);
+HPX_REGISTER_ACTION(has_data_action, qubus_object_server_has_data_action);
+
 using acquire_read_access_action = qubus::object_server::acquire_read_access_action;
 HPX_REGISTER_ACTION_DECLARATION(acquire_read_access_action, qubus_object_server_acquire_read_access_action);
 HPX_REGISTER_ACTION(acquire_read_access_action, qubus_object_server_acquire_read_access_action);
@@ -44,6 +48,11 @@ object_server::~object_server()
 hpx::id_type object_server::id() const
 {
     return get_id();
+}
+
+bool object_server::has_data() const
+{
+    return static_cast<bool>(data_);
 }
 
 token object_server::acquire_read_access()
@@ -92,6 +101,11 @@ type object::object_type() const
 hpx::id_type object::id() const
 {
     return get_id();
+}
+
+bool object::has_data() const
+{
+    return hpx::async<object_server::has_data_action>(this->get_id()).get();
 }
 
 hpx::future<token> object::acquire_read_access()
