@@ -30,7 +30,8 @@ virtual_address_space_wrapper::client::client(hpx::future<hpx::id_type>&& id)
 {
 }
 
-hpx::future<object_instance> virtual_address_space_wrapper::client::resolve_object(const object& obj)
+hpx::future<object_instance>
+virtual_address_space_wrapper::client::resolve_object(const object& obj)
 {
     return hpx::async<virtual_address_space_wrapper::resolve_object_action>(this->get_id(), obj);
 }
@@ -39,6 +40,12 @@ object_instance virtual_address_space_wrapper::client::try_resolve_object(const 
 {
     return hpx::async<virtual_address_space_wrapper::try_resolve_object_action>(this->get_id(), obj)
         .get();
+}
+
+virtual_address_space_wrapper::virtual_address_space_wrapper(
+    std::unique_ptr<virtual_address_space> wrapped_address_space_)
+: wrapped_address_space_(std::move(wrapped_address_space_))
+{
 }
 
 hpx::future<object_instance> virtual_address_space_wrapper::resolve_object(const object& obj)
