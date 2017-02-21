@@ -33,7 +33,7 @@ set(qubus_source_files allocator.cpp loop_optimizer.cpp
                        task_invariants_analysis.cpp affine_constraints.cpp value_set_analysis.cpp
                        value_range_analysis.cpp static_schedule.cpp static_schedule_analysis.cpp
                        performance_models/unified_performance_model.cpp performance_models/simple_statistical_performance_model.cpp
-                       performance_models/symbolic_regression.cpp performance_models/regression_performance_model.cpp)
+                       performance_models/symbolic_regression.cpp performance_models/regression_performance_model.cpp object_instance.cpp)
 
 add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 
