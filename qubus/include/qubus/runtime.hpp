@@ -34,8 +34,8 @@ public:
     HPX_DEFINE_COMPONENT_ACTION(runtime_server, execute, execute_action);
     HPX_DEFINE_COMPONENT_ACTION(runtime_server, get_object_factory, get_object_factory_action);
 private:
+    boost::optional<virtual_address_space_wrapper::client> global_address_space_;
     std::vector<local_runtime_reference> local_runtimes_;
-    boost::optional<virtual_address_space_wrapper> global_address_space_;
     object_factory obj_factory_;
     boost::optional<aggregate_vpu> global_vpu_;
 };

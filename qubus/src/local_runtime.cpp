@@ -16,7 +16,8 @@
 using server_type = hpx::components::component<qubus::local_runtime_reference_server>;
 HPX_REGISTER_COMPONENT(server_type, qubus_local_runtime_reference_server);
 
-typedef qubus::local_runtime_reference_server::get_local_object_factory_action get_local_object_factory_action;
+typedef qubus::local_runtime_reference_server::get_local_object_factory_action
+    get_local_object_factory_action;
 HPX_REGISTER_ACTION_DECLARATION(get_local_object_factory_action);
 HPX_REGISTER_ACTION(get_local_object_factory_action)
 
@@ -31,13 +32,13 @@ namespace
 {
 
 std::unique_ptr<local_runtime> local_qubus_runtime;
-
 }
 
 extern "C" backend* init_cpu_backend(const abi_info*);
 
-local_runtime::local_runtime()
+local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_address_space_)
 //: cpu_plugin_(util::get_prefix("qubus") / "qubus/backends/libqubus_cpu_backend.so")
+: global_address_space_(std::move(global_address_space_))
 {
     init_logging();
 
@@ -105,16 +106,19 @@ hpx::future<hpx::id_type> local_runtime_reference_server::get_local_object_facto
 
 std::unique_ptr<remote_vpu_reference> local_runtime_reference_server::get_local_vpu() const
 {
-    return std::make_unique<remote_vpu_reference>(new_here<remote_vpu_reference_server>(&runtime_->get_local_vpu()));
+    return std::make_unique<remote_vpu_reference>(
+        new_here<remote_vpu_reference_server>(&runtime_->get_local_vpu()));
 }
 
-local_runtime_reference::local_runtime_reference(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
+local_runtime_reference::local_runtime_reference(hpx::future<hpx::id_type>&& id)
+: base_type(std::move(id))
 {
 }
 
 local_object_factory local_runtime_reference::get_local_object_factory() const
 {
-    return hpx::async<local_runtime_reference_server::get_local_object_factory_action>(this->get_id());
+    return hpx::async<local_runtime_reference_server::get_local_object_factory_action>(
+        this->get_id());
 }
 
 std::unique_ptr<remote_vpu_reference> local_runtime_reference::get_local_vpu() const
@@ -122,9 +126,9 @@ std::unique_ptr<remote_vpu_reference> local_runtime_reference::get_local_vpu() c
     return hpx::async<local_runtime_reference_server::get_local_vpu_action>(this->get_id()).get();
 }
 
-local_runtime& init_local_runtime()
+local_runtime& init_local_runtime(std::unique_ptr<virtual_address_space> global_addr_space)
 {
-    local_qubus_runtime = std::make_unique<local_runtime>();
+    local_qubus_runtime = std::make_unique<local_runtime>(std::move(global_addr_space));
 
     return *local_qubus_runtime;
 }
@@ -134,9 +138,11 @@ local_runtime& get_local_runtime()
     return *local_qubus_runtime;
 }
 
-hpx::future<hpx::id_type> init_local_runtime_remote()
+hpx::future<hpx::id_type> init_local_runtime_remote(virtual_address_space_wrapper::client global_addr_space)
 {
-    return new_here<local_runtime_reference_server>(&init_local_runtime());
+    auto copy = std::make_unique<virtual_address_space_wrapper::client>(std::move(global_addr_space));
+
+    return new_here<local_runtime_reference_server>(&init_local_runtime(std::move(copy)));
 }
 
 hpx::future<hpx::id_type> get_local_runtime_remote()
@@ -147,19 +153,19 @@ hpx::future<hpx::id_type> get_local_runtime_remote()
 HPX_DEFINE_PLAIN_ACTION(init_local_runtime_remote, init_local_runtime_remote_action);
 HPX_DEFINE_PLAIN_ACTION(get_local_runtime_remote, get_local_runtime_remote_action);
 
-local_runtime_reference init_local_runtime_on_locality(const hpx::id_type& locality)
+local_runtime_reference
+init_local_runtime_on_locality(const hpx::id_type& locality,
+                               virtual_address_space_wrapper::client superior_addr_space)
 {
-    return hpx::async<init_local_runtime_remote_action>(locality);
+    return hpx::async<init_local_runtime_remote_action>(locality, std::move(superior_addr_space));
 }
 
 local_runtime_reference get_local_runtime_on_locality(const hpx::id_type& locality)
 {
     return hpx::async<get_local_runtime_remote_action>(locality);
 }
-
 }
 
-HPX_REGISTER_ACTION(qubus::init_local_runtime_remote_action, QUBUS_init_local_runtime_remote_action);
+HPX_REGISTER_ACTION(qubus::init_local_runtime_remote_action,
+                    QUBUS_init_local_runtime_remote_action);
 HPX_REGISTER_ACTION(qubus::get_local_runtime_remote_action, QUBUS_get_local_runtime_remote_action);
-
-
