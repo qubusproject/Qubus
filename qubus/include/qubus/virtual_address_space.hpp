@@ -30,6 +30,8 @@ public:
     public:
         using base_type = hpx::components::client_base<client, virtual_address_space_wrapper>;
 
+        client() = default;
+
         client(hpx::id_type&& id);
         client(hpx::future<hpx::id_type>&& id);
 
