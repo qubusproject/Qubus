@@ -7,17 +7,13 @@
 #include <qubus/memory_block.hpp>
 
 #include <qubus/util/delegate.hpp>
-#include <qubus/util/dense_hash_map.hpp>
 #include <qubus/util/handle.hpp>
 #include <qubus/util/integers.hpp>
 
 #include <hpx/include/lcos.hpp>
 #include <hpx/include/local_lcos.hpp>
 
-#include <boost/bimap.hpp>
-#include <boost/bimap/unordered_set_of.hpp>
-
-#include <atomic>
+#include <exception>
 #include <functional>
 #include <map>
 #include <memory>
@@ -32,24 +28,7 @@ class object;
 class address_space
 {
 private:
-    class address_entry
-    {
-    public:
-        address_entry(hpx::naming::gid_type addr_, std::unique_ptr<memory_block> data_);
-
-        address_entry(const address_entry&) = delete;
-        address_entry& operator=(const address_entry&) = delete;
-
-        address_entry(address_entry&& other) = default;
-        address_entry& operator=(address_entry&& other) = default;
-
-        const hpx::naming::gid_type& addr() const;
-        memory_block& data() const;
-
-    private:
-        hpx::naming::gid_type addr_;
-        std::unique_ptr<memory_block> data_;
-    };
+    class address_entry;
 
 public:
     class handle
@@ -57,12 +36,6 @@ public:
     public:
         handle() = default;
         explicit handle(std::shared_ptr<address_entry> entry_);
-
-        handle(const handle&) = delete;
-        handle& operator=(const handle&) = delete;
-
-        handle(handle&& other) = default;
-        handle& operator=(handle&& other) = default;
 
         memory_block& data() const;
 
@@ -84,6 +57,29 @@ public:
     void dump() const;
 
 private:
+    class address_entry
+    {
+    public:
+        address_entry(hpx::naming::gid_type addr_, std::unique_ptr<memory_block> data_);
+        address_entry(hpx::naming::gid_type addr_, std::unique_ptr<memory_block> data_,
+                      std::vector<handle> referenced_pages_);
+
+        address_entry(const address_entry&) = delete;
+        address_entry& operator=(const address_entry&) = delete;
+
+        address_entry(address_entry&& other) = default;
+        address_entry& operator=(address_entry&& other) = default;
+
+        const hpx::naming::gid_type& addr() const;
+        memory_block& data() const;
+        const std::vector<handle>& referenced_pages() const;
+
+    private:
+        hpx::naming::gid_type addr_;
+        std::unique_ptr<memory_block> data_;
+        std::vector<handle> referenced_pages_;
+    };
+
     bool evict_objects(std::size_t hint);
 
     std::unique_ptr<allocator> allocator_;
@@ -111,8 +107,11 @@ public:
     hpx::future<handle> resolve_object(const object& obj);
     handle try_resolve_object(const object& obj) const;
 
+    void on_page_fault(std::function<hpx::future<handle>(const object& obj)> callback);
 private:
     std::reference_wrapper<host_address_space> host_addr_space_;
+
+    util::delegate<hpx::future<handle>(const object& obj)> on_page_fault_;
 };
 }
 

@@ -15,6 +15,12 @@ public:
     explicit aggregate_vpu(std::unique_ptr<scheduler> scheduler_);
     virtual ~aggregate_vpu() = default;
 
+    aggregate_vpu(const aggregate_vpu&) = delete;
+    aggregate_vpu& operator=(const aggregate_vpu&) = delete;
+
+    aggregate_vpu(aggregate_vpu&&) = default;
+    aggregate_vpu& operator=(aggregate_vpu&&) = default;
+
     void add_member_vpu(std::unique_ptr<vpu> new_member_vpu);
 
     hpx::future<void> execute(computelet c, execution_context ctx) const override;

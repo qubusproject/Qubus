@@ -41,10 +41,10 @@ hpx::future<hpx::id_type> local_object_factory_server::create_scalar(type data_t
 {
     QUBUS_ASSERT(data_type.is_primitive(), "The type of scalars has to be primitive.");
 
-    object obj = new_here<object_server>(data_type);
-
     auto size = abi_.get_size_of(data_type);
     auto alignment = abi_.get_align_of(data_type);
+
+    object obj = new_here<object_server>(data_type, size, alignment);
 
     auto instance = address_space_->allocate_object_page(obj, size, alignment);
 
@@ -58,9 +58,11 @@ hpx::future<hpx::id_type> local_object_factory_server::create_scalar(type data_t
 hpx::future<hpx::id_type>
 local_object_factory_server::create_array(type value_type, std::vector<util::index_t> shape)
 {
-    object obj = new_here<object_server>(types::array(value_type, util::to_uindex(shape.size())));
+    auto obj_type = types::array(value_type, util::to_uindex(shape.size()));
 
     auto layout = abi_.get_array_layout(value_type, shape);
+
+    object obj = new_here<object_server>(std::move(obj_type), layout.size(), layout.alignment());
 
     auto instance = address_space_->allocate_object_page(obj, util::to_uindex(layout.size()),
                                                          util::to_uindex(layout.alignment()));
@@ -91,7 +93,8 @@ local_object_factory_server::create_array(type value_type, std::vector<util::ind
 hpx::future<hpx::id_type> local_object_factory_server::create_struct(type struct_type,
                                                                      std::vector<object> members)
 {
-    object obj = new_here<object_server>(struct_type);
+    // TODO: What should be the alignment of a struct?
+    object obj = new_here<object_server>(struct_type, 0, sizeof(void*));
 
     auto obj_ptr = hpx::get_ptr<object_server>(hpx::launch::sync, obj.get_id());
 
