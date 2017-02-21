@@ -13,6 +13,7 @@
 #include <hpx/include/lcos.hpp>
 #include <hpx/include/local_lcos.hpp>
 
+#include <exception>
 #include <functional>
 #include <map>
 #include <memory>

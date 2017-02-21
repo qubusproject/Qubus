@@ -37,8 +37,8 @@ std::unique_ptr<local_runtime> local_qubus_runtime;
 extern "C" backend* init_cpu_backend(const abi_info*);
 
 local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_address_space_)
-//: cpu_plugin_(util::get_prefix("qubus") / "qubus/backends/libqubus_cpu_backend.so")
-: global_address_space_(std::move(global_address_space_))
+    //: cpu_plugin_(util::get_prefix("qubus") / "qubus/backends/libqubus_cpu_backend.so")
+    : global_address_space_(std::move(global_address_space_))
 {
     init_logging();
 
@@ -67,6 +67,8 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
 
     address_space_ = std::make_unique<local_address_space>(cpu_backend_->get_host_address_space());
 
+    address_space_->on_page_fault([this](const object& obj) { return resolve_page_fault(obj); });
+
     object_factory_ = new_here<local_object_factory_server>(address_space_.get());
 
     //local_vpu_ = std::make_unique<aggregate_vpu>(std::make_unique<round_robin_scheduler>());
@@ -92,6 +94,39 @@ vpu& local_runtime::get_local_vpu() const
 local_address_space& local_runtime::get_address_space() const
 {
     return *address_space_;
+}
+
+hpx::future<local_address_space::handle> local_runtime::resolve_page_fault(const object& obj)
+{
+    auto instance = global_address_space_->resolve_object(obj);
+
+    auto page = instance.then([this, obj](hpx::future<object_instance> instance) {
+        auto instance_v = instance.get();
+
+        if (!instance_v)
+            throw std::runtime_error("Page fault");
+
+        const auto& obj_type = obj.object_type();
+
+        auto size = obj.size();
+        auto alignment = obj.alignment();
+
+        auto page = address_space_->allocate_object_page(obj, size, alignment);
+
+        auto& data = page.data();
+
+        util::span<char> obj_memory(static_cast<char*>(data.ptr()), size);
+
+        auto finished = instance_v.copy(obj_memory);
+
+        return finished.then([page = std::move(page)](hpx::future<void> finished) {
+            finished.get();
+
+            return std::move(page);
+        });
+    });
+
+    return page;
 }
 
 local_runtime_reference_server::local_runtime_reference_server(local_runtime* runtime_)
@@ -141,9 +176,11 @@ local_runtime& get_local_runtime()
     return *local_qubus_runtime;
 }
 
-hpx::future<hpx::id_type> init_local_runtime_remote(virtual_address_space_wrapper::client global_addr_space)
+hpx::future<hpx::id_type>
+init_local_runtime_remote(virtual_address_space_wrapper::client global_addr_space)
 {
-    auto copy = std::make_unique<virtual_address_space_wrapper::client>(std::move(global_addr_space));
+    auto copy =
+        std::make_unique<virtual_address_space_wrapper::client>(std::move(global_addr_space));
 
     return new_here<local_runtime_reference_server>(&init_local_runtime(std::move(copy)));
 }

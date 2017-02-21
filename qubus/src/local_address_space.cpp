@@ -9,7 +9,6 @@
 #include <qubus/util/assert.hpp>
 #include <qubus/util/unused.hpp>
 
-#include <exception>
 #include <tuple>
 #include <utility>
 

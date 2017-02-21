@@ -48,6 +48,8 @@ public:
     }
 
 private:
+    hpx::future<local_address_space::handle> resolve_page_fault(const object& obj);
+
     abi_info abi_info_;
     //boost::dll::shared_library cpu_plugin_;
 
