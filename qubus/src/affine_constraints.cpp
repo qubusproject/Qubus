@@ -659,19 +659,22 @@ affine_expr_context::affine_expr_context(std::function<bool(const expression&)> 
 
 affine_expr affine_expr_context::declare_variable(const variable_declaration& var)
 {
-    auto search_result = variable_table_.find(var);
+    auto search_result =
+            std::find_if(variable_table_.begin(), variable_table_.end(),
+                         [&](const auto& entry) { return std::get<0>(entry) == var; });
 
     if (search_result != variable_table_.end())
     {
-        return affine_expr(std::make_unique<affine_expr_variable>(search_result->second), *this);
+        return affine_expr(std::make_unique<affine_expr_variable>(std::get<1>(*search_result)), *this);
     }
     else
     {
         auto name = "i" + std::to_string(free_variable_id_++);
 
-        auto new_entry = variable_table_.emplace(var, std::move(name)).first;
+        variable_table_.emplace_back(var, std::move(name));
+        const auto& new_entry = variable_table_.back();
 
-        return affine_expr(std::make_unique<affine_expr_variable>(new_entry->second), *this);
+        return affine_expr(std::make_unique<affine_expr_variable>(std::get<1>(new_entry)), *this);
     }
 }
 
@@ -701,11 +704,11 @@ boost::optional<variable_declaration>
 affine_expr_context::lookup_variable(const std::string& name) const
 {
     auto search_result = std::find_if(variable_table_.begin(), variable_table_.end(),
-                                      [&](const auto& entry) { return entry.second == name; });
+                                      [&](const auto& entry) { return std::get<1>(entry) == name; });
 
     if (search_result != variable_table_.end())
     {
-        return search_result->first;
+        return std::get<0>(*search_result);
     }
     else
     {
@@ -751,7 +754,7 @@ isl::space affine_expr_context::construct_corresponding_space(isl::context& isl_
 
     for (const auto& entry : variable_table_)
     {
-        corresponding_space.set_dim_name(isl_dim_set, pos, entry.second);
+        corresponding_space.set_dim_name(isl_dim_set, pos, std::get<1>(entry));
 
         ++pos;
     }
