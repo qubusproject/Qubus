@@ -1,6 +1,7 @@
 #ifndef QUBUS_OBJECT_HPP
 #define QUBUS_OBJECT_HPP
 
+#include <qubus/object_instance.hpp>
 #include <qubus/local_address_space.hpp>
 
 #include <qubus/object_monitor.hpp>
@@ -31,6 +32,8 @@ public:
     type object_type() const;
     hpx::id_type id() const;
 
+    object_instance primary_instance() const;
+
     bool has_data() const;
 
     token acquire_read_access();
@@ -39,6 +42,7 @@ public:
     std::vector<object> components() const;
 
     HPX_DEFINE_COMPONENT_ACTION(object_server, object_type, object_type_action);
+    HPX_DEFINE_COMPONENT_ACTION(object_server, primary_instance, primary_instance_action);
     HPX_DEFINE_COMPONENT_ACTION(object_server, has_data, has_data_action);
     HPX_DEFINE_COMPONENT_ACTION(object_server, acquire_read_access, acquire_read_access_action);
     HPX_DEFINE_COMPONENT_ACTION(object_server, acquire_write_access, acquire_write_access_action);
@@ -67,6 +71,8 @@ public:
     type object_type() const;
 
     hpx::id_type id() const;
+
+    object_instance primary_instance() const;
 
     bool has_data() const;
 

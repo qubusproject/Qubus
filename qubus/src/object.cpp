@@ -11,6 +11,10 @@ using object_type_action = qubus::object_server::object_type_action;
 HPX_REGISTER_ACTION_DECLARATION(object_type_action, qubus_object_server_type_action);
 HPX_REGISTER_ACTION(object_type_action, qubus_object_server_type_action);
 
+using primary_instance_action = qubus::object_server::primary_instance_action;
+HPX_REGISTER_ACTION_DECLARATION(primary_instance_action, qubus_object_server_primary_instance_action);
+HPX_REGISTER_ACTION(primary_instance_action, qubus_object_server_primary_instance_action);
+
 using has_data_action = qubus::object_server::has_data_action;
 HPX_REGISTER_ACTION_DECLARATION(has_data_action, qubus_object_server_has_data_action);
 HPX_REGISTER_ACTION(has_data_action, qubus_object_server_has_data_action);
@@ -48,6 +52,14 @@ object_server::~object_server()
 hpx::id_type object_server::id() const
 {
     return get_id();
+}
+
+object_instance object_server::primary_instance() const
+{
+    if (!has_data())
+        return object_instance();
+
+    return object_instance(data_);
 }
 
 bool object_server::has_data() const
@@ -101,6 +113,11 @@ type object::object_type() const
 hpx::id_type object::id() const
 {
     return get_id();
+}
+
+object_instance object::primary_instance() const
+{
+    return hpx::async<object_server::primary_instance_action>(this->get_id()).get();
 }
 
 bool object::has_data() const
