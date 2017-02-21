@@ -11,6 +11,14 @@ using object_type_action = qubus::object_server::object_type_action;
 HPX_REGISTER_ACTION_DECLARATION(object_type_action, qubus_object_server_type_action);
 HPX_REGISTER_ACTION(object_type_action, qubus_object_server_type_action);
 
+using size_action = qubus::object_server::size_action;
+HPX_REGISTER_ACTION_DECLARATION(size_action, qubus_object_server_size_action);
+HPX_REGISTER_ACTION(size_action, qubus_object_server_size_action);
+
+using alignment_action = qubus::object_server::alignment_action;
+HPX_REGISTER_ACTION_DECLARATION(alignment_action, qubus_object_server_alignment_action);
+HPX_REGISTER_ACTION(alignment_action, qubus_object_server_alignment_action);
+
 using primary_instance_action = qubus::object_server::primary_instance_action;
 HPX_REGISTER_ACTION_DECLARATION(primary_instance_action, qubus_object_server_primary_instance_action);
 HPX_REGISTER_ACTION(primary_instance_action, qubus_object_server_primary_instance_action);
@@ -34,14 +42,24 @@ HPX_REGISTER_ACTION(components_action, qubus_object_server_components_action);
 namespace qubus
 {
 
-object_server::object_server(type object_type_)
-: object_type_(std::move(object_type_))
+object_server::object_server(type object_type_, std::size_t size_, std::size_t alignment_)
+: object_type_(std::move(object_type_)), size_(size_), alignment_(alignment_)
 {
 }
 
 type object_server::object_type() const
 {
     return object_type_;
+}
+
+std::size_t object_server::size() const
+{
+    return size_;
+}
+
+std::size_t object_server::alignment() const
+{
+    return alignment_;
 }
 
 object_server::~object_server()
@@ -108,6 +126,16 @@ object::object(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
 type object::object_type() const
 {
     return hpx::async<object_server::object_type_action>(this->get_id()).get();
+}
+
+std::size_t object::size() const
+{
+    return hpx::async<object_server::size_action>(this->get_id()).get();
+}
+
+std::size_t object::alignment() const
+{
+    return hpx::async<object_server::alignment_action>(this->get_id()).get();
 }
 
 hpx::id_type object::id() const

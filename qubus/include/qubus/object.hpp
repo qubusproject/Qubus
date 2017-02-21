@@ -23,13 +23,15 @@ class object_server : public hpx::components::component_base<object_server>
 {
 public:
     object_server() = default;
-    explicit object_server(type object_type_);
+    explicit object_server(type object_type_, std::size_t size_, std::size_t alignment_);
     ~object_server();
 
     object_server(const object_server&) = delete;
     object_server& operator=(const object_server&) = delete;
     
     type object_type() const;
+    std::size_t size() const;
+    std::size_t alignment() const;
     hpx::id_type id() const;
 
     object_instance primary_instance() const;
@@ -42,6 +44,8 @@ public:
     std::vector<object> components() const;
 
     HPX_DEFINE_COMPONENT_ACTION(object_server, object_type, object_type_action);
+    HPX_DEFINE_COMPONENT_ACTION(object_server, size, size_action);
+    HPX_DEFINE_COMPONENT_ACTION(object_server, alignment, alignment_action);
     HPX_DEFINE_COMPONENT_ACTION(object_server, primary_instance, primary_instance_action);
     HPX_DEFINE_COMPONENT_ACTION(object_server, has_data, has_data_action);
     HPX_DEFINE_COMPONENT_ACTION(object_server, acquire_read_access, acquire_read_access_action);
@@ -55,6 +59,8 @@ private:
     object_monitor monitor_;
 
     type object_type_;
+    std::size_t size_;
+    std::size_t alignment_;
     local_address_space::handle data_;
     std::vector<object> components_;
 };
@@ -69,6 +75,8 @@ public:
     object(hpx::future<hpx::id_type>&& id);
 
     type object_type() const;
+    std::size_t size() const;
+    std::size_t alignment() const;
 
     hpx::id_type id() const;
 
