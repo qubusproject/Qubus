@@ -6,11 +6,14 @@
 #include <qubus/local_runtime.hpp>
 
 #include <qubus/aggregate_vpu.hpp>
+#include <qubus/virtual_address_space.hpp>
 
 #include <qubus/computelet.hpp>
 #include <qubus/execution_context.hpp>
 
 #include <qubus/object_factory.hpp>
+
+#include <boost/optional.hpp>
 
 #include <hpx/include/components.hpp>
 #include <hpx/include/actions.hpp>
@@ -32,8 +35,9 @@ public:
     HPX_DEFINE_COMPONENT_ACTION(runtime_server, get_object_factory, get_object_factory_action);
 private:
     std::vector<local_runtime_reference> local_runtimes_;
+    boost::optional<virtual_address_space_wrapper> global_address_space_;
     object_factory obj_factory_;
-    std::unique_ptr<aggregate_vpu> global_vpu_;
+    boost::optional<aggregate_vpu> global_vpu_;
 };
 
 class runtime : public hpx::components::client_base<runtime, runtime_server>

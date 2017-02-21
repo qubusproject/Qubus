@@ -1,5 +1,7 @@
 #include <qubus/runtime.hpp>
 
+#include <qubus/basic_address_space.hpp>
+
 #include <qubus/hpx_utils.hpp>
 
 #include <qubus/util/unused.hpp>
@@ -26,9 +28,13 @@ runtime_server::runtime_server()
         local_runtimes_.push_back(init_local_runtime_on_locality(locality));
     }
 
+    auto addr_space_impl = std::make_unique<basic_address_space>();
+
+    global_address_space_ = virtual_address_space_wrapper(std::move(addr_space_impl));
+
     obj_factory_ = hpx::new_<object_factory>(hpx::find_here(), abi_info(), local_runtimes_);
 
-    global_vpu_ = std::make_unique<aggregate_vpu>(std::make_unique<round_robin_scheduler>());
+    global_vpu_ = aggregate_vpu(std::make_unique<round_robin_scheduler>());
 
     for (const auto& runtime : local_runtimes_)
     {
