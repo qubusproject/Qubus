@@ -128,6 +128,9 @@ std::unique_ptr<remote_vpu_reference> local_runtime_reference::get_local_vpu() c
 
 local_runtime& init_local_runtime(std::unique_ptr<virtual_address_space> global_addr_space)
 {
+    if (local_qubus_runtime)
+        throw 0;
+
     local_qubus_runtime = std::make_unique<local_runtime>(std::move(global_addr_space));
 
     return *local_qubus_runtime;
