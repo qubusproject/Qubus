@@ -138,6 +138,11 @@ object_instance::~object_instance() = default;
 object_instance::object_instance(object_instance&& other) noexcept = default;
 object_instance& object_instance::operator=(object_instance&& other) noexcept = default;
 
+object_instance::operator bool() const
+{
+    return static_cast<bool>(impl_);
+}
+
 hpx::future<void> object_instance::copy(util::span<char> buffer) const
 {
     return impl_->copy(buffer);

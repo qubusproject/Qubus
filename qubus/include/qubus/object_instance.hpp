@@ -24,6 +24,8 @@ public:
     object_instance(object_instance&& other) noexcept;
     object_instance& operator=(object_instance&& other) noexcept;
 
+    explicit operator bool() const;
+
     hpx::future<void> copy(util::span<char> buffer) const;
 
     void load(hpx::serialization::input_archive & ar, unsigned version);
