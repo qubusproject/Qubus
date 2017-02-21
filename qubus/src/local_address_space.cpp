@@ -230,7 +230,10 @@ void address_space::dump() const
 }
 
 local_address_space::local_address_space(host_address_space& host_addr_space_)
-: host_addr_space_(host_addr_space_)
+: host_addr_space_(host_addr_space_),
+  on_page_fault_([](const object& QUBUS_UNUSED(obj)) { // TODO: Add correct exception type.
+      return hpx::make_exceptional_future<local_address_space::handle>(std::runtime_error("Page fault"));
+  })
 {
     host_addr_space_.on_page_fault([this](const object& obj) -> hpx::future<address_space::handle> {
         auto components = obj.components();
@@ -242,8 +245,7 @@ local_address_space::local_address_space(host_address_space& host_addr_space_)
             return hpx::make_ready_future(std::move(page));
         }
 
-        return hpx::make_exceptional_future<address_space::handle>(
-            std::runtime_error("Page fault"));
+        return on_page_fault_(obj);
     });
 }
 
@@ -266,5 +268,11 @@ hpx::future<local_address_space::handle> local_address_space::resolve_object(con
 local_address_space::handle local_address_space::try_resolve_object(const object& obj) const
 {
     return host_addr_space_.get().try_resolve_object(obj);
+}
+
+void local_address_space::on_page_fault(
+    std::function<hpx::future<local_address_space::handle>(const object& obj)> callback)
+{
+    on_page_fault_.connect(std::move(callback));
 }
 }

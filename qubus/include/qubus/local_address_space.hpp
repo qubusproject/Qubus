@@ -106,8 +106,11 @@ public:
     hpx::future<handle> resolve_object(const object& obj);
     handle try_resolve_object(const object& obj) const;
 
+    void on_page_fault(std::function<hpx::future<handle>(const object& obj)> callback);
 private:
     std::reference_wrapper<host_address_space> host_addr_space_;
+
+    util::delegate<hpx::future<handle>(const object& obj)> on_page_fault_;
 };
 }
 
