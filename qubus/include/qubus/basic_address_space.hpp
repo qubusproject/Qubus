@@ -9,7 +9,7 @@
 namespace qubus
 {
 
-class basic_address_space : public virtual_address_space
+class basic_address_space final : public virtual_address_space
 {
 public:
     ~basic_address_space() override = default;
