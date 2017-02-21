@@ -36,12 +36,6 @@ public:
         handle() = default;
         explicit handle(std::shared_ptr<address_entry> entry_);
 
-        handle(const handle&) = delete;
-        handle& operator=(const handle&) = delete;
-
-        handle(handle&& other) = default;
-        handle& operator=(handle&& other) = default;
-
         memory_block& data() const;
 
         explicit operator bool() const;
