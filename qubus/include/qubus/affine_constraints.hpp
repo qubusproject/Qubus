@@ -90,7 +90,7 @@ private:
     std::function<bool(const expression&)> invariant_checker_;
 
     std::size_t free_variable_id_ = 0;
-    std::map<variable_declaration, std::string> variable_table_;
+    std::vector<std::tuple<variable_declaration, std::string>> variable_table_;
 
     std::size_t free_constant_id_ = 0;
     std::vector<std::tuple<const expression*, std::string>> constant_table_;
