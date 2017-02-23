@@ -1,3 +1,5 @@
+variables:
+  GIT_SUBMODULE_STRATEGY: recursive
 # Currently, we run all test configurations concurrently to optimize for the usual (non failing) case.
 # We could also run the debug tests first and abort the entire pipeline if they fail to shorten the build but
 # IMHO we would not gain enough speedup to justify the regression in all other cases.
@@ -8,7 +10,6 @@ stages:
 build:clang:release:
   script:
   - "sudo chown -R `whoami`: ."
-  - git submodule update --init
   - ls -la
   - export CC=clang
   - export CXX=clang++
@@ -37,7 +38,6 @@ test:clang:release:
 build:gcc:release:
   script:
   - "sudo chown -R `whoami`: ."
-  - git submodule update --init
   - ls -la
   - export CC=gcc
   - export CXX=g++
@@ -66,7 +66,6 @@ test:gcc:release:
 build:clang:debug:
   script:
   - "sudo chown -R `whoami`: ."
-  - git submodule update --init
   - ls -la
   - export CC=clang
   - export CXX=clang++
@@ -95,7 +94,6 @@ test:clang:debug:
 build:gcc:debug:
   script:
   - "sudo chown -R `whoami`: ."
-  - git submodule update --init
   - ls -la
   - export CC=gcc
   - export CXX=g++
@@ -126,7 +124,6 @@ test:gcc:debug:
 build:doc:
   script:
   - "sudo chown -R `whoami`: ."
-  - git submodule update --init
   - ls -la
   - mkdir build
   - cd build
