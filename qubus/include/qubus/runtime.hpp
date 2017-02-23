@@ -59,6 +59,7 @@ public:
 };
 
 void init(int argc, char** argv);
+void finalize();
 runtime get_runtime();
 
 template<typename... Args>

@@ -1,7 +1,7 @@
 #ifndef QUBUS_TENSOR_VAR_HPP
 #define QUBUS_TENSOR_VAR_HPP
 
-#include <qubus/local_runtime.hpp>
+#include <qubus/runtime.hpp>
 
 #include <qubus/IR/pretty_printer.hpp>
 #include <qubus/IR/qir.hpp>
