@@ -5,6 +5,7 @@ find_package(HPX 0.9.12 REQUIRED)
 add_subdirectory(src)
 add_subdirectory(tests)
 add_subdirectory(benchmarks)
+add_subdirectory(examples)
 
 generate_export_header(qubus BASE_NAME QUBUS)
 

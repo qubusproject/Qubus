@@ -79,6 +79,10 @@ void init(int QUBUS_UNUSED(argc), char** QUBUS_UNUSED(argv))
     }
 }
 
+void finalize()
+{
+}
+
 runtime get_runtime()
 {
     return hpx::agas::resolve_name("/qubus/runtime");
