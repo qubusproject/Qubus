@@ -1,7 +1,8 @@
-#include <qubus/scheduling/scheduler.hpp>
+#include <qubus/scheduling/round_robin_scheduler.hpp>
 
 #include <boost/optional.hpp>
 
+#include <mutex>
 #include <utility>
 
 namespace qubus

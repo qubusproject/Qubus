@@ -1,5 +1,7 @@
 #include <qubus/runtime.hpp>
 
+#include <qubus/scheduling/round_robin_scheduler.hpp>
+
 #include <qubus/basic_address_space.hpp>
 
 #include <qubus/hpx_utils.hpp>
