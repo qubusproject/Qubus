@@ -17,7 +17,7 @@ void round_robin_scheduler::schedule(computelet c, execution_context ctx)
 
     next_endpoint_ = (next_endpoint_ + 1) % resource_count;
 
-    execution_started.wait();
+    execution_started.get();
 }
 
 void round_robin_scheduler::add_resource(vpu& execution_resource)
