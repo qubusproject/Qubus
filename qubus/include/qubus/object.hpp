@@ -4,6 +4,7 @@
 #include <qubus/object_instance.hpp>
 #include <qubus/local_address_space.hpp>
 
+#include <qubus/distributed_future.hpp>
 #include <qubus/object_monitor.hpp>
 
 #include <hpx/include/lcos.hpp>
@@ -84,8 +85,8 @@ public:
 
     bool has_data() const;
 
-    hpx::future<token> acquire_read_access();
-    hpx::future<token> acquire_write_access();
+    token acquire_read_access();
+    token acquire_write_access();
 
     std::vector<object> components() const;
 

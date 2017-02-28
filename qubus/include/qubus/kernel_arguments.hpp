@@ -1,10 +1,7 @@
-#ifndef QUBUS_EXECUTION_CONTEXT_HPP
-#define QUBUS_EXECUTION_CONTEXT_HPP
+#ifndef QUBUS_KERNEL_ARGUMENTS_HPP
+#define QUBUS_KERNEL_ARGUMENTS_HPP
 
-#include <qubus/distributed_future.hpp>
 #include <qubus/object.hpp>
-
-#include <hpx/include/lcos.hpp>
 
 #include <qubus/util/unused.hpp>
 
@@ -15,18 +12,10 @@
 namespace qubus
 {
 
-class execution_context
+class kernel_arguments
 {
 public:
-    execution_context() = default;
-
-    execution_context(std::vector<object> args_, std::vector<object> results_,
-                      hpx::future<void> is_ready_)
-    : arguments_(std::move(args_)),
-      results_(std::move(results_)),
-      is_ready_(make_distributed_future(hpx::shared_future<void>(std::move(is_ready_))))
-    {
-    }
+    kernel_arguments() = default;
 
     std::vector<object>& args()
     {
@@ -36,6 +25,11 @@ public:
     const std::vector<object>& args() const
     {
         return arguments_;
+    }
+
+    void push_back_arg(object arg)
+    {
+        arguments_.push_back(arg);
     }
 
     std::vector<object>& results()
@@ -48,9 +42,9 @@ public:
         return results_;
     }
 
-    hpx::future<void> when_ready() const
+    void push_back_result(object result)
     {
-        return make_future(is_ready_);
+        results_.push_back(result);
     }
 
     template <typename Archive>
@@ -63,7 +57,6 @@ public:
 private:
     std::vector<object> arguments_;
     std::vector<object> results_;
-    distributed_future<void> is_ready_;
 };
 }
 
