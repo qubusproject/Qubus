@@ -8,6 +8,8 @@
 #include <qubus/computelet.hpp>
 #include <qubus/execution_context.hpp>
 
+#include <hpx/include/lcos.hpp>
+
 namespace qubus
 {
 
@@ -20,7 +22,7 @@ public:
     scheduler(const scheduler&) = delete;
     scheduler& operator=(const scheduler&) = delete;
     
-    virtual void schedule(computelet c, execution_context ctx) = 0;
+    virtual hpx::future<void> schedule(computelet c, execution_context ctx) = 0;
     virtual void add_resource(vpu& execution_resource) = 0;
 };
 

@@ -9,7 +9,7 @@
 #include <qubus/virtual_address_space.hpp>
 
 #include <qubus/computelet.hpp>
-#include <qubus/execution_context.hpp>
+#include <qubus/kernel_arguments.hpp>
 
 #include <qubus/object_factory.hpp>
 
@@ -27,7 +27,7 @@ class runtime_server : public hpx::components::component_base<runtime_server>
 {
 public:
     runtime_server();
-    void execute(computelet c, execution_context ctx);
+    void execute(computelet c, kernel_arguments args);
 
     hpx::future<hpx::id_type> get_object_factory() const;
 
@@ -53,7 +53,7 @@ public:
 
     // plan register_user_defined_plan(user_defined_plan_t plan); Is this still necessary?
 
-    hpx::future<void> execute(computelet c, execution_context ctx);
+    hpx::future<void> execute(computelet c, kernel_arguments args);
 
     // const abi_info& abi();
 };
@@ -65,9 +65,9 @@ runtime get_runtime();
 template<typename... Args>
 void execute(const computelet& c, Args&&... args)
 {
-    execution_context ctx({std::forward<Args>(args).get_object()...});
+    kernel_arguments kernel_args({std::forward<Args>(args).get_object()...});
 
-    get_runtime().execute(c, std::move(ctx));
+    get_runtime().execute(c, std::move(kernel_args));
 }
 
 }

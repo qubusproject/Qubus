@@ -42,7 +42,7 @@ private:
 };
 
 template <typename View>
-hpx::future<token> acquire_access_for_view(object& obj)
+token acquire_access_for_view(object& obj)
 {
     if (!object_view_traits<View>::is_immutable)
     {
@@ -72,9 +72,9 @@ public:
 
     static hpx::future<cpu_scalar_view<T>> construct(object obj)
     {
-        auto object_ready = acquire_access_for_view<cpu_scalar_view<T>>(obj);
+        auto token = acquire_access_for_view<cpu_scalar_view<T>>(obj);
 
-        auto token = object_ready.get();
+        token.when_valid().get();
 
         auto& addr_space = get_local_runtime().get_address_space();
 
@@ -176,9 +176,9 @@ public:
 
     static hpx::future<cpu_array_view<T, Rank>> construct(object obj)
     {
-        auto object_ready = acquire_access_for_view<cpu_array_view<T, Rank>>(obj);
+        auto token = acquire_access_for_view<cpu_array_view<T, Rank>>(obj);
 
-        auto token = object_ready.get();
+        token.when_valid().get();
 
         auto& addr_space = get_local_runtime().get_address_space();
 
@@ -235,9 +235,9 @@ public:
 
     static hpx::future<mutable_cpu_sparse_tensor_view<T, Rank>> construct(object obj)
     {
-        auto object_ready = acquire_access_for_view<mutable_cpu_sparse_tensor_view<T, Rank>>(obj);
+        auto token = acquire_access_for_view<mutable_cpu_sparse_tensor_view<T, Rank>>(obj);
 
-        auto token = object_ready.get();
+        token.when_valid().get();
 
         auto ctx =
             std::make_shared<host_view_context>(std::move(token), local_address_space::handle());
