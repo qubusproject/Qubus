@@ -7,7 +7,6 @@
 #include <hpx/include/lcos.hpp>
 
 #include <chrono>
-#include <memory>
 #include <queue>
 #include <vector>
 
