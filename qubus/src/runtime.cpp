@@ -1,6 +1,6 @@
 #include <qubus/runtime.hpp>
 
-#include <qubus/scheduling/round_robin_scheduler.hpp>
+#include <qubus/scheduling/uniform_fill_scheduler.hpp>
 
 #include <qubus/basic_address_space.hpp>
 
@@ -39,7 +39,7 @@ runtime_server::runtime_server()
 
     obj_factory_ = hpx::new_<object_factory>(hpx::find_here(), abi_info(), local_runtimes_);
 
-    global_vpu_ = aggregate_vpu(std::make_unique<round_robin_scheduler>());
+    global_vpu_ = aggregate_vpu(std::make_unique<uniform_fill_scheduler>());
 
     for (const auto& runtime : local_runtimes_)
     {
