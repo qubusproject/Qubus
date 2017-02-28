@@ -1,5 +1,7 @@
 #include <qubus/runtime.hpp>
 
+#include <qubus/scheduling/uniform_fill_scheduler.hpp>
+
 #include <qubus/basic_address_space.hpp>
 
 #include <qubus/hpx_utils.hpp>
@@ -27,7 +29,8 @@ runtime_server::runtime_server()
 
     global_address_space_ = new_here<virtual_address_space_wrapper>(std::move(addr_space_impl));
 
-    QUBUS_ASSERT(static_cast<bool>(global_address_space_), "This subsystem is not properly initialized.");
+    QUBUS_ASSERT(static_cast<bool>(global_address_space_),
+                 "This subsystem is not properly initialized.");
 
     for (const auto& locality : hpx::find_all_localities())
     {
@@ -36,7 +39,7 @@ runtime_server::runtime_server()
 
     obj_factory_ = hpx::new_<object_factory>(hpx::find_here(), abi_info(), local_runtimes_);
 
-    global_vpu_ = aggregate_vpu(std::make_unique<round_robin_scheduler>());
+    global_vpu_ = aggregate_vpu(std::make_unique<uniform_fill_scheduler>());
 
     for (const auto& runtime : local_runtimes_)
     {
@@ -44,9 +47,57 @@ runtime_server::runtime_server()
     }
 }
 
-void runtime_server::execute(computelet c, execution_context ctx)
+void runtime_server::execute(computelet c, kernel_arguments kernel_args)
 {
-    global_vpu_->execute(std::move(c), std::move(ctx)).wait();
+    std::vector<token> tokens;
+
+    std::vector<object> args;
+    std::vector<object> results;
+
+    std::vector<distributed_future<void>> dependencies;
+
+    for (auto& arg : kernel_args.args())
+    {
+        auto token = arg.acquire_read_access();
+
+        auto is_valid = token.when_valid();
+
+        dependencies.push_back(make_distributed_future(std::move(is_valid)));
+
+        args.push_back(arg);
+
+        tokens.push_back(std::move(token));
+    }
+
+    for (auto& result : kernel_args.results())
+    {
+        auto token = result.acquire_write_access();
+
+        auto is_valid = token.when_valid();
+
+        dependencies.push_back(make_distributed_future(std::move(is_valid)));
+
+        results.push_back(result);
+
+        tokens.push_back(std::move(token));
+    }
+
+    hpx::future<void> dependencies_ready = hpx::when_all(std::move(dependencies));
+
+    execution_context ctx(std::move(args), std::move(results), std::move(dependencies_ready));
+
+    auto is_finished = global_vpu_->execute(std::move(c), std::move(ctx));
+
+    is_finished.then([tokens = std::move(tokens)](hpx::future<void> is_finished) mutable {
+        is_finished.get();
+
+        for (auto& token : tokens)
+        {
+            token.release();
+        }
+    });
+
+    // TODO: Make sure that all tasks are run.
 }
 
 hpx::future<hpx::id_type> runtime_server::get_object_factory() const
@@ -58,9 +109,10 @@ runtime::runtime(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
 {
 }
 
-hpx::future<void> runtime::execute(computelet c, execution_context ctx)
+hpx::future<void> runtime::execute(computelet c, kernel_arguments args)
 {
-    return hpx::async<runtime_server::execute_action>(this->get_id(), std::move(c), std::move(ctx));
+    return hpx::async<runtime_server::execute_action>(this->get_id(), std::move(c),
+                                                      std::move(args));
 }
 
 object_factory runtime::get_object_factory() const

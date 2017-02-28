@@ -139,33 +139,17 @@ public:
     {
         const auto& compilation = compiler_.compile(c);
 
-        std::vector<hpx::future<token>> tokens;
+        auto deps_ready = ctx.when_ready();
 
-        for (auto& arg : ctx.args())
-        {
-            auto token = arg.acquire_read_access();
-
-            tokens.push_back(std::move(token));
-        }
-
-        for (auto& result : ctx.results())
-        {
-            auto token = result.acquire_write_access();
-
-            tokens.push_back(std::move(token));
-        }
-
-        hpx::future<std::vector<hpx::future<token>>> deps_ready = hpx::when_all(std::move(tokens));
-
-        hpx::shared_future<void> task_done = hpx::dataflow(
-            [this, &compilation, c, ctx](hpx::future<std::vector<hpx::future<token>>>) mutable {
+        hpx::future<void> task_done = hpx::dataflow(
+            [this, &compilation, c, ctx](auto) mutable {
                 auto task_start = std::chrono::steady_clock::now();
 
                 std::vector<void*> task_args;
 
                 std::vector<host_address_space::handle> pages;
 
-                for (auto& arg : ctx.args())
+                for (const auto& arg : ctx.args())
                 {
                     auto page = address_space_->resolve_object(arg).get();
 
@@ -174,7 +158,7 @@ public:
                     pages.push_back(std::move(page));
                 }
 
-                for (auto& result : ctx.results())
+                for (const auto& result : ctx.results())
                 {
                     auto page = address_space_->resolve_object(result).get();
 
@@ -196,7 +180,7 @@ public:
             },
             std::move(deps_ready));
 
-        return hpx::make_ready_future();
+        return task_done;
     }
 
     hpx::future<boost::optional<performance_estimate>>

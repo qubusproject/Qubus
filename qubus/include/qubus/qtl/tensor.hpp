@@ -10,7 +10,7 @@
 #include <qubus/util/integers.hpp>
 
 #include <qubus/IR/expression.hpp>
-#include <qubus/execution_context.hpp>
+#include <qubus/kernel_arguments.hpp>
 
 #include <qubus/qtl/kronecker_delta_folding_pass.hpp>
 #include <qubus/qtl/lower_abstract_indices.hpp>
@@ -341,18 +341,18 @@ public:
     {
         const auto& args = c.args();
 
-        execution_context ctx;
+        kernel_arguments kernel_args;
 
         for (const auto& arg : args)
         {
-            ctx.push_back_arg(arg);
+            kernel_args.push_back_arg(arg);
         }
 
-        ctx.push_back_result(get_object());
+        kernel_args.push_back_result(get_object());
 
         auto complet = c.stored_computelet();
 
-        get_runtime().execute(complet, std::move(ctx)).get();
+        get_runtime().execute(complet, std::move(kernel_args)).get();
 
         return *this;
     }
@@ -365,11 +365,6 @@ public:
                 sliced_tensor<tensor<T, Rank>, Indices...>, subscripted_tensor<tensor<T, Rank>, Indices...>>;
 
         return subscription_type(*this, indices...);
-    }
-
-    hpx::future<void> when_ready()
-    {
-        return data_.acquire_read_access();
     }
 
     object get_object() const

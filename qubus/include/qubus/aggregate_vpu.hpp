@@ -1,7 +1,7 @@
 #ifndef QUBUS_AGGREGATE_VPU_HPP
 #define QUBUS_AGGREGATE_VPU_HPP
 
-#include <qubus/scheduler.hpp>
+#include <qubus/scheduling/scheduler.hpp>
 #include <qubus/vpu.hpp>
 
 #include <memory>

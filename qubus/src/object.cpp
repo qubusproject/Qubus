@@ -2,6 +2,8 @@
 
 #include <qubus/local_runtime.hpp>
 
+#include <qubus/hpx_utils.hpp>
+
 #include <utility>
 
 using server_type = hpx::components::component<qubus::object_server>;
@@ -87,12 +89,12 @@ bool object_server::has_data() const
 
 token object_server::acquire_read_access()
 {
-    return monitor_.acquire_read_access().get();
+    return monitor_.acquire_read_access();
 }
 
 token object_server::acquire_write_access()
 {
-    return monitor_.acquire_write_access().get();
+    return monitor_.acquire_write_access();
 }
 
 std::vector<object> object_server::components() const
@@ -153,14 +155,14 @@ bool object::has_data() const
     return hpx::async<object_server::has_data_action>(this->get_id()).get();
 }
 
-hpx::future<token> object::acquire_read_access()
+token object::acquire_read_access()
 {
-    return hpx::async<object_server::acquire_read_access_action>(this->get_id()).then([] (hpx::future<hpx::id_type> id) { return token(std::move(id)); });
+    return hpx::async<object_server::acquire_read_access_action>(this->get_id()).get();
 }
 
-hpx::future<token> object::acquire_write_access()
+token object::acquire_write_access()
 {
-    return hpx::async<object_server::acquire_write_access_action>(this->get_id()).then([] (hpx::future<hpx::id_type> id) { return token(std::move(id)); });
+    return hpx::async<object_server::acquire_write_access_action>(this->get_id()).get();
 }
 
 std::vector<object> object::components() const
