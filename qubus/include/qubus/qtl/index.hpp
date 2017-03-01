@@ -1,9 +1,7 @@
 #ifndef QUBUS_INDEX_HPP
 #define QUBUS_INDEX_HPP
 
-#include <hpx/include/components.hpp>
-
-#include <qubus/hpx_utils.hpp>
+#include <qubus/global_id.hpp>
 
 #include <boost/hana/fold.hpp>
 #include <boost/hana/transform.hpp>
@@ -30,29 +28,15 @@ struct is_index : std::false_type
 {
 };
 
-class id_type_server : public hpx::components::component_base<id_type_server>
-{
-};
-
-class id_type : public hpx::components::client_base<id_type, id_type_server>
-{
-public:
-    using base_type = hpx::components::client_base<id_type, id_type_server>;
-
-    id_type() = default;
-
-    id_type(hpx::future<hpx::id_type>&& id);
-};
-
 class index
 {
 public:
-    index() : info_(std::make_shared<index_info>()), id_(new_here<id_type_server>())
+    index() : info_(std::make_shared<index_info>()), id_(generate_global_id())
     {
     }
 
     explicit index(const char* debug_name_)
-    : info_(std::make_shared<index_info>(debug_name_)), id_(new_here<id_type_server>())
+    : info_(std::make_shared<index_info>(debug_name_)), id_(generate_global_id())
     {
     }
 
@@ -88,7 +72,7 @@ private:
     };
 
     std::shared_ptr<index_info> info_;
-    id_type id_;
+    global_id id_;
 };
 
 inline bool operator==(const index& lhs, const index& rhs)
@@ -122,24 +106,24 @@ class multi_index
 public:
     static_assert(Rank >= 0, "Rank must be non-negative.");
 
-    multi_index() : info_(std::make_shared<multi_index_info>()), id_(new_here<id_type_server>())
+    multi_index() : info_(std::make_shared<multi_index_info>()), id_(generate_global_id())
     {
     }
 
     explicit multi_index(const char* debug_name_)
-    : info_(std::make_shared<multi_index_info>(debug_name_)), id_(new_here<id_type_server>())
+    : info_(std::make_shared<multi_index_info>(debug_name_)), id_(generate_global_id())
     {
     }
 
     multi_index(std::array<index, Rank> element_indices_)
     : info_(std::make_shared<multi_index_info>(std::move(element_indices_))),
-      id_(new_here<id_type_server>())
+      id_(generate_global_id())
     {
     }
 
     multi_index(std::array<index, Rank> element_indices_, const char* debug_name_)
     : info_(std::make_shared<multi_index_info>(std::move(element_indices_), debug_name_)),
-      id_(new_here<id_type_server>())
+      id_(generate_global_id())
     {
     }
 
@@ -201,7 +185,7 @@ private:
     };
 
     std::shared_ptr<multi_index_info> info_;
-    id_type id_;
+    global_id id_;
 };
 
 template <long int LHSRank, long int RHSRank>

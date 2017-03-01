@@ -1,20 +1,11 @@
 #include <qubus/qtl/index.hpp>
 
-#include <utility>
-
-using server_type = hpx::components::component<qubus::qtl::ast::id_type_server>;
-HPX_REGISTER_COMPONENT(server_type, QUBUS_qtl_ast_id_type_server);
-
 namespace qubus
 {
 namespace qtl
 {
 namespace ast
 {
-
-id_type::id_type(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
-{
-}
 
 }
 }
