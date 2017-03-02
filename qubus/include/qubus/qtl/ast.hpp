@@ -3,6 +3,8 @@
 
 #include <qubus/qtl/index.hpp>
 
+#include <qubus/global_id.hpp>
+
 #include <boost/hana/any.hpp>
 #include <boost/hana/tuple.hpp>
 
@@ -63,7 +65,7 @@ template <typename T>
 class variable
 {
 public:
-    variable() : id_(new_here<id_type_server>())
+    variable() : id_(generate_global_id())
     {
     }
 
@@ -83,7 +85,7 @@ public:
     }
 
 private:
-    id_type id_;
+    global_id id_;
 };
 
 template <typename T>
