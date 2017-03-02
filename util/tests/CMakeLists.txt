@@ -11,7 +11,7 @@ function(util_add_simple_test name)
   util_add_test(${name} ${name}.cpp)
 endfunction()
 
-if(UTIL_BUILD_TESTS)
+if(QUBUS_UTIL_BUILD_TESTS)
   find_package(GTest REQUIRED)
 
   util_add_simple_test(one_shot)
