@@ -48,8 +48,8 @@ private:
     }
 
 public:
-    static constexpr void* thunk = reinterpret_cast<void*>(
-        static_cast<void (*)(F*, typename type_generator<Indices, void*>::type...)>(&thunk_body));
+    static constexpr auto* thunk =
+        static_cast<void (*)(F*, typename type_generator<Indices, void*>::type...)>(&thunk_body);
 };
 
 template <typename F>
@@ -125,7 +125,7 @@ private:
 
         const void* get_function() const override final
         {
-            return foreign_computelet_traits<T>::thunk;
+            return reinterpret_cast<const void*>(foreign_computelet_traits<T>::thunk);
         }
 
         const void* get_data() const override final
