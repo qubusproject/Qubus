@@ -50,6 +50,8 @@ public:
 
     hpx::future<void> when_ready() const
     {
+        QUBUS_ASSERT(is_ready_.valid(), "Invalid future.");
+
         return make_future(is_ready_);
     }
 
@@ -58,6 +60,7 @@ public:
     {
         ar& arguments_;
         ar& results_;
+        ar& is_ready_;
     }
 
 private:
