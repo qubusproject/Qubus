@@ -62,7 +62,7 @@ void runtime_server::execute(computelet c, kernel_arguments kernel_args)
 
         auto is_valid = token.when_valid();
 
-        dependencies.push_back(make_distributed_future(std::move(is_valid)));
+        dependencies.push_back(std::move(is_valid));
 
         args.push_back(arg);
 
@@ -75,7 +75,7 @@ void runtime_server::execute(computelet c, kernel_arguments kernel_args)
 
         auto is_valid = token.when_valid();
 
-        dependencies.push_back(make_distributed_future(std::move(is_valid)));
+        dependencies.push_back(std::move(is_valid));
 
         results.push_back(result);
 
