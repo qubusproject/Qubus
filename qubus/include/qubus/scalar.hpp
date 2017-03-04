@@ -88,7 +88,7 @@ public:
 };
 
 template <typename Derived, typename ValueType,
-        typename Enabled = std::enable_if<std::is_integral<ValueType>::value>>
+          typename Enabled = std::enable_if<std::is_integral<ValueType>::value>>
 class integral_scalar_mixin
 {
 public:
@@ -101,9 +101,8 @@ public:
         auto view = get_view<host_scalar_view<value_type>>(self.get_object());
 
         // TODO: Add this as a pending task
-        view.then([](hpx::future<host_scalar_view<value_type>> view) mutable {
-            ++view.get().get();
-        });
+        view.then(
+            [](hpx::future<host_scalar_view<value_type>> view) mutable { ++view.get().get(); });
 
         return self;
     }
@@ -117,9 +116,8 @@ public:
         auto view = get_view<host_scalar_view<value_type>>(self.get_object());
 
         // TODO: Add this as a pending task
-        view.then([](hpx::future<host_scalar_view<value_type>> view) mutable {
-            view.get().get()++;
-        });
+        view.then(
+            [](hpx::future<host_scalar_view<value_type>> view) mutable { view.get().get()++; });
 
         return self;
     }
@@ -133,9 +131,8 @@ public:
         auto view = get_view<host_scalar_view<value_type>>(self.get_object());
 
         // TODO: Add this as a pending task
-        view.then([](hpx::future<host_scalar_view<value_type>> view) mutable {
-            --view.get().get();
-        });
+        view.then(
+            [](hpx::future<host_scalar_view<value_type>> view) mutable { --view.get().get(); });
 
         return self;
     }
@@ -149,16 +146,16 @@ public:
         auto view = get_view<host_scalar_view<value_type>>(self.get_object());
 
         // TODO: Add this as a pending task
-        view.then([](hpx::future<host_scalar_view<value_type>> view) mutable {
-            view.get().get()--;
-        });
+        view.then(
+            [](hpx::future<host_scalar_view<value_type>> view) mutable { view.get().get()--; });
 
         return self;
     }
 };
 
 template <typename T>
-class scalar : public arithmetic_scalar_mixin<scalar<T>, T>, public integral_scalar_mixin<scalar<T>, T>
+class scalar : public arithmetic_scalar_mixin<scalar<T>, T>,
+               public integral_scalar_mixin<scalar<T>, T>
 {
 public:
     using value_type = T;
@@ -201,6 +198,15 @@ auto get_view(const scalar<T>& value)
 {
     return get_view<View>(value.get_object());
 }
+
+template <typename T>
+struct associated_qubus_type<scalar<T>>
+{
+    static type get()
+    {
+        return associated_qubus_type<T>::get();
+    }
+};
 }
 
 #endif

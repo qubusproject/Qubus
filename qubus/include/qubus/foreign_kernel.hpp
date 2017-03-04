@@ -5,6 +5,7 @@
 #include <qubus/runtime.hpp>
 
 #include <qubus/host_object_views.hpp>
+#include <qubus/associated_qubus_type.hpp>
 
 #include <boost/hana/for_each.hpp>
 #include <boost/hana/tuple.hpp>

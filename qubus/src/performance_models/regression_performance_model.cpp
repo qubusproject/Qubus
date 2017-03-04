@@ -124,19 +124,19 @@ std::vector<double> extract_arguments_from_ctx(const execution_context& ctx)
 
         if (datatype == types::integer{})
         {
-            auto view = get_view<host_scalar_view<util::index_t>>(obj).get();
+            auto view = get_view_for_locked_object<host_scalar_view<util::index_t>>(obj).get();
 
             arguments.push_back(view.get());
         }
         else if (datatype == types::double_{})
         {
-            auto view = get_view<host_scalar_view<double>>(obj).get();
+            auto view = get_view_for_locked_object<host_scalar_view<double>>(obj).get();
 
             arguments.push_back(view.get());
         }
         else if (datatype == types::float_{})
         {
-            auto view = get_view<host_scalar_view<float>>(obj).get();
+            auto view = get_view_for_locked_object<host_scalar_view<float>>(obj).get();
 
             arguments.push_back(view.get());
         }

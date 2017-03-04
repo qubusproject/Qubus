@@ -95,6 +95,19 @@ public:
 
         return cpu_scalar_view<T>(value, std::move(ctx));
     }
+
+    static hpx::future<cpu_scalar_view<T>> construct_from_locked_object(object obj)
+    {
+        auto& addr_space = get_local_runtime().get_address_space();
+
+        auto hnd = addr_space.resolve_object(obj).get();
+
+        auto value = static_cast<T*>(hnd.data().ptr());
+
+        auto ctx = std::make_shared<host_view_context>(token(), std::move(hnd));
+
+        return hpx::make_ready_future(cpu_scalar_view<T>(value, std::move(ctx)));
+    }
 private:
     cpu_scalar_view(T* value_, std::shared_ptr<host_view_context> ctx_)
     : value_(value_), ctx_(std::move(ctx_))
@@ -209,6 +222,21 @@ public:
 
         return cpu_array_view<T, Rank>(Rank, static_cast<util::index_t*>(array_md->shape),
                                         static_cast<T*>(array_md->data), std::move(ctx));
+    }
+
+    static hpx::future<cpu_array_view<T, Rank>> construct_from_locked_object(object obj)
+    {
+        auto& addr_space = get_local_runtime().get_address_space();
+
+        auto hnd = addr_space.resolve_object(obj).get();
+
+        auto array_md = static_cast<array_metadata*>(hnd.data().ptr());
+
+        auto ctx = std::make_shared<host_view_context>(token(), std::move(hnd));
+
+        return hpx::make_ready_future(
+                cpu_array_view<T, Rank>(Rank, static_cast<util::index_t*>(array_md->shape),
+                                        static_cast<T*>(array_md->data), std::move(ctx)));
     }
 private:
     cpu_array_view(util::index_t rank_, util::index_t* shape_, T* data_,
