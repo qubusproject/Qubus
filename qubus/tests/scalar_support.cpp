@@ -158,6 +158,32 @@ TEST(scalar_support, decrement)
     }
 }
 
+qubus::foreign_kernel<const qubus::scalar<double>, qubus::scalar<double>>
+    kernel_with_scalar_param("kernel_with_scalar_param");
+
+void kernel_with_scalar_param_host(qubus::host_scalar_view<const double> alpha,
+                                   qubus::host_scalar_view<double> pi)
+{
+    pi.get() = alpha.get();
+}
+
+QUBUS_ADD_FOREIGN_KERNEL_VERSION(kernel_with_scalar_param, qubus::architectures::host,
+                                 kernel_with_scalar_param_host);
+
+TEST(scalar_support, foreign_kernel_with_scalar_param)
+{
+    using namespace qubus;
+
+    scalar<double> alpha(3.1415926);
+    scalar<double> pi;
+
+    kernel_with_scalar_param(alpha, pi);
+
+    auto pi_value = get_view<host_scalar_view<const double>>(pi).get().get();
+
+    EXPECT_EQ(pi_value, 3.1415926);
+}
+
 int hpx_main(int argc, char** argv)
 {
     qubus::init(argc, argv);
