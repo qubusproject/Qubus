@@ -17,6 +17,7 @@
 #include <qubus/util/optional_ref.hpp>
 #include <qubus/util/unused.hpp>
 
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -80,12 +81,6 @@ struct ast_context
     symbol_table_t symbol_table;
     std::vector<std::pair<variable_declaration, object>> object_table;
 };
-
-template <typename T>
-auto translate_ast(literal<T> node, ast_context& QUBUS_UNUSED(ctx))
-{
-    return lit(node.value());
-}
 
 template <binary_operator_tag Tag, typename LHS, typename RHS>
 auto translate_ast(binary_operator<Tag, LHS, RHS> node, ast_context& ctx)
@@ -173,7 +168,7 @@ auto translate_ast(sliced_tensor<Tensor, Ranges...> node, ast_context& ctx)
 
     boost::hana::for_each(node.ranges(), [&offset, &shape, &strides, &ctx](auto range) {
         offset.push_back(integer_literal(range.start));
-        shape.push_back(integer_literal((range.end - range.start)/range.stride));
+        shape.push_back(integer_literal((range.end - range.start) / range.stride));
         strides.push_back(integer_literal(range.stride));
     });
 
@@ -218,7 +213,7 @@ auto translate_ast(const variable<T>& tensor, ast_context& ctx)
     }
 }
 
-template <typename Tensor>
+template <typename Tensor, typename /*Enabled*/ = typename std::enable_if<!std::is_arithmetic<Tensor>::value>::type>
 auto translate_ast(const Tensor& tensor, ast_context& ctx)
 {
     if (auto tensor_var = ctx.symbol_table.lookup(tensor.get_object().id().get_gid()))
@@ -237,6 +232,12 @@ auto translate_ast(const Tensor& tensor, ast_context& ctx)
     }
 }
 
+template <typename T, typename /*Enabled*/ = typename std::enable_if<std::is_arithmetic<T>::value>::type>
+auto translate_ast(T node, ast_context& QUBUS_UNUSED(ctx))
+{
+    return lit(node);
+}
+
 template <typename FirstIndex, typename SecondIndex>
 auto translate_ast(kronecker_delta<FirstIndex, SecondIndex> node, ast_context& ctx)
 {
@@ -244,7 +245,16 @@ auto translate_ast(kronecker_delta<FirstIndex, SecondIndex> node, ast_context& c
     auto second_index = translate_ast(node.second_index(), ctx);
 
     return qubus::qtl::kronecker_delta(node.extent(), std::move(first_index),
-                                            std::move(second_index));
+                                       std::move(second_index));
+}
+
+template <typename LHS, typename RHS>
+auto translate_ast(assignment<LHS, RHS> node, ast_context& ctx)
+{
+    auto lhs = translate_ast(node.lhs(), ctx);
+    auto rhs = translate_ast(node.rhs(), ctx);
+
+    return assign(std::move(lhs), std::move(rhs));
 }
 }
 }

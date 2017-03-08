@@ -36,23 +36,6 @@ struct is_term : std::is_arithmetic<T>
 {
 };
 
-template <typename T>
-struct literal
-{
-public:
-    explicit literal(T value_) : value_(std::move(value_))
-    {
-    }
-
-    const T& value() const
-    {
-        return value_;
-    }
-
-private:
-    T value_;
-};
-
 template <typename Tensor, typename... Indices>
 class subscripted_tensor;
 
@@ -91,6 +74,34 @@ struct is_term<variable<T>> : std::true_type
 {
 };
 
+template <typename LHS, typename RHS>
+class assignment
+{
+public:
+    assignment(LHS lhs_, RHS rhs_)
+            : lhs_(std::move(lhs_)), rhs_(std::move(rhs_))
+    {
+    }
+
+    const LHS& lhs() const
+    {
+        return lhs_;
+    }
+
+    const RHS& rhs() const
+    {
+        return rhs_;
+    }
+private:
+    LHS lhs_;
+    RHS rhs_;
+};
+
+template <typename LHS, typename RHS>
+struct is_term<assignment<LHS, RHS>> : std::true_type
+{
+};
+
 template <typename Tensor, typename... Indices>
 class subscripted_tensor
 {
@@ -110,6 +121,11 @@ public:
         return indices_;
     }
 
+    template <typename RHS>
+    auto operator=(RHS rhs) const
+    {
+        return assignment<subscripted_tensor<Tensor, Indices...>, RHS>(*this, std::move(rhs));
+    }
 private:
     Tensor tensor_;
     boost::hana::tuple<Indices...> indices_;
