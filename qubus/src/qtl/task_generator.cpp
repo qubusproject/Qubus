@@ -8,6 +8,7 @@
 
 #include <qubus/util/assert.hpp>
 
+#include <algorithm>
 #include <vector>
 
 namespace qubus
@@ -31,7 +32,10 @@ std::vector<variable_declaration> extract_params(const expression& expr)
        {
             if (decl.get().var_type() != types::index{})
             {
-                params.push_back(decl.get());
+                if (std::find(params.begin(), params.end(), decl.get()) == params.end())
+                {
+                    params.push_back(decl.get());
+                }
             }
        });
 
