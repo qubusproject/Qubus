@@ -45,6 +45,7 @@ std::vector<std::unique_ptr<expression>> expand_multi_index(
 
     return qubus::pattern::match(expr, m);
 }
+}
 
 std::unique_ptr<expression> expand_multi_indices(const expression& expr)
 {
@@ -63,7 +64,7 @@ std::unique_ptr<expression> expand_multi_indices(const expression& expr)
     variable<const expression &> body, a, b;
 
     auto m =
-    qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>()
+        qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>()
             .case_(subscription(tensor, indices),
                    [&] {
                        std::vector<std::unique_ptr<expression>> new_indices;
@@ -177,7 +178,6 @@ std::unique_ptr<expression> expand_multi_indices(const expression& expr)
             });
 
     return qubus::pattern::substitute(expr, m);
-}
 }
 
 function_declaration expand_multi_indices(function_declaration decl)

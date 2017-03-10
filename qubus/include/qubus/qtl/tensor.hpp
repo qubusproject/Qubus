@@ -3,6 +3,8 @@
 
 #include <qubus/local_runtime.hpp>
 
+#include <qubus/qtl/task_generator.hpp>
+
 #include <qubus/IR/pretty_printer.hpp>
 #include <qubus/IR/qir.hpp>
 
@@ -27,6 +29,7 @@
 #include <boost/optional.hpp>
 #include <boost/range/adaptor/reversed.hpp>
 
+#include <algorithm>
 #include <memory>
 #include <type_traits>
 #include <utility>
@@ -45,8 +48,8 @@ class tensor;
 class closure
 {
 public:
-    closure(computelet stored_computelet_, std::vector<object> args_)
-    : stored_computelet_(std::move(stored_computelet_)), args_(std::move(args_))
+    closure(computelet stored_computelet_, std::vector<object> args_, std::vector<std::size_t> argument_map_)
+    : stored_computelet_(std::move(stored_computelet_)), args_(std::move(args_)), argument_map_(std::move(argument_map_))
     {
     }
 
@@ -60,9 +63,15 @@ public:
         return args_;
     }
 
+    const std::vector<std::size_t>& argument_map() const
+    {
+        return argument_map_;
+    }
+
 private:
     computelet stored_computelet_;
     std::vector<object> args_;
+    std::vector<std::size_t> argument_map_;
 };
 
 template <typename T, long int Rank>
@@ -117,17 +126,28 @@ public:
             }
         }
 
-        function_declaration entry("entry", std::move(params), std::move(result), std::move(expr));
+        expr = expand_multi_indices(*expr);
 
-        entry = expand_multi_indices(entry);
+        expr = fold_kronecker_deltas(*expr);
 
-        entry = fold_kronecker_deltas(entry);
+        auto entry = wrap_code_in_task(clone(*expr));
 
-        entry = optimize_sparse_patterns(entry);
+        expr = optimize_sparse_patterns(*expr);
 
-        entry = lower_top_level_sums(entry);
+        expr = lower_top_level_sums(*expr);
 
-        entry = lower_abstract_indices(entry);
+        expr = lower_abstract_indices(*expr);
+
+        entry.substitute_body(std::move(expr));
+
+        for (const auto& param : entry.params())
+        {
+            auto pos = std::find(params.begin(), params.end(), param);
+
+            argument_map_.push_back(pos - params.begin());
+        }
+
+        QUBUS_ASSERT(argument_map_.size() == entry.arity(), "Wrong number of arguments mappings.");
 
         stored_computelet_ = make_computelet(std::move(entry));
     }
@@ -141,7 +161,7 @@ public:
         if (args_.size() != stored_computelet_.code().get().arity())
             throw 0;
 
-        return closure(stored_computelet_, args_);
+        return closure(stored_computelet_, args_, argument_map_);
     }
 
     template <typename... Args>
@@ -154,7 +174,7 @@ public:
 
         full_args.insert(full_args.end(), args_.begin(), args_.end());
 
-        return closure(stored_computelet_, std::move(full_args));
+        return closure(stored_computelet_, std::move(full_args), argument_map_);
     }
 
 private:
@@ -164,6 +184,7 @@ private:
     }
 
     std::vector<object> args_;
+    std::vector<std::size_t> argument_map_;
     computelet stored_computelet_;
 };
 
@@ -186,9 +207,9 @@ public:
 
         execution_context ctx;
 
-        for (const auto& arg : args)
+        for (const auto& mapping : c.argument_map())
         {
-            ctx.push_back_arg(arg);
+            ctx.push_back_arg(args[mapping]);
         }
 
         ctx.push_back_result(get_object());
