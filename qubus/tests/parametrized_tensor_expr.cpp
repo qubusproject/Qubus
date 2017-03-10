@@ -170,6 +170,75 @@ TEST(parametrized_tensor_expr, sparse_matrix_vector_product)
     ASSERT_NEAR(error, 0.0, 1e-12);
 }
 
+TEST(parametrized_tensor_expr, partial_parameterization)
+{
+    using namespace qubus;
+    using namespace qtl;
+
+    long int N = 100;
+
+    std::random_device rd;
+
+    std::mt19937 gen(rd());
+
+    std::uniform_real_distribution<double> dist(-10.0, 10.0);
+
+    std::vector<std::complex<double>> A2(N);
+    std::vector<std::complex<double>> B2(N);
+    std::vector<std::complex<double>> C2(N);
+
+    for (long int i = 0; i < N; ++i)
+    {
+        A2[i] = std::complex<double>(dist(gen), dist(gen));
+        B2[i] = std::complex<double>(dist(gen), dist(gen));
+    }
+
+    tensor<std::complex<double>, 1> A(N);
+    tensor<std::complex<double>, 1> B(N);
+    tensor<std::complex<double>, 1> C(N);
+
+    {
+        auto A_view = get_view<host_tensor_view<std::complex<double>, 1>>(A).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            A_view(i) = A2[i];
+        }
+
+        auto B_view = get_view<host_tensor_view<std::complex<double>, 1>>(B).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            B_view(i) = B2[i];
+        }
+    }
+
+    tensor_expr<std::complex<double>, 1> vec_add =
+            [B](qtl::index i, variable<tensor<std::complex<double>, 1>> A) { return A(i) + B(i); };
+
+    C = vec_add(A);
+
+    for (long int i = 0; i < N; ++i)
+    {
+        C2[i] = A2[i] + B2[i];
+    }
+
+    double error = 0.0;
+
+    {
+        auto C_view = get_view<host_tensor_view<const std::complex<double>, 1>>(C).get();
+
+        for (long int i = 0; i < N; ++i)
+        {
+            std::complex<double> diff = C_view(i) - C2[i];
+
+            error += std::norm(diff);
+        }
+    }
+
+    ASSERT_NEAR(error, 0.0, 1e-14);
+}
+
 int hpx_main(int argc, char** argv)
 {
     qubus::init(argc, argv);

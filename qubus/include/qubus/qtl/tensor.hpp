@@ -169,10 +169,10 @@ public:
     {
         std::vector<object> full_args = {args.get_object()...};
 
+        full_args.insert(full_args.end(), args_.begin(), args_.end());
+
         if (full_args.size() != stored_computelet_.code().get().arity())
             throw 0;
-
-        full_args.insert(full_args.end(), args_.begin(), args_.end());
 
         return closure(stored_computelet_, std::move(full_args), argument_map_);
     }
