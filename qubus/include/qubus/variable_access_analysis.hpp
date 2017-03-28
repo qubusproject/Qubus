@@ -62,37 +62,26 @@ private:
     std::reference_wrapper<const expression> location_;
 };
 
+class access_set_node;
+
+enum class access_kind
+{
+    external,
+    all
+};
+
 class access_set
 {
 public:
-    access_set(const expression& location_, std::vector<access> local_read_accesses_,
-               std::vector<access> local_write_accesses_,
-               std::vector<std::unique_ptr<access_set>> subsets_);
-
-    access_set(const access_set&) = delete;
-    access_set& operator=(const access_set&) = delete;
-
-    access_set(access_set&&) = delete;
-    access_set& operator=(access_set&&) = delete;
+    explicit access_set(const access_set_node& root_, access_kind kind_);
 
     const expression& location() const;
 
     std::vector<access> get_read_accesses() const;
-
     std::vector<access> get_write_accesses() const;
-
-    auto subsets() const
-    {
-        return subsets_ | boost::adaptors::indirected;
-    }
-
 private:
-    std::reference_wrapper<const expression> location_;
-
-    std::vector<access> local_read_accesses_;
-    std::vector<access> local_write_accesses_;
-
-    std::vector<std::unique_ptr<access_set>> subsets_;
+    const access_set_node* root_;
+    access_kind kind_;
 };
 
 class variable_access_index;
@@ -110,7 +99,7 @@ public:
     variable_access_analyis_result(variable_access_analyis_result&&);
     variable_access_analyis_result& operator=(variable_access_analyis_result&&);
 
-    const access_set& query_accesses_for_location(const expression& location) const;
+    access_set query_accesses_for_location(const expression& location, access_kind kind = access_kind::external) const;
 
 private:
     std::unique_ptr<variable_access_index> access_index_;
