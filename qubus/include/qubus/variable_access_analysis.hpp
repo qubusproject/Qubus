@@ -69,6 +69,12 @@ public:
                std::vector<access> local_write_accesses_,
                std::vector<std::unique_ptr<access_set>> subsets_);
 
+    access_set(const access_set&) = delete;
+    access_set& operator=(const access_set&) = delete;
+
+    access_set(access_set&&) = delete;
+    access_set& operator=(access_set&&) = delete;
+
     const expression& location() const;
 
     std::vector<access> get_read_accesses() const;
@@ -94,16 +100,20 @@ class variable_access_index;
 class variable_access_analyis_result
 {
 public:
-    explicit variable_access_analyis_result(std::shared_ptr<variable_access_index> access_index_)
-    : access_index_(std::move(access_index_))
-    {
-    }
+    explicit variable_access_analyis_result(std::unique_ptr<variable_access_index> access_index_);
+
+    ~variable_access_analyis_result();
+
+    variable_access_analyis_result(const variable_access_analyis_result&) = delete;
+    variable_access_analyis_result& operator=(const variable_access_analyis_result&) = delete;
+
+    variable_access_analyis_result(variable_access_analyis_result&&);
+    variable_access_analyis_result& operator=(variable_access_analyis_result&&);
 
     const access_set& query_accesses_for_location(const expression& location) const;
 
 private:
-    // TODO: Substitute shared_ptr with a more appropriate smart pointer.
-    std::shared_ptr<variable_access_index> access_index_;
+    std::unique_ptr<variable_access_index> access_index_;
 };
 
 class variable_access_analysis

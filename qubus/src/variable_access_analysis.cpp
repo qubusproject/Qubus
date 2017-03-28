@@ -3,10 +3,11 @@
 #include <qubus/pattern/IR.hpp>
 #include <qubus/pattern/core.hpp>
 
-#include <qubus/util/optional_ref.hpp>
 #include <qubus/util/assert.hpp>
+#include <qubus/util/optional_ref.hpp>
 #include <qubus/util/unreachable.hpp>
 
+#include <algorithm>
 #include <stack>
 #include <unordered_map>
 #include <utility>
@@ -109,6 +110,8 @@ const expression& access_set::location() const
 
 std::vector<access> access_set::get_read_accesses() const
 {
+    using pattern::_;
+
     std::vector<access> read_accesses = local_read_accesses_;
 
     for (const auto& subset : subsets_)
@@ -118,11 +121,24 @@ std::vector<access> access_set::get_read_accesses() const
         read_accesses.insert(read_accesses.end(), subset_accesses.begin(), subset_accesses.end());
     }
 
+    pattern::variable<variable_declaration> var;
+
+    auto m = pattern::make_matcher<expression, void>().case_(variable_scope(var, _), [&] {
+        auto new_end =
+            std::remove_if(read_accesses.begin(), read_accesses.end(),
+                           [&](const access& acc) { return acc.variable() == var.get(); });
+        read_accesses.erase(new_end, read_accesses.end());
+    });
+
+    pattern::try_match(location(), m);
+
     return read_accesses;
 }
 
 std::vector<access> access_set::get_write_accesses() const
 {
+    using pattern::_;
+
     std::vector<access> write_accesses = local_write_accesses_;
 
     for (const auto& subset : subsets_)
@@ -132,12 +148,22 @@ std::vector<access> access_set::get_write_accesses() const
         write_accesses.insert(write_accesses.end(), subset_accesses.begin(), subset_accesses.end());
     }
 
+    pattern::variable<variable_declaration> var;
+
+    auto m = pattern::make_matcher<expression, void>().case_(variable_scope(var, _), [&] {
+        auto new_end =
+            std::remove_if(write_accesses.begin(), write_accesses.end(),
+                           [&](const access& acc) { return acc.variable() == var.get(); });
+        write_accesses.erase(new_end, write_accesses.end());
+    });
+
+    pattern::try_match(location(), m);
+
     return write_accesses;
 }
 
 class variable_access_index
 {
-
 public:
     explicit variable_access_index(std::unique_ptr<access_set> global_access_set_)
     : global_access_set_(std::move(global_access_set_))
@@ -172,6 +198,17 @@ private:
     std::unordered_map<const expression*, const access_set*> location_index_;
 };
 
+variable_access_analyis_result::variable_access_analyis_result(
+    std::unique_ptr<variable_access_index> access_index_)
+: access_index_(std::move(access_index_))
+{
+}
+
+variable_access_analyis_result::~variable_access_analyis_result() = default;
+
+variable_access_analyis_result::variable_access_analyis_result(variable_access_analyis_result&&) = default;
+variable_access_analyis_result& variable_access_analyis_result::operator=(variable_access_analyis_result&&) = default;
+
 const access_set&
 variable_access_analyis_result::query_accesses_for_location(const expression& location) const
 {
@@ -197,10 +234,28 @@ std::vector<access> get_accesses(const expression& expr)
         if (auto acc = current_expr->try_as<access_expr>())
         {
             accesses.emplace_back(*acc);
+
+            if (auto qualified_acc = acc->try_as<access_qualifier_expr>())
+            {
+                for (const auto& child : current_expr->sub_expressions())
+                {
+                    if (&child != &qualified_acc->qualified_access())
+                    {
+                        pending_expressions.push(&child);
+                    }
+                }
+            }
+            else
+            {
+                for (const auto& child : current_expr->sub_expressions())
+                {
+                    pending_expressions.push(&child);
+                }
+            }
         }
         else
         {
-            for (const auto &child : current_expr->sub_expressions())
+            for (const auto& child : current_expr->sub_expressions())
             {
                 pending_expressions.push(&child);
             }
@@ -208,6 +263,54 @@ std::vector<access> get_accesses(const expression& expr)
     }
 
     return accesses;
+}
+
+struct access_info
+{
+    access_info(access direct_access, std::vector<access> indirect_accesses)
+    : direct_access(std::move(direct_access)), indirect_accesses(std::move(indirect_accesses))
+    {
+    }
+
+    access direct_access;
+    std::vector<access> indirect_accesses;
+};
+
+access_info analyze_access(const access_expr& acc)
+{
+    if (auto qual_access = acc.try_as<access_qualifier_expr>())
+    {
+        auto direct_access = access(*qual_access);
+
+        std::vector<access> indirect_accesses;
+
+        for (const auto& child : acc.sub_expressions())
+        {
+            if (&child != &qual_access->qualified_access())
+            {
+                auto accesses = get_accesses(child);
+
+                indirect_accesses.insert(indirect_accesses.end(), accesses.begin(), accesses.end());
+            }
+        }
+
+        return access_info(std::move(direct_access), std::move(indirect_accesses));
+    }
+    else
+    {
+        auto direct_access = access(acc);
+
+        std::vector<access> indirect_accesses;
+
+        for (const auto& child : acc.sub_expressions())
+        {
+            auto accesses = get_accesses(child);
+
+            indirect_accesses.insert(indirect_accesses.end(), accesses.begin(), accesses.end());
+        }
+
+        return access_info(std::move(direct_access), std::move(indirect_accesses));
+    }
 }
 
 std::unique_ptr<access_set> compute_access_set(const expression& expr)
@@ -223,17 +326,26 @@ std::unique_ptr<access_set> compute_access_set(const expression& expr)
     auto m = pattern::make_matcher<expression, void>()
                  .case_(assign(lhs, rhs),
                         [&] {
-                            local_write_accesses = get_accesses(lhs.get());
+                            auto acc_info = analyze_access(lhs.get().as<access_expr>());
+
+                            local_write_accesses.push_back(std::move(acc_info.direct_access));
+
                             local_read_accesses = get_accesses(rhs.get());
+                            local_read_accesses.insert(local_read_accesses.end(),
+                                                       acc_info.indirect_accesses.begin(),
+                                                       acc_info.indirect_accesses.end());
                         })
                  .case_(plus_assign(lhs, rhs),
                         [&] {
-                            local_write_accesses = get_accesses(lhs.get());
-                            local_read_accesses = get_accesses(rhs.get());
+                            auto acc_info = analyze_access(lhs.get().as<access_expr>());
 
+                            local_write_accesses.push_back(acc_info.direct_access);
+
+                            local_read_accesses = get_accesses(rhs.get());
                             local_read_accesses.insert(local_read_accesses.end(),
-                                                       local_write_accesses.begin(),
-                                                       local_write_accesses.end());
+                                                       acc_info.indirect_accesses.begin(),
+                                                       acc_info.indirect_accesses.end());
+                            local_read_accesses.push_back(std::move(acc_info.direct_access));
                         })
                  // FIXME: Add spawn
                  .case_(_, [&](const expression& self) {
@@ -250,13 +362,13 @@ std::unique_ptr<access_set> compute_access_set(const expression& expr)
 }
 }
 
-variable_access_analyis_result variable_access_analysis::run(const expression& root,
-                                                             analysis_manager& manager,
-                                                             pass_resource_manager& resource_manager) const
+variable_access_analyis_result
+variable_access_analysis::run(const expression& root, analysis_manager& manager,
+                              pass_resource_manager& resource_manager) const
 {
     auto global_access_set = compute_access_set(root);
 
-    auto access_index = std::make_shared<variable_access_index>(std::move(global_access_set));
+    auto access_index = std::make_unique<variable_access_index>(std::move(global_access_set));
 
     return variable_access_analyis_result(std::move(access_index));
 }
