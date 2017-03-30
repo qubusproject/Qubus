@@ -2,9 +2,9 @@
 
 #include <qubus/pattern/IR.hpp>
 #include <qubus/pattern/core.hpp>
+#include <qubus/qtl/pattern/captured_multi_index.hpp>
 #include <qubus/qtl/pattern/index.hpp>
 #include <qubus/qtl/pattern/tensor.hpp>
-#include <qubus/qtl/pattern/captured_multi_index.hpp>
 
 #include <qubus/IR/qir.hpp>
 #include <qubus/qtl/IR/all.hpp>
@@ -55,39 +55,38 @@ std::unique_ptr<expression> legalize_expression(const expression& expr)
 
     for (const auto& expr : indices.get())
     {
-        if (auto index = expr.get().try_as<variable_ref_expr>())
-        {
-            auto index_var = index->declaration();
+        ::qubus::pattern::variable<variable_declaration> index_var;
+        ::qubus::pattern::variable<std::vector<variable_declaration>> element_indices;
 
-            auto search_result = std::find_if(
-                outer_indices.begin(), outer_indices.end(),
-                [&index_var](const index_info& entry) { return entry.index == index_var; });
+        auto m2 =
+            ::qubus::pattern::make_matcher<expression, void>()
+                .case_(var(index_var),
+                       [&] {
+                           auto search_result =
+                               std::find_if(outer_indices.begin(), outer_indices.end(),
+                                            [&index_var](const index_info& entry) {
+                                                return entry.index == index_var.get();
+                                            });
 
-            if (search_result == outer_indices.end())
-            {
-                outer_indices.push_back(index_info(std::move(index_var)));
-            }
-        }
-        else if (auto multi_index = expr.get().try_as<multi_index_expr>())
-        {
-            auto index_var = multi_index->multi_index();
+                           if (search_result == outer_indices.end())
+                           {
+                               outer_indices.push_back(index_info(std::move(index_var.get())));
+                           }
+                       })
+                .case_(pattern::captured_multi_index(index_var, element_indices), [&] {
+                    auto search_result = std::find_if(outer_indices.begin(), outer_indices.end(),
+                                                      [&index_var](const index_info& entry) {
+                                                          return entry.index == index_var.get();
+                                                      });
 
-            auto search_result = std::find_if(
-                outer_indices.begin(), outer_indices.end(),
-                [&index_var](const index_info& entry) { return entry.index == index_var; });
+                    if (search_result == outer_indices.end())
+                    {
+                        outer_indices.push_back(index_info(std::move(index_var.get()),
+                                                           std::move(element_indices.get())));
+                    }
+                });
 
-            if (search_result == outer_indices.end())
-            {
-                auto element_indices = multi_index->element_indices();
-
-                outer_indices.push_back(
-                    index_info(std::move(index_var), std::move(element_indices)));
-            }
-        }
-        else
-        {
-            throw 0;
-        }
+        ::qubus::pattern::match(expr, m2);
     }
 
     auto root = clone(expr);
