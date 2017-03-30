@@ -13,7 +13,7 @@ TEST(slicing, simple_slice)
 
     long int N = 100;
 
-    tensor<double, 1> A(N/2);
+    tensor<double, 1> A(N / 2);
     tensor<double, 1> B(N);
 
     {
@@ -32,16 +32,20 @@ TEST(slicing, simple_slice)
         }
     }
 
-    tensor_expr<double, 1> Adef = [B, N](qtl::index i) { return B(range(0, N, 2))(i); };
+    kernel simple_slice = [A, B, N] {
+        qtl::index i;
 
-    A = Adef;
+        A(i) = B(range(0, N, 2))(i);
+    };
+
+    simple_slice();
 
     double error = 0.0;
 
     {
         auto A_view = get_view<host_tensor_view<const double, 1>>(A).get();
 
-        for (long int i = 0; i < N/2; ++i)
+        for (long int i = 0; i < N / 2; ++i)
         {
             double diff = A_view(i) - 42.0;
 
@@ -59,7 +63,7 @@ TEST(slicing, recursive_slicing)
 
     long int N = 16;
 
-    tensor<double, 1> A(N/8);
+    tensor<double, 1> A(N / 8);
     tensor<double, 1> B(N);
 
     {
@@ -69,9 +73,9 @@ TEST(slicing, recursive_slicing)
         {
             if (i % 2 == 0)
             {
-                if (i/2 >= N/4)
+                if (i / 2 >= N / 4)
                 {
-                    if (i/2 % 2 == 0)
+                    if (i / 2 % 2 == 0)
                     {
                         B_view(i) = 42;
                     }
@@ -92,16 +96,20 @@ TEST(slicing, recursive_slicing)
         }
     }
 
-    tensor_expr<double, 1> Adef = [B, N](qtl::index i) { return B(range(0, N, 2))(range(N/4, N/2, 2))(i); };
+    kernel recursive_slicing = [A, B, N] {
+        qtl::index i;
 
-    A = Adef;
+        A(i) = B(range(0, N, 2))(range(N / 4, N / 2, 2))(i);
+    };
+
+    recursive_slicing();
 
     double error = 0.0;
 
     {
         auto A_view = get_view<host_tensor_view<const double, 1>>(A).get();
 
-        for (long int i = 0; i < N/8; ++i)
+        for (long int i = 0; i < N / 8; ++i)
         {
             double diff = A_view(i) - 42.0;
 

@@ -109,25 +109,26 @@ int hpx_main(int argc, char** argv)
         results.emplace_back(N);
     }
 
-    std::vector<tensor_expr<double, 1>> codes;
+    std::vector<kernel> codes;
 
     for (long int loc = 0; loc < num_localities; ++loc)
     {
         auto A = matrices[loc];
         auto b = vectors[loc];
+        auto r = results[loc];
 
-        tensor_expr<double, 1> code = [A, b](qtl::index i) {
-            qtl::index j;
+        kernel code = [A, b, r] {
+            qtl::index i, j;
 
-            return sum(j, A(i, j) * b(j));
+            r(i) = sum(j, A(i, j) * b(j));
         };
 
-        codes.push_back(code);
+        codes.push_back(std::move(code));
     }
 
     for (long int loc = 0; loc < num_localities; ++loc)
     {
-        results[loc] = codes[loc];
+        codes[loc]();
     }
 
     for (long int loc = 0; loc < num_localities; ++loc)
@@ -146,7 +147,7 @@ int hpx_main(int argc, char** argv)
 
         for (long int loc = 0; loc < num_localities; ++loc)
         {
-            futures.push_back(hpx::async([&results, &codes, loc] { results[loc] = codes[loc]; }));
+            futures.push_back(hpx::async([&codes, loc] { codes[loc](); }));
         }
 
         hpx::wait_all(std::move(futures));

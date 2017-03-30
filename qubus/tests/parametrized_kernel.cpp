@@ -12,7 +12,7 @@
 
 #include <gtest/gtest.h>
 
-TEST(parametrized_tensor_expr, vector_add)
+TEST(parametrized_kernel, vector_add)
 {
     using namespace qubus;
     using namespace qtl;
@@ -55,11 +55,15 @@ TEST(parametrized_tensor_expr, vector_add)
         }
     }
 
-    tensor_expr<std::complex<double>, 1> vec_add =
-        [](qtl::index i, variable<tensor<std::complex<double>, 1>> A,
-           variable<tensor<std::complex<double>, 1>> B) { return A(i) + B(i); };
+    kernel vec_add = [](tensor_var<std::complex<double>, 1> A,
+                        tensor_var<std::complex<double>, 1> B,
+                        tensor_var<std::complex<double>, 1> C) {
+        qtl::index i;
 
-    C = vec_add(A, B);
+        C(i) = A(i) + B(i);
+    };
+
+    vec_add(A, B, C);
 
     for (long int i = 0; i < N; ++i)
     {
@@ -82,7 +86,7 @@ TEST(parametrized_tensor_expr, vector_add)
     ASSERT_NEAR(error, 0.0, 1e-14);
 }
 
-TEST(parametrized_tensor_expr, sparse_matrix_vector_product)
+TEST(parametrized_kernel, sparse_matrix_vector_product)
 {
     using namespace qubus;
     using namespace qtl;
@@ -138,13 +142,14 @@ TEST(parametrized_tensor_expr, sparse_matrix_vector_product)
         }
     }
 
-    tensor_expr<double, 1> spmv = [](variable<sparse_tensor<double, 2>> A,
-                                     variable<tensor<double, 1>> B, qtl::index i) {
-        qtl::index j;
-        return sum(j, A(i, j) * B(j));
+    kernel spmv = [](sparse_tensor_var<double, 2> A, tensor_var<double, 1> B,
+                     tensor_var<double, 1> C) {
+        qtl::index i, j;
+
+        C(i) = sum(j, A(i, j) * B(j));
     };
 
-    C = spmv(A, B);
+    spmv(A, B, C);
 
     for (long int i = 0; i < N; ++i)
     {
@@ -170,7 +175,7 @@ TEST(parametrized_tensor_expr, sparse_matrix_vector_product)
     ASSERT_NEAR(error, 0.0, 1e-12);
 }
 
-TEST(parametrized_tensor_expr, partial_parameterization)
+TEST(parametrized_kernel, partial_parameterization)
 {
     using namespace qubus;
     using namespace qtl;
@@ -213,10 +218,13 @@ TEST(parametrized_tensor_expr, partial_parameterization)
         }
     }
 
-    tensor_expr<std::complex<double>, 1> vec_add =
-            [B](qtl::index i, variable<tensor<std::complex<double>, 1>> A) { return A(i) + B(i); };
+    kernel vec_add = [C, B](tensor_var<std::complex<double>, 1> A) {
+        qtl::index i;
 
-    C = vec_add(A);
+        C(i) = A(i) + B(i);
+    };
+
+    vec_add(A);
 
     for (long int i = 0; i < N; ++i)
     {

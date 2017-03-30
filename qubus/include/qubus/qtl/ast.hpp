@@ -2,8 +2,18 @@
 #define QUBUS_QTL_AST_HPP
 
 #include <qubus/qtl/index.hpp>
+#include <qubus/qtl/kernel.hpp>
+
+#include <qubus/associated_qubus_type.hpp>
+
+#include <qubus/IR/access.hpp>
+#include <qubus/IR/binary_operator_expr.hpp>
+#include <qubus/IR/expression.hpp>
+#include <qubus/IR/subscription_expr.hpp>
+#include <qubus/IR/variable_declaration.hpp>
 
 #include <boost/hana/any.hpp>
+#include <boost/hana/for_each.hpp>
 #include <boost/hana/tuple.hpp>
 
 #include <qubus/util/integers.hpp>
@@ -31,6 +41,10 @@ struct range
 
 namespace ast
 {
+struct domain
+{
+};
+
 template <typename T>
 struct is_term : std::is_arithmetic<T>
 {
@@ -41,66 +55,6 @@ class subscripted_tensor;
 
 template <typename Tensor, typename... Ranges>
 class sliced_tensor;
-
-template <typename T>
-class variable
-{
-public:
-    variable() : id_(new_here<id_type_server>())
-    {
-    }
-
-    template <typename... Indices>
-    auto operator()(Indices... indices) const
-    {
-        using subscription_type = std::conditional_t<
-            boost::hana::any(boost::hana::make_tuple(std::is_same<Indices, range>::value...)),
-            sliced_tensor<variable<T>, Indices...>, subscripted_tensor<variable<T>, Indices...>>;
-
-        return subscription_type(*this, std::move(indices)...);
-    }
-
-    hpx::naming::gid_type id() const
-    {
-        return id_.get_id().get_gid();
-    }
-
-private:
-    id_type id_;
-};
-
-template <typename T>
-struct is_term<variable<T>> : std::true_type
-{
-};
-
-template <typename LHS, typename RHS>
-class assignment
-{
-public:
-    assignment(LHS lhs_, RHS rhs_)
-            : lhs_(std::move(lhs_)), rhs_(std::move(rhs_))
-    {
-    }
-
-    const LHS& lhs() const
-    {
-        return lhs_;
-    }
-
-    const RHS& rhs() const
-    {
-        return rhs_;
-    }
-private:
-    LHS lhs_;
-    RHS rhs_;
-};
-
-template <typename LHS, typename RHS>
-struct is_term<assignment<LHS, RHS>> : std::true_type
-{
-};
 
 template <typename Tensor, typename... Indices>
 class subscripted_tensor
@@ -122,10 +76,33 @@ public:
     }
 
     template <typename RHS>
-    auto operator=(RHS rhs) const
+    void operator=(RHS rhs) const
     {
-        return assignment<subscripted_tensor<Tensor, Indices...>, RHS>(*this, std::move(rhs));
+        domain dom;
+
+        std::vector<std::unique_ptr<expression>> translated_indices;
+
+        boost::hana::for_each(indices(), [&translated_indices, &dom](auto index) {
+            translated_indices.push_back(translate_ast(index, dom));
+        });
+
+        auto translated_tensor = translate_ast(tensor(), dom);
+
+        auto accessible_tensor = translated_tensor->template try_as<access_expr>();
+
+        if (!accessible_tensor)
+            throw 0; // Invalid left-hand side
+
+        // FIXME: Avoid the copy of accessible_tensor.
+        auto lhs = subscription(clone(*accessible_tensor), std::move(translated_indices));
+
+        auto translated_rhs = translate_ast(rhs, dom);
+
+        auto code = assign(std::move(lhs), std::move(translated_rhs));
+
+        this_kernel::add_code(std::move(code));
     }
+
 private:
     Tensor tensor_;
     boost::hana::tuple<Indices...> indices_;
@@ -387,11 +364,82 @@ auto delta(util::index_t extent, FirstIndex first_index, SecondIndex second_inde
     return kronecker_delta<FirstIndex, SecondIndex>(std::move(extent), std::move(first_index),
                                                     std::move(second_index));
 }
+
+template <typename T, long int Rank>
+class tensor_var
+{
+public:
+    tensor_var() : var_(types::array(associated_qubus_type<T>::get(), Rank))
+    {
+    }
+
+    template <typename... Indices>
+    auto operator()(Indices... indices) const
+    {
+        using subscription_type =
+            std::conditional_t<boost::hana::any(
+                                   boost::hana::make_tuple(std::is_same<Indices, range>::value...)),
+                               sliced_tensor<tensor_var<T, Rank>, Indices...>,
+                               subscripted_tensor<tensor_var<T, Rank>, Indices...>>;
+
+        return subscription_type(*this, std::move(indices)...);
+    }
+
+    const variable_declaration& var() const
+    {
+        return var_;
+    }
+private:
+    variable_declaration var_;
+};
+
+template <typename T, long int Rank>
+struct is_term<tensor_var<T, Rank>> : std::true_type
+{
+};
+
+template <typename T, long int Rank>
+class sparse_tensor_var
+{
+public:
+    sparse_tensor_var() : var_(types::sparse_tensor(associated_qubus_type<T>::get()))
+    {
+    }
+
+    template <typename... Indices>
+    auto operator()(Indices... indices) const
+    {
+        using subscription_type =
+        std::conditional_t<boost::hana::any(
+                boost::hana::make_tuple(std::is_same<Indices, range>::value...)),
+                sliced_tensor<sparse_tensor_var<T, Rank>, Indices...>,
+                subscripted_tensor<sparse_tensor_var<T, Rank>, Indices...>>;
+
+        return subscription_type(*this, std::move(indices)...);
+    }
+
+    const variable_declaration& var() const
+    {
+        return var_;
+    }
+private:
+    variable_declaration var_;
+};
+
+template <typename T, long int Rank>
+struct is_term<sparse_tensor_var<T, Rank>> : std::true_type
+{
+};
 }
 
-template <typename T>
-using variable = ast::variable<T>;
+template <typename T, long int Rank>
+using tensor_var = ast::tensor_var<T, Rank>;
+
+template <typename T, long int Rank>
+using sparse_tensor_var = ast::sparse_tensor_var<T, Rank>;
 }
 }
+
+#include <qubus/qtl/ast_translation.hpp>
 
 #endif

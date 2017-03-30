@@ -4,8 +4,6 @@
 
 #include <hpx/hpx_init.hpp>
 
-#include <qubus/util/unused.hpp>
-
 #include <complex>
 #include <random>
 #include <vector>
@@ -64,12 +62,12 @@ TEST(qm_patterns, commutator)
         }
     }
 
-    tensor_expr<std::complex<double>, 2> Cdef = [A, B](qtl::index i, qtl::index j) {
-        qtl::index k;
-        return sum(k, A(i, k) * B(k, j) - B(i, k) * A(k, j));
+    kernel commutator = [A, B, C] {
+        qtl::index i, j, k;
+        C(i, j) = sum(k, A(i, k) * B(k, j) - B(i, k) * A(k, j));
     };
 
-    C = Cdef;
+    commutator();
 
     for (long int i = 0; i < N; ++i)
     {

@@ -1,10 +1,6 @@
 #include <qubus/qtl/task_generator.hpp>
 
-#include <qubus/qtl/IR/all.hpp>
-#include <qubus/IR/qir.hpp>
-
-#include <qubus/pattern/IR.hpp>
-#include <qubus/pattern/core.hpp>
+#include <qubus/variable_access_analysis.hpp>
 
 #include <qubus/util/assert.hpp>
 
@@ -18,60 +14,51 @@ namespace qtl
 
 namespace
 {
-
-std::vector<variable_declaration> extract_params(const expression& expr)
+template <typename Range, typename T>
+bool contains(const Range& range, const T& value)
 {
-    using pattern::_;
-
-    std::vector<variable_declaration> params;
-
-    pattern::variable<variable_declaration> decl;
-
-    auto m = pattern::make_matcher<expression, void>()
-       .case_(var(decl), [&]
-       {
-            if (decl.get().var_type() != types::index{})
-            {
-                if (std::find(params.begin(), params.end(), decl.get()) == params.end())
-                {
-                    params.push_back(decl.get());
-                }
-            }
-       });
-
-    pattern::for_each(expr, m);
-
-    return params;
+    return std::find(range.begin(), range.end(), value) != range.end();
 }
-
 }
 
 function_declaration wrap_code_in_task(std::unique_ptr<expression> expr)
 {
-    const expression* root = expr.get();
+    pass_resource_manager resource_man;
+    analysis_manager analysis_man(resource_man);
 
-    while (auto for_all = root->try_as<for_all_expr>())
+    variable_access_analysis analysis;
+
+    auto result = analysis.run(*expr, analysis_man, resource_man);
+
+    auto access_set = result.query_accesses_for_location(*expr);
+
+    std::vector<variable_declaration> mutable_params;
+
+    for (const auto& access : access_set.get_write_accesses())
     {
-        root = &for_all->body();
+        if (!contains(mutable_params, access.variable()))
+        {
+            mutable_params.push_back(access.variable());
+        }
     }
 
-    auto assignment = root->try_as<binary_operator_expr>();
+    std::vector<variable_declaration> immutable_params;
 
-    if (!assignment)
-        throw 0;
-
-    if (assignment->tag() != binary_op_tag::assign)
-        throw 0;
-
-    auto immutable_params = extract_params(assignment->right());
-    auto mutable_params = extract_params(assignment->left());
+    for (const auto& access : access_set.get_read_accesses())
+    {
+        if (!contains(mutable_params, access.variable()) &&
+            !contains(immutable_params, access.variable()))
+        {
+            immutable_params.push_back(access.variable());
+        }
+    }
 
     QUBUS_ASSERT(mutable_params.size() == 1, "Only one mutable param is currently allowed.");
 
-    function_declaration func("entry", std::move(immutable_params), std::move(mutable_params[0]), std::move(expr));
+    function_declaration func("entry", std::move(immutable_params), std::move(mutable_params[0]),
+                              std::move(expr));
 
     return func;
 }
-
 }
 }

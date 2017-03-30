@@ -21,9 +21,9 @@ TEST(basic_expressions, constant_expr)
 
     tensor<double, 2> A(N, N);
 
-    tensor_expr<double, 2> Adef = [](qtl::index i, qtl::index j) { return 42; };
+    kernel const_kernel = [A] { qtl::index i, j; A(i, j) = 42; };
 
-    A = Adef;
+    const_kernel();
 
     double error = 0.0;
 
@@ -87,9 +87,9 @@ TEST(basic_expressions, complex_addition)
         }
     }
 
-    tensor_expr<std::complex<double>, 1> Cdef = [A, B](qtl::index i) { return A(i) + B(i); };
+    kernel vec_add = [A, B, C] { qtl::index i; C(i) = A(i) + B(i); };
 
-    C = Cdef;
+    vec_add();
 
     for (long int i = 0; i < N; ++i)
     {
@@ -156,9 +156,9 @@ TEST(basic_expressions, complex_substraction)
         }
     }
 
-    tensor_expr<std::complex<double>, 1> Cdef = [A, B](qtl::index i) { return A(i) - B(i); };
+    kernel vec_sub = [A, B, C] { qtl::index i; C(i) = A(i) - B(i); };
 
-    C = Cdef;
+    vec_sub();
 
     for (long int i = 0; i < N; ++i)
     {
@@ -224,9 +224,9 @@ TEST(basic_expressions, complex_multiplication)
         }
     }
 
-    tensor_expr<std::complex<double>, 1> Cdef = [A, B](qtl::index i) { return A(i) * B(i); };
+    kernel vec_mul = [A, B, C] { qtl::index i; C(i) = A(i) * B(i); };
 
-    C = Cdef;
+    vec_mul();
 
     for (long int i = 0; i < N; ++i)
     {
@@ -292,9 +292,9 @@ TEST(basic_expressions, complex_division)
         }
     }
 
-    tensor_expr<std::complex<double>, 1> Cdef = [A, B](qtl::index i) { return A(i) / B(i); };
+    kernel vec_div = [A, B, C] { qtl::index i; C(i) = A(i) / B(i); };
 
-    C = Cdef;
+    vec_div();
 
     for (long int i = 0; i < N; ++i)
     {
