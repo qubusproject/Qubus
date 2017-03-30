@@ -64,12 +64,13 @@ TEST(contractions, simple_contraction)
         }
     }
 
-    tensor_expr<double, 2> Cdef = [A, B](qtl::index i, qtl::index j) {
-        qtl::index k;
-        return sum(k, A(i, k) * B(j, k));
+    kernel simple_contraction = [A, B, C] {
+        qtl::index i, j, k;
+
+        C(i, j) = sum(k, A(i, k) * B(j, k));
     };
 
-    C = Cdef;
+    simple_contraction();
 
     for (long int i = 0; i < N; ++i)
     {
@@ -153,12 +154,13 @@ TEST(contractions, complex_matrix_multiplication)
         }
     }
 
-    tensor_expr<std::complex<double>, 2> Cdef = [A, B](qtl::index i, qtl::index j) {
-        qtl::index k;
-        return sum(k, A(i, k) * B(k, j));
+    kernel complex_mat_mul = [A, B, C] {
+        qtl::index i, j, k;
+
+        C(i, j) = sum(k, A(i, k) * B(k, j));
     };
 
-    C = Cdef;
+    complex_mat_mul();
 
     for (long int i = 0; i < N; ++i)
     {
@@ -242,12 +244,13 @@ TEST(contractions, reduction_to_r1)
         }
     }
 
-    tensor_expr<double, 1> Cdef = [A, B](qtl::index i) {
-        qtl::index j, k;
-        return sum(j, sum(k, A(i, k) * B(j, k)));
+    kernel reduction_to_r1 = [A, B, C] {
+        qtl::index i, j, k;
+
+        C(i) = sum(j, sum(k, A(i, k) * B(j, k)));
     };
 
-    C = Cdef;
+    reduction_to_r1();
 
     for (long int i = 0; i < N; ++i)
     {
@@ -325,12 +328,13 @@ TEST(contractions, matrix_vector_product)
         }
     }
 
-    tensor_expr<double, 1> Cdef = [A, B](qtl::index i) {
-        qtl::index j;
-        return sum(j, A(i, j) * B(j));
+    kernel matrix_vector_product = [A, B, C] {
+        qtl::index i, j;
+
+        C(i) = sum(j, A(i, j) * B(j));
     };
 
-    C = Cdef;
+    matrix_vector_product();
 
     for (long int i = 0; i < N; ++i)
     {
@@ -411,12 +415,13 @@ TEST(contractions, basis_change_r2)
         }
     }
 
-    tensor_expr<double, 2> Cdef = [A, B](qtl::index i, qtl::index j) {
-        qtl::index k, l;
-        return sum(l, sum(k, A(i, k) * B(k, l) * A(l, j)));
+    kernel basis_change_r2 = [A, B, C] {
+        qtl::index i, j, k, l;
+
+        C(i, j) = sum(l, sum(k, A(i, k) * B(k, l) * A(l, j)));
     };
 
-    C = Cdef;
+    basis_change_r2();
 
     for (long int i = 0; i < N; ++i)
     {

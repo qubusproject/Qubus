@@ -8,14 +8,14 @@ endforeach()
 
 set(qubus_qtl_source_files deduce_iteration_space.cpp index.cpp kronecker_delta_folding_pass.cpp
                            lower_abstract_indices.cpp lower_top_level_sums.cpp multi_index_handling.cpp
-                           sparse_patterns.cpp IR/for_all_expr.cpp IR/kronecker_delta_expr.cpp IR/sum_expr.cpp)
+                           sparse_patterns.cpp IR/for_all_expr.cpp IR/kronecker_delta_expr.cpp IR/sum_expr.cpp task_generator.cpp
+                           kernel.cpp IR/object_expr.cpp object_extraction_pass.cpp legalization_pass.cpp IR/multi_index_expr.cpp)
 
 add_library(qubus_qtl SHARED ${qubus_qtl_header_files} ${qubus_qtl_source_files})
 
 target_include_directories(qubus_qtl PUBLIC ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 target_compile_options(qubus_qtl PUBLIC -std=c++14)
-target_link_libraries(qubus_qtl PUBLIC qubus qubus_ir qubus_util)
-target_link_libraries(qubus_qtl PUBLIC ${Boost_LIBRARIES})
+target_link_libraries(qubus_qtl qubus qubus_ir qubus_util ${Boost_LIBRARIES})
 hpx_setup_target(qubus_qtl)
 qubus_set_output_name(qubus_qtl qubus_qtl)
 

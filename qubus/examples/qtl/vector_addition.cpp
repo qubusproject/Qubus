@@ -33,11 +33,13 @@ int hpx_main(int argc, char** argv)
         }
     }
 
-    static const qtl::tensor_expr<double, 1> C_def = [A, B](qtl::index i) {
-        return A(i) + B(i);
+    static const qtl::kernel vec_add = [A, B, C] {
+        qtl::index i;
+
+        C(i) = A(i) + B(i);
     };
 
-    C = C_def;
+    vec_add();
 
     {
         auto C_view = get_view<host_tensor_view<const double, 1>>(C).get();

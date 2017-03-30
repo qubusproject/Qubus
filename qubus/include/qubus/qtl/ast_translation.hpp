@@ -17,6 +17,10 @@
 #include <qubus/util/optional_ref.hpp>
 #include <qubus/util/unused.hpp>
 
+#include <boost/range/adaptor/reversed.hpp>
+
+#include <tuple>
+#include <type_traits>
 #include <unordered_map>
 #include <utility>
 #include <vector>
@@ -28,70 +32,14 @@ namespace qtl
 namespace ast
 {
 
-struct ast_context
-{
-    class symbol_table_t
-    {
-    public:
-        const variable_declaration& lookup_or_create_symbol(hpx::naming::gid_type id, type var_type)
-        {
-            auto search_result = table_.find(id);
-
-            if (search_result != table_.end())
-            {
-                return search_result->second;
-            }
-            else
-            {
-                variable_declaration var(std::move(var_type));
-
-                auto result = table_.emplace(std::move(id), std::move(var));
-
-                return result.first->second;
-            }
-        }
-
-        void add_symbol(hpx::naming::gid_type id, variable_declaration var)
-        {
-            auto result = table_.emplace(std::move(id), std::move(var));
-
-            if (!result.second)
-                throw 0;
-        }
-
-        util::optional_ref<const variable_declaration> lookup(const hpx::naming::gid_type& id) const
-        {
-            auto search_result = table_.find(id);
-
-            if (search_result != table_.end())
-            {
-                return search_result->second;
-            }
-            else
-            {
-                return {};
-            }
-        }
-
-    private:
-        std::unordered_map<hpx::naming::gid_type, variable_declaration> table_;
-    };
-
-    symbol_table_t symbol_table;
-    std::vector<std::pair<variable_declaration, object>> object_table;
-};
-
-template <typename T>
-auto translate_ast(literal<T> node, ast_context& QUBUS_UNUSED(ctx))
-{
-    return lit(node.value());
-}
+template <typename T, long int Rank>
+class tensor_expr;
 
 template <binary_operator_tag Tag, typename LHS, typename RHS>
-auto translate_ast(binary_operator<Tag, LHS, RHS> node, ast_context& ctx)
+auto translate_ast(binary_operator<Tag, LHS, RHS> node, domain& dom)
 {
-    auto lhs = translate_ast(node.lhs(), ctx);
-    auto rhs = translate_ast(node.rhs(), ctx);
+    auto lhs = translate_ast(node.lhs(), dom);
+    auto rhs = translate_ast(node.rhs(), dom);
 
     switch (node.tag())
     {
@@ -109,58 +57,58 @@ auto translate_ast(binary_operator<Tag, LHS, RHS> node, ast_context& ctx)
 }
 
 template <typename Body>
-auto translate_ast(contraction<index, Body> node, ast_context& ctx)
+auto translate_ast(contraction<index, Body> node, domain& dom)
 {
-    variable_declaration idx_var(types::index{});
+    auto idx_var = node.contraction_index().var();
 
-    ctx.symbol_table.add_symbol(node.contraction_index().id(), idx_var);
-
-    auto body = translate_ast(node.body(), ctx);
+    auto body = translate_ast(node.body(), dom);
 
     return qubus::qtl::sum(std::move(idx_var), std::move(body));
 }
 
 template <long int Rank, typename Body>
-auto translate_ast(contraction<multi_index<Rank>, Body> node, ast_context& ctx)
+auto translate_ast(contraction<multi_index<Rank>, Body> node, domain& dom)
 {
-    variable_declaration multi_idx_var(types::multi_index{});
-
-    ctx.symbol_table.add_symbol(node.contraction_index().id(), multi_idx_var);
+    auto multi_idx_var = node.contraction_index().var();
 
     std::vector<variable_declaration> indices;
 
     for (long int i = 0; i < node.contraction_index().rank(); ++i)
     {
-        variable_declaration idx_var(types::index{});
+        auto idx_var = node.contraction_index()[i].var();
 
         indices.push_back(idx_var);
-
-        ctx.symbol_table.add_symbol(node.contraction_index()[i].id(), idx_var);
     }
 
-    auto body = translate_ast(node.body(), ctx);
+    auto body = translate_ast(node.body(), dom);
 
     return qubus::qtl::sum(std::move(indices), std::move(multi_idx_var), std::move(body));
 }
 
 template <typename Tensor, typename... Indices>
-auto translate_ast(subscripted_tensor<Tensor, Indices...> node, ast_context& ctx)
+auto translate_ast(subscripted_tensor<Tensor, Indices...> node, domain& dom)
 {
-    auto tensor = translate_ast(node.tensor(), ctx);
+    auto tensor = translate_ast(node.tensor(), dom);
+
+    auto accessible_tensor = tensor->template try_as<access_expr>();
+
+    if (!accessible_tensor)
+        throw 0; // Invalid tensor
 
     std::vector<std::unique_ptr<expression>> indices;
 
-    boost::hana::for_each(node.indices(), [&indices, &ctx](auto index) {
-        indices.push_back(translate_ast(index, ctx));
+    boost::hana::for_each(node.indices(), [&indices, &dom](auto index) {
+        indices.push_back(translate_ast(index, dom));
     });
 
-    return subscription(std::move(tensor), std::move(indices));
+    // FIXME: Avoid the copy of accessible_tensor.
+    return subscription(clone(*accessible_tensor), std::move(indices));
 }
 
 template <typename Tensor, typename... Ranges>
-auto translate_ast(sliced_tensor<Tensor, Ranges...> node, ast_context& ctx)
+auto translate_ast(sliced_tensor<Tensor, Ranges...> node, domain& dom)
 {
-    auto tensor = translate_ast(node.tensor(), ctx);
+    auto tensor = translate_ast(node.tensor(), dom);
 
     std::vector<std::unique_ptr<expression>> offset;
     offset.reserve(sizeof...(Ranges));
@@ -171,80 +119,66 @@ auto translate_ast(sliced_tensor<Tensor, Ranges...> node, ast_context& ctx)
     std::vector<std::unique_ptr<expression>> strides;
     strides.reserve(sizeof...(Ranges));
 
-    boost::hana::for_each(node.ranges(), [&offset, &shape, &strides, &ctx](auto range) {
+    boost::hana::for_each(node.ranges(), [&offset, &shape, &strides](auto range) {
         offset.push_back(integer_literal(range.start));
-        shape.push_back(integer_literal((range.end - range.start)/range.stride));
+        shape.push_back(integer_literal((range.end - range.start) / range.stride));
         strides.push_back(integer_literal(range.stride));
     });
 
     return slice(std::move(tensor), std::move(offset), std::move(shape), std::move(strides));
 }
 
-inline auto translate_ast(const index& idx, ast_context& ctx)
+inline auto translate_ast(const index& idx, domain& /*unused*/)
 {
-    if (auto idx_var = ctx.symbol_table.lookup(idx.id()))
-    {
-        return var(*idx_var);
-    }
-    else
-    {
-        throw 0;
-    }
+    return var(idx.var());
 }
 
 template <long int Rank>
-auto translate_ast(const multi_index<Rank>& idx, ast_context& ctx)
+auto translate_ast(const multi_index<Rank>& idx, domain& /*unused*/)
 {
-    if (auto idx_var = ctx.symbol_table.lookup(idx.id()))
-    {
-        return var(*idx_var);
-    }
-    else
-    {
-        throw 0;
-    }
+    return capture_multi_index(idx);
 }
 
-template <typename T>
-auto translate_ast(const variable<T>& tensor, ast_context& ctx)
+template <typename T, long int Rank>
+auto translate_ast(const tensor_expr<T, Rank>& tensor, domain& /*unused*/)
 {
-    if (auto tensor_var = ctx.symbol_table.lookup(tensor.id()))
-    {
-        return var(*tensor_var);
-    }
-    else
-    {
-        throw 0;
-    }
+    return clone(tensor.code());
 }
 
-template <typename Tensor>
-auto translate_ast(const Tensor& tensor, ast_context& ctx)
+template <typename T, long int Rank>
+auto translate_ast(const tensor_var<T, Rank>& tensor, domain& /*unused*/)
 {
-    if (auto tensor_var = ctx.symbol_table.lookup(tensor.get_object().id().get_gid()))
-    {
-        return var(*tensor_var);
-    }
-    else
-    {
-        variable_declaration new_tensor_var(tensor.get_object().object_type());
+    return var(tensor.var());
+}
 
-        ctx.symbol_table.add_symbol(tensor.get_object().id().get_gid(), new_tensor_var);
+template <typename T, long int Rank>
+auto translate_ast(const sparse_tensor_var<T, Rank>& tensor, domain& /*unused*/)
+{
+    return var(tensor.var());
+}
 
-        ctx.object_table.emplace_back(new_tensor_var, tensor.get_object());
+template <typename Tensor,
+          typename /*Enabled*/ = typename std::enable_if<!std::is_arithmetic<Tensor>::value>::type>
+auto translate_ast(const Tensor& tensor, domain& /*unused*/)
+{
+    return qubus::qtl::obj(tensor.get_object());
+}
 
-        return var(new_tensor_var);
-    }
+template <typename T,
+          typename /*Enabled*/ = typename std::enable_if<std::is_arithmetic<T>::value>::type>
+auto translate_ast(T node, domain& dom)
+{
+    return lit(node);
 }
 
 template <typename FirstIndex, typename SecondIndex>
-auto translate_ast(kronecker_delta<FirstIndex, SecondIndex> node, ast_context& ctx)
+auto translate_ast(kronecker_delta<FirstIndex, SecondIndex> node, domain& dom)
 {
-    auto first_index = translate_ast(node.first_index(), ctx);
-    auto second_index = translate_ast(node.second_index(), ctx);
+    auto first_index = translate_ast(node.first_index(), dom);
+    auto second_index = translate_ast(node.second_index(), dom);
 
     return qubus::qtl::kronecker_delta(node.extent(), std::move(first_index),
-                                            std::move(second_index));
+                                       std::move(second_index));
 }
 }
 }

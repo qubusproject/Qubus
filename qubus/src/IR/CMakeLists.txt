@@ -39,7 +39,7 @@ add_library(qubus_ir SHARED ${qubus_pattern_header_files} ${qubus_ir_header_file
 
 target_include_directories(qubus_ir PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 target_compile_options(qubus_ir PUBLIC -std=c++14)
-target_link_libraries(qubus_ir PUBLIC qubus_util)
+target_link_libraries(qubus_ir qubus_util)
 hpx_setup_target(qubus_ir)
 qubus_set_output_name(qubus_ir qubus_ir)
 

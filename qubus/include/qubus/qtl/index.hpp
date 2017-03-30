@@ -1,7 +1,7 @@
 #ifndef QUBUS_INDEX_HPP
 #define QUBUS_INDEX_HPP
 
-#include <qubus/global_id.hpp>
+#include <qubus/IR/variable_declaration.hpp>
 
 #include <boost/hana/fold.hpp>
 #include <boost/hana/transform.hpp>
@@ -31,18 +31,17 @@ struct is_index : std::false_type
 class index
 {
 public:
-    index() : info_(std::make_shared<index_info>()), id_(generate_global_id())
+    index() : info_(std::make_shared<index_info>())
     {
     }
 
-    explicit index(const char* debug_name_)
-    : info_(std::make_shared<index_info>(debug_name_)), id_(generate_global_id())
+    explicit index(const char* debug_name_) : info_(std::make_shared<index_info>(debug_name_))
     {
     }
 
-    hpx::naming::gid_type id() const
+    const variable_declaration& var() const
     {
-        return id_.get_id().get_gid();
+        return info_->var();
     }
 
     const char* debug_name() const
@@ -54,12 +53,18 @@ private:
     class index_info
     {
     public:
-        index_info() : debug_name_(nullptr)
+        index_info() : var_(types::index{}), debug_name_(nullptr)
         {
         }
 
-        explicit index_info(const char* debug_name_) : debug_name_(debug_name_)
+        explicit index_info(const char* debug_name_)
+        : var_(types::index{}), debug_name_(debug_name_)
         {
+        }
+
+        const variable_declaration& var() const
+        {
+            return var_;
         }
 
         const char* debug_name() const
@@ -68,16 +73,16 @@ private:
         }
 
     private:
+        variable_declaration var_;
         const char* debug_name_;
     };
 
     std::shared_ptr<index_info> info_;
-    global_id id_;
 };
 
 inline bool operator==(const index& lhs, const index& rhs)
 {
-    return lhs.id() == rhs.id();
+    return lhs.var() == rhs.var();
 }
 
 inline bool operator!=(const index& lhs, const index& rhs)
@@ -88,11 +93,6 @@ inline bool operator!=(const index& lhs, const index& rhs)
 inline std::ostream& operator<<(std::ostream& os, const index& idx)
 {
     return os << "index( " << idx.debug_name() << " )";
-}
-
-inline hpx::naming::gid_type id(const index& value)
-{
-    return value.id();
 }
 
 template <>
@@ -106,24 +106,22 @@ class multi_index
 public:
     static_assert(Rank >= 0, "Rank must be non-negative.");
 
-    multi_index() : info_(std::make_shared<multi_index_info>()), id_(generate_global_id())
+    multi_index() : info_(std::make_shared<multi_index_info>())
     {
     }
 
     explicit multi_index(const char* debug_name_)
-    : info_(std::make_shared<multi_index_info>(debug_name_)), id_(generate_global_id())
+    : info_(std::make_shared<multi_index_info>(debug_name_))
     {
     }
 
     multi_index(std::array<index, Rank> element_indices_)
-    : info_(std::make_shared<multi_index_info>(std::move(element_indices_))),
-      id_(generate_global_id())
+    : info_(std::make_shared<multi_index_info>(std::move(element_indices_)))
     {
     }
 
     multi_index(std::array<index, Rank> element_indices_, const char* debug_name_)
-    : info_(std::make_shared<multi_index_info>(std::move(element_indices_), debug_name_)),
-      id_(generate_global_id())
+    : info_(std::make_shared<multi_index_info>(std::move(element_indices_), debug_name_))
     {
     }
 
@@ -137,9 +135,9 @@ public:
         return Rank;
     }
 
-    hpx::naming::gid_type id() const
+    const variable_declaration& var() const
     {
-        return id_.get_id().get_gid();
+        return info_->var();
     }
 
     const char* debug_name() const
@@ -151,22 +149,32 @@ private:
     class multi_index_info
     {
     public:
-        multi_index_info() : debug_name_(nullptr)
+        multi_index_info() : var_(types::multi_index(Rank)), debug_name_(nullptr)
         {
         }
 
-        explicit multi_index_info(const char* debug_name_) : debug_name_(debug_name_)
+        explicit multi_index_info(const char* debug_name_)
+        : var_(types::multi_index(Rank)), debug_name_(debug_name_)
         {
         }
 
         explicit multi_index_info(std::array<index, Rank> element_indices_)
-        : element_indices_(std::move(element_indices_)), debug_name_(nullptr)
+        : var_(types::multi_index(Rank)),
+          element_indices_(std::move(element_indices_)),
+          debug_name_(nullptr)
         {
         }
 
         explicit multi_index_info(std::array<index, Rank> element_indices_, const char* debug_name_)
-        : element_indices_(std::move(element_indices_)), debug_name_(debug_name_)
+        : var_(types::multi_index(Rank)),
+          element_indices_(std::move(element_indices_)),
+          debug_name_(debug_name_)
         {
+        }
+
+        const variable_declaration& var() const
+        {
+            return var_;
         }
 
         const index& operator[](long int pos) const
@@ -180,18 +188,18 @@ private:
         }
 
     private:
+        variable_declaration var_;
         std::array<index, Rank> element_indices_;
         const char* debug_name_;
     };
 
     std::shared_ptr<multi_index_info> info_;
-    global_id id_;
 };
 
 template <long int LHSRank, long int RHSRank>
 inline bool operator==(const multi_index<LHSRank>& lhs, const multi_index<RHSRank>& rhs)
 {
-    return lhs.id() == rhs.id();
+    return lhs.var() == rhs.var();
 }
 
 template <long int LHSRank, long int RHSRank>
@@ -204,12 +212,6 @@ template <long int Rank>
 inline std::ostream& operator<<(std::ostream& os, const multi_index<Rank>& idx)
 {
     return os << "multi_index( " << idx.debug_name() << " )";
-}
-
-template <long int Rank>
-inline hpx::naming::gid_type id(const multi_index<Rank>& value)
-{
-    return value.id();
 }
 
 template <long int Rank>
@@ -245,7 +247,7 @@ constexpr bool are_all_indices()
 
 using index = ast::index;
 
-template<long int Rank>
+template <long int Rank>
 using multi_index = ast::multi_index<Rank>;
 }
 }

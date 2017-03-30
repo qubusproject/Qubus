@@ -101,11 +101,13 @@ for our first program featuring *vector addition*.
             }
         }
 
-        static const qtl::tensor_expr<double, 1> C_def = [A, B](qtl::index i) {
-            return A(i) + B(i);
+        static const qtl::kernel vec_add = [A, B, C] {
+            qtl::index i;
+
+            C(i) = A(i) + B(i);
         };
 
-        C = C_def;
+        vec_add();
 
         {
             auto C_view = get_view<host_tensor_view<const double, 1>>(C).get();
@@ -158,39 +160,48 @@ of the view otherwise.
 
 .. code-block:: C++
 
-        static const qtl::tensor_expr<double, 1> C_def = [A, B](qtl::index i) {
-            return A(i) + B(i);
+        static const qtl::kernel vec_add = [A, B, C] {
+            qtl::index i;
+
+            C(i) = A(i) + B(i);
         };
 
-does specify the calculation which we want to perform and stores it in a tensor expression object.
+does specify the calculation which we want to perform and stores it in a kernel object.
 It should be noted that this only **defines** the operation but does not execute it yet.
 
-in Qubus, a tensor expression is a first-class object which can store a definition of a tensor.
+In Qubus, a kernel is a first-class object which can store a definition of a computation.
+Essentially, the definition of a kernel object in Qubus corresponds to the definition of a function
+in other programming languages.
+
 Since it is a first-class object it can be passed around the program or stored for eventual execution.
-In this case, we store the tensor expression in a local static variable. This has the advantage
-that the tensor expression can be easily used within that function but is only initialized once.
-Since the creating and destruction of a tensor expression can be extremely costly, it should be usualy
+In this case, we store the kernel in a local static variable. This has the advantage
+that the kernel can be easily used within that function but is only initialized once.
+Since the creating and destruction of a kernel can be extremely costly, it should be usualy
 avoided.
 
-To initialize the tensor expression, one can use, in principle, any function with a certain structure.
-As parameters, the funciton should take the indices, represented by :cpp:`index` objects,
-of the defined tensor which can be used later within the function to construct the actual definition
-and should return an expression defining the calculation which is used to form the new tensor.
+To initialize the kernel, one can use, in principle, any function with a certain structure.
 Since the calculation depends on the tensors :cpp:`A` and :cpp:`B`, we specify these in the capture list
 of the lambda to be able to use them in the definition. Since the objects corresponding to :cpp:`A` and :cpp:`B`
 can not be changed afterwards, we refer to these dependencies as *static* dependencies. Later on, we will learn
 how to specify *dynamic* depedencies to change the used objects between calculations.
 
-To actually execute the calculation, one can simply assign the definition to a suitable tensor object:
+In the definition itself, we declare two indices, represented by :cpp:`index` objects, to be used in the definition
+of our computation. Afterwords, we define the actual computation as the element-wise addition of two tensors.
+Usually, the QTL syntax is oriented to match the usual C++ array syntax except that the indices are abstract index
+objects and no concrete integer values.
+
+To actually execute the calculation, one can simply call the kernel object like any other function:
 
 .. code-block:: C++
 
-    C = C_def;
+    vec_add();
+
+Since all our dependencies are static (that is defined at the point of kernel definition) the call has no
+parameters.
 
 Afterwards, we finish the program by writing the result to the standard output using a view.
 It should be noted that a read-only view is requested by prefixing the value type of the view with :cpp:`const`.
 If possible, read-only access should be prefered as it allows for a more optimized exection of the code.
 
 .. TODO: We need to write these guides first.
-.. To learn how to build and execute the program, please refer to the Build Guide and the Execution Guide,
-respectively.
+.. To learn how to build and execute the program, please refer to the Build Guide and the Execution Guide, respectively.

@@ -6,5 +6,7 @@
 #include <qubus/qtl/pattern/index.hpp>
 #include <qubus/qtl/pattern/sum.hpp>
 #include <qubus/qtl/pattern/tensor.hpp>
+#include <qubus/qtl/pattern/object.hpp>
+#include <qubus/qtl/pattern/captured_multi_index.hpp>
 
 #endif

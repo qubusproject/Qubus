@@ -62,31 +62,26 @@ private:
     std::reference_wrapper<const expression> location_;
 };
 
+class access_set_node;
+
+enum class access_kind
+{
+    external,
+    all
+};
+
 class access_set
 {
 public:
-    access_set(const expression& location_, std::vector<access> local_read_accesses_,
-               std::vector<access> local_write_accesses_,
-               std::vector<std::unique_ptr<access_set>> subsets_);
+    explicit access_set(const access_set_node& root_, access_kind kind_);
 
     const expression& location() const;
 
     std::vector<access> get_read_accesses() const;
-
     std::vector<access> get_write_accesses() const;
-
-    auto subsets() const
-    {
-        return subsets_ | boost::adaptors::indirected;
-    }
-
 private:
-    std::reference_wrapper<const expression> location_;
-
-    std::vector<access> local_read_accesses_;
-    std::vector<access> local_write_accesses_;
-
-    std::vector<std::unique_ptr<access_set>> subsets_;
+    const access_set_node* root_;
+    access_kind kind_;
 };
 
 class variable_access_index;
@@ -94,16 +89,20 @@ class variable_access_index;
 class variable_access_analyis_result
 {
 public:
-    explicit variable_access_analyis_result(std::shared_ptr<variable_access_index> access_index_)
-    : access_index_(std::move(access_index_))
-    {
-    }
+    explicit variable_access_analyis_result(std::unique_ptr<variable_access_index> access_index_);
 
-    const access_set& query_accesses_for_location(const expression& location) const;
+    ~variable_access_analyis_result();
+
+    variable_access_analyis_result(const variable_access_analyis_result&) = delete;
+    variable_access_analyis_result& operator=(const variable_access_analyis_result&) = delete;
+
+    variable_access_analyis_result(variable_access_analyis_result&&);
+    variable_access_analyis_result& operator=(variable_access_analyis_result&&);
+
+    access_set query_accesses_for_location(const expression& location, access_kind kind = access_kind::external) const;
 
 private:
-    // TODO: Substitute shared_ptr with a more appropriate smart pointer.
-    std::shared_ptr<variable_access_index> access_index_;
+    std::unique_ptr<variable_access_index> access_index_;
 };
 
 class variable_access_analysis

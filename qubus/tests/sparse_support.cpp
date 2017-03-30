@@ -4,8 +4,6 @@
 
 #include <hpx/hpx_init.hpp>
 
-#include <qubus/util/unused.hpp>
-
 #include <random>
 #include <vector>
 
@@ -65,9 +63,10 @@ TEST_P(sparse_support, sparse_matrix_vector_product)
     tensor<double, 1> B(N);
     tensor<double, 1> C(N);
 
-    tensor_expr<double, 1> Cdef = [A, B](qtl::index i) {
-        qtl::index j;
-        return sum(j, A(i, j) * B(j));
+    kernel spmv = [A, B, C]{
+        qtl::index i, j;
+
+        C(i) = sum(j, A(i, j) * B(j));
     };
 
     {
@@ -79,7 +78,7 @@ TEST_P(sparse_support, sparse_matrix_vector_product)
         }
     }
 
-    C = Cdef;
+    spmv();
 
     for (long int i = 0; i < N; ++i)
     {
@@ -164,12 +163,13 @@ TEST_P(sparse_support, sparse_matrix_matrix_product)
         }
     }
 
-    tensor_expr<double, 2> Cdef = [A, B](qtl::index i, qtl::index k) {
-        qtl::index j;
-        return sum(j, A(i, j) * B(j, k));
+    kernel spmm = [A, B, C] {
+        qtl::index i, j, k;
+
+        C(i, k) = sum(j, A(i, j) * B(j, k));
     };
 
-    C = Cdef;
+    spmm();
 
     for (long int i = 0; i < N; ++i)
     {

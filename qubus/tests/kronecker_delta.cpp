@@ -21,9 +21,9 @@ TEST(kronecker_delta, identity)
 
     tensor<double, 2> A(N, N);
 
-    tensor_expr<double, 2> Adef = [N](qtl::index i, qtl::index j) { return delta(N, i, j); };
+    kernel identify = [A, N] { qtl::index i, j; A(i, j) = delta(N, i, j); };
 
-    A = Adef;
+    identify();
 
     double error = 0.0;
 
@@ -53,12 +53,9 @@ TEST(kronecker_delta, identity_contraction)
 
     tensor<double, 1> A(N);
 
-    tensor_expr<double, 1> Adef = [N](qtl::index i) {
-        qtl::index j;
-        return sum(j, delta(N, i, j));
-    };
+    kernel identify_contraction = [A, N] { qtl::index i, j; A(i, j) = sum(j, delta(N, i, j)); };
 
-    A = Adef;
+    identify_contraction();
 
     double error = 0.0;
 
