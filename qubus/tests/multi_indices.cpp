@@ -120,12 +120,9 @@ TEST(multi_indices, index_splitting)
 /*TEST(multi_indices, reverse_index_splitting)
 {
     using namespace qubus;
+    using namespace qtl;
 
     long int N = 100;
-
-    qubus::index i("i");
-    qubus::index j("j");
-    qubus::multi_index<2> ij({i, j}, "ij");
 
     std::random_device rd;
 
@@ -145,48 +142,44 @@ TEST(multi_indices, index_splitting)
 
     tensor<double, 2> A(N, N);
 
-    auto init_A = make_computelet()
-            .body([&](cpu_tensor_view<double, 2> A)
-                  {
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          for (long int j = 0; j < N; ++j)
-                          {
-                              A(i, j) = A2[i * N + j];
-                          }
-                      }
-                  })
-            .finalize();
+    {
+        auto A_view = get_view<host_tensor_view<double, 2>>(A).get();
 
-    execute(init_A, A);
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                A_view(i, j) = A2[i * N + j];
+            }
+        }
+    }
 
     tensor<double, 2> R(N, N);
 
-    tensor_expr<double, 2> Rdef = def_tensor(i, j)[A(ij)];
+    kernel reverse_index_splitting = [A, R] {
+        qtl::index i, j;
+        qtl::multi_index<2> ij({i, j});
 
-    R = Rdef;
+        R(i, j) = A(ij);
+    };
 
-    double error;
+    reverse_index_splitting();
 
-    auto test = make_computelet()
-            .body([&](cpu_tensor_view<double, 2> R)
-                  {
-                      error = 0.0;
+    double error = 0.0;
 
-                      for (long int i = 0; i < N; ++i)
-                      {
-                          for (long int j = 0; j < N; ++j)
-                          {
-                              double diff = R(i, j) - A2[i * N + j];
+    {
+        auto R_view = get_view<host_tensor_view<const double, 2>>(R).get();
 
-                              error += diff * diff;
-                          }
-                      }
-                  })
-            .finalize();
+        for (long int i = 0; i < N; ++i)
+        {
+            for (long int j = 0; j < N; ++j)
+            {
+                double diff = R_view(i, j) - A2[i * N + j];
 
-    execute(test, R);
-    R.when_ready().wait();
+                error += diff * diff;
+            }
+        }
+    }
 
     ASSERT_NEAR(error, 0.0, 1e-14);
 }*/
