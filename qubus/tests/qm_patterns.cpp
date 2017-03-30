@@ -96,8 +96,6 @@ TEST(qm_patterns, commutator)
         }
     }
 
-    C.when_ready().wait();
-
     ASSERT_NEAR(error, 0.0, 1e-12);
 }
 

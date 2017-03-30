@@ -4,34 +4,68 @@
 #include <hpx/config.hpp>
 
 #include <qubus/architecture_identifier.hpp>
+#include <qubus/global_id.hpp>
 
 #include <qubus/IR/type.hpp>
 
 #include <hpx/include/actions.hpp>
 #include <hpx/runtime/serialization/serialize.hpp>
-#include <hpx/runtime/serialization/base_object.hpp>
 
+#include <qubus/util/function_traits.hpp>
 #include <qubus/util/unused.hpp>
 
-#include <vector>
-#include <memory>
-#include <typeinfo>
-#include <typeindex>
 #include <algorithm>
+#include <map>
+#include <memory>
+#include <mutex>
+#include <string>
+#include <typeindex>
+#include <typeinfo>
 #include <utility>
+#include <vector>
 
 namespace qubus
 {
 
-template <typename T, typename Enable = void>
-struct foreign_computelet_traits;
+template <typename F, typename Indices>
+struct function_thunk_mixin_impl;
 
-class foreign_computelet
+template <std::size_t, typename T>
+struct type_generator
+{
+    using type = T;
+};
+
+template <typename F, std::size_t... Indices>
+struct function_thunk_mixin_impl<F, std::index_sequence<Indices...>>
+{
+private:
+    template <typename... Args>
+    static void thunk_body(F* f, Args... args)
+    {
+        (*f)(util::function_traits<F>::template arg<Indices>::type::construct_from_reference(
+            args)...);
+    }
+
+public:
+    static constexpr auto* thunk =
+        static_cast<void (*)(F*, typename type_generator<Indices, void*>::type...)>(&thunk_body);
+};
+
+template <typename F>
+struct function_thunk_mixin
+    : function_thunk_mixin_impl<F, std::make_index_sequence<util::function_traits<F>::arity>>
+{
+};
+
+template <typename F>
+struct foreign_computelet_traits : function_thunk_mixin<F>
+{
+};
+
+class foreign_computelet_registry
 {
 public:
-    foreign_computelet() = default;
-    foreign_computelet(type result_type_, std::vector<type> argument_types_);
-
     class version
     {
     public:
@@ -42,49 +76,35 @@ public:
 
         virtual const void* get_function() const = 0;
         virtual const void* get_data() const = 0;
-
-        template <typename Archive>
-        void serialize(Archive& QUBUS_UNUSED(ar), unsigned QUBUS_UNUSED(version))
-        {
-        }
-
-        HPX_SERIALIZATION_POLYMORPHIC_ABSTRACT(version);
     };
 
-    template <typename T>
-    foreign_computelet& add_version(architecture_identifier target, T version)
+    template <typename Implementation>
+    void add_version(const std::string& kernel_id, architecture_identifier target,
+                     Implementation implementation)
     {
-        versions_.push_back(
-            std::make_shared<version_wrapper<T>>(std::move(target), std::move(version)));
+        std::lock_guard<std::mutex> lock(version_table_mutex_);
 
-        return *this;
+        auto& subtable = version_table_[kernel_id];
+
+        auto search_result =
+            std::find_if(subtable.begin(), subtable.end(),
+                         [&target](const auto& entry) { return entry->target() == target; });
+
+        if (search_result == search_result)
+        {
+            auto version = std::make_unique<version_wrapper<Implementation>>(
+                std::move(target), std::move(implementation));
+
+            subtable.push_back(std::move(version));
+        }
+        else
+        {
+            throw 0;
+        }
     }
 
-    std::shared_ptr<version> lookup_version(const architecture_identifier& target) const
-    {
-        auto pos = std::find_if(versions_.begin(), versions_.end(), [&target](const auto& value)
-                                {
-                                    return value->target() == target;
-                                });
-
-        return *pos;
-    }
-
-    const type& result_type() const
-    {
-        return result_type_;
-    }
-
-    const std::vector<type>& argument_types() const
-    {
-        return argument_types_;
-    }
-
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar& versions_;
-    }
+    const version& lookup_version(const std::string& kernel_id,
+                                  const architecture_identifier& target) const;
 
 private:
     template <typename T>
@@ -105,7 +125,7 @@ private:
 
         const void* get_function() const override final
         {
-            return foreign_computelet_traits<T>::thunk;
+            return reinterpret_cast<const void*>(foreign_computelet_traits<T>::thunk);
         }
 
         const void* get_data() const override final
@@ -113,25 +133,61 @@ private:
             return &value_;
         }
 
-        template <typename Archive>
-        void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-        {
-            ar& hpx::serialization::base_object<foreign_computelet::version>(*this);
-
-            ar& target_;
-            ar& value_;
-        }
-
-        HPX_SERIALIZATION_POLYMORPHIC_TEMPLATE(version_wrapper);
-
     private:
         architecture_identifier target_;
         T value_;
     };
 
+    // Since the registry might be used during static initialisation, we have to use a full OS mutex.
+    mutable std::mutex version_table_mutex_;
+    std::map<std::string, std::vector<std::unique_ptr<version>>> version_table_;
+};
+
+foreign_computelet_registry& get_foreign_computelet_registry();
+
+class foreign_computelet
+{
+public:
+    using version = foreign_computelet_registry::version;
+
+    foreign_computelet() = default;
+    foreign_computelet(std::string id_, type result_type_, std::vector<type> argument_types_);
+
+    template <typename T>
+    foreign_computelet& add_version(architecture_identifier target, T version)
+    {
+        get_foreign_computelet_registry().add_version(id_, std::move(target), std::move(version));
+
+        return *this;
+    }
+
+    const version& lookup_version(const architecture_identifier& target) const
+    {
+        return get_foreign_computelet_registry().lookup_version(id_, target);
+    }
+
+    const type& result_type() const
+    {
+        return result_type_;
+    }
+
+    const std::vector<type>& argument_types() const
+    {
+        return argument_types_;
+    }
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
+    {
+        ar& id_;
+        ar& result_type_;
+        ar& argument_types_;
+    }
+
+private:
+    std::string id_;
     type result_type_;
     std::vector<type> argument_types_;
-    std::vector<std::shared_ptr<version>> versions_;
 };
 
 inline bool operator==(const foreign_computelet& QUBUS_UNUSED(lhs),

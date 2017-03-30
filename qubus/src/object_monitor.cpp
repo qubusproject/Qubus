@@ -7,12 +7,11 @@
 namespace qubus
 {
 
-object_monitor::object_monitor()
-: type_(access_type::write)
+object_monitor::object_monitor() : type_(access_type::write)
 {
 }
 
-hpx::future<token> object_monitor::acquire_read_access()
+token object_monitor::acquire_read_access()
 {
     std::lock_guard<hpx::lcos::local::mutex> guard(acquire_mutex_);
 
@@ -23,20 +22,14 @@ hpx::future<token> object_monitor::acquire_read_access()
         type_ = access_type::read;
     }
 
-    auto token_and_future = make_token_with_future();
+    token access_token(ready_);
 
-    auto access_token = std::move(std::get<0>(token_and_future));
+    futures_.push_back(make_future(access_token.when_expired()));
 
-    futures_.push_back(std::move(std::get<1>(token_and_future)));
-
-    return ready_.then([access_token = std::move(access_token)](const hpx::shared_future<void>& ready) mutable {
-        ready.get();
-
-        return std::move(access_token);
-    });
+    return access_token;
 }
 
-hpx::future<token> object_monitor::acquire_write_access()
+token object_monitor::acquire_write_access()
 {
     std::lock_guard<hpx::lcos::local::mutex> guard(acquire_mutex_);
 
@@ -44,17 +37,10 @@ hpx::future<token> object_monitor::acquire_write_access()
     futures_ = std::vector<hpx::future<void>>();
     type_ = access_type::write;
 
-    auto token_and_future = make_token_with_future();
+    token access_token(ready_);
 
-    auto access_token = std::move(std::get<0>(token_and_future));
+    futures_.push_back(make_future(access_token.when_expired()));
 
-    futures_.push_back(std::move(std::get<1>(token_and_future)));
-
-    return ready_.then([access_token = std::move(access_token)](const hpx::shared_future<void>& ready) mutable {
-        ready.get();
-
-        return std::move(access_token);
-    });
+    return access_token;
 }
-
 }

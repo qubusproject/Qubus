@@ -44,8 +44,6 @@ TEST(multi_indices, simple_expr)
         }
     }
 
-    A.when_ready().wait();
-
     ASSERT_NEAR(error, 0.0, 1e-14);
 }
 
@@ -114,8 +112,6 @@ TEST(multi_indices, index_splitting)
             }
         }
     }
-
-    R.when_ready().wait();
 
     ASSERT_NEAR(error, 0.0, 1e-14);
 }
@@ -274,8 +270,6 @@ TEST(multi_indices, multi_sum)
         }
     }
 
-    R.when_ready().wait();
-
     ASSERT_NEAR(error, 0.0, 1e-14);
 }
 
@@ -357,8 +351,6 @@ TEST(multi_indices, multi_sum_index_splitting)
             error += diff * diff;
         }
     }
-
-    R.when_ready().wait();
 
     ASSERT_NEAR(error, 0.0, 1e-14);
 }

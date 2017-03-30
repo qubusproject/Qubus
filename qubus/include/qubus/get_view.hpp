@@ -17,6 +17,12 @@ hpx::future<View> get_view(object obj)
 {
     return View::construct(std::move(obj));
 }
+
+template <typename View>
+hpx::future<View> get_view_for_locked_object(object obj)
+{
+    return View::construct_from_locked_object(std::move(obj));
+}
 }
 
 #endif

@@ -13,8 +13,8 @@ class object_monitor
 public:
     object_monitor();
 
-    hpx::future<token> acquire_read_access();
-    hpx::future<token> acquire_write_access();
+    token acquire_read_access();
+    token acquire_write_access();
 private:
     enum class access_type
     {

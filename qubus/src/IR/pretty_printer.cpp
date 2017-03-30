@@ -638,7 +638,7 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
 
                        std::cout << "." << id.get();
                    })
-            .case_(call_foreign(_, args),
+            .case_(call_foreign(_, args, a),
                    [&] {
                        std::cout << "foreign call (";
 
@@ -648,7 +648,9 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                            std::cout << ", ";
                        }
 
-                       std::cout << ")";
+                       std::cout << ") -> ";
+
+                       print(a.get(), ctx, print_types);
                    })
             .case_(array_slice(a, offset, shape, strides), [&] {
                 print(a.get(), ctx, print_types);

@@ -2,14 +2,27 @@
 
 #include <qubus/hpx_utils.hpp>
 
+#include <qubus/util/assert.hpp>
+
+#include <utility>
+
+QUBUS_REGISTER_DISTRIBUTED_FUTURE(void);
+
 using server_type = hpx::components::component<qubus::token_server>;
 HPX_REGISTER_COMPONENT(server_type, qubus_token_server);
+
+using when_valid_action = qubus::token_server::when_valid_action;
+HPX_REGISTER_ACTION_DECLARATION(when_valid_action, qubus_token_server_when_valid_action);
+HPX_REGISTER_ACTION(when_valid_action, qubus_token_server_when_valid_action);
+
+using when_expired_action = qubus::token_server::when_expired_action;
+HPX_REGISTER_ACTION_DECLARATION(when_expired_action, qubus_token_server_when_expired_action);
+HPX_REGISTER_ACTION(when_expired_action, qubus_token_server_when_expired_action);
 
 namespace qubus
 {
 
-token_server::token_server(util::one_shot<void()> on_expiration_)
-: on_expiration_(std::move(on_expiration_))
+token_server::token_server(distributed_future<void> is_valid_) : is_valid_(std::move(is_valid_))
 {
 }
 
@@ -18,49 +31,59 @@ token_server::~token_server()
     expire();
 }
 
+hpx::id_type token_server::when_valid() const
+{
+    QUBUS_ASSERT(is_valid_.valid(), "Invalid future.");
+
+    return is_valid_.get_id();
+}
+
+hpx::id_type token_server::when_expired() const
+{
+    QUBUS_ASSERT(promise_.valid(), "Invalid promise.");
+
+    return promise_.get_future().get_id();
+}
+
 void token_server::expire()
 {
-    if (on_expiration_)
+    if (promise_.valid())
     {
-        on_expiration_();
+        promise_.set_value();
+        promise_.free();
     }
 }
 
-token::token(hpx::id_type id_)
-: base_type(std::move(id_))
+token::token(hpx::shared_future<void> is_valid_)
+: token(make_distributed_future(std::move(is_valid_)))
 {
 }
 
-token::token(hpx::future<hpx::id_type>&& id_)
-: base_type(std::move(id_))
+token::token(distributed_future<void> is_valid_)
+: base_type(new_here<token_server>(std::move(is_valid_)))
 {
 }
 
-token::~token()
+token::token(hpx::id_type&& id) : base_type(std::move(id))
 {
-    release();
+}
+
+token::token(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
+{
+}
+
+distributed_future<void> token::when_valid() const
+{
+    return hpx::async<token_server::when_valid_action>(this->get_id());
+}
+
+distributed_future<void> token::when_expired() const
+{
+    return hpx::async<token_server::when_expired_action>(this->get_id());
 }
 
 void token::release()
 {
     this->free();
 }
-
-token make_token(util::one_shot<void()> on_expiration)
-{
-    return new_here<token_server>(std::move(on_expiration));
 }
-
-std::tuple<token, hpx::future<void>> make_token_with_future()
-{
-    hpx::promise<void> expiration_promise;
-
-    hpx::future<void> expiration_future = expiration_promise.get_future();
-
-    auto token = make_token([promise = std::move(expiration_promise)] () mutable { promise.set_value(); });
-
-    return std::make_tuple(std::move(token), std::move(expiration_future));
-}
-
-}
-

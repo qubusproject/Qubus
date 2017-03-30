@@ -3,7 +3,8 @@
 
 #include <qubus/runtime.hpp>
 
-#include <qubus/foreign_computelet.hpp>
+#include <qubus/scalar.hpp>
+#include <qubus/foreign_kernel.hpp>
 #include <qubus/host_object_views.hpp>
 #include <qubus/get_view.hpp>
 

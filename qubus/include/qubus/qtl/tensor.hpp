@@ -77,11 +77,6 @@ public:
         return subscription_type(*this, indices...);
     }
 
-    hpx::future<void> when_ready()
-    {
-        return data_.acquire_read_access();
-    }
-
     object get_object() const
     {
         return data_;

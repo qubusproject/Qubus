@@ -99,8 +99,6 @@ TEST(contractions, simple_contraction)
         }
     }
 
-    C.when_ready().wait();
-
     ASSERT_NEAR(error, 0.0, 1e-12);
 }
 
@@ -191,8 +189,6 @@ TEST(contractions, complex_matrix_multiplication)
         }
     }
 
-    C.when_ready().wait();
-
     ASSERT_NEAR(error, 0.0, 1e-12);
 }
 
@@ -280,8 +276,6 @@ TEST(contractions, reduction_to_r1)
         }
     }
 
-    C.when_ready().wait();
-
     ASSERT_NEAR(error, 0.0, 1e-12);
 }
 
@@ -360,8 +354,6 @@ TEST(contractions, matrix_vector_product)
 
         error += diff * diff;
     }
-
-    C.when_ready().wait();
 
     ASSERT_NEAR(error, 0.0, 1e-12);
 }
@@ -460,8 +452,6 @@ TEST(contractions, basis_change_r2)
             }
         }
     }
-
-    C.when_ready().wait();
 
     ASSERT_NEAR(error, 0.0, 1e-12);
 }

@@ -25,7 +25,7 @@ endforeach()
 set(qubus_source_files allocator.cpp loop_optimizer.cpp
                        local_runtime.cpp backend_registry.cpp local_address_space.cpp evicting_allocator.cpp
                        abi_info.cpp logging.cpp object_factory.cpp
-                       make_implicit_conversions_explicit.cpp scheduler.cpp object.cpp
+                       make_implicit_conversions_explicit.cpp scheduling/round_robin_scheduler.cpp object.cpp
                        runtime.cpp computelet.cpp host_allocator.cpp
                        local_object_factory.cpp vpu.cpp aggregate_vpu.cpp
                        architecture_identifier.cpp object_monitor.cpp token.cpp
@@ -34,7 +34,7 @@ set(qubus_source_files allocator.cpp loop_optimizer.cpp
                        value_range_analysis.cpp static_schedule.cpp static_schedule_analysis.cpp
                        performance_models/unified_performance_model.cpp performance_models/simple_statistical_performance_model.cpp
                        performance_models/symbolic_regression.cpp performance_models/regression_performance_model.cpp object_instance.cpp
-                       virtual_address_space.cpp basic_address_space.cpp)
+                       virtual_address_space.cpp basic_address_space.cpp scheduling/uniform_fill_scheduler.cpp global_id.cpp foreign_computelet.cpp)
 
 add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 

@@ -176,12 +176,12 @@ object_instance_server::object_instance_server(local_address_space::handle local
 
 transfer_buffer_type object_instance_server::copy(std::uintptr_t remote_addr) const
 {
-    pointer_allocator<char> allocator(reinterpret_cast<char*>(remote_addr), 0);
-
     const auto& data = local_handle_.data();
 
     auto ptr = data.ptr();
     auto size = data.size();
+
+    pointer_allocator<char> allocator(reinterpret_cast<char*>(remote_addr), size);
 
     return transfer_buffer_type(static_cast<char*>(ptr), size, transfer_buffer_type::reference,
                                 std::move(allocator));

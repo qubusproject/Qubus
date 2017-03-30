@@ -7,5 +7,6 @@
 #include <qubus/qtl/tensor.hpp>
 #include <qubus/qtl/sparse_tensor.hpp>
 #include <qubus/qtl/index.hpp>
+#include <qubus/qtl/scalar.hpp>
 
 #endif

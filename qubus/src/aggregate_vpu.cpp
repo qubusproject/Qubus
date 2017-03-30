@@ -24,9 +24,7 @@ hpx::future<void> aggregate_vpu::execute(computelet c, execution_context ctx) co
         throw 0;
 
     // For now just forward all tasks immediately.
-    scheduler_->schedule(std::move(c), std::move(ctx));
-
-    return hpx::make_ready_future();
+    return scheduler_->schedule(std::move(c), std::move(ctx));
 }
 
 hpx::future<boost::optional<performance_estimate>>

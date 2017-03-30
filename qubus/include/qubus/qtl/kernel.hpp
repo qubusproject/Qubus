@@ -8,7 +8,7 @@
 #include <qubus/runtime.hpp>
 
 #include <qubus/computelet.hpp>
-#include <qubus/execution_context.hpp>
+#include <qubus/kernel_arguments.hpp>
 
 #include <boost/hana/for_each.hpp>
 #include <boost/hana/unpack.hpp>
@@ -65,16 +65,16 @@ public:
         if (full_args.size() != code_.code().get().arity() + 1)
             throw 0;
 
-        execution_context ctx;
+        kernel_arguments kernel_args;
 
         for (const auto& mapping : immutable_argument_map_)
         {
-            ctx.push_back_arg(full_args[mapping]);
+            kernel_args.push_back_arg(full_args[mapping]);
         }
 
-        ctx.push_back_result(full_args[mutable_argument_map_[0]]);
+        kernel_args.push_back_result(full_args[mutable_argument_map_[0]]);
 
-        get_runtime().execute(code_, std::move(ctx)).get();
+        get_runtime().execute(code_, std::move(kernel_args)).get();
     }
 
     void add_code(std::unique_ptr<expression> code)
