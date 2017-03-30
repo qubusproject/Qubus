@@ -104,7 +104,7 @@ write_basic_package_version_file(
   COMPATIBILITY AnyNewerVersion
 )
 
-set(ConfigPackageLocation lib/cmake/qubus)
+set(ConfigPackageLocation lib/cmake/Qubus)
 
 install(EXPORT qubus-targets
   FILE
