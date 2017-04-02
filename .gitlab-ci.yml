@@ -2,10 +2,10 @@
 # We could also run the debug tests first and abort the entire pipeline if they fail to shorten the build but
 # IMHO we would not gain enough speedup to justify the regression in all other cases.
 stages:
-- build
 - test
+- build
 - deploy
-build:clang:release:
+test:clang:release:
   script:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
@@ -16,25 +16,12 @@ build:clang:release:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  stage: build
-  tags:
-  - docker
-  artifacts:
-    paths:
-    - build/
-    expire_in: 12 hour
-test:clang:release:
-  script:
-  - "sudo chown -R `whoami`: ."
-  - cd build
   - ctest
   stage: test
   tags:
   - docker
-  dependencies:
-  - build:clang:release
 
-build:gcc:release:
+test:gcc:release:
   script:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
@@ -45,25 +32,12 @@ build:gcc:release:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  stage: build
-  tags:
-  - docker
-  artifacts:
-    paths:
-    - build/
-    expire_in: 12 hour
-test:gcc:release:
-  script:
-  - "sudo chown -R `whoami`: ."
-  - cd build
   - ctest
   stage: test
   tags:
   - docker
-  dependencies:
-  - build:gcc:release
 
-build:clang:debug:
+test:clang:debug:
   script:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
@@ -74,25 +48,12 @@ build:clang:debug:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Debug -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  stage: build
-  tags:
-  - docker
-  artifacts:
-    paths:
-    - build/
-    expire_in: 12 hour
-test:clang:debug:
-  script:
-  - "sudo chown -R `whoami`: ."
-  - cd build
   - ctest
   stage: test
   tags:
   - docker
-  dependencies:
-  - build:clang:debug
 
-build:gcc:debug:
+test:gcc:debug:
   script:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
@@ -103,23 +64,10 @@ build:gcc:debug:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Debug  -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  stage: build
-  tags:
-  - docker
-  artifacts:
-    paths:
-    - build/
-    expire_in: 12 hour
-test:gcc:debug:
-  script:
-  - "sudo chown -R `whoami`: ."
-  - cd build
   - ctest
   stage: test
   tags:
   - docker
-  dependencies:
-  - build:gcc:debug
 
 # We need to separate the doc build and deploy steps. Otherwise the documentation build itself
 # might fail but the (incomplete) documentation would still be deployed.
