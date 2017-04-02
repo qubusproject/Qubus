@@ -20,8 +20,6 @@ test:clang:release:
   stage: test
   tags:
   - docker
-  dependencies:
-  - build:clang:release
 
 test:gcc:release:
   script:
@@ -38,8 +36,6 @@ test:gcc:release:
   stage: test
   tags:
   - docker
-  dependencies:
-  - build:gcc:release
 
 test:clang:debug:
   script:
@@ -56,8 +52,6 @@ test:clang:debug:
   stage: test
   tags:
   - docker
-  dependencies:
-  - build:clang:debug
 
 test:gcc:debug:
   script:
@@ -74,8 +68,6 @@ test:gcc:debug:
   stage: test
   tags:
   - docker
-  dependencies:
-  - build:gcc:debug
 
 # We need to separate the doc build and deploy steps. Otherwise the documentation build itself
 # might fail but the (incomplete) documentation would still be deployed.
