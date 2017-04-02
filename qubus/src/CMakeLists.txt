@@ -9,6 +9,7 @@ set(QUBUS_BUILD_PREFIX ${CMAKE_CURRENT_BINARY_DIR})
 add_subdirectory(IR)
 add_subdirectory(isl)
 add_subdirectory(jit)
+add_subdirectory(cuda)
 add_subdirectory(backends)
 
 set(qubus_header_file_names allocator.hpp generic_ptr.hpp loop_optimizer.hpp
