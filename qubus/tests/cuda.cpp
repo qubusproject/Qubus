@@ -138,13 +138,24 @@ TEST(cuda, function)
 
         auto suggested_config = qubus::cuda::calculate_launch_config_with_max_occupancy(test, 0);
 
-        EXPECT_NO_THROW(qubus::cuda::calculate_max_active_blocks_per_multiprocessor(test, suggested_config.block_size,0));
+        EXPECT_NO_THROW(qubus::cuda::calculate_max_active_blocks_per_multiprocessor(
+            test, suggested_config.block_size, 0));
 
         EXPECT_NO_THROW(qubus::cuda::launch_kernel(test, 1, suggested_config.block_size, 0));
 
         qubus::cuda::stream nondefault_stream;
 
-        EXPECT_NO_THROW(qubus::cuda::launch_kernel(test, 1, suggested_config.block_size, 0, nondefault_stream));
+        EXPECT_NO_THROW(
+            qubus::cuda::launch_kernel(test, 1, suggested_config.block_size, 0, nondefault_stream));
+
+        EXPECT_EQ(test.shared_memory_size(), 0);
+        EXPECT_EQ(test.ptx_version(), qubus::cuda::architecture_version(3, 0));
+
+        auto compute_capability = dev.compute_capability();
+
+        EXPECT_EQ(test.binary_version(),
+                  qubus::cuda::architecture_version(compute_capability.major_revision,
+                                                    compute_capability.minor_revision));
     }
 }
 

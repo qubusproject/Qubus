@@ -3,6 +3,7 @@
 #include <qubus/util/assert.hpp>
 
 #include <cstring>
+#include <tuple>
 #include <utility>
 
 namespace qubus
@@ -250,8 +251,82 @@ CUstream stream::native_handle() const
     return stream_handle_;
 }
 
+bool operator==(const architecture_version& lhs, const architecture_version& rhs)
+{
+    return lhs.major_version == rhs.major_version && lhs.minor_version == rhs.minor_version;
+}
+
+bool operator!=(const architecture_version& lhs, const architecture_version& rhs)
+{
+    return !(lhs == rhs);
+}
+
+bool operator<(const architecture_version& lhs, const architecture_version& rhs)
+{
+    return std::tie(lhs.major_version, lhs.minor_version) < std::tie(rhs.major_version, rhs.minor_version);
+}
+
+bool operator>(const architecture_version& lhs, const architecture_version& rhs)
+{
+    return !(lhs <= rhs);
+}
+
+bool operator<=(const architecture_version& lhs, const architecture_version& rhs)
+{
+    return lhs < rhs || lhs == rhs;
+}
+
+bool operator>=(const architecture_version& lhs, const architecture_version& rhs)
+{
+    return !(lhs < rhs);
+}
+
 function::function(CUfunction function_) : function_(function_)
 {
+}
+
+int function::get_attribute(CUfunction_attribute attr) const
+{
+    int value;
+
+    check_cuda_error(cuFuncGetAttribute(&value, attr, function_));
+
+    return value;
+}
+
+int function::max_threads_per_block() const
+{
+    return get_attribute(CU_FUNC_ATTRIBUTE_MAX_THREADS_PER_BLOCK);
+}
+
+int function::shared_memory_size() const
+{
+    return get_attribute(CU_FUNC_ATTRIBUTE_SHARED_SIZE_BYTES);
+}
+
+int function::number_of_register_per_thread() const
+{
+    return get_attribute(CU_FUNC_ATTRIBUTE_NUM_REGS);
+}
+
+architecture_version function::ptx_version() const
+{
+    int mangled_version = get_attribute(CU_FUNC_ATTRIBUTE_PTX_VERSION);
+
+    int major_version = mangled_version / 10;
+    int minor_version = mangled_version % 10;
+
+    return architecture_version(major_version, minor_version);
+}
+
+architecture_version function::binary_version() const
+{
+    int mangled_version = get_attribute(CU_FUNC_ATTRIBUTE_BINARY_VERSION);
+
+    int major_version = mangled_version / 10;
+    int minor_version = mangled_version % 10;
+
+    return architecture_version(major_version, minor_version);
 }
 
 CUfunction function::native_handle() const

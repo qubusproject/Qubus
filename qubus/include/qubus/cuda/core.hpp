@@ -132,10 +132,37 @@ private:
     std::list<stream::callback_closure> pending_callbacks_;
 };
 
+struct architecture_version
+{
+    architecture_version(int major_version, int minor_version)
+    : major_version(major_version), minor_version(minor_version)
+    {
+    }
+
+    int major_version;
+    int minor_version;
+};
+
+bool operator==(const architecture_version& lhs, const architecture_version& rhs);
+bool operator!=(const architecture_version& lhs, const architecture_version& rhs);
+
+bool operator<(const architecture_version& lhs, const architecture_version& rhs);
+bool operator>(const architecture_version& lhs, const architecture_version& rhs);
+bool operator<=(const architecture_version& lhs, const architecture_version& rhs);
+bool operator>=(const architecture_version& lhs, const architecture_version& rhs);
+
 class function
 {
 public:
     explicit function(CUfunction function_);
+
+    int get_attribute(CUfunction_attribute attr) const;
+
+    int max_threads_per_block() const;
+    int shared_memory_size() const;
+    int number_of_register_per_thread() const;
+    architecture_version ptx_version() const;
+    architecture_version binary_version() const;
 
     CUfunction native_handle() const;
 
