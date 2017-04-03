@@ -164,6 +164,9 @@ public:
     architecture_version ptx_version() const;
     architecture_version binary_version() const;
 
+    void set_cache_config(CUfunc_cache config);
+    void set_shared_memory_config(CUsharedconfig config);
+
     CUfunction native_handle() const;
 
 private:

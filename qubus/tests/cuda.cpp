@@ -156,6 +156,9 @@ TEST(cuda, function)
         EXPECT_EQ(test.binary_version(),
                   qubus::cuda::architecture_version(compute_capability.major_revision,
                                                     compute_capability.minor_revision));
+
+        EXPECT_NO_THROW(test.set_cache_config(CU_FUNC_CACHE_PREFER_L1));
+        EXPECT_NO_THROW(test.set_shared_memory_config(CU_SHARED_MEM_CONFIG_EIGHT_BYTE_BANK_SIZE));
     }
 }
 

@@ -329,6 +329,16 @@ architecture_version function::binary_version() const
     return architecture_version(major_version, minor_version);
 }
 
+void function::set_cache_config(CUfunc_cache config)
+{
+    check_cuda_error(cuFuncSetCacheConfig(function_, config));
+}
+
+void function::set_shared_memory_config(CUsharedconfig config)
+{
+    check_cuda_error(cuFuncSetSharedMemConfig(function_, config));
+}
+
 CUfunction function::native_handle() const
 {
     return function_;
