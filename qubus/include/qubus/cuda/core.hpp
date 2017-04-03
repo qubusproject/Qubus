@@ -26,6 +26,7 @@ public:
     CUresult error_code() const;
 
     const char* what() const noexcept override;
+
 private:
     CUresult error_code_;
 };
@@ -150,6 +151,17 @@ void launch_kernel(const function& kernel, std::size_t grid_extend, std::size_t 
 
     cuLaunchKernel(kernel.native_handle(), grid_extend, 1, 1, block_extend, 1, 1,
                    shared_memory_size, 0, params, 0);
+}
+
+template <typename... Parameters>
+void launch_kernel(const function& kernel, std::size_t grid_extend, std::size_t block_extend,
+                   std::size_t shared_memory_size, const stream& used_stream,
+                   Parameters&&... parameters)
+{
+    void* params[] = {&parameters...};
+
+    cuLaunchKernel(kernel.native_handle(), grid_extend, 1, 1, block_extend, 1, 1,
+                   shared_memory_size, used_stream.native_handle(), params, 0);
 }
 
 int calculate_max_active_blocks_per_multiprocessor(const function& kernel, int block_size,

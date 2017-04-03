@@ -141,6 +141,10 @@ TEST(cuda, function)
         EXPECT_NO_THROW(qubus::cuda::calculate_max_active_blocks_per_multiprocessor(test, suggested_config.block_size,0));
 
         EXPECT_NO_THROW(qubus::cuda::launch_kernel(test, 1, suggested_config.block_size, 0));
+
+        qubus::cuda::stream nondefault_stream;
+
+        EXPECT_NO_THROW(qubus::cuda::launch_kernel(test, 1, suggested_config.block_size, 0, nondefault_stream));
     }
 }
 
