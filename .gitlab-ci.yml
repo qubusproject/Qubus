@@ -16,11 +16,10 @@ test:clang:release:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  - ctest
+  - ctest -E cuda
   stage: test
   tags:
   - docker
-  - cuda
 
 test:gcc:release:
   script:
@@ -33,11 +32,10 @@ test:gcc:release:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  - ctest
+  - ctest -E cuda
   stage: test
   tags:
   - docker
-  - cuda
 
 test:clang:debug:
   script:
@@ -50,11 +48,10 @@ test:clang:debug:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Debug -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  - ctest
+  - ctest -E cuda
   stage: test
   tags:
   - docker
-  - cuda
 
 test:gcc:debug:
   script:
