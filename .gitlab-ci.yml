@@ -94,7 +94,7 @@ deploy:doc:
   script:
   - "sudo chown -R `whoami`: ."
   - cd build
-  - rsync -az --delete qubus/doc/html/* supas335@upload.rz.uni-kiel.de:htdocs/qubus/doc
+  - rsync -az --delete qubus/doc/html/* ssh-523024-chinz@qubusproject.org:webseiten/doc
   stage: deploy
   environment:
     name: documentation
