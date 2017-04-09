@@ -65,6 +65,17 @@ if(QUBUS_ENABLE_ADDRESS_SANITIZER)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=address")
 endif()
 
+if (${CMAKE_BUILD_TYPE} STREQUAL "Debug")
+    option(QUBUS_ENABLE_UB_SANITIZER "Enable the undefined behaviour sanitizer" OFF)
+else()
+    option(QUBUS_ENABLE_UB_SANITIZER "Enable the undefined behaviourq sanitizer" OFF)
+endif()
+
+if(QUBUS_ENABLE_UB_SANITIZER)
+    add_compile_options(-fsanitize=undefined)
+    set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
+endif()
+
 option(QUBUS_RUN_IWYU "Toggle if CMake should run include-what-you-use during compilation." OFF)
 
 if (QUBUS_RUN_IWYU)
