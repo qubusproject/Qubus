@@ -36,6 +36,27 @@ TEST(cuda, context)
     for (const auto& device : qubus::cuda::get_devices())
     {
         EXPECT_NO_THROW(qubus::cuda::context ctx(device));
+
+        EXPECT_EQ(qubus::cuda::this_context::get(), qubus::cuda::context());
+
+        qubus::cuda::context ctx(device);
+        qubus::cuda::context ctx2(device);
+
+        EXPECT_EQ(qubus::cuda::this_context::get(), qubus::cuda::context());
+
+        {
+            qubus::cuda::context_guard guard(ctx);
+
+            EXPECT_EQ(qubus::cuda::this_context::get(), ctx);
+            EXPECT_NE(qubus::cuda::this_context::get(), ctx2);
+        }
+
+        {
+            qubus::cuda::context_guard guard(ctx2);
+
+            EXPECT_NE(qubus::cuda::this_context::get(), ctx);
+            EXPECT_EQ(qubus::cuda::this_context::get(), ctx2);
+        }
     }
 }
 
@@ -50,6 +71,8 @@ TEST(cuda, sync)
         qubus::cuda::device dev(0);
 
         qubus::cuda::context ctx(dev);
+
+        qubus::cuda::context_guard guard(ctx);
 
         EXPECT_NO_THROW(qubus::cuda::this_context::synchronize());
     }
@@ -66,6 +89,8 @@ TEST(cuda, stream)
         qubus::cuda::device dev(0);
 
         qubus::cuda::context ctx(dev);
+
+        qubus::cuda::context_guard guard(ctx);
 
         EXPECT_NO_THROW({
             qubus::cuda::stream str;
@@ -112,6 +137,8 @@ TEST(cuda, module)
 
         qubus::cuda::context ctx(dev);
 
+        qubus::cuda::context_guard guard(ctx);
+
         ASSERT_NO_THROW(qubus::cuda::module mod(ptx_code));
 
         qubus::cuda::module mod(ptx_code);
@@ -129,6 +156,8 @@ TEST(cuda, function)
         qubus::cuda::device dev(0);
 
         qubus::cuda::context ctx(dev);
+
+        qubus::cuda::context_guard guard(ctx);
 
         qubus::cuda::module mod(ptx_code);
 
@@ -173,6 +202,8 @@ TEST(cuda, memory)
         qubus::cuda::device dev(0);
 
         qubus::cuda::context ctx(dev);
+
+        qubus::cuda::context_guard guard(ctx);
 
         auto ptr = qubus::cuda::device_malloc(1024);
 

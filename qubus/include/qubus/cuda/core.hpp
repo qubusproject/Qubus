@@ -82,12 +82,28 @@ private:
 int get_device_count();
 std::vector<device> get_devices();
 
+class context_view
+{
+public:
+    context_view();
+
+    explicit context_view(CUcontext handle_) noexcept;
+
+    CUcontext native_handle() const;
+private:
+    CUcontext context_;
+};
+
+bool operator==(const context_view& lhs, const context_view& rhs);
+bool operator!=(const context_view& lhs, const context_view& rhs);
+
 class context
 {
 public:
     context();
 
     explicit context(const device& dev);
+    explicit context(CUcontext handle_) noexcept;
 
     context(const context&) = delete;
     context& operator=(const context&) = delete;
@@ -98,16 +114,47 @@ public:
 
     ~context();
 
+    void activate();
+    void deactivate();
+
     CUcontext native_handle() const;
 
 private:
     CUcontext context_;
 };
 
+bool operator==(const context& lhs, const context& rhs);
+bool operator!=(const context& lhs, const context& rhs);
+
+bool operator==(const context_view& lhs, const context& rhs);
+bool operator!=(const context_view& lhs, const context& rhs);
+bool operator==(const context& lhs, const context_view& rhs);
+bool operator!=(const context& lhs, const context_view& rhs);
+
 namespace this_context
 {
+context_view get();
 void synchronize();
 }
+
+class context_guard
+{
+public:
+    explicit context_guard(context& ctx_);
+
+    ~context_guard();
+
+    context_guard(const context_guard&) = delete;
+    context_guard& operator=(const context_guard&) = delete;
+
+    context_guard(context_guard&& other);
+    context_guard& operator=(context_guard&& other);
+
+    void deactivate();
+
+private:
+    context* ctx_;
+};
 
 class stream
 {

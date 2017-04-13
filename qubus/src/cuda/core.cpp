@@ -158,6 +158,29 @@ std::vector<device> get_devices()
     return devices;
 }
 
+context_view::context_view() : context_(0)
+{
+}
+
+context_view::context_view(CUcontext handle_) noexcept : context_(handle_)
+{
+}
+
+CUcontext context_view::native_handle() const
+{
+    return context_;
+}
+
+bool operator==(const context_view& lhs, const context_view& rhs)
+{
+    return lhs.native_handle() == rhs.native_handle();
+}
+
+bool operator!=(const context_view& lhs, const context_view& rhs)
+{
+    return !(lhs == rhs);
+}
+
 context::context() : context_(0)
 {
 }
@@ -165,6 +188,14 @@ context::context() : context_(0)
 context::context(const device& dev)
 {
     check_cuda_error(cuCtxCreate(&context_, CU_CTX_SCHED_BLOCKING_SYNC, dev.native_handle()));
+
+    CUcontext ctx;
+
+    check_cuda_error(cuCtxPopCurrent(&ctx));
+}
+
+context::context(CUcontext handle_) noexcept : context_(handle_)
+{
 }
 
 context::context(context&& other) : context_(std::move(other.context_))
@@ -188,17 +219,101 @@ context::~context()
     }
 }
 
+void context::activate()
+{
+    check_cuda_error(cuCtxPushCurrent(this->native_handle()));
+}
+
+void context::deactivate()
+{
+    CUcontext old_ctx;
+
+    check_cuda_error(cuCtxPopCurrent(&old_ctx));
+}
+
 CUcontext context::native_handle() const
 {
     return context_;
 }
 
+bool operator==(const context& lhs, const context& rhs)
+{
+    return lhs.native_handle() == rhs.native_handle();
+}
+
+bool operator!=(const context& lhs, const context& rhs)
+{
+    return !(lhs == rhs);
+}
+
+bool operator==(const context_view& lhs, const context& rhs)
+{
+    return lhs.native_handle() == rhs.native_handle();
+}
+
+bool operator!=(const context_view& lhs, const context& rhs)
+{
+    return !(lhs == rhs);
+}
+
+bool operator==(const context& lhs, const context_view& rhs)
+{
+    return lhs.native_handle() == rhs.native_handle();
+}
+
+bool operator!=(const context& lhs, const context_view& rhs)
+{
+    return !(lhs == rhs);
+}
+
 namespace this_context
 {
+context_view get()
+{
+    CUcontext current_ctx;
+
+    check_cuda_error(cuCtxGetCurrent(&current_ctx));
+
+    return context_view(current_ctx);
+}
+
 void synchronize()
 {
     check_cuda_error(cuCtxSynchronize());
 }
+}
+
+context_guard::context_guard(context& ctx_)
+: ctx_(&ctx_)
+{
+    this->ctx_->activate();
+}
+
+context_guard::~context_guard()
+{
+    deactivate();
+}
+
+context_guard::context_guard(context_guard&& other)
+: ctx_(other.ctx_)
+{
+    other.ctx_ = nullptr;
+}
+
+context_guard& context_guard::operator=(context_guard&& other)
+{
+    ctx_ = other.ctx_;
+    other.ctx_ = nullptr;
+
+    return *this;
+}
+
+void context_guard::deactivate()
+{
+    if (ctx_)
+    {
+        ctx_->deactivate();
+    }
 }
 
 namespace
@@ -272,7 +387,8 @@ bool operator!=(const architecture_version& lhs, const architecture_version& rhs
 
 bool operator<(const architecture_version& lhs, const architecture_version& rhs)
 {
-    return std::tie(lhs.major_version, lhs.minor_version) < std::tie(rhs.major_version, rhs.minor_version);
+    return std::tie(lhs.major_version, lhs.minor_version) <
+           std::tie(rhs.major_version, rhs.minor_version);
 }
 
 bool operator>(const architecture_version& lhs, const architecture_version& rhs)
