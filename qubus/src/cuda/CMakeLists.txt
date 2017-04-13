@@ -11,6 +11,8 @@ if (CUDA_FOUND)
     target_compile_options(qubus_cuda PUBLIC -std=c++14)
     target_link_libraries(qubus_cuda qubus_util ${CUDA_CUDA_LIBRARY})
 
+    set_target_properties(qubus_cuda PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
     install(TARGETS qubus_cuda EXPORT qubus-targets
             RUNTIME DESTINATION bin
             INCLUDES DESTINATION include
