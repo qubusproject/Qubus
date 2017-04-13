@@ -40,6 +40,15 @@ void init()
     check_cuda_error(cuInit(0));
 }
 
+int get_driver_version()
+{
+    int version;
+
+    check_cuda_error(cuDriverGetVersion(&version));
+
+    return version;
+}
+
 device::device(int ordinal)
 {
     check_cuda_error(cuDeviceGet(&device_, ordinal));

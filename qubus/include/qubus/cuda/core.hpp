@@ -35,6 +35,8 @@ void check_cuda_error(CUresult result);
 
 void init();
 
+int get_driver_version();
+
 struct compute_capability_info
 {
     compute_capability_info(int major_revision, int minor_revision)
