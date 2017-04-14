@@ -135,7 +135,7 @@ public:
 
     virtual ~cpu_vpu() = default;
 
-    hpx::future<void> execute(computelet c, execution_context ctx) const override
+    hpx::future<void> execute(computelet c, execution_context ctx) override
     {
         const auto& compilation = compiler_.compile(c);
 
@@ -196,7 +196,7 @@ private:
     host_address_space* address_space_;
     abi_info abi_;
 
-    mutable unified_performance_model perf_model_;
+    unified_performance_model perf_model_;
 };
 
 class cpu_backend final : public host_backend

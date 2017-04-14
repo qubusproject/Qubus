@@ -23,7 +23,7 @@ public:
 
     void add_member_vpu(std::unique_ptr<vpu> new_member_vpu);
 
-    hpx::future<void> execute(computelet c, execution_context ctx) const override;
+    hpx::future<void> execute(computelet c, execution_context ctx) override;
     hpx::future<boost::optional<performance_estimate>>
     try_estimate_execution_time(const computelet& c, const execution_context& ctx) const override;
 private:
