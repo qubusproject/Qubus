@@ -114,8 +114,8 @@ public:
 
     ~context();
 
-    void activate();
-    void deactivate();
+    void activate() const;
+    void deactivate() const;
 
     CUcontext native_handle() const;
 
@@ -140,7 +140,7 @@ void synchronize();
 class context_guard
 {
 public:
-    explicit context_guard(context& ctx_);
+    explicit context_guard(const context& ctx_);
 
     ~context_guard();
 
@@ -153,7 +153,7 @@ public:
     void deactivate();
 
 private:
-    context* ctx_;
+    const context* ctx_;
 };
 
 class stream

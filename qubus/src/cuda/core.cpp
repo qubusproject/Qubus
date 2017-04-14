@@ -219,12 +219,12 @@ context::~context()
     }
 }
 
-void context::activate()
+void context::activate() const
 {
     check_cuda_error(cuCtxPushCurrent(this->native_handle()));
 }
 
-void context::deactivate()
+void context::deactivate() const
 {
     CUcontext old_ctx;
 
@@ -283,7 +283,7 @@ void synchronize()
 }
 }
 
-context_guard::context_guard(context& ctx_)
+context_guard::context_guard(const context& ctx_)
 : ctx_(&ctx_)
 {
     this->ctx_->activate();
