@@ -206,6 +206,11 @@ context::context(context&& other) : context_(std::move(other.context_))
 
 context& context::operator=(context&& other)
 {
+    if (context_ != 0)
+    {
+        cuCtxDestroy(context_);
+    }
+
     context_ = std::move(other.context_);
     other.context_ = 0;
 
@@ -339,6 +344,14 @@ stream::stream(stream&& other)
 
 stream& stream::operator=(stream&& other)
 {
+    if (stream_handle_ != 0)
+    {
+        cuStreamSynchronize(stream_handle_);
+        cuStreamDestroy(stream_handle_);
+    }
+
+    QUBUS_ASSERT(pending_callbacks_.empty(), "There are still pending callbacks.");
+
     stream_handle_ = std::move(other.stream_handle_);
     other.stream_handle_ = 0;
     pending_callbacks_ = std::move(other.pending_callbacks_);
@@ -601,6 +614,11 @@ module::module(module&& other) : module_(std::move(other.module_))
 
 module& module::operator=(module&& other)
 {
+    if (module_ != 0)
+    {
+        cuModuleUnload(module_);
+    }
+
     module_ = std::move(other.module_);
     other.module_ = 0;
 
@@ -676,6 +694,8 @@ unique_device_ptr::unique_device_ptr(unique_device_ptr&& other) : ptr_(std::move
 
 unique_device_ptr& unique_device_ptr::operator=(unique_device_ptr&& other)
 {
+    device_free(ptr_);
+
     ptr_ = std::move(other.ptr_);
     other.ptr_ = 0;
 
