@@ -3,6 +3,7 @@
 
 #include <cuda.h>
 
+#include <chrono>
 #include <exception>
 #include <functional>
 #include <list>
@@ -181,6 +182,31 @@ private:
     std::list<stream::callback_closure> pending_callbacks_;
 };
 
+class event
+{
+public:
+    event();
+    explicit event(stream& s);
+
+    ~event();
+
+    event(const event&) = delete;
+    event& operator=(const event&) = delete;
+
+    event(event&& other);
+    event& operator=(event&& other);
+
+    bool has_occured() const;
+
+    void wait() const;
+
+    CUevent native_handle() const;
+private:
+    CUevent handle_;
+};
+
+std::chrono::duration<float, std::milli> compute_elapsed_time(const event& start, const event& end);
+
 struct architecture_version
 {
     architecture_version(int major_version, int minor_version)
@@ -234,7 +260,7 @@ void launch_kernel(const function& kernel, std::size_t grid_extend, std::size_t 
 
 template <typename... Parameters>
 void launch_kernel(const function& kernel, std::size_t grid_extend, std::size_t block_extend,
-                   std::size_t shared_memory_size, const stream& used_stream,
+                   std::size_t shared_memory_size, stream& used_stream,
                    Parameters&&... parameters)
 {
     void* params[] = {&parameters...};

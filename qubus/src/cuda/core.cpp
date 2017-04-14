@@ -1,6 +1,7 @@
 #include <qubus/cuda/core.hpp>
 
 #include <qubus/util/assert.hpp>
+#include <qubus/util/unreachable.hpp>
 
 #include <cstring>
 #include <tuple>
@@ -283,8 +284,7 @@ void synchronize()
 }
 }
 
-context_guard::context_guard(const context& ctx_)
-: ctx_(&ctx_)
+context_guard::context_guard(const context& ctx_) : ctx_(&ctx_)
 {
     this->ctx_->activate();
 }
@@ -294,8 +294,7 @@ context_guard::~context_guard()
     deactivate();
 }
 
-context_guard::context_guard(context_guard&& other)
-: ctx_(other.ctx_)
+context_guard::context_guard(context_guard&& other) : ctx_(other.ctx_)
 {
     other.ctx_ = nullptr;
 }
@@ -373,6 +372,82 @@ void stream::add_callback(std::function<void()> callback)
 CUstream stream::native_handle() const
 {
     return stream_handle_;
+}
+
+event::event() : handle_(0)
+{
+}
+
+event::event(stream& s)
+{
+    check_cuda_error(cuEventCreate(&handle_, CU_EVENT_BLOCKING_SYNC));
+    check_cuda_error(cuEventRecord(handle_, s.native_handle()));
+}
+
+event::~event()
+{
+    if (handle_ != 0)
+    {
+        cuEventDestroy(handle_);
+    }
+}
+
+event::event(event&& other) : handle_(other.handle_)
+{
+    other.handle_ = 0;
+}
+
+event& event::operator=(event&& other)
+{
+    if (handle_ != 0)
+    {
+        cuEventDestroy(handle_);
+    }
+
+    handle_ = other.handle_;
+    other.handle_ = 0;
+
+    return *this;
+}
+
+bool event::has_occured() const
+{
+    auto result = cuEventQuery(handle_);
+
+    if (result == CUDA_SUCCESS)
+    {
+        return true;
+    }
+    else if (result == CUDA_ERROR_NOT_READY)
+    {
+        return false;
+    }
+    else
+    {
+        check_cuda_error(result);
+
+        QUBUS_UNREACHABLE_BECAUSE("check_cuda_error should always throw.");
+    }
+}
+
+void event::wait() const
+{
+    cuEventSynchronize(handle_);
+}
+
+CUevent event::native_handle() const
+{
+    return handle_;
+}
+
+std::chrono::duration<float, std::milli> compute_elapsed_time(const event& start, const event& end)
+{
+    float elapsed_time_in_milliseconds;
+
+    check_cuda_error(cuEventElapsedTime(&elapsed_time_in_milliseconds, start.native_handle(),
+                                        end.native_handle()));
+
+    return std::chrono::duration<float, std::milli>(elapsed_time_in_milliseconds);
 }
 
 bool operator==(const architecture_version& lhs, const architecture_version& rhs)
