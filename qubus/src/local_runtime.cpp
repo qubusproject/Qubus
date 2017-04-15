@@ -44,13 +44,15 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
 {
     init_logging();
 
-    BOOST_LOG_NAMED_SCOPE("runtime");
+    {
+        BOOST_LOG_NAMED_SCOPE("runtime");
 
-    logger slg;
+        logger slg;
 
-    QUBUS_LOG(slg, normal) << "Initialize the Qubus runtime";
+        QUBUS_LOG(slg, normal) << "Initialize the Qubus runtime";
 
-    QUBUS_LOG(slg, normal) << "Runtime prefix: " << util::get_prefix("qubus");
+        QUBUS_LOG(slg, normal) << "Runtime prefix: " << util::get_prefix("qubus");
+    }
 
     scan_for_backends();
 
@@ -75,7 +77,13 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
 
     object_factory_ = new_here<local_object_factory_server>(address_space_.get());
 
-    QUBUS_LOG(slg, normal) << "Bootstrapping virtual multiprocessor";
+    {
+        BOOST_LOG_NAMED_SCOPE("runtime");
+
+        logger slg;
+
+        QUBUS_LOG(slg, normal) << "Bootstrapping virtual multiprocessor";
+    }
 
     //local_vpu_ = std::make_unique<aggregate_vpu>(std::make_unique<round_robin_scheduler>());
 
@@ -159,11 +167,13 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
 
 void local_runtime::scan_for_backends()
 {
-    BOOST_LOG_NAMED_SCOPE("runtime");
+    {
+        BOOST_LOG_NAMED_SCOPE("runtime");
 
-    logger slg;
+        logger slg;
 
-    QUBUS_LOG(slg, normal) << "Scanning for backends";
+        QUBUS_LOG(slg, normal) << "Scanning for backends";
+    }
 
     auto backend_search_path = util::get_prefix("qubus") / "qubus/backends";
 
