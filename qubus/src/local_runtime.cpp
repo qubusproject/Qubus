@@ -10,6 +10,9 @@
 
 #include <hpx/include/lcos.hpp>
 
+#include <boost/dll.hpp>
+#include <boost/regex.hpp>
+
 #include <memory>
 #include <utility>
 
@@ -37,8 +40,7 @@ std::unique_ptr<local_runtime> local_qubus_runtime;
 extern "C" backend* init_cpu_backend(const abi_info*);
 
 local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_address_space_)
-    //: cpu_plugin_(util::get_prefix("qubus") / "qubus/backends/libqubus_cpu_backend.so")
-    : global_address_space_(std::move(global_address_space_)), service_executor_(1)
+: service_executor_(1), global_address_space_(std::move(global_address_space_))
 {
     init_logging();
 
@@ -50,19 +52,21 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
 
     QUBUS_LOG(slg, normal) << "Runtime prefix: " << util::get_prefix("qubus");
 
-    QUBUS_LOG(slg, normal) << "Bootstrapping virtual multiprocessor";
+    scan_for_backends();
 
-    QUBUS_LOG(slg, normal) << "Scanning for backends";
+    for (const auto& entry : backend_registry_)
+    {
+        if (auto backend = dynamic_cast<host_backend*>(&entry.get_backend()))
+        {
+            cpu_backend_ = backend;
 
-    QUBUS_LOG(slg, normal) << "Loading backend 'cpu_backend'";
-
-    //auto init_cpu_backend = cpu_plugin_.get<backend*(const abi_info*)>("init_cpu_backend");
-
-    cpu_backend_ = dynamic_cast<host_backend*>(init_cpu_backend(&abi_info_));
+            break;
+        }
+    }
 
     if (!cpu_backend_)
     {
-        throw 0;
+        throw 0; // No valid host backend.
     }
 
     address_space_ = std::make_unique<local_address_space>(cpu_backend_->get_host_address_space());
@@ -70,6 +74,8 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
     address_space_->on_page_fault([this](const object& obj) { return resolve_page_fault(obj); });
 
     object_factory_ = new_here<local_object_factory_server>(address_space_.get());
+
+    QUBUS_LOG(slg, normal) << "Bootstrapping virtual multiprocessor";
 
     //local_vpu_ = std::make_unique<aggregate_vpu>(std::make_unique<round_robin_scheduler>());
 
@@ -94,6 +100,80 @@ vpu& local_runtime::get_local_vpu() const
 local_address_space& local_runtime::get_address_space() const
 {
     return *address_space_;
+}
+
+void local_runtime::try_to_load_backend(const boost::filesystem::path& library_path)
+{
+    BOOST_LOG_NAMED_SCOPE("runtime");
+
+    logger slg;
+
+    boost::regex backend_pattern("^libqubus_([\\S]+)\\.so$");
+
+    auto filename = library_path.filename().string();
+
+    boost::smatch match;
+    if (boost::regex_match(filename, match, backend_pattern))
+    {
+        auto backend_name = match[1];
+
+        QUBUS_LOG(slg, normal) << "Loading backend '" << backend_name << "' (located at " << library_path << ")";
+
+        boost::dll::shared_library backend_library(library_path);
+
+        if (!backend_library)
+        {
+            QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+                                    << "' (located at " << library_path << ")";
+
+            return;
+        }
+
+        auto init_func_name = "init_" + backend_name;
+
+        if (!backend_library.has(init_func_name))
+        {
+            QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+                                    << "': No viable init function.";
+
+            return;
+        }
+
+        using init_function_type = backend*(const abi_info* abi);
+
+        auto& init_backend = backend_library.get<init_function_type>(init_func_name);
+
+        auto backend = init_backend(&abi_info_);
+
+        if (!backend)
+        {
+            QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+                                    << "': Backend initialization failed.";
+
+            return;
+        }
+
+        backend_registry_.register_backend(std::move(backend_name), *backend, std::move(backend_library));
+    }
+}
+
+void local_runtime::scan_for_backends()
+{
+    BOOST_LOG_NAMED_SCOPE("runtime");
+
+    logger slg;
+
+    QUBUS_LOG(slg, normal) << "Scanning for backends";
+
+    auto backend_search_path = util::get_prefix("qubus") / "qubus/backends";
+
+    auto first = boost::filesystem::directory_iterator(backend_search_path);
+    auto last = boost::filesystem::directory_iterator();
+
+    for (auto iter = first; iter != last; ++iter)
+    {
+        try_to_load_backend(iter->path());
+    }
 }
 
 hpx::future<local_address_space::handle> local_runtime::resolve_page_fault(const object& obj)
@@ -171,8 +251,15 @@ local_runtime& init_local_runtime(std::unique_ptr<virtual_address_space> global_
     return *local_qubus_runtime;
 }
 
+void shutdown_local_runtime()
+{
+    local_qubus_runtime.reset();
+}
+
 local_runtime& get_local_runtime()
 {
+    QUBUS_ASSERT(local_qubus_runtime, "The local runtime is not initialized.");
+
     return *local_qubus_runtime;
 }
 
@@ -185,12 +272,18 @@ init_local_runtime_remote(virtual_address_space_wrapper::client global_addr_spac
     return new_here<local_runtime_reference_server>(&init_local_runtime(std::move(copy)));
 }
 
+void shutdown_local_runtime_remote()
+{
+    shutdown_local_runtime();
+}
+
 hpx::future<hpx::id_type> get_local_runtime_remote()
 {
     return new_here<local_runtime_reference_server>(&get_local_runtime());
 }
 
 HPX_DEFINE_PLAIN_ACTION(init_local_runtime_remote, init_local_runtime_remote_action);
+HPX_DEFINE_PLAIN_ACTION(shutdown_local_runtime_remote, shutdown_local_runtime_remote_action);
 HPX_DEFINE_PLAIN_ACTION(get_local_runtime_remote, get_local_runtime_remote_action);
 
 local_runtime_reference
@@ -198,6 +291,11 @@ init_local_runtime_on_locality(const hpx::id_type& locality,
                                virtual_address_space_wrapper::client superior_addr_space)
 {
     return hpx::async<init_local_runtime_remote_action>(locality, std::move(superior_addr_space));
+}
+
+void shutdown_local_runtime_on_locality(const hpx::id_type& locality)
+{
+    hpx::async<shutdown_local_runtime_remote_action>(locality).get();
 }
 
 local_runtime_reference get_local_runtime_on_locality(const hpx::id_type& locality)

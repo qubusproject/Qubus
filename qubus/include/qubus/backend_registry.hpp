@@ -3,9 +3,10 @@
 
 #include <qubus/backend.hpp>
 
+#include <boost/dll.hpp>
+
 #include <string>
-#include <map>
-#include <memory>
+#include <vector>
 
 namespace qubus
 {
@@ -13,11 +14,23 @@ namespace qubus
 class backend_registry
 {
 public:
-    using iterator = std::map<std::string, std::unique_ptr<backend>>::iterator;
-    using const_iterator = std::map<std::string, std::unique_ptr<backend>>::const_iterator;
+    class entry
+    {
+    public:
+        entry(std::string id_, backend& backend_, boost::dll::shared_library library_);
 
-    void register_backend(std::string id, std::unique_ptr<backend> backend);
-    backend* lookup_backend(std::string id) const;
+        const std::string& id() const;
+        backend& get_backend() const;
+    private:
+        std::string id_;
+        backend* backend_;
+        boost::dll::shared_library library_;
+    };
+
+    using iterator = std::vector<entry>::iterator;
+    using const_iterator = std::vector<entry>::const_iterator;
+
+    void register_backend(std::string id, backend& backend, boost::dll::shared_library library);
 
     iterator begin();
     iterator end();
@@ -26,7 +39,7 @@ public:
     const_iterator end() const;
 
 private:
-    std::map<std::string, std::unique_ptr<backend>> backend_dictionary_;
+    std::vector<entry> backends_;
 };
 }
 

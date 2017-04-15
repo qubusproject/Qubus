@@ -1,4 +1,4 @@
-find_package(Boost 1.62.0 COMPONENTS log thread system REQUIRED)
+find_package(Boost 1.62.0 COMPONENTS log regex thread system REQUIRED)
 
 find_package(HPX 0.9.12 REQUIRED)
 
