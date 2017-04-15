@@ -17,9 +17,9 @@ else ()
 endif ()
 
 if (LLVM_HAS_INTEL_JITEVENTS)
-    set(REQ_LLVM_TARGETS IntelJITEvents executionengine mcjit analysis ipo vectorize native NVPTX)
+    set(REQ_LLVM_TARGETS IntelJITEvents executionengine orcjit mcjit transformutils linker analysis ipo vectorize native NVPTX)
 else ()
-    set(REQ_LLVM_TARGETS executionengine mcjit analysis ipo vectorize native NVPTX)
+    set(REQ_LLVM_TARGETS executionengine orcjit mcjit transformutils linker analysis ipo vectorize native NVPTX)
 endif ()
 
 llvm_map_components_to_libnames(REQ_LLVM_LIBRARIES ${REQ_LLVM_TARGETS})
