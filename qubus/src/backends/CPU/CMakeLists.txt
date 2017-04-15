@@ -1,4 +1,4 @@
-add_library(qubus_cpu_backend SHARED cpu_backend.cpp cpu_object_factory.cpp
+add_library(qubus_cpu_backend MODULE cpu_backend.cpp cpu_object_factory.cpp
                                      cpu_memory_block.cpp cpu_allocator.cpp cpu_compiler.cpp)
 
 target_include_directories(qubus_cpu_backend PUBLIC ${Boost_LIBRARY_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>)
@@ -20,7 +20,7 @@ set_property(TARGET qubus_cpu_backend APPEND PROPERTY COMPATIBLE_INTERFACE_STRIN
 set_property(TARGET qubus_cpu_backend APPEND PROPERTY COMPATIBLE_INTERFACE_STRING qubus_MINOR_VERSION)
 
 install(TARGETS qubus_cpu_backend EXPORT qubus-targets
-                                  RUNTIME DESTINATION bin
-                                  INCLUDES DESTINATION include
-                                  LIBRARY DESTINATION lib
-                                  ARCHIVE DESTINATION lib)
+                                  RUNTIME DESTINATION bin/qubus/backends
+                                  INCLUDES DESTINATION include/qubus/backends
+                                  LIBRARY DESTINATION lib/qubus/backends
+                                  ARCHIVE DESTINATION lib/qubus/backends)

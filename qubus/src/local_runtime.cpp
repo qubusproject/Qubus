@@ -37,8 +37,6 @@ namespace
 std::unique_ptr<local_runtime> local_qubus_runtime;
 }
 
-extern "C" backend* init_cpu_backend(const abi_info*);
-
 local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_address_space_)
 : service_executor_(1), global_address_space_(std::move(global_address_space_))
 {
