@@ -17,26 +17,30 @@ else ()
 endif ()
 
 if (LLVM_HAS_INTEL_JITEVENTS)
-    set(REQ_LLVM_TARGETS IntelJITEvents mcjit analysis ipo vectorize native)
+    set(REQ_LLVM_TARGETS IntelJITEvents executionengine mcjit analysis ipo vectorize native NVPTX)
 else ()
-    set(REQ_LLVM_TARGETS mcjit analysis ipo vectorize native)
+    set(REQ_LLVM_TARGETS executionengine mcjit analysis ipo vectorize native NVPTX)
 endif ()
 
 llvm_map_components_to_libnames(REQ_LLVM_LIBRARIES ${REQ_LLVM_TARGETS})
 
 message(STATUS "LLVM libraries: ${REQ_LLVM_LIBRARIES}")
 
+add_library(qubus_llvm SHARED)
+target_include_directories(qubus_llvm PUBLIC ${LLVM_INCLUDE_DIRS})
+target_compile_definitions(qubus_llvm PUBLIC ${LLVM_DEFINITIONS})
+target_link_libraries(qubus_llvm PRIVATE -Wl,--whole-archive ${REQ_LLVM_LIBRARIES} -Wl,--no-whole-archive)
+
 add_library(qubus_jit SHARED compiler.cpp compile.cpp llvm_environment.cpp entry_block_alloca.cpp load_store.cpp
             loops.cpp control_flow.cpp operators.cpp type_conversion.cpp array_access.cpp optimization_pipeline.cpp
             compilation_context.cpp reference.cpp jit_engine.cpp cpuinfo.cpp)
-target_include_directories(qubus_jit PUBLIC ${Boost_LIBRARY_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}> ${LLVM_INCLUDE_DIRS})
+target_include_directories(qubus_jit PUBLIC ${Boost_LIBRARY_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>)
 target_compile_options(qubus_jit PUBLIC -std=c++14)
-target_compile_definitions(qubus_jit PUBLIC ${LLVM_DEFINITIONS})
-target_link_libraries(qubus_jit ${Boost_LIBRARIES} qubus_ir qubus_util ${REQ_LLVM_LIBRARIES})
+target_link_libraries(qubus_jit ${Boost_LIBRARIES} qubus_ir qubus_util qubus_llvm)
 hpx_setup_target(qubus_jit)
 qubus_set_output_name(qubus_jit qubus_jit)
 
-install(TARGETS qubus_jit EXPORT qubus-targets
+install(TARGETS qubus_llvm qubus_jit EXPORT qubus-targets
         RUNTIME DESTINATION bin
         INCLUDES DESTINATION include
         LIBRARY DESTINATION lib

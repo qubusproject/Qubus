@@ -52,7 +52,7 @@ public:
     virtual reference compile(const expression& expr);
     virtual void compile(const function_declaration& func);
 
-    virtual void compile_entry_function(const function_declaration& func);
+    virtual llvm::Function* compile_entry_function(const function_declaration& func);
 
     void set_module(module& current_module);
     module& get_module();
