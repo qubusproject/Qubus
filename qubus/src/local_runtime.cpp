@@ -54,22 +54,24 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
 
     scan_for_backends();
 
+    host_backend* the_host_backend;
+
     for (const auto& entry : backend_registry_)
     {
         if (auto backend = dynamic_cast<host_backend*>(&entry.get_backend()))
         {
-            cpu_backend_ = backend;
+            the_host_backend = backend;
 
             break;
         }
     }
 
-    if (!cpu_backend_)
+    if (!the_host_backend)
     {
         throw 0; // No valid host backend.
     }
 
-    address_space_ = std::make_unique<local_address_space>(cpu_backend_->get_host_address_space());
+    address_space_ = std::make_unique<local_address_space>(the_host_backend->get_host_address_space());
 
     address_space_->on_page_fault([this](const object& obj) { return resolve_page_fault(obj); });
 
@@ -90,7 +92,7 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
         local_vpu_->add_member_vpu(std::move(vpu));
     }*/
 
-    local_vpu_ = std::move(cpu_backend_->create_vpus()[0]);
+    local_vpu_ = std::move(the_host_backend->create_vpus()[0]);
 }
 
 local_object_factory local_runtime::get_local_object_factory() const

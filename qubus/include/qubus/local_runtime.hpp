@@ -64,8 +64,6 @@ private:
 
     backend_registry backend_registry_;
 
-    host_backend* cpu_backend_;
-
     std::unique_ptr<virtual_address_space> global_address_space_;
 
     std::unique_ptr<local_address_space> address_space_;
