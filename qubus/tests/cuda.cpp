@@ -243,6 +243,26 @@ TEST(cuda, memory)
     }
 }
 
+TEST(cuda, context_stream_interaction)
+{
+    ASSERT_NO_THROW(qubus::cuda::init());
+
+    if (qubus::cuda::get_device_count() > 0)
+    {
+        qubus::cuda::device dev(0);
+
+        qubus::cuda::context ctx(dev);
+
+        qubus::cuda::context_guard guard(ctx);
+
+        qubus::cuda::stream s;
+
+        guard.deactivate();
+
+        EXPECT_NO_THROW(s.add_callback([] {}));
+    }
+}
+
 int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);

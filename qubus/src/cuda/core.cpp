@@ -317,6 +317,7 @@ void context_guard::deactivate()
     if (ctx_)
     {
         ctx_->deactivate();
+        ctx_ = nullptr;
     }
 }
 
