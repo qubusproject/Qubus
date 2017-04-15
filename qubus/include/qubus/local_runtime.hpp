@@ -18,6 +18,7 @@
 #include <qubus/local_object_factory.hpp>
 
 #include <hpx/include/components.hpp>
+#include <hpx/include/thread_executors.hpp>
 
 #include <boost/dll.hpp>
 
@@ -47,6 +48,10 @@ public:
         return abi_info_;
     }
 
+    auto& get_service_executor()
+    {
+        return service_executor_;
+    }
 private:
     hpx::future<local_address_space::handle> resolve_page_fault(const object& obj);
 
@@ -63,6 +68,8 @@ private:
     local_object_factory object_factory_;
 
     std::unique_ptr<vpu> local_vpu_;
+
+    hpx::threads::executors::local_priority_queue_os_executor service_executor_;
 };
 
 class local_runtime_reference_server
