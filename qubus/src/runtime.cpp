@@ -11,9 +11,9 @@
 using server_type = hpx::components::component<qubus::runtime_server>;
 HPX_REGISTER_COMPONENT(server_type, qubus_runtime_server);
 
-typedef qubus::runtime_server::finalize_action finalize_action;
-HPX_REGISTER_ACTION_DECLARATION(finalize_action, runtime_server_finalize_action);
-HPX_REGISTER_ACTION(finalize_action, runtime_server_finalize_action);
+typedef qubus::runtime_server::shutdown_action shutdown_action;
+HPX_REGISTER_ACTION_DECLARATION(shutdown_action, runtime_server_shutdown_action);
+HPX_REGISTER_ACTION(shutdown_action, runtime_server_shutdown_action);
 
 typedef qubus::runtime_server::execute_action execute_action;
 HPX_REGISTER_ACTION_DECLARATION(execute_action, runtime_server_execute_action);
@@ -51,7 +51,7 @@ runtime_server::runtime_server()
     }
 }
 
-void runtime_server::finalize()
+void runtime_server::shutdown()
 {
     global_vpu_.reset();
 
@@ -127,9 +127,9 @@ runtime::runtime(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
 {
 }
 
-void runtime::finalize()
+void runtime::shutdown()
 {
-    hpx::async<runtime_server::finalize_action>(this->get_id()).get();
+    hpx::async<runtime_server::shutdown_action>(this->get_id()).get();
 }
 
 hpx::future<void> runtime::execute(computelet c, kernel_arguments args)
@@ -160,7 +160,7 @@ void finalize()
 
     hpx::agas::unregister_name("/qubus/runtime");
 
-    rt.finalize();
+    rt.shutdown();
 }
 
 runtime get_runtime()

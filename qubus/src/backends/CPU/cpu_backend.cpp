@@ -142,7 +142,9 @@ public:
         auto deps_ready = ctx.when_ready();
 
         hpx::future<void> task_done = hpx::dataflow(
-            [this, &compilation, c, ctx](auto) mutable {
+            [this, &compilation, c, ctx](hpx::future<void> deps_ready) mutable {
+                deps_ready.get();
+
                 auto task_start = std::chrono::steady_clock::now();
 
                 std::vector<void*> task_args;

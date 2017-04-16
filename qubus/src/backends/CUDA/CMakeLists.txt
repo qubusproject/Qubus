@@ -1,6 +1,6 @@
 if (TARGET qubus_cuda)
 
-    add_library(qubus_cuda_backend MODULE cuda_backend.cpp cuda_compiler.cpp cuda_memory_block.cpp cuda_allocator.cpp)
+    add_library(qubus_cuda_backend SHARED cuda_backend.cpp cuda_compiler.cpp cuda_memory_block.cpp cuda_allocator.cpp)
 
     target_include_directories(qubus_cuda_backend PUBLIC ${Boost_LIBRARY_DIRS}
                                $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>)
