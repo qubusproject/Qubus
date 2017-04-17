@@ -321,6 +321,9 @@ void device_free(device_ptr ptr);
 void memcpy(void* dst, device_ptr src, std::size_t size);
 void memcpy(device_ptr dst, void* src, std::size_t size);
 
+void async_memcpy(void* dst, device_ptr src, std::size_t size, stream& used_stream);
+void async_memcpy(device_ptr dst, void* src, std::size_t size, stream& used_stream);
+
 class unique_device_ptr
 {
 public:

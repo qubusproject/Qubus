@@ -684,6 +684,16 @@ void memcpy(device_ptr dst, void* src, std::size_t size)
     check_cuda_error(cuMemcpyHtoD(dst, src, size));
 }
 
+void async_memcpy(void* dst, device_ptr src, std::size_t size, stream& used_stream)
+{
+    check_cuda_error(cuMemcpyDtoHAsync(dst, src, size, used_stream.native_handle()));
+}
+
+void async_memcpy(device_ptr dst, void* src, std::size_t size, stream& used_stream)
+{
+    check_cuda_error(cuMemcpyHtoDAsync(dst, src, size, used_stream.native_handle()));
+}
+
 unique_device_ptr::unique_device_ptr(device_ptr ptr_) : ptr_(ptr_)
 {
 }

@@ -243,6 +243,40 @@ TEST(cuda, memory)
     }
 }
 
+TEST(cuda, memory_async)
+{
+    ASSERT_NO_THROW(qubus::cuda::init());
+
+    EXPECT_THROW(qubus::cuda::device_malloc(1024), qubus::cuda::cuda_error);
+
+    if (qubus::cuda::get_device_count() > 0)
+    {
+        qubus::cuda::device dev(0);
+
+        qubus::cuda::context ctx(dev);
+
+        qubus::cuda::context_guard guard(ctx);
+
+        qubus::cuda::stream s;
+
+        auto ptr = qubus::cuda::device_malloc(1024);
+
+        int value = 42;
+
+        ASSERT_NO_THROW(qubus::cuda::async_memcpy(ptr, &value, sizeof(int), s));
+
+        int other_value;
+
+        ASSERT_NO_THROW(qubus::cuda::async_memcpy(&other_value, ptr, sizeof(int), s));
+
+        qubus::cuda::this_context::synchronize();
+
+        EXPECT_EQ(other_value, value);
+
+        EXPECT_NO_THROW(qubus::cuda::device_free(ptr));
+    }
+}
+
 TEST(cuda, context_stream_interaction)
 {
     ASSERT_NO_THROW(qubus::cuda::init());
