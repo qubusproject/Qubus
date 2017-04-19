@@ -54,23 +54,13 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
 
     scan_for_backends();
 
-    host_backend* the_host_backend;
+    QUBUS_ASSERT(static_cast<bool>(backend_registry_.get_host_backend()),
+                 "No host backend has been loaded.");
 
-    if (auto host_backend = backend_registry_.get_host_backend())
-    {
-        the_host_backend = &host_backend.get();
-    }
-    else
-    {
-        the_host_backend = nullptr;
-    }
+    auto& the_host_backend = *backend_registry_.get_host_backend();
 
-    if (!the_host_backend)
-    {
-        throw 0; // No valid host backend.
-    }
-
-    address_space_ = std::make_unique<local_address_space>(the_host_backend->get_host_address_space());
+    address_space_ =
+        std::make_unique<local_address_space>(the_host_backend.get_host_address_space());
 
     address_space_->on_page_fault([this](const object& obj) { return resolve_page_fault(obj); });
 
@@ -91,7 +81,7 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
         local_vpu_->add_member_vpu(std::move(vpu));
     }*/
 
-    local_vpu_ = std::move(the_host_backend->create_vpus()[0]);
+    local_vpu_ = std::move(the_host_backend.create_vpus()[0]);
 }
 
 local_object_factory local_runtime::get_local_object_factory() const
@@ -124,7 +114,8 @@ void local_runtime::try_to_load_host_backend(const boost::filesystem::path& libr
     {
         auto backend_name = match[1];
 
-        QUBUS_LOG(slg, normal) << "Loading backend '" << backend_name << "' (located at " << library_path << ")";
+        QUBUS_LOG(slg, normal) << "Loading backend '" << backend_name << "' (located at "
+                               << library_path << ")";
 
         boost::dll::shared_library backend_library(library_path);
 
@@ -164,9 +155,9 @@ void local_runtime::try_to_load_host_backend(const boost::filesystem::path& libr
                 return;
             }
 
-            using init_function_type = host_backend *(const abi_info *abi);
+            using init_function_type = host_backend*(const abi_info*);
 
-            auto &init_backend = backend_library.get<init_function_type>(init_func_name);
+            auto& init_backend = backend_library.get<init_function_type>(init_func_name);
 
             auto backend = init_backend(&abi_info_);
 
@@ -180,17 +171,20 @@ void local_runtime::try_to_load_host_backend(const boost::filesystem::path& libr
 
             try
             {
-                backend_registry_.register_host_backend(std::move(backend_name), *backend, std::move(backend_library));
+                backend_registry_.register_host_backend(std::move(backend_name), *backend,
+                                                        std::move(backend_library));
             }
             catch (const host_backend_already_set_exception& /*unused*/)
             {
-                QUBUS_LOG(slg, warning) << "Host backend has already been chosen. Ignoring new backend.";
+                QUBUS_LOG(slg, warning)
+                    << "Host backend has already been chosen. Ignoring new backend.";
             }
         }
     }
 }
 
-void local_runtime::try_to_load_backend(const boost::filesystem::path& library_path)
+void local_runtime::try_to_load_backend(const boost::filesystem::path& library_path,
+                                        host_backend& the_host_backend)
 {
     BOOST_LOG_NAMED_SCOPE("runtime");
 
@@ -205,7 +199,8 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
     {
         auto backend_name = match[1];
 
-        QUBUS_LOG(slg, normal) << "Loading backend '" << backend_name << "' (located at " << library_path << ")";
+        QUBUS_LOG(slg, normal) << "Loading backend '" << backend_name << "' (located at "
+                               << library_path << ")";
 
         boost::dll::shared_library backend_library(library_path);
 
@@ -245,11 +240,11 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
                 return;
             }
 
-            using init_function_type = backend *(const abi_info *abi);
+            using init_function_type = backend*(const abi_info*, host_address_space*);
 
-            auto &init_backend = backend_library.get<init_function_type>(init_func_name);
+            auto& init_backend = backend_library.get<init_function_type>(init_func_name);
 
-            auto backend = init_backend(&abi_info_);
+            auto backend = init_backend(&abi_info_, &the_host_backend.get_host_address_space());
 
             if (!backend)
             {
@@ -259,7 +254,8 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
                 return;
             }
 
-            backend_registry_.register_backend(std::move(backend_name), *backend, std::move(backend_library));
+            backend_registry_.register_backend(std::move(backend_name), *backend,
+                                               std::move(backend_library));
         }
     }
 }
@@ -284,9 +280,25 @@ void local_runtime::scan_for_backends()
         try_to_load_host_backend(iter->path());
     }
 
+    host_backend* the_host_backend;
+
+    if (auto host_backend = backend_registry_.get_host_backend())
+    {
+        the_host_backend = &host_backend.get();
+    }
+    else
+    {
+        the_host_backend = nullptr;
+    }
+
+    if (!the_host_backend)
+    {
+        throw 0; // No valid host backend.
+    }
+
     for (auto iter = first; iter != last; ++iter)
     {
-        try_to_load_backend(iter->path());
+        try_to_load_backend(iter->path(), *the_host_backend);
     }
 }
 
