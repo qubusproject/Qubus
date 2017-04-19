@@ -53,6 +53,7 @@ public:
         return service_executor_;
     }
 private:
+    void try_to_load_host_backend(const boost::filesystem::path& library_path);
     void try_to_load_backend(const boost::filesystem::path& library_path);
     void scan_for_backends();
 

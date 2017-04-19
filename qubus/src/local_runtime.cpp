@@ -56,14 +56,13 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
 
     host_backend* the_host_backend;
 
-    for (const auto& entry : backend_registry_)
+    if (auto host_backend = backend_registry_.get_host_backend())
     {
-        if (auto backend = dynamic_cast<host_backend*>(&entry.get_backend()))
-        {
-            the_host_backend = backend;
-
-            break;
-        }
+        the_host_backend = &host_backend.get();
+    }
+    else
+    {
+        the_host_backend = nullptr;
     }
 
     if (!the_host_backend)
@@ -110,6 +109,87 @@ local_address_space& local_runtime::get_address_space() const
     return *address_space_;
 }
 
+void local_runtime::try_to_load_host_backend(const boost::filesystem::path& library_path)
+{
+    BOOST_LOG_NAMED_SCOPE("runtime");
+
+    logger slg;
+
+    boost::regex backend_pattern("^libqubus_([\\S]+)\\.so$");
+
+    auto filename = library_path.filename().string();
+
+    boost::smatch match;
+    if (boost::regex_match(filename, match, backend_pattern))
+    {
+        auto backend_name = match[1];
+
+        QUBUS_LOG(slg, normal) << "Loading backend '" << backend_name << "' (located at " << library_path << ")";
+
+        boost::dll::shared_library backend_library(library_path);
+
+        if (!backend_library)
+        {
+            QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+                                    << "' (located at " << library_path << ")";
+
+            return;
+        }
+
+        auto get_type_name = backend_name + "_get_backend_type";
+
+        if (!backend_library.has(get_type_name))
+        {
+            QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+                                    << "': Missing backend type accessor.";
+
+            return;
+        }
+
+        using get_type_type = unsigned int();
+
+        auto& get_type = backend_library.get<get_type_type>(get_type_name);
+
+        auto type = static_cast<backend_type>(get_type());
+
+        if (type == backend_type::host)
+        {
+            auto init_func_name = "init_" + backend_name;
+
+            if (!backend_library.has(init_func_name))
+            {
+                QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+                                        << "': No viable init function.";
+
+                return;
+            }
+
+            using init_function_type = host_backend *(const abi_info *abi);
+
+            auto &init_backend = backend_library.get<init_function_type>(init_func_name);
+
+            auto backend = init_backend(&abi_info_);
+
+            if (!backend)
+            {
+                QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+                                        << "': Backend initialization failed.";
+
+                return;
+            }
+
+            try
+            {
+                backend_registry_.register_host_backend(std::move(backend_name), *backend, std::move(backend_library));
+            }
+            catch (const host_backend_already_set_exception& /*unused*/)
+            {
+                QUBUS_LOG(slg, warning) << "Host backend has already been chosen. Ignoring new backend.";
+            }
+        }
+    }
+}
+
 void local_runtime::try_to_load_backend(const boost::filesystem::path& library_path)
 {
     BOOST_LOG_NAMED_SCOPE("runtime");
@@ -137,31 +217,50 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
             return;
         }
 
-        auto init_func_name = "init_" + backend_name;
+        auto get_type_name = backend_name + "_get_backend_type";
 
-        if (!backend_library.has(init_func_name))
+        if (!backend_library.has(get_type_name))
         {
             QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
-                                    << "': No viable init function.";
+                                    << "': Missing backend type accessor.";
 
             return;
         }
 
-        using init_function_type = backend*(const abi_info* abi);
+        using get_type_type = unsigned int();
 
-        auto& init_backend = backend_library.get<init_function_type>(init_func_name);
+        auto& get_type = backend_library.get<get_type_type>(get_type_name);
 
-        auto backend = init_backend(&abi_info_);
+        auto type = static_cast<backend_type>(get_type());
 
-        if (!backend)
+        if (type == backend_type::vpu)
         {
-            QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
-                                    << "': Backend initialization failed.";
+            auto init_func_name = "init_" + backend_name;
 
-            return;
+            if (!backend_library.has(init_func_name))
+            {
+                QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+                                        << "': No viable init function.";
+
+                return;
+            }
+
+            using init_function_type = backend *(const abi_info *abi);
+
+            auto &init_backend = backend_library.get<init_function_type>(init_func_name);
+
+            auto backend = init_backend(&abi_info_);
+
+            if (!backend)
+            {
+                QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+                                        << "': Backend initialization failed.";
+
+                return;
+            }
+
+            backend_registry_.register_backend(std::move(backend_name), *backend, std::move(backend_library));
         }
-
-        backend_registry_.register_backend(std::move(backend_name), *backend, std::move(backend_library));
     }
 }
 
@@ -179,6 +278,11 @@ void local_runtime::scan_for_backends()
 
     auto first = boost::filesystem::directory_iterator(backend_search_path);
     auto last = boost::filesystem::directory_iterator();
+
+    for (auto iter = first; iter != last; ++iter)
+    {
+        try_to_load_host_backend(iter->path());
+    }
 
     for (auto iter = first; iter != last; ++iter)
     {
