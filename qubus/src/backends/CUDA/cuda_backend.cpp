@@ -73,11 +73,47 @@ private:
 class cuda_vpu final : public vpu
 {
 public:
-    explicit cuda_vpu(cuda::device dev_)
+    explicit cuda_vpu(cuda::device dev_, host_address_space& host_addr_space_)
     : dev_(std::move(dev_)),
       cuda_ctx_(this->dev_),
       address_space_(std::make_unique<cuda_allocator>(this->cuda_ctx_))
     {
+        auto page_fault_handler =
+            [this, &host_addr_space_](const object& obj) -> hpx::future<address_space::handle> {
+            auto host_handle = host_addr_space_.resolve_object(obj);
+
+            return host_handle.then(
+                get_local_runtime().get_service_executor(),
+                [this, &obj](hpx::future<host_address_space::handle> host_handle) {
+                    auto handle = host_handle.get();
+
+                    auto size = handle.data().size();
+
+                    auto cuda_handle = address_space_.allocate_object_page(obj, size, 1);
+
+                    auto data = cuda_handle.data().ptr();
+
+                    cuda::device_ptr ptr;
+
+                    static_assert(
+                        sizeof(ptr) == sizeof(void*),
+                        "The size of a CUDA device pointer has match the size of a host pointer.");
+
+                    std::memcpy(&ptr, &data, sizeof(void*));
+
+                    cuda::async_memcpy(ptr, handle.data().ptr(), size, stream_);
+
+                    return cuda::when_finished(stream_).then(
+                        get_local_runtime().get_service_executor(),
+                        [cuda_handle = std::move(cuda_handle)](hpx::future<void> when_finished) {
+                            when_finished.get();
+
+                            return cuda_handle;
+                        });
+                });
+        };
+
+        address_space_.on_page_fault(std::move(page_fault_handler));
     }
 
     hpx::future<void> execute(computelet c, execution_context ctx) override
@@ -156,7 +192,8 @@ private:
 class cuda_backend final : public backend
 {
 public:
-    cuda_backend(const abi_info& abi_) : abi_(&abi_)
+    cuda_backend(const abi_info& abi_, host_address_space& host_addr_space_)
+    : abi_(&abi_), host_addr_space_(&host_addr_space_)
     {
     }
 
@@ -175,9 +212,9 @@ public:
 
             std::vector<std::unique_ptr<vpu>> vpus;
 
-            for (auto &&device : cuda::get_devices())
+            for (auto&& device : cuda::get_devices())
             {
-                vpus.push_back(std::make_unique<cuda_vpu>(std::move(device)));
+                vpus.push_back(std::make_unique<cuda_vpu>(std::move(device), *host_addr_space_));
             }
 
             return vpus;
@@ -192,6 +229,7 @@ public:
 
 private:
     const abi_info* abi_;
+    host_address_space* host_addr_space_;
 };
 }
 
@@ -211,10 +249,15 @@ std::unique_ptr<cuda_backend> the_cuda_backend;
 std::once_flag cuda_backend_init_flag;
 }
 
-extern "C" QUBUS_EXPORT backend* init_cuda_backend(const abi_info* abi, host_address_space* host_addr_space)
+extern "C" QUBUS_EXPORT backend* init_cuda_backend(const abi_info* abi,
+                                                   host_address_space* host_addr_space)
 {
-    std::call_once(cuda_backend_init_flag,
-                   [&] { the_cuda_backend = std::make_unique<cuda_backend>(*abi); });
+    QUBUS_ASSERT(abi, "Expected argument to be non-null.");
+    QUBUS_ASSERT(host_addr_space, "Expected argument to be non-null.");
+
+    std::call_once(cuda_backend_init_flag, [&] {
+        the_cuda_backend = std::make_unique<cuda_backend>(*abi, *host_addr_space);
+    });
 
     return the_cuda_backend.get();
 }
