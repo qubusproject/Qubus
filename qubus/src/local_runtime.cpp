@@ -62,7 +62,10 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
     address_space_ =
         std::make_unique<local_address_space>(the_host_backend.get_host_address_space());
 
-    address_space_->on_page_fault([this](const object& obj) { return resolve_page_fault(obj); });
+    address_space_->on_page_fault(
+        [this](const object& obj, local_address_space::page_fault_context ctx) mutable {
+            return resolve_page_fault(obj, std::move(ctx));
+        });
 
     object_factory_ = new_here<local_object_factory_server>(address_space_.get());
 
@@ -149,8 +152,8 @@ void local_runtime::try_to_load_host_backend(const boost::filesystem::path& libr
 
             if (!backend_library.has(init_func_name))
             {
-                QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
-                                        << "': No viable init function.";
+                QUBUS_LOG(slg, warning)
+                    << "Failed to load backend '" << backend_name << "': No viable init function.";
 
                 return;
             }
@@ -234,8 +237,8 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
 
             if (!backend_library.has(init_func_name))
             {
-                QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
-                                        << "': No viable init function.";
+                QUBUS_LOG(slg, warning)
+                    << "Failed to load backend '" << backend_name << "': No viable init function.";
 
                 return;
             }
@@ -302,35 +305,41 @@ void local_runtime::scan_for_backends()
     }
 }
 
-hpx::future<local_address_space::handle> local_runtime::resolve_page_fault(const object& obj)
+hpx::future<local_address_space::address_entry>
+local_runtime::resolve_page_fault(const object& obj, local_address_space::page_fault_context ctx)
 {
     auto instance = global_address_space_->resolve_object(obj);
 
-    auto page = instance.then([this, obj](hpx::future<object_instance> instance) {
-        auto instance_v = instance.get();
+    auto page = instance.then(
+        get_local_runtime().get_service_executor(),
+        [this, obj, ctx](hpx::future<object_instance> instance) mutable {
+            auto instance_v = instance.get();
 
-        if (!instance_v)
-            throw std::runtime_error("Page fault");
+            if (!instance_v)
+                throw std::runtime_error("Page fault");
 
-        const auto& obj_type = obj.object_type();
+            const auto& obj_type = obj.object_type();
 
-        auto size = obj.size();
-        auto alignment = obj.alignment();
+            auto size = obj.size();
+            auto alignment = obj.alignment();
 
-        auto page = address_space_->allocate_object_page(obj, size, alignment);
+            auto page = ctx.allocate_page(obj, size, alignment).get();
 
-        auto& data = page.data();
+            auto& data = page.data();
 
-        util::span<char> obj_memory(static_cast<char*>(data.ptr()), size);
+            util::span<char> obj_memory(static_cast<char*>(data.ptr()), size);
 
-        auto finished = instance_v.copy(obj_memory);
+            auto finished = instance_v.copy(obj_memory);
 
-        return finished.then([page = std::move(page)](hpx::future<void> finished) {
-            finished.get();
+            return finished.then(
+                get_local_runtime().get_service_executor(), [page = std::move(page)](
+                                                                hpx::future<void>
+                                                                    finished) mutable {
+                    finished.get();
 
-            return std::move(page);
+                    return std::move(page);
+                });
         });
-    });
 
     return page;
 }

@@ -78,20 +78,21 @@ public:
       cuda_ctx_(this->dev_),
       address_space_(std::make_unique<cuda_allocator>(this->cuda_ctx_))
     {
-        auto page_fault_handler =
-            [this, &host_addr_space_](const object& obj) -> hpx::future<address_space::handle> {
+        auto page_fault_handler = [this, &host_addr_space_](
+            const object& obj,
+            address_space::page_fault_context ctx) -> hpx::future<address_space::address_entry> {
             auto host_handle = host_addr_space_.resolve_object(obj);
 
             return host_handle.then(
                 get_local_runtime().get_service_executor(),
-                [this, &obj](hpx::future<host_address_space::handle> host_handle) {
+                [this, &obj, ctx](hpx::future<host_address_space::handle> host_handle) mutable {
                     auto handle = host_handle.get();
 
                     auto size = handle.data().size();
 
-                    auto cuda_handle = address_space_.allocate_object_page(obj, size, 1);
+                    auto page = ctx.allocate_page(obj, size, 1).get();
 
-                    auto data = cuda_handle.data().ptr();
+                    auto data = page.data().ptr();
 
                     cuda::device_ptr ptr;
 
@@ -104,11 +105,12 @@ public:
                     cuda::async_memcpy(ptr, handle.data().ptr(), size, stream_);
 
                     return cuda::when_finished(stream_).then(
-                        get_local_runtime().get_service_executor(),
-                        [cuda_handle = std::move(cuda_handle)](hpx::future<void> when_finished) {
+                        get_local_runtime().get_service_executor(), [page = std::move(page)](
+                                                                        hpx::future<void>
+                                                                            when_finished) mutable {
                             when_finished.get();
 
-                            return cuda_handle;
+                            return std::move(page);
                         });
                 });
         };
