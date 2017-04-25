@@ -95,8 +95,6 @@ llvm::Function* compile_entry_point(const function_declaration& plan, compiler& 
     auto& env = comp.get_module().env();
     auto& ctx = comp.get_module().ctx();
 
-    comp.compile(plan);
-
     // Prolog
     std::vector<llvm::Type*> param_types;
 
@@ -126,7 +124,7 @@ llvm::Function* compile_entry_point(const function_declaration& plan, compiler& 
     // unpack args
     std::size_t counter = 0;
 
-    std::vector<llvm::Value*> arguments;
+    auto& symbol_table = ctx.symbol_table();
 
     auto add_param = [&](const variable_declaration& param) mutable {
         llvm::Type* param_type = env.map_qubus_type(param.var_type());
@@ -140,9 +138,12 @@ llvm::Function* compile_entry_point(const function_declaration& plan, compiler& 
             env.builder().CreateBitCast(arg, llvm::PointerType::get(param_type, 0));
 
         // TODO: Generalize and reenable alignment tracking.
-        // TODO: get alignement from the ABI
+        // TODO: get alignment from the ABI
 
-        arguments.push_back(typed_arg);
+        access_path apath(param.id());
+        symbol_table[param.id()] = reference(typed_arg, apath, param.var_type());
+        env.get_alias_scope(apath);
+
         ++counter;
     };
 
@@ -153,11 +154,9 @@ llvm::Function* compile_entry_point(const function_declaration& plan, compiler& 
 
     add_param(plan.result());
 
-    arguments.push_back(&kernel->getArgumentList().back());
-
     // body
 
-    env.builder().CreateCall(env.module().getFunction(plan.name()), arguments);
+    comp.compile_root_skeleton(plan.body());
 
     ctx.exit_current_scope();
 
@@ -223,6 +222,11 @@ void compiler::compile(const function_declaration& func)
 llvm::Function* compiler::compile_entry_function(const function_declaration& func)
 {
     return compile_entry_point(func, *this, current_module_->get_namespace());
+}
+
+reference compiler::compile_root_skeleton(const expression& root_skel)
+{
+    return compile(root_skel);
 }
 
 void compiler::set_module(module& current_module)
