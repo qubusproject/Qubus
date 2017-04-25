@@ -1,7 +1,5 @@
 #include <hpx/config.hpp>
 
-#include <qubus/backends/cpu_backend.hpp>
-
 #include <qubus/backend.hpp>
 #include <qubus/host_backend.hpp>
 
@@ -135,14 +133,16 @@ public:
 
     virtual ~cpu_vpu() = default;
 
-    hpx::future<void> execute(computelet c, execution_context ctx) const override
+    hpx::future<void> execute(computelet c, execution_context ctx) override
     {
         const auto& compilation = compiler_.compile(c);
 
         auto deps_ready = ctx.when_ready();
 
         hpx::future<void> task_done = hpx::dataflow(
-            [this, &compilation, c, ctx](auto) mutable {
+            [this, &compilation, c, ctx](hpx::future<void> deps_ready) mutable {
+                deps_ready.get();
+
                 auto task_start = std::chrono::steady_clock::now();
 
                 std::vector<void*> task_args;
@@ -196,7 +196,7 @@ private:
     host_address_space* address_space_;
     abi_info abi_;
 
-    mutable unified_performance_model perf_model_;
+    unified_performance_model perf_model_;
 };
 
 class cpu_backend final : public host_backend
@@ -248,7 +248,7 @@ extern "C" QUBUS_EXPORT unsigned long int cpu_backend_get_api_version()
 std::unique_ptr<cpu_backend> the_cpu_backend;
 std::once_flag cpu_backend_init_flag;
 
-extern "C" QUBUS_EXPORT backend* init_cpu_backend(const abi_info* abi)
+extern "C" QUBUS_EXPORT host_backend* init_cpu_backend(const abi_info* abi)
 {
     std::call_once(cpu_backend_init_flag,
                    [&] { the_cpu_backend = util::make_unique<cpu_backend>(*abi); });

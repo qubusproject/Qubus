@@ -27,10 +27,14 @@ class runtime_server : public hpx::components::component_base<runtime_server>
 {
 public:
     runtime_server();
+
+    void shutdown();
+
     void execute(computelet c, kernel_arguments args);
 
     hpx::future<hpx::id_type> get_object_factory() const;
 
+    HPX_DEFINE_COMPONENT_ACTION(runtime_server, shutdown, shutdown_action);
     HPX_DEFINE_COMPONENT_ACTION(runtime_server, execute, execute_action);
     HPX_DEFINE_COMPONENT_ACTION(runtime_server, get_object_factory, get_object_factory_action);
 private:
@@ -49,9 +53,9 @@ public:
 
     runtime(hpx::future<hpx::id_type>&& id);
 
-    object_factory get_object_factory() const;
+    void shutdown();
 
-    // plan register_user_defined_plan(user_defined_plan_t plan); Is this still necessary?
+    object_factory get_object_factory() const;
 
     hpx::future<void> execute(computelet c, kernel_arguments args);
 

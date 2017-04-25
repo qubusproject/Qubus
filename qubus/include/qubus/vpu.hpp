@@ -25,7 +25,7 @@ public:
 
     virtual ~vpu() = default;
 
-    virtual hpx::future<void> execute(computelet c, execution_context ctx) const = 0;
+    virtual hpx::future<void> execute(computelet c, execution_context ctx) = 0;
     virtual hpx::future<boost::optional<performance_estimate>>
     try_estimate_execution_time(const computelet& c, const execution_context& ctx) const = 0;
 
@@ -46,7 +46,7 @@ public:
 
     explicit remote_vpu_server(std::unique_ptr<vpu> underlying_vpu_);
 
-    void execute(computelet c, execution_context ctx) const;
+    void execute(computelet c, execution_context ctx);
     boost::optional<performance_estimate>
     try_estimate_execution_time(const computelet& c, const execution_context& ctx) const;
 
@@ -67,7 +67,7 @@ public:
 
     remote_vpu(hpx::future<hpx::id_type>&& id);
 
-    hpx::future<void> execute(computelet c, execution_context ctx) const override;
+    hpx::future<void> execute(computelet c, execution_context ctx) override;
     hpx::future<boost::optional<performance_estimate>>
     try_estimate_execution_time(const computelet& c, const execution_context& ctx) const override;
 };
@@ -80,7 +80,7 @@ public:
 
     explicit remote_vpu_reference_server(vpu* underlying_vpu_);
 
-    void execute(computelet c, execution_context ctx) const;
+    void execute(computelet c, execution_context ctx);
     boost::optional<performance_estimate>
     try_estimate_execution_time(const computelet& c, const execution_context& ctx) const;
 
@@ -104,7 +104,7 @@ public:
 
     remote_vpu_reference(hpx::future<hpx::id_type>&& id);
 
-    hpx::future<void> execute(computelet c, execution_context ctx) const override;
+    hpx::future<void> execute(computelet c, execution_context ctx) override;
     hpx::future<boost::optional<performance_estimate>>
     try_estimate_execution_time(const computelet& c, const execution_context& ctx) const override;
 };

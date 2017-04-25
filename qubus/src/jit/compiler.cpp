@@ -8,13 +8,13 @@
 
 #include <boost/optional.hpp>
 
-#include <qubus/util/make_unique.hpp>
 #include <qubus/util/assert.hpp>
+#include <qubus/util/make_unique.hpp>
 #include <qubus/util/unused.hpp>
 
 #include <memory>
-#include <vector>
 #include <utility>
+#include <vector>
 
 namespace qubus
 {
@@ -89,13 +89,11 @@ void compile_function(const function_declaration& plan, compiler& comp)
     env.builder().CreateRetVoid();
 }
 
-void compile_entry_point(const function_declaration& plan, compiler& comp,
-                         const std::string& namespace_)
+llvm::Function* compile_entry_point(const function_declaration& plan, compiler& comp,
+                                    const std::string& namespace_)
 {
     auto& env = comp.get_module().env();
     auto& ctx = comp.get_module().ctx();
-
-    comp.compile(plan);
 
     // Prolog
     std::vector<llvm::Type*> param_types;
@@ -126,10 +124,9 @@ void compile_entry_point(const function_declaration& plan, compiler& comp,
     // unpack args
     std::size_t counter = 0;
 
-    std::vector<llvm::Value*> arguments;
+    auto& symbol_table = ctx.symbol_table();
 
-    auto add_param = [&](const variable_declaration& param) mutable
-    {
+    auto add_param = [&](const variable_declaration& param) mutable {
         llvm::Type* param_type = env.map_qubus_type(param.var_type());
 
         llvm::Value* ptr_to_arg =
@@ -141,9 +138,12 @@ void compile_entry_point(const function_declaration& plan, compiler& comp,
             env.builder().CreateBitCast(arg, llvm::PointerType::get(param_type, 0));
 
         // TODO: Generalize and reenable alignment tracking.
-        // TODO: get alignement from the ABI
+        // TODO: get alignment from the ABI
 
-        arguments.push_back(typed_arg);
+        access_path apath(param.id());
+        symbol_table[param.id()] = reference(typed_arg, apath, param.var_type());
+        env.get_alias_scope(apath);
+
         ++counter;
     };
 
@@ -154,11 +154,9 @@ void compile_entry_point(const function_declaration& plan, compiler& comp,
 
     add_param(plan.result());
 
-    arguments.push_back(&kernel->getArgumentList().back());
-
     // body
 
-    env.builder().CreateCall(env.module().getFunction(plan.name()), arguments);
+    comp.compile_root_skeleton(plan.body());
 
     ctx.exit_current_scope();
 
@@ -170,11 +168,15 @@ void compile_entry_point(const function_declaration& plan, compiler& comp,
     {
         comp.compile(*plan);
     }
+
+    return kernel;
 }
 }
 
 module::module(std::string namespace_, llvm::LLVMContext& llvm_ctx_)
-: namespace_(std::move(namespace_)), env_(llvm_ctx_), ctx_(std::make_unique<compilation_context>(env_))
+: namespace_(std::move(namespace_)),
+  env_(llvm_ctx_),
+  ctx_(std::make_unique<compilation_context>(env_))
 {
 }
 
@@ -203,8 +205,7 @@ void module::finish()
     ctx_.reset();
 }
 
-compiler::compiler()
-: ctx_(std::make_unique<llvm::LLVMContext>()), current_module_(nullptr)
+compiler::compiler() : ctx_(std::make_unique<llvm::LLVMContext>()), current_module_(nullptr)
 {
 }
 
@@ -218,10 +219,14 @@ void compiler::compile(const function_declaration& func)
     return compile_function(func, *this);
 }
 
-void compiler::compile_entry_function(const function_declaration& func)
+llvm::Function* compiler::compile_entry_function(const function_declaration& func)
 {
-
     return compile_entry_point(func, *this, current_module_->get_namespace());
+}
+
+reference compiler::compile_root_skeleton(const expression& root_skel)
+{
+    return compile(root_skel);
 }
 
 void compiler::set_module(module& current_module)
@@ -250,7 +255,8 @@ std::unique_ptr<module> compile(const function_declaration& func, compiler& comp
 {
     static std::size_t unique_id = 0;
 
-    auto mod = std::make_unique<module>("qubus_plan" + std::to_string(unique_id), comp.get_context());
+    auto mod =
+        std::make_unique<module>("qubus_plan" + std::to_string(unique_id), comp.get_context());
 
     ++unique_id;
 

@@ -18,7 +18,7 @@ void aggregate_vpu::add_member_vpu(std::unique_ptr<vpu> new_member_vpu)
     scheduler_->add_resource(*member_vpus_.back());
 }
 
-hpx::future<void> aggregate_vpu::execute(computelet c, execution_context ctx) const
+hpx::future<void> aggregate_vpu::execute(computelet c, execution_context ctx)
 {
     if (member_vpus_.empty())
         throw 0;

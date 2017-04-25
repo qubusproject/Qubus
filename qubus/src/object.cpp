@@ -66,7 +66,7 @@ std::size_t object_server::alignment() const
 
 object_server::~object_server()
 {
-    get_local_runtime().get_address_space().free_object(object(id()));
+    //TODO: Send a notification to all parts of the memory subsystem that this object is dead.
 }
 
 hpx::id_type object_server::id() const

@@ -53,7 +53,7 @@ TEST(kronecker_delta, identity_contraction)
 
     tensor<double, 1> A(N);
 
-    kernel identify_contraction = [A, N] { qtl::index i, j; A(i, j) = sum(j, delta(N, i, j)); };
+    kernel identify_contraction = [A, N] { qtl::index i, j; A(i) = sum(j, delta(N, i, j)); };
 
     identify_contraction();
 
@@ -78,6 +78,8 @@ int hpx_main(int argc, char** argv)
     qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
+
+    qubus::finalize();
 
     hpx::finalize();
 

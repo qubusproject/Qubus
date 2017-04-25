@@ -1,6 +1,4 @@
-find_package(Boost 1.62.0 COMPONENTS log thread system REQUIRED)
-
-find_package(CUDA 7.0)
+find_package(Boost 1.62.0 COMPONENTS log regex thread system REQUIRED)
 
 find_package(HPX 0.9.12 REQUIRED)
 
@@ -11,6 +9,7 @@ set(QUBUS_BUILD_PREFIX ${CMAKE_CURRENT_BINARY_DIR})
 add_subdirectory(IR)
 add_subdirectory(isl)
 add_subdirectory(jit)
+add_subdirectory(cuda)
 add_subdirectory(backends)
 
 set(qubus_header_file_names allocator.hpp generic_ptr.hpp loop_optimizer.hpp
@@ -40,9 +39,10 @@ add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 
 target_include_directories(qubus PUBLIC ${Boost_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 target_compile_options(qubus PUBLIC -std=c++14)
-target_link_libraries(qubus qubus_ir qubus_isl qubus_util ${Boost_LIBRARIES} qubus_cpu_backend)
+target_link_libraries(qubus qubus_ir qubus_isl qubus_util ${Boost_LIBRARIES} qubus_cpu_backend qubus_cuda_backend)
+
 target_compile_definitions(qubus PUBLIC -DBOOST_LOG_DYN_LINK)
-add_dependencies(qubus qubus_cpu_backend)
+add_dependencies(qubus qubus_cpu_backend qubus_cuda_backend)
 hpx_setup_target(qubus COMPONENT_DEPENDENCIES iostreams)
 qubus_set_output_name(qubus qubus)
 

@@ -18,8 +18,9 @@
 #include <qubus/local_object_factory.hpp>
 
 #include <hpx/include/components.hpp>
+#include <hpx/include/thread_executors.hpp>
 
-#include <boost/dll.hpp>
+#include <boost/filesystem.hpp>
 
 #include <memory>
 #include <utility>
@@ -47,13 +48,23 @@ public:
         return abi_info_;
     }
 
+    auto& get_service_executor()
+    {
+        return service_executor_;
+    }
+
 private:
-    hpx::future<local_address_space::handle> resolve_page_fault(const object& obj);
+    void try_to_load_host_backend(const boost::filesystem::path& library_path);
+    void try_to_load_backend(const boost::filesystem::path& library_path,
+                             host_backend& the_host_backend);
+    void scan_for_backends();
+
+    hpx::future<local_address_space::address_entry>
+    resolve_page_fault(const object& obj, local_address_space::page_fault_context ctx);
+
+    hpx::threads::executors::local_priority_queue_os_executor service_executor_;
 
     abi_info abi_info_;
-    //boost::dll::shared_library cpu_plugin_;
-
-    host_backend* cpu_backend_;
 
     backend_registry backend_registry_;
 
@@ -102,11 +113,14 @@ public:
 };
 
 local_runtime& init_local_runtime(virtual_address_space_wrapper::client global_addr_space);
+void shutdown_local_runtime();
 local_runtime& get_local_runtime();
 
 local_runtime_reference
 init_local_runtime_on_locality(const hpx::id_type& locality,
                                virtual_address_space_wrapper::client global_addr_space);
+void shutdown_local_runtime_on_locality(const hpx::id_type& locality);
+
 local_runtime_reference get_local_runtime_on_locality(const hpx::id_type& locality);
 }
 

@@ -11,6 +11,10 @@
 using server_type = hpx::components::component<qubus::runtime_server>;
 HPX_REGISTER_COMPONENT(server_type, qubus_runtime_server);
 
+typedef qubus::runtime_server::shutdown_action shutdown_action;
+HPX_REGISTER_ACTION_DECLARATION(shutdown_action, runtime_server_shutdown_action);
+HPX_REGISTER_ACTION(shutdown_action, runtime_server_shutdown_action);
+
 typedef qubus::runtime_server::execute_action execute_action;
 HPX_REGISTER_ACTION_DECLARATION(execute_action, runtime_server_execute_action);
 HPX_REGISTER_ACTION(execute_action, runtime_server_execute_action);
@@ -45,6 +49,20 @@ runtime_server::runtime_server()
     {
         global_vpu_->add_member_vpu(runtime.get_local_vpu());
     }
+}
+
+void runtime_server::shutdown()
+{
+    global_vpu_.reset();
+
+    obj_factory_.free();
+
+    for (const auto& locality : hpx::find_all_localities())
+    {
+        shutdown_local_runtime_on_locality(locality);
+    }
+
+    global_address_space_.reset();
 }
 
 void runtime_server::execute(computelet c, kernel_arguments kernel_args)
@@ -109,6 +127,11 @@ runtime::runtime(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
 {
 }
 
+void runtime::shutdown()
+{
+    hpx::async<runtime_server::shutdown_action>(this->get_id()).get();
+}
+
 hpx::future<void> runtime::execute(computelet c, kernel_arguments args)
 {
     return hpx::async<runtime_server::execute_action>(this->get_id(), std::move(c),
@@ -133,6 +156,11 @@ void init(int QUBUS_UNUSED(argc), char** QUBUS_UNUSED(argv))
 
 void finalize()
 {
+    auto rt = get_runtime();
+
+    hpx::agas::unregister_name("/qubus/runtime");
+
+    rt.shutdown();
 }
 
 runtime get_runtime()

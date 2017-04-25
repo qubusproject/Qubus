@@ -411,6 +411,8 @@ int hpx_main(int argc, char** argv)
         std::cout << duration.count() / static_cast<double>(samples) << " seconds" << std::endl;
     }*/
 
+    qubus::finalize();
+
     return hpx::finalize();
 }
 

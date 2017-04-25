@@ -16,7 +16,7 @@ test:clang:release:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  - ctest
+  - ctest -E cuda
   stage: test
   tags:
   - docker
@@ -32,7 +32,7 @@ test:gcc:release:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  - ctest
+  - ctest -E cuda
   stage: test
   tags:
   - docker
@@ -48,7 +48,7 @@ test:clang:debug:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Debug -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  - ctest
+  - ctest -E cuda
   stage: test
   tags:
   - docker
@@ -68,6 +68,7 @@ test:gcc:debug:
   stage: test
   tags:
   - docker
+  - cuda
 
 # We need to separate the doc build and deploy steps. Otherwise the documentation build itself
 # might fail but the (incomplete) documentation would still be deployed.
