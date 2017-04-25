@@ -9,9 +9,8 @@
 
 #include <qubus/host_allocator.hpp>
 
-#include <qubus/backends/cpu_compiler.hpp>
-
-#include <qubus/backends/cpu_allocator.hpp>
+#include <qubus/backends/cpu/cpu_compiler.hpp>
+#include <qubus/backends/cpu/cpu_allocator.hpp>
 
 #include <qubus/IR/qir.hpp>
 #include <qubus/pattern/IR.hpp>

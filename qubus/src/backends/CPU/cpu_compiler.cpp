@@ -1,4 +1,4 @@
-#include <qubus/backends/cpu_compiler.hpp>
+#include <qubus/backends/cpu/cpu_compiler.hpp>
 
 #include <qubus/loop_optimizer.hpp>
 #include <qubus/make_implicit_conversions_explicit.hpp>
