@@ -18,6 +18,7 @@
 #include <hpx/include/components.hpp>
 #include <hpx/include/actions.hpp>
 
+#include <string>
 #include <vector>
 
 namespace qubus
@@ -65,6 +66,8 @@ public:
 void init(int argc, char** argv);
 void finalize();
 runtime get_runtime();
+
+std::vector<std::string> get_hpx_config();
 
 template<typename... Args>
 void execute(const computelet& c, Args&&... args)

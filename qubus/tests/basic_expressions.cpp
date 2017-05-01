@@ -21,7 +21,10 @@ TEST(basic_expressions, constant_expr)
 
     tensor<double, 2> A(N, N);
 
-    kernel const_kernel = [A] { qtl::index i, j; A(i, j) = 42; };
+    kernel const_kernel = [A] {
+        qtl::index i, j;
+        A(i, j) = 42;
+    };
 
     const_kernel();
 
@@ -87,7 +90,10 @@ TEST(basic_expressions, complex_addition)
         }
     }
 
-    kernel vec_add = [A, B, C] { qtl::index i; C(i) = A(i) + B(i); };
+    kernel vec_add = [A, B, C] {
+        qtl::index i;
+        C(i) = A(i) + B(i);
+    };
 
     vec_add();
 
@@ -111,7 +117,6 @@ TEST(basic_expressions, complex_addition)
 
     ASSERT_NEAR(error, 0.0, 1e-14);
 }
-
 
 TEST(basic_expressions, complex_substraction)
 {
@@ -156,7 +161,10 @@ TEST(basic_expressions, complex_substraction)
         }
     }
 
-    kernel vec_sub = [A, B, C] { qtl::index i; C(i) = A(i) - B(i); };
+    kernel vec_sub = [A, B, C] {
+        qtl::index i;
+        C(i) = A(i) - B(i);
+    };
 
     vec_sub();
 
@@ -209,7 +217,7 @@ TEST(basic_expressions, complex_multiplication)
     tensor<std::complex<double>, 1> C(N);
 
     {
-        auto A_view =get_view<host_tensor_view<std::complex<double>, 1>>(A).get();
+        auto A_view = get_view<host_tensor_view<std::complex<double>, 1>>(A).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -224,7 +232,10 @@ TEST(basic_expressions, complex_multiplication)
         }
     }
 
-    kernel vec_mul = [A, B, C] { qtl::index i; C(i) = A(i) * B(i); };
+    kernel vec_mul = [A, B, C] {
+        qtl::index i;
+        C(i) = A(i) * B(i);
+    };
 
     vec_mul();
 
@@ -292,7 +303,10 @@ TEST(basic_expressions, complex_division)
         }
     }
 
-    kernel vec_div = [A, B, C] { qtl::index i; C(i) = A(i) / B(i); };
+    kernel vec_div = [A, B, C] {
+        qtl::index i;
+        C(i) = A(i) / B(i);
+    };
 
     vec_div();
 
@@ -334,5 +348,5 @@ int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
 
-    return hpx::init(argc, argv);
+    return hpx::init(argc, argv, qubus::get_hpx_config());
 }

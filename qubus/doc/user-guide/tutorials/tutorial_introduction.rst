@@ -28,7 +28,7 @@ This requirements leads to a common structure of Qubus-driven programs:
 
     int main(int argc, char** argv)
     {
-        return hpx::init(argc, argv);
+        return hpx::init(argc, argv, qubus::get_hpx_config());
     }
 
 As usual, the program features the C++ entry point :cpp:`main`. Usually, the only thing the main function will
@@ -36,7 +36,7 @@ do is to initialize the HPX runtime
 
 .. code-block:: C++
 
-    return hpx::init(argc, argv);
+    return hpx::init(argc, argv, qubus::get_hpx_config());
 
 and return the exit code from the program.
 
@@ -125,7 +125,7 @@ for our first program featuring *vector addition*.
 
     int main(int argc, char** argv)
     {
-        return hpx::init(argc, argv);
+        return hpx::init(argc, argv, qubus::get_hpx_config());
     }
 
 After the usual initialization, we create some vectors (tensors of order 1)

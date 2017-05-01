@@ -167,4 +167,12 @@ runtime get_runtime()
 {
     return hpx::agas::resolve_name("/qubus/runtime");
 }
+
+std::vector<std::string> get_hpx_config()
+{
+    std::vector<std::string> cfg = {"hpx.commandline.aliasing=0",
+                                    "hpx.commandline.allow_unknown=1"};
+
+    return cfg;
+}
 }

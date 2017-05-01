@@ -112,5 +112,5 @@ int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
 
-    return hpx::init(argc, argv);
+    return hpx::init(argc, argv, qubus::get_hpx_config());
 }

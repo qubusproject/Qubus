@@ -147,5 +147,5 @@ int hpx_main(int argc, char** argv)
 
 int main(int argc, char** argv)
 {
-    return hpx::init(argc, argv);
+    return hpx::init(argc, argv, qubus::get_hpx_config());
 }
