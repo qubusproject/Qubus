@@ -130,7 +130,7 @@ llvm::Function* compile_entry_point(const function_declaration& plan, compiler& 
         llvm::Type* param_type = env.map_qubus_type(param.var_type());
 
         llvm::Value* ptr_to_arg =
-            env.builder().CreateConstInBoundsGEP1_64(&kernel->getArgumentList().front(), counter);
+            env.builder().CreateConstInBoundsGEP1_64(&*kernel->arg_begin(), counter);
 
         auto arg = env.builder().CreateLoad(ptr_to_arg);
 

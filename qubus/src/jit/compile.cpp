@@ -16,6 +16,8 @@
 #include <qubus/pattern/IR.hpp>
 #include <qubus/pattern/core.hpp>
 
+#include <iterator>
+
 namespace qubus
 {
 namespace jit
@@ -32,7 +34,7 @@ reference compile(const expression& expr, compiler& comp)
 
     pattern::variable<binary_op_tag> btag;
     pattern::variable<unary_op_tag> utag;
-    pattern::variable<const expression &> a, b, c, d;
+    pattern::variable<const expression&> a, b, c, d;
     pattern::variable<util::optional_ref<const expression>> opt_expr;
     pattern::variable<std::vector<std::reference_wrapper<const expression>>> expressions,
         expressions2, expressions3;
@@ -420,7 +422,8 @@ reference compile(const expression& expr, compiler& comp)
 
                        auto member_type = obj_type[name.get()];
 
-                       auto runtime = &env.get_current_function()->getArgumentList().back();
+                       auto runtime = &*std::next(env.get_current_function()->arg_begin(),
+                                                  env.get_current_function()->arg_size() - 1);
 
                        auto member_ptr = builder.CreateLoad(member);
 
@@ -486,7 +489,10 @@ reference compile(const expression& expr, compiler& comp)
                         arguments.push_back(arg_ref.addr());
                     }
 
-                    arguments.push_back(&env.get_current_function()->getArgumentList().back());
+                    auto runtime = &*std::next(env.get_current_function()->arg_begin(),
+                                               env.get_current_function()->arg_size() - 1);
+
+                    arguments.push_back(runtime);
 
                     builder.CreateCall(plan_ptr, arguments);
 
@@ -554,8 +560,10 @@ reference compile(const expression& expr, compiler& comp)
                                     {
                                         std::vector<llvm::Value*> args;
 
-                                        args.push_back(
-                                            &env.get_current_function()->getArgumentList().back());
+                                        auto runtime = &*std::next(env.get_current_function()->arg_begin(),
+                                                                   env.get_current_function()->arg_size() - 1);
+
+                                        args.push_back(runtime);
                                         args.push_back(llvm::ConstantInt::get(size_type, mem_size));
 
                                         data_ptr = builder.CreateBitCast(
@@ -672,7 +680,6 @@ reference compile(const expression& expr, compiler& comp)
 
                 return reference();
             });
-
 
     auto result = pattern::match(expr, m);
 

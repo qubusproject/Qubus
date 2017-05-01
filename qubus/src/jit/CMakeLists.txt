@@ -22,14 +22,14 @@ else ()
     set(REQ_LLVM_TARGETS executionengine orcjit mcjit transformutils linker analysis ipo vectorize native NVPTX)
 endif ()
 
-llvm_map_components_to_libnames(REQ_LLVM_LIBRARIES ${REQ_LLVM_TARGETS})
+if (NOT TARGET LLVM)
+    message(ERROR "The shared version of the LLVM library is not available.")
+endif()
 
-message(STATUS "LLVM libraries: ${REQ_LLVM_LIBRARIES}")
-
-add_library(qubus_llvm SHARED)
+add_library(qubus_llvm SHARED llvm_version.cpp)
 target_include_directories(qubus_llvm PUBLIC ${LLVM_INCLUDE_DIRS})
 target_compile_definitions(qubus_llvm PUBLIC ${LLVM_DEFINITIONS})
-target_link_libraries(qubus_llvm PRIVATE -Wl,--whole-archive ${REQ_LLVM_LIBRARIES} -Wl,--no-whole-archive)
+target_link_libraries(qubus_llvm PUBLIC LLVM)
 
 add_library(qubus_jit SHARED compiler.cpp compile.cpp llvm_environment.cpp entry_block_alloca.cpp load_store.cpp
             loops.cpp control_flow.cpp operators.cpp type_conversion.cpp array_access.cpp optimization_pipeline.cpp
