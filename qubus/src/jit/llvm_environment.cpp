@@ -92,13 +92,13 @@ void llvm_environment::init_assume_align()
     llvm::BasicBlock* BB = llvm::BasicBlock::Create(ctx(), "entry", assume_align_);
     builder().SetInsertPoint(BB);
 
-    auto ptrint = builder().CreatePtrToInt(&assume_align_->getArgumentList().front(), int_type);
+    auto ptrint = builder().CreatePtrToInt(&*assume_align_->arg_begin(), int_type);
     auto lhs = builder().CreateAnd(ptrint, llvm::ConstantInt::get(int_type, 31));
     auto cond = builder().CreateICmpEQ(lhs, llvm::ConstantInt::get(int_type, 0));
 
     builder().CreateCall(assume, cond);
 
-    builder().CreateRet(&assume_align_->getArgumentList().front());
+    builder().CreateRet(&*assume_align_->arg_begin());
 }
 
 void llvm_environment::init_alloc_scratch_mem()

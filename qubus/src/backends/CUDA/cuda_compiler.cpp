@@ -305,8 +305,6 @@ std::unique_ptr<cuda_plan> compile(function_declaration entry_point, jit::compil
 
     llvm::verifyModule(*the_module);
 
-    the_module->dump();
-
     llvm::legacy::FunctionPassManager fn_pass_man(the_module.get());
     llvm::legacy::PassManager pass_man;
 
