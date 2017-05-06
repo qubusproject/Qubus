@@ -47,8 +47,26 @@ int hpx_main(int argc, char** argv)
 
     auto obj_factory = qubus::get_runtime().get_object_factory();
 
+    std::vector<qubus::object> filler_objects;
+
+    for (int i = 0; i < 500; ++i)
+    {
+        filler_objects.push_back(obj_factory.create_scalar(qubus::types::double_{}));
+    }
+
     qubus::object obj = obj_factory.create_scalar(qubus::types::double_{});
+
+    for (int i = 0; i < 500; ++i)
+    {
+        filler_objects.push_back(obj_factory.create_scalar(qubus::types::double_{}));
+    }
+
     qubus::object obj2 = obj_factory.create_scalar(qubus::types::double_{});
+
+    for (int i = 0; i < 500; ++i)
+    {
+        filler_objects.push_back(obj_factory.create_scalar(qubus::types::double_{}));
+    }
 
     qubus::host_address_space addr_space(std::make_unique<mock_allocator>());
 
@@ -66,8 +84,11 @@ int hpx_main(int argc, char** argv)
     nonius::configuration cfg;
     cfg.output_file = "address_resolution.html";
 
-    nonius::benchmark benchmarks[] = {nonius::benchmark("page hit", [&] { addr_space.resolve_object(obj); }),
-                                      nonius::benchmark("page fault", [&] { addr_space.resolve_object(obj2); })};
+    nonius::benchmark benchmarks[] = {
+        nonius::benchmark("page hit", [&] { addr_space.resolve_object(obj); }),
+        nonius::benchmark("page fault", [&] { addr_space.resolve_object(obj2); }),
+        nonius::benchmark("try page hit", [&] { addr_space.try_resolve_object(obj); }),
+        nonius::benchmark("try page fault", [&] { addr_space.try_resolve_object(obj2); })};
 
     nonius::go(cfg, std::begin(benchmarks), std::end(benchmarks), nonius::html_reporter());
 
