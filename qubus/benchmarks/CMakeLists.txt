@@ -1,5 +1,7 @@
 option(QUBUS_BUILD_BENCHMARKS "build the Qubus benchmark suite" OFF)
 
+add_subdirectory(runtime)
+
 if(QUBUS_BUILD_BENCHMARKS)
     find_package(Threads REQUIRED)
 
