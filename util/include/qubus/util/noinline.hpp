@@ -7,7 +7,7 @@
 
 #else
 
-#warning "unreachable builtin not supported"
+#warning "noinline attribute not supported"
 
 #endif
 
