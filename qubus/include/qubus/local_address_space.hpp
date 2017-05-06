@@ -93,7 +93,7 @@ private:
     std::unique_ptr<allocator> allocator_;
 
     mutable std::map<hpx::naming::gid_type, hpx::shared_future<std::shared_ptr<address_entry>>> entry_table_;
-    mutable hpx::lcos::local::mutex address_translation_table_mutex_;
+    mutable hpx::lcos::local::spinlock address_translation_table_mutex_;
 
     util::delegate<hpx::future<address_entry>(const object&, page_fault_context)> on_page_fault_;
 };

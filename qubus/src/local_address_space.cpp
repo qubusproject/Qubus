@@ -142,7 +142,7 @@ address_space::handle address_space::allocate_object_page(const object& obj, lon
     auto entry = std::make_shared<address_entry>(std::move(page));
 
     {
-        std::unique_lock<hpx::lcos::local::mutex> guard(address_translation_table_mutex_);
+        std::unique_lock<hpx::lcos::local::spinlock> guard(address_translation_table_mutex_);
 
         std::tie(pos, addr_was_free) =
             entry_table_.emplace(addr, hpx::make_ready_future(std::move(entry)));
@@ -155,14 +155,14 @@ address_space::handle address_space::allocate_object_page(const object& obj, lon
 
 void address_space::free_object(const object& obj)
 {
-    std::unique_lock<hpx::lcos::local::mutex> guard(address_translation_table_mutex_);
+    std::unique_lock<hpx::lcos::local::spinlock> guard(address_translation_table_mutex_);
 
     entry_table_.erase(obj.get_id().get_gid());
 }
 
 hpx::future<address_space::handle> address_space::resolve_object(const object& obj)
 {
-    std::unique_lock<hpx::lcos::local::mutex> guard(address_translation_table_mutex_);
+    std::unique_lock<hpx::lcos::local::spinlock> guard(address_translation_table_mutex_);
 
     auto addr = obj.get_id().get_gid();
 
@@ -220,7 +220,7 @@ hpx::future<address_space::handle> address_space::resolve_object(const object& o
 
 address_space::handle address_space::try_resolve_object(const object& obj) const
 {
-    std::unique_lock<hpx::lcos::local::mutex> guard(address_translation_table_mutex_);
+    std::unique_lock<hpx::lcos::local::spinlock> guard(address_translation_table_mutex_);
 
     auto addr = obj.get_id().get_gid();
 
@@ -239,7 +239,7 @@ address_space::handle address_space::try_resolve_object(const object& obj) const
 
 bool address_space::evict_objects(std::size_t hint)
 {
-    std::unique_lock<hpx::lcos::local::mutex> guard(address_translation_table_mutex_);
+    std::unique_lock<hpx::lcos::local::spinlock> guard(address_translation_table_mutex_);
 
     BOOST_LOG_NAMED_SCOPE("local_address_space");
 
@@ -281,7 +281,7 @@ void address_space::on_page_fault(
 
 void address_space::dump() const
 {
-    std::unique_lock<hpx::lcos::local::mutex> guard(address_translation_table_mutex_);
+    std::unique_lock<hpx::lcos::local::spinlock> guard(address_translation_table_mutex_);
 
     /*BOOST_LOG_NAMED_SCOPE("address_space");
 
