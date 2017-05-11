@@ -16,4 +16,5 @@ if(QUBUS_UTIL_BUILD_TESTS)
 
   util_add_simple_test(one_shot)
   util_add_simple_test(dense_hash_map)
+  util_add_simple_test(dense_hash_set)
 endif()

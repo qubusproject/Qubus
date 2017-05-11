@@ -1,259 +1,114 @@
+/* This code is based on Malte Skarupke's fantastic flat hash map (https://github.com/skarupke/flat_hash_map).
+ * The original code is licensed under the Boost Software License, Version 1.0. A copy of the entire
+ * license can be found in external/licenses/LICENSE_1_0.txt.
+ *
+ * Our version mostly fixes some small quirks and adapts the code to match our style guide.
+*/
 #ifndef QUBUS_UTIL_DENSE_HASH_MAP_HPP
 #define QUBUS_UTIL_DENSE_HASH_MAP_HPP
 
-#include <qubus/util/unreachable.hpp>
-#include <qubus/util/assert.hpp>
+#include <qubus/util/detail/dense_hash_table.hpp>
 
 #include <functional>
-#include <utility>
-#include <vector>
 #include <memory>
-#include <stdexcept>
-#include <algorithm>
+#include <utility>
 
 namespace qubus
 {
 namespace util
 {
 
-template <typename Key, typename T, typename Hash = std::hash<Key>,
-          typename KeyEqual = std::equal_to<Key>,
-          typename Bucket = std::pair<Key, T>,
-          typename Allocator = std::allocator<Bucket>>
+template <typename Key, typename Value, typename Hasher = std::hash<Key>,
+          typename Equal = std::equal_to<Key>,
+          typename Allocator = std::allocator<std::pair<Key, Value>>>
 class dense_hash_map
+    : public detail::dense_hash_table<
+          std::pair<Key, Value>, Key, Hasher,
+          detail::key_or_value_hasher<Key, std::pair<Key, Value>, Hasher>, Equal,
+          detail::key_or_value_equality<Key, std::pair<Key, Value>, Equal>, Allocator,
+          typename std::allocator_traits<Allocator>::template rebind_alloc<
+              detail::dense_hash_table_entry<std::pair<Key, Value>>>>
 {
+    using base_type = detail::dense_hash_table<
+        std::pair<Key, Value>, Key, Hasher,
+        detail::key_or_value_hasher<Key, std::pair<Key, Value>, Hasher>, Equal,
+        detail::key_or_value_equality<Key, std::pair<Key, Value>, Equal>, Allocator,
+        typename std::allocator_traits<Allocator>::template rebind_alloc<
+            detail::dense_hash_table_entry<std::pair<Key, Value>>>>;
+
 public:
     using key_type = Key;
-    using mapped_type = T;
-    using value_type = Bucket;
-    using iterator = typename std::vector<value_type, Allocator>::iterator;
-    using const_iterator = typename std::vector<value_type, Allocator>::const_iterator;
-    using hasher = Hash;
-    using key_equal = KeyEqual;
+    using mapped_type = Value;
 
-    explicit dense_hash_map(Key empty_key_, std::size_t bucket_count_ = 40)
-    : empty_key_(std::move(empty_key_)), num_of_used_buckets_(0),
-      buckets_(bucket_count_, value_type(empty_key_, T()))
+    using base_type::base_type;
+
+    dense_hash_map() = default;
+
+    Value& operator[](const Key& key)
     {
+        return emplace(key, convertible_to_value()).first->second;
     }
 
-    std::pair<iterator, bool> insert(const value_type& value)
+    Value& operator[](Key&& key)
     {
-        return emplace(value);
+        return emplace(std::move(key), convertible_to_value()).first->second;
     }
 
-    template <typename... Args>
-    std::pair<iterator, bool> emplace(Args&&... args)
+    Value& at(const Key& key)
     {
-        if (size() + 1 >= std::max(std::size_t(max_load_factor() * bucket_count()), std::size_t(1)))
-            resize_and_rehash();
+        auto found = this->find(key);
+        if (found == this->end())
+            throw std::out_of_range("Argument passed to at() was not in the map.");
+        return found->second;
+    }
 
-        value_type value(std::forward<Args>(args)...);
+    const Value& at(const Key& key) const
+    {
+        auto found = this->find(key);
+        if (found == this->end())
+            throw std::out_of_range("Argument passed to at() was not in the map.");
+        return found->second;
+    }
 
-        QUBUS_ASSERT(value.first != empty_key_, "The empty key is not a valid key.");
+    using base_type::emplace;
 
-        auto guessed_bucket_id = hasher()(value.first) % bucket_count();
-        auto bucket_id = guessed_bucket_id;
+    std::pair<typename base_type::iterator, bool> emplace()
+    {
+        return emplace(key_type(), convertible_to_value());
+    }
 
-        do
+    friend bool operator==(const dense_hash_map& lhs, const dense_hash_map& rhs)
+    {
+        if (lhs.size() != rhs.size())
+            return false;
+
+        for (const typename base_type::value_type& value : lhs)
         {
-            auto& bucket = buckets_[bucket_id];
+            auto found = rhs.find(value.first);
 
-            if (key_equal()(bucket.first, value.first))
-            {
-                return {buckets_.begin() + bucket_id, false};
-            }
-            else if(key_equal()(bucket.first, empty_key_))
-            {
-                bucket = std::move(value);
-                ++num_of_used_buckets_;
+            if (found == rhs.end())
+                return false;
 
-                return {buckets_.begin() + bucket_id, true};
-            }
-
-            bucket_id = (bucket_id + 1) % bucket_count();
-        } while(bucket_id != guessed_bucket_id);
-
-        QUBUS_UNREACHABLE();
-    }
-
-    iterator erase(const_iterator pos)
-    {
-        auto first = buckets_.begin();
-        iterator non_const_pos = first + (pos - first);
-
-        return erase(non_const_pos);
-    }
-
-    iterator erase(iterator pos)
-    {
-        *pos = value_type(empty_key_, T());
-
-        --num_of_used_buckets_;
-
-        return pos + 1;
-    }
-
-    std::size_t erase(const key_type& key)
-    {
-        QUBUS_ASSERT(key != empty_key_, "The empty key is not a valid key.");
-
-        auto bucket_id = find_bucket(key);
-
-        if (is_valid_bucket(bucket_id))
-        {
-            erase(buckets_.begin() + bucket_id);
-
-            return 1;
+            if (value.second != found->second)
+                return false;
         }
 
-        return 0;
+        return true;
     }
 
-    iterator find(const key_type& key)
+    friend bool operator!=(const dense_hash_map& lhs, const dense_hash_map& rhs)
     {
-        QUBUS_ASSERT(key != empty_key_, "The empty key is not a valid key.");
-
-        auto bucket_id = find_bucket(key);
-
-        if (is_valid_bucket(bucket_id))
-        {
-            return buckets_.begin() + bucket_id;
-        }
-        else
-        {
-            return invalid_iterator();
-        }
+        return !(lhs == rhs);
     }
 
-    const_iterator find(const key_type& key) const
-    {
-        QUBUS_ASSERT(key != empty_key_, "The empty key is not a valid key.");
-
-        auto bucket_id = find_bucket(key);
-
-        if (is_valid_bucket(bucket_id))
-        {
-            return buckets_.begin() + bucket_id;
-        }
-        else
-        {
-            return invalid_iterator();
-        }
-    }
-
-    mapped_type& at(const key_type& key)
-    {
-        QUBUS_ASSERT(key != empty_key_, "The empty key is not a valid key.");
-
-        auto pos = find(key);
-
-        if (pos != buckets_.end())
-        {
-            return pos->second;
-        }
-        else
-        {
-            throw std::out_of_range("The key is not contained in this map.");
-        }
-    }
-
-    const mapped_type& at(const key_type& key) const
-    {
-        QUBUS_ASSERT(key != empty_key_, "The empty key is not a valid key.");
-
-        auto pos = find(key);
-
-        if (pos != buckets_.end())
-        {
-            return pos->second;
-        }
-        else
-        {
-            throw std::out_of_range("The key is not contained in this map.");
-        }
-    }
-
-    float load_factor() const
-    {
-        return num_of_used_buckets_ / static_cast<float>(buckets_.size());
-    }
-
-    float max_load_factor() const
-    {
-        return 0.75;
-    }
-
-    std::size_t size() const
-    {
-        return num_of_used_buckets_;
-    }
-
-    std::size_t bucket_count() const
-    {
-        return buckets_.size();
-    }
-
-    const value_type* data() const
-    {
-        return buckets_.data();
-    }
-
-    iterator invalid_iterator()
-    {
-        return buckets_.end();
-    }
-
-    const_iterator invalid_iterator() const
-    {
-        return buckets_.end();
-    }
 private:
-    void resize_and_rehash()
+    struct convertible_to_value
     {
-        dense_hash_map new_map(empty_key_, 2 * bucket_count());
-
-        for (auto& value : buckets_)
+        explicit operator Value() const
         {
-            if (!key_equal()(value.first, empty_key_))
-            {
-                new_map.emplace(std::move(value));
-            }
+            return Value();
         }
-
-        *this = std::move(new_map);
-    }
-
-    auto find_bucket(const key_type& key) const
-    {
-        QUBUS_ASSERT(key != empty_key_, "The empty key is not a valid key.");
-
-        auto guessed_bucket_id = hasher()(key) % bucket_count();
-        auto bucket_id = guessed_bucket_id;
-
-        do
-        {
-            auto& bucket = buckets_[bucket_id];
-
-            if (key_equal()(bucket.first, key))
-            {
-                return bucket_id;
-            }
-
-            bucket_id = (bucket_id + 1) % bucket_count();
-        } while(bucket_id != guessed_bucket_id);
-
-        return buckets_.size();
-    }
-
-    bool is_valid_bucket(std::size_t bucket_id) const
-    {
-        return bucket_id != buckets_.size();
-    }
-
-    key_type empty_key_;
-    std::size_t num_of_used_buckets_;
-    std::vector<value_type, Allocator> buckets_;
+    };
 };
 }
 }
