@@ -99,7 +99,7 @@ deploy:doc:
   stage: deploy
   environment:
     name: documentation
-    url: http://qbbproject.org/
+    url: https://qbbproject.org/
   tags:
   - docker
   - doc
@@ -119,7 +119,7 @@ deploy:source_code:
   stage: deploy
   environment:
     name: source code
-    url: http://qbbproject.org/
+    url: https://qbbproject.org/
   tags:
   - docker
   only:
