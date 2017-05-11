@@ -256,12 +256,14 @@ inline std::int8_t log2(std::size_t value)
         63, 0,  58, 1,  59, 47, 53, 2,  60, 39, 48, 27, 54, 33, 42, 3,  61, 51, 37, 40, 49, 18,
         28, 20, 55, 30, 34, 11, 43, 14, 22, 4,  62, 57, 46, 52, 38, 26, 32, 41, 50, 36, 17, 19,
         29, 10, 13, 21, 56, 45, 25, 31, 35, 16, 9,  12, 44, 24, 15, 8,  23, 7,  6,  5};
+
     value |= value >> 1;
     value |= value >> 2;
     value |= value >> 4;
     value |= value >> 8;
     value |= value >> 16;
     value |= value >> 32;
+
     return table[((value - (value >> 1)) * 0x07EDD5E59A4E28C2) >> 58];
 }
 
@@ -350,72 +352,73 @@ public:
         setup_default_table();
     }
 
-    explicit dense_hash_table(size_type bucket_count, const ArgumentHash& hash = ArgumentHash(),
-                              const ArgumentEqual& equal = ArgumentEqual(),
-                              const ArgumentAlloc& alloc = ArgumentAlloc())
-    : EntryAlloc(alloc), Hasher(hash), Equal(equal)
+    explicit dense_hash_table(size_type bucket_count_, ArgumentHash hash_ = ArgumentHash(),
+                              ArgumentEqual equal_ = ArgumentEqual(),
+                              ArgumentAlloc alloc_ = ArgumentAlloc())
+    : EntryAlloc(std::move(alloc_)), Hasher(std::move(hash_)), Equal(std::move(equal_))
     {
-        rehash(bucket_count);
+        rehash(bucket_count_);
     }
 
-    dense_hash_table(size_type bucket_count, const ArgumentAlloc& alloc)
-    : dense_hash_table(bucket_count, ArgumentHash(), ArgumentEqual(), alloc)
-    {
-    }
-
-    dense_hash_table(size_type bucket_count, const ArgumentHash& hash, const ArgumentAlloc& alloc)
-    : dense_hash_table(bucket_count, hash, ArgumentEqual(), alloc)
+    dense_hash_table(size_type bucket_count_, ArgumentAlloc alloc_)
+    : dense_hash_table(bucket_count_, ArgumentHash(), ArgumentEqual(), std::move(alloc_))
     {
     }
 
-    explicit dense_hash_table(const ArgumentAlloc& alloc) : EntryAlloc(alloc)
+    dense_hash_table(size_type bucket_count_, ArgumentHash hash_, ArgumentAlloc alloc_)
+    : dense_hash_table(bucket_count_, std::move(hash_), ArgumentEqual(), std::move(alloc_))
     {
     }
 
-    template <typename It>
-    dense_hash_table(It first, It last, size_type bucket_count = 0,
-                     const ArgumentHash& hash = ArgumentHash(),
-                     const ArgumentEqual& equal = ArgumentEqual(),
-                     const ArgumentAlloc& alloc = ArgumentAlloc())
-    : dense_hash_table(bucket_count, hash, equal, alloc)
-    {
-        insert(first, last);
-    }
-
-    template <typename It>
-    dense_hash_table(It first, It last, size_type bucket_count, const ArgumentAlloc& alloc)
-    : dense_hash_table(first, last, bucket_count, ArgumentHash(), ArgumentEqual(), alloc)
+    explicit dense_hash_table(ArgumentAlloc alloc_)
+    : dense_hash_table(0, ArgumentHash(), ArgumentEqual(), std::move(alloc_))
     {
     }
 
     template <typename It>
-    dense_hash_table(It first, It last, size_type bucket_count, const ArgumentHash& hash,
-                     const ArgumentAlloc& alloc)
-    : dense_hash_table(first, last, bucket_count, hash, ArgumentEqual(), alloc)
+    dense_hash_table(It first_, It last_, size_type bucket_count_ = 0,
+                     ArgumentHash hash_ = ArgumentHash(),
+                     ArgumentEqual equal_ = ArgumentEqual(),
+                     ArgumentAlloc alloc_ = ArgumentAlloc())
+    : dense_hash_table(bucket_count_, std::move(hash_), std::move(equal_), std::move(alloc_))
+    {
+        insert(first_, last_);
+    }
+
+    template <typename It>
+    dense_hash_table(It first_, It last_, size_type bucket_count_, ArgumentAlloc alloc_)
+    : dense_hash_table(std::move(first_), std::move(last_), bucket_count_, ArgumentHash(), ArgumentEqual(), std::move(alloc_))
     {
     }
 
-    dense_hash_table(std::initializer_list<T> il, size_type bucket_count = 0,
-                     const ArgumentHash& hash = ArgumentHash(),
-                     const ArgumentEqual& equal = ArgumentEqual(),
-                     const ArgumentAlloc& alloc = ArgumentAlloc())
-    : dense_hash_table(bucket_count, hash, equal, alloc)
-    {
-        if (bucket_count == 0)
-            rehash(il.size());
-
-        insert(il.begin(), il.end());
-    }
-
-    dense_hash_table(std::initializer_list<T> il, size_type bucket_count,
-                     const ArgumentAlloc& alloc)
-    : dense_hash_table(il, bucket_count, ArgumentHash(), ArgumentEqual(), alloc)
+    template <typename It>
+    dense_hash_table(It first_, It last_, size_type bucket_count_, ArgumentHash hash_,
+                     ArgumentAlloc alloc_)
+    : dense_hash_table(std::move(first_), std::move(last_), bucket_count_, std::move(hash_), ArgumentEqual(), std::move(alloc_))
     {
     }
 
-    dense_hash_table(std::initializer_list<T> il, size_type bucket_count, const ArgumentHash& hash,
-                     const ArgumentAlloc& alloc)
-    : dense_hash_table(il, bucket_count, hash, ArgumentEqual(), alloc)
+    dense_hash_table(std::initializer_list<T> il_, size_type bucket_count_ = 0,
+                     const ArgumentHash& hash_ = ArgumentHash(),
+                     const ArgumentEqual& equal_ = ArgumentEqual(),
+                     const ArgumentAlloc& alloc_ = ArgumentAlloc())
+    : dense_hash_table(bucket_count_, std::move(hash_), std::move(equal_), std::move(alloc_))
+    {
+        if (bucket_count_ == 0)
+            rehash(il_.size());
+
+        insert(il_.begin(), il_.end());
+    }
+
+    dense_hash_table(std::initializer_list<T> il_, size_type bucket_count_,
+                     ArgumentAlloc alloc_)
+    : dense_hash_table(il_, bucket_count_, ArgumentHash(), ArgumentEqual(), std::move(alloc_))
+    {
+    }
+
+    dense_hash_table(std::initializer_list<T> il_, size_type bucket_count_, ArgumentHash hash_,
+                     ArgumentAlloc alloc_)
+    : dense_hash_table(il_, bucket_count_, std::move(hash_), ArgumentEqual(), std::move(alloc_))
     {
     }
 
@@ -426,7 +429,7 @@ public:
     }
 
     dense_hash_table(const dense_hash_table& other, const ArgumentAlloc& alloc)
-    : EntryAlloc(alloc), Hasher(other), Equal(other), _max_load_factor(other._max_load_factor)
+    : EntryAlloc(alloc), Hasher(other), Equal(other), max_load_factor_(other.max_load_factor_)
     {
         rehash_for_other_container(other);
 
@@ -438,7 +441,7 @@ public:
         {
             clear();
 
-            deallocate_data(entries, num_slots_minus_one, max_lookups);
+            deallocate_data(entries_, num_slots_minus_one_, max_lookups_);
 
             throw;
         }
@@ -451,7 +454,7 @@ public:
     }
 
     dense_hash_table(dense_hash_table&& other, const ArgumentAlloc& alloc) noexcept
-    : EntryAlloc(alloc), Hasher(std::move(other)), Equal(std::move(other))
+    : EntryAlloc(std::move(alloc)), Hasher(std::move(other)), Equal(std::move(other))
     {
         swap_pointers(other);
     }
@@ -475,7 +478,7 @@ public:
                 *this, other);
         }
 
-        _max_load_factor = other._max_load_factor;
+        max_load_factor_ = other.max_load_factor_;
         static_cast<Hasher&>(*this) = other;
         static_cast<Equal&>(*this) = other;
         rehash_for_other_container(other);
@@ -505,7 +508,7 @@ public:
         else
         {
             clear();
-            _max_load_factor = other._max_load_factor;
+            max_load_factor_ = other.max_load_factor_;
             rehash_for_other_container(other);
             for (T& elem : other)
                 emplace(std::move(elem));
@@ -517,11 +520,12 @@ public:
 
         return *this;
     }
+
     ~dense_hash_table()
     {
         clear();
 
-        deallocate_data(entries, num_slots_minus_one, max_lookups);
+        deallocate_data(entries_, num_slots_minus_one_, max_lookups_);
     }
 
     const allocator_type& get_allocator() const
@@ -598,7 +602,7 @@ public:
 
     iterator begin()
     {
-        for (entry_pointer_type it = entries;; ++it)
+        for (entry_pointer_type it = entries_;; ++it)
         {
             if (it->has_value())
                 return {it};
@@ -607,7 +611,7 @@ public:
 
     const_iterator begin() const
     {
-        for (entry_pointer_type it = entries;; ++it)
+        for (entry_pointer_type it = entries_;; ++it)
         {
             if (it->has_value())
                 return {it};
@@ -621,12 +625,12 @@ public:
 
     iterator end()
     {
-        return {entries + static_cast<ptrdiff_t>(num_slots_minus_one + max_lookups)};
+        return {entries_ + static_cast<ptrdiff_t>(num_slots_minus_one_ + max_lookups_)};
     }
 
     const_iterator end() const
     {
-        return {entries + static_cast<ptrdiff_t>(num_slots_minus_one + max_lookups)};
+        return {entries_ + static_cast<ptrdiff_t>(num_slots_minus_one_ + max_lookups_)};
     }
 
     const_iterator cend() const
@@ -636,8 +640,8 @@ public:
 
     iterator find(const FindKey& key)
     {
-        std::size_t index = hash_policy.index_for_hash(hash_object(key), num_slots_minus_one);
-        entry_pointer_type it = entries + ptrdiff_t(index);
+        std::size_t index = hash_policy_.index_for_hash(hash_object(key), num_slots_minus_one_);
+        entry_pointer_type it = entries_ + ptrdiff_t(index);
 
         for (std::int8_t distance = 0; it->distance_from_desired >= distance; ++distance, ++it)
         {
@@ -681,8 +685,8 @@ public:
     template <typename Key, typename... Args>
     std::pair<iterator, bool> emplace(Key&& key, Args&&... args)
     {
-        std::size_t index = hash_policy.index_for_hash(hash_object(key), num_slots_minus_one);
-        entry_pointer_type current_entry = entries + ptrdiff_t(index);
+        std::size_t index = hash_policy_.index_for_hash(hash_object(key), num_slots_minus_one_);
+        entry_pointer_type current_entry = entries_ + ptrdiff_t(index);
         std::int8_t distance_from_desired = 0;
 
         for (; current_entry->distance_from_desired >= distance_from_desired;
@@ -740,7 +744,7 @@ public:
     {
         num_buckets =
             std::max(num_buckets, static_cast<std::size_t>(std::ceil(
-                                      num_elements / static_cast<double>(_max_load_factor))));
+                                      num_elements_ / static_cast<double>(max_load_factor_))));
 
         if (num_buckets == 0)
         {
@@ -748,7 +752,7 @@ public:
             return;
         }
 
-        auto new_prime_index = hash_policy.next_size_over(num_buckets);
+        auto new_prime_index = hash_policy_.next_size_over(num_buckets);
 
         if (num_buckets == bucket_count())
             return;
@@ -768,16 +772,16 @@ public:
         new_buckets[num_buckets + new_max_lookups - 1].distance_from_desired =
             entry_type::special_end_value;
 
-        std::swap(entries, new_buckets);
-        std::swap(num_slots_minus_one, num_buckets);
+        std::swap(entries_, new_buckets);
+        std::swap(num_slots_minus_one_, num_buckets);
 
-        --num_slots_minus_one;
+        --num_slots_minus_one_;
 
-        hash_policy.commit(new_prime_index);
+        hash_policy_.commit(new_prime_index);
 
-        std::int8_t old_max_lookups = max_lookups;
-        max_lookups = new_max_lookups;
-        num_elements = 0;
+        std::int8_t old_max_lookups = max_lookups_;
+        max_lookups_ = new_max_lookups;
+        num_elements_ = 0;
 
         for (entry_pointer_type it = new_buckets,
                                 end = it + static_cast<ptrdiff_t>(num_buckets + old_max_lookups);
@@ -810,7 +814,7 @@ public:
         entry_pointer_type current = to_erase.current;
         current->destroy_value();
 
-        --num_elements;
+        --num_elements_;
 
         for (entry_pointer_type next = current + ptrdiff_t(1); !next->is_at_desired_position();
              ++current, ++next)
@@ -829,7 +833,7 @@ public:
             if (it->has_value())
             {
                 it->destroy_value();
-                --num_elements;
+                --num_elements_;
             }
         }
 
@@ -868,15 +872,15 @@ public:
     void clear()
     {
         for (entry_pointer_type
-                 it = entries,
-                 end = it + static_cast<ptrdiff_t>(num_slots_minus_one + max_lookups);
+                 it = entries_,
+                 end = it + static_cast<ptrdiff_t>(num_slots_minus_one_ + max_lookups_);
              it != end; ++it)
         {
             if (it->has_value())
                 it->destroy_value();
         }
 
-        num_elements = 0;
+        num_elements_ = 0;
     }
 
     void shrink_to_fit()
@@ -898,7 +902,7 @@ public:
 
     std::size_t size() const
     {
-        return num_elements;
+        return num_elements_;
     }
 
     std::size_t max_size() const
@@ -908,7 +912,7 @@ public:
 
     std::size_t bucket_count() const
     {
-        return num_slots_minus_one + 1;
+        return num_slots_minus_one_ + 1;
     }
 
     size_type max_bucket_count() const
@@ -918,7 +922,7 @@ public:
 
     std::size_t bucket(const FindKey& key) const
     {
-        return hash_policy.index_for_hash(hash_object(key), num_slots_minus_one);
+        return hash_policy_.index_for_hash(hash_object(key), num_slots_minus_one_);
     }
 
     float load_factor() const
@@ -926,33 +930,33 @@ public:
         std::size_t buckets = bucket_count();
 
         if (buckets > 0)
-            return static_cast<float>(num_elements) / bucket_count();
+            return static_cast<float>(num_elements_) / bucket_count();
 
         return 0;
     }
 
     void max_load_factor(float value)
     {
-        _max_load_factor = value;
+        max_load_factor_ = value;
     }
 
     float max_load_factor() const
     {
-        return _max_load_factor;
+        return max_load_factor_;
     }
 
     bool empty() const
     {
-        return num_elements == 0;
+        return num_elements_ == 0;
     }
 
 private:
-    entry_pointer_type entries;
-    std::size_t num_slots_minus_one = 0;
-    typename hash_policy_selector<ArgumentHash>::type hash_policy;
-    std::int8_t max_lookups = detail::min_lookups - 1;
-    float _max_load_factor = 0.5f;
-    std::size_t num_elements = 0;
+    entry_pointer_type entries_;
+    std::size_t num_slots_minus_one_ = 0;
+    typename hash_policy_selector<ArgumentHash>::type hash_policy_;
+    std::int8_t max_lookups_ = detail::min_lookups - 1;
+    float max_load_factor_ = 0.5f;
+    std::size_t num_elements_ = 0;
 
     static std::int8_t compute_max_lookups(std::size_t num_buckets)
     {
@@ -964,7 +968,7 @@ private:
     std::size_t num_buckets_for_reserve(std::size_t num_elements) const
     {
         return static_cast<std::size_t>(
-            std::ceil(num_elements / std::min(0.5, static_cast<double>(_max_load_factor))));
+            std::ceil(num_elements / std::min(0.5, static_cast<double>(max_load_factor_))));
     }
 
     void rehash_for_other_container(const dense_hash_table& other)
@@ -976,12 +980,12 @@ private:
     {
         using std::swap;
 
-        swap(hash_policy, other.hash_policy);
-        swap(entries, other.entries);
-        swap(num_slots_minus_one, other.num_slots_minus_one);
-        swap(num_elements, other.num_elements);
-        swap(max_lookups, other.max_lookups);
-        swap(_max_load_factor, other._max_load_factor);
+        swap(hash_policy_, other.hash_policy_);
+        swap(entries_, other.entries_);
+        swap(num_slots_minus_one_, other.num_slots_minus_one_);
+        swap(num_elements_, other.num_elements_);
+        swap(max_lookups_, other.max_lookups_);
+        swap(max_load_factor_, other.max_load_factor_);
     }
 
     template <typename Key, typename... Args>
@@ -991,9 +995,9 @@ private:
     {
         using std::swap;
 
-        if (num_slots_minus_one == 0 || distance_from_desired == max_lookups ||
-            static_cast<double>(num_elements + 1) / static_cast<double>(bucket_count()) >
-                _max_load_factor)
+        if (num_slots_minus_one_ == 0 || distance_from_desired == max_lookups_ ||
+            static_cast<double>(num_elements_ + 1) / static_cast<double>(bucket_count()) >
+                max_load_factor_)
         {
             grow();
             return emplace(std::forward<Key>(key), std::forward<Args>(args)...);
@@ -1003,7 +1007,7 @@ private:
         {
             current_entry->emplace(distance_from_desired, std::forward<Key>(key),
                                    std::forward<Args>(args)...);
-            ++num_elements;
+            ++num_elements_;
             return {{current_entry}, true};
         }
 
@@ -1017,7 +1021,7 @@ private:
             if (current_entry->is_empty())
             {
                 current_entry->emplace(distance_from_desired, std::move(to_insert));
-                ++num_elements;
+                ++num_elements_;
                 return {result, true};
             }
 
@@ -1030,7 +1034,7 @@ private:
             else
             {
                 ++distance_from_desired;
-                if (distance_from_desired == max_lookups)
+                if (distance_from_desired == max_lookups_)
                 {
                     swap(to_insert, result.current->value);
                     grow();
@@ -1064,17 +1068,17 @@ private:
 
         new_buckets[min_lookups - 1].distance_from_desired = entry_type::special_end_value;
 
-        entries = new_buckets;
+        entries_ = new_buckets;
     }
 
     void reset_to_empty_state()
     {
-        deallocate_data(entries, num_slots_minus_one, max_lookups);
+        deallocate_data(entries_, num_slots_minus_one_, max_lookups_);
 
         setup_default_table();
-        num_slots_minus_one = 0;
-        hash_policy.reset();
-        max_lookups = detail::min_lookups - 1;
+        num_slots_minus_one_ = 0;
+        hash_policy_.reset();
+        max_lookups_ = detail::min_lookups - 1;
     }
 
     template <typename U>
