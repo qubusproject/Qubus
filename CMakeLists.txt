@@ -46,9 +46,14 @@ include(FeatureSummary)
 
 include (CheckSIMD)
 include (CheckFMA)
+include (CheckLTO)
 
 CheckSIMD()
 CheckFMA()
+CheckLTO()
+
+add_compile_options(${QUBUS_LTO_FLAGS})
+link_libraries(${QUBUS_LTO_FLAGS})
 
 if (CXX_COMPILER_ID STREQUAL "GNU" OR CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wall -Wextra)
