@@ -99,7 +99,7 @@ deploy:doc:
   stage: deploy
   environment:
     name: documentation
-    url: http://qubus.qbb-project.org/
+    url: http://qbbproject.org/
   tags:
   - docker
   - doc
@@ -108,27 +108,27 @@ deploy:doc:
   dependencies:
   - build:doc
 
-#deploy:source_code:
-#  script:
-#  - "sudo chown -R `whoami`: ."
-#  - mkdir build
-#  - cd build
-#  - cmake -DCMAKE_BUILD_TYPE=Release -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
-#  - make package_source
-#  - rsync -az --delete *-src.tar.bz2 *-src.tar.gz *-src.tar.xz *-src.tar.Z supas335@upload.rz.uni-kiel.de:htdocs/qubus/downloads/src
-#  stage: deploy
-#  environment:
-#    name: source code
-#    url: http://qubus.qbb-project.org/
-#  tags:
-#  - docker
-#  only:
-#  - master
-#  artifacts:
-#    paths:
-#    - build/*-src.tar.bz2
-#    - build/*-src.tar.gz
-#    - build/*-src.tar.xz
-#    - build/*-src.tar.Z
-#    expire_in: 1 day
-#  dependencies: []
+deploy:source_code:
+  script:
+  - "sudo chown -R `whoami`: ."
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - make package_source
+  - rsync -az --delete *-src.tar.bz2 *-src.tar.gz *-src.tar.xz *-src.tar.Z ssh-523024-chinz@qubusproject.org:webseiten/downloads/src
+  stage: deploy
+  environment:
+    name: source code
+    url: http://qbbproject.org/
+  tags:
+  - docker
+  only:
+  - master
+  artifacts:
+    paths:
+    - build/*-src.tar.bz2
+    - build/*-src.tar.gz
+    - build/*-src.tar.xz
+    - build/*-src.tar.Z
+    expire_in: 1 day
+  dependencies: []
