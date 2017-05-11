@@ -250,16 +250,6 @@ struct dense_hash_table_entry_constexpr
 
 static constexpr std::int8_t min_lookups = 4;
 
-template <typename T>
-struct entry_default_table
-{
-    static constexpr const dense_hash_table_entry_constexpr<T> table[min_lookups] = {
-        {}, {}, {}, dense_hash_table_entry_constexpr<T>::special_end_entry()};
-};
-
-template <typename T>
-constexpr const dense_hash_table_entry_constexpr<T> entry_default_table<T>::table[min_lookups];
-
 inline std::int8_t log2(std::size_t value)
 {
     static constexpr std::int8_t table[64] = {
@@ -355,7 +345,10 @@ public:
     using pointer = value_type*;
     using const_pointer = const value_type*;
 
-    dense_hash_table() = default;
+    dense_hash_table()
+    {
+        setup_default_table();
+    }
 
     explicit dense_hash_table(size_type bucket_count, const ArgumentHash& hash = ArgumentHash(),
                               const ArgumentEqual& equal = ArgumentEqual(),
@@ -954,10 +947,7 @@ public:
     }
 
 private:
-    using default_table = detail::entry_default_table<T>;
-
-    entry_pointer_type entries =
-        const_cast<entry_type*>(reinterpret_cast<const entry_type*>(default_table::table));
+    entry_pointer_type entries;
     std::size_t num_slots_minus_one = 0;
     typename hash_policy_selector<ArgumentHash>::type hash_policy;
     std::int8_t max_lookups = detail::min_lookups - 1;
@@ -1058,19 +1048,30 @@ private:
     void deallocate_data(entry_pointer_type begin, std::size_t num_slots_minus_one,
                          std::int8_t max_lookups)
     {
-        if (begin !=
-            const_cast<entry_type*>(reinterpret_cast<const entry_type*>(default_table::table)))
+        allocator_traits::deallocate(*this, begin, num_slots_minus_one + max_lookups + 1);
+    }
+
+    void setup_default_table()
+    {
+        entry_pointer_type new_buckets = allocator_traits::allocate(*this, min_lookups);
+
+        for (entry_pointer_type it = new_buckets,
+                                real_end = it + static_cast<ptrdiff_t>(min_lookups - 1);
+             it != real_end; ++it)
         {
-            allocator_traits::deallocate(*this, begin, num_slots_minus_one + max_lookups + 1);
+            it->distance_from_desired = -1;
         }
+
+        new_buckets[min_lookups - 1].distance_from_desired = entry_type::special_end_value;
+
+        entries = new_buckets;
     }
 
     void reset_to_empty_state()
     {
         deallocate_data(entries, num_slots_minus_one, max_lookups);
 
-        entries =
-            const_cast<entry_type*>(reinterpret_cast<const entry_type*>(default_table::table));
+        setup_default_table();
         num_slots_minus_one = 0;
         hash_policy.reset();
         max_lookups = detail::min_lookups - 1;
