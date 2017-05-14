@@ -73,15 +73,15 @@ private:
 class cuda_vpu final : public vpu
 {
 public:
-    explicit cuda_vpu(cuda::device dev_, host_address_space& host_addr_space_)
+    explicit cuda_vpu(cuda::device dev_, local_address_space& local_addr_space_)
     : dev_(std::move(dev_)),
       cuda_ctx_(this->dev_),
       address_space_(std::make_unique<cuda_allocator>(this->cuda_ctx_))
     {
-        auto page_fault_handler = [this, &host_addr_space_](
+        auto page_fault_handler = [this, &local_addr_space_](
             const object& obj,
             address_space::page_fault_context ctx) -> hpx::future<address_space::address_entry> {
-            auto host_handle = host_addr_space_.resolve_object(obj);
+            auto host_handle = local_addr_space_.resolve_object(obj);
 
             return host_handle.then(
                 get_local_runtime().get_service_executor(),
@@ -194,8 +194,8 @@ private:
 class cuda_backend final : public backend
 {
 public:
-    cuda_backend(const abi_info& abi_, host_address_space& host_addr_space_)
-    : abi_(&abi_), host_addr_space_(&host_addr_space_)
+    cuda_backend(const abi_info& abi_, local_address_space& local_addr_space_)
+    : abi_(&abi_), local_addr_space_(&local_addr_space_)
     {
     }
 
@@ -216,7 +216,7 @@ public:
 
             for (auto&& device : cuda::get_devices())
             {
-                vpus.push_back(std::make_unique<cuda_vpu>(std::move(device), *host_addr_space_));
+                vpus.push_back(std::make_unique<cuda_vpu>(std::move(device), *local_addr_space_));
             }
 
             return vpus;
@@ -231,7 +231,7 @@ public:
 
 private:
     const abi_info* abi_;
-    host_address_space* host_addr_space_;
+    local_address_space* local_addr_space_;
 };
 }
 
@@ -252,13 +252,13 @@ std::once_flag cuda_backend_init_flag;
 }
 
 extern "C" QUBUS_EXPORT backend* init_cuda_backend(const abi_info* abi,
-                                                   host_address_space* host_addr_space)
+                                                   local_address_space* local_addr_space)
 {
     QUBUS_ASSERT(abi, "Expected argument to be non-null.");
-    QUBUS_ASSERT(host_addr_space, "Expected argument to be non-null.");
+    QUBUS_ASSERT(local_addr_space, "Expected argument to be non-null.");
 
     std::call_once(cuda_backend_init_flag, [&] {
-        the_cuda_backend = std::make_unique<cuda_backend>(*abi, *host_addr_space);
+        the_cuda_backend = std::make_unique<cuda_backend>(*abi, *local_addr_space);
     });
 
     return the_cuda_backend.get();

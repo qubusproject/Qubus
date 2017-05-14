@@ -40,7 +40,7 @@ std::unique_ptr<local_runtime> local_qubus_runtime;
 local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_address_space_)
 : service_executor_(1), global_address_space_(std::move(global_address_space_))
 {
-    scan_for_backends();
+    scan_for_host_backends();
 
     QUBUS_ASSERT(static_cast<bool>(backend_registry_.get_host_backend()),
                  "No host backend has been loaded.");
@@ -54,6 +54,8 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
         [this](const object& obj, local_address_space::page_fault_context ctx) mutable {
             return resolve_page_fault(obj, std::move(ctx));
         });
+
+    scan_for_vpu_backends();
 
     object_factory_ = new_here<local_object_factory_server>(address_space_.get());
 
@@ -166,8 +168,7 @@ void local_runtime::try_to_load_host_backend(const boost::filesystem::path& libr
     }
 }
 
-void local_runtime::try_to_load_backend(const boost::filesystem::path& library_path,
-                                        host_backend& the_host_backend)
+void local_runtime::try_to_load_backend(const boost::filesystem::path& library_path)
 {
     BOOST_LOG_NAMED_SCOPE("runtime");
 
@@ -223,11 +224,13 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
                 return;
             }
 
-            using init_function_type = backend*(const abi_info*, host_address_space*);
+            using init_function_type = backend*(const abi_info*, local_address_space*);
 
             auto& init_backend = backend_library.get<init_function_type>(init_func_name);
 
-            auto backend = init_backend(&abi_info_, &the_host_backend.get_host_address_space());
+            QUBUS_ASSERT(address_space_, "Invalid address space");
+
+            auto backend = init_backend(&abi_info_, address_space_.get());
 
             if (!backend)
             {
@@ -243,14 +246,14 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
     }
 }
 
-void local_runtime::scan_for_backends()
+void local_runtime::scan_for_host_backends()
 {
     {
         BOOST_LOG_NAMED_SCOPE("runtime");
 
         logger slg;
 
-        QUBUS_LOG(slg, normal) << "Scanning for backends";
+        QUBUS_LOG(slg, normal) << "Scanning for host backends";
     }
 
     auto backend_search_path = util::get_prefix("qubus") / "qubus/backends";
@@ -278,10 +281,26 @@ void local_runtime::scan_for_backends()
     {
         throw 0; // No valid host backend.
     }
+}
+
+void local_runtime::scan_for_vpu_backends()
+{
+    {
+        BOOST_LOG_NAMED_SCOPE("runtime");
+
+        logger slg;
+
+        QUBUS_LOG(slg, normal) << "Scanning for VPU backends";
+    }
+
+    auto backend_search_path = util::get_prefix("qubus") / "qubus/backends";
+
+    auto first = boost::filesystem::directory_iterator(backend_search_path);
+    auto last = boost::filesystem::directory_iterator();
 
     for (auto iter = first; iter != last; ++iter)
     {
-        try_to_load_backend(iter->path(), *the_host_backend);
+        try_to_load_backend(iter->path());
     }
 }
 

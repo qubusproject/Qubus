@@ -55,9 +55,9 @@ public:
 
 private:
     void try_to_load_host_backend(const boost::filesystem::path& library_path);
-    void try_to_load_backend(const boost::filesystem::path& library_path,
-                             host_backend& the_host_backend);
-    void scan_for_backends();
+    void try_to_load_backend(const boost::filesystem::path& library_path);
+    void scan_for_host_backends();
+    void scan_for_vpu_backends();
 
     hpx::future<local_address_space::address_entry>
     resolve_page_fault(const object& obj, local_address_space::page_fault_context ctx);
