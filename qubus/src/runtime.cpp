@@ -4,6 +4,8 @@
 
 #include <qubus/basic_address_space.hpp>
 
+#include <qubus/logging.hpp>
+
 #include <qubus/hpx_utils.hpp>
 
 #include <qubus/util/unused.hpp>
@@ -29,6 +31,8 @@ namespace qubus
 
 runtime_server::runtime_server()
 {
+    init_logging();
+
     auto addr_space_impl = std::make_unique<basic_address_space>();
 
     global_address_space_ = new_here<virtual_address_space_wrapper>(std::move(addr_space_impl));
@@ -63,6 +67,8 @@ void runtime_server::shutdown()
     }
 
     global_address_space_.reset();
+
+    finalize_logging();
 }
 
 void runtime_server::execute(computelet c, kernel_arguments kernel_args)
