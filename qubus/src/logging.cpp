@@ -25,6 +25,7 @@
 #include <memory>
 #include <mutex>
 #include <ostream>
+#include <vector>
 
 namespace qubus
 {
@@ -131,21 +132,27 @@ public:
 
     void add_client(hpx_log_client client)
     {
-        client_ = std::move(client);
+        clients_.push_back(std::move(client));
     }
 
     void consume(const boost::log::record_view& QUBUS_UNUSED(rec), const string_type& msg)
     {
-        client_.consume(msg);
+        for (auto& client : clients_)
+        {
+            client.consume(msg);
+        }
     }
 
     void flush()
     {
-        client_.flush();
+        for (auto& client : clients_)
+        {
+            client.flush();
+        }
     }
 
 private:
-    hpx_log_client client_;
+    std::vector<hpx_log_client> clients_;
 };
 
 boost::shared_ptr<sinks::synchronous_sink<hpx_log_backend>> logging_sink;
@@ -186,7 +193,8 @@ void init_logging()
     logging::add_common_attributes();
     logging::core::get()->add_global_attribute("Scope", attrs::named_scope());
     logging::core::get()->add_global_attribute("TimeStampUTC", attrs::utc_clock());
-    logging::core::get()->add_global_attribute("Locality", attrs::make_function([] { return hpx::get_locality_id(); }));
+    logging::core::get()->add_global_attribute(
+        "Locality", attrs::make_function([] { return hpx::get_locality_id(); }));
 
     logging::core::get()->set_filter(severity >= normal);
 }
