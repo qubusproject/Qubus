@@ -85,6 +85,7 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(severity, "Severity", severity_level)
 BOOST_LOG_ATTRIBUTE_KEYWORD(tag_attr, "Tag", std::string)
 BOOST_LOG_ATTRIBUTE_KEYWORD(scope, "Scope", attrs::named_scope::value_type)
 BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp_utc, "TimeStampUTC", attrs::utc_clock::value_type)
+BOOST_LOG_ATTRIBUTE_KEYWORD(locality, "Locality", std::uint32_t)
 }
 
 class hpx_log_client : public hpx::components::client_base<hpx_log_client, hpx_log_server>
@@ -176,6 +177,7 @@ void init_logging()
                      << std::setfill(' ') << ": <" << severity << ">\t"
                      << "(" << scope << ") "
                      << expr::if_(expr::has_attr(tag_attr))[expr::stream << "[" << tag_attr << "] "]
+                     << '#' << std::setw(8) << std::setfill('0') << locality << " "
                      << "[" << timestamp_utc << "] " << expr::smessage);
 
     logging::core::get()->add_sink(logging_sink);
@@ -184,6 +186,7 @@ void init_logging()
     logging::add_common_attributes();
     logging::core::get()->add_global_attribute("Scope", attrs::named_scope());
     logging::core::get()->add_global_attribute("TimeStampUTC", attrs::utc_clock());
+    logging::core::get()->add_global_attribute("Locality", attrs::make_function([] { return hpx::get_locality_id(); }));
 
     logging::core::get()->set_filter(severity >= normal);
 }
