@@ -40,18 +40,6 @@ std::unique_ptr<local_runtime> local_qubus_runtime;
 local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_address_space_)
 : service_executor_(1), global_address_space_(std::move(global_address_space_))
 {
-    init_logging();
-
-    {
-        BOOST_LOG_NAMED_SCOPE("runtime");
-
-        logger slg;
-
-        QUBUS_LOG(slg, normal) << "Initialize the Qubus runtime";
-
-        QUBUS_LOG(slg, normal) << "Runtime prefix: " << util::get_prefix("qubus");
-    }
-
     scan_for_backends();
 
     QUBUS_ASSERT(static_cast<bool>(backend_registry_.get_host_backend()),
@@ -68,14 +56,6 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
         });
 
     object_factory_ = new_here<local_object_factory_server>(address_space_.get());
-
-    {
-        BOOST_LOG_NAMED_SCOPE("runtime");
-
-        logger slg;
-
-        QUBUS_LOG(slg, normal) << "Bootstrapping virtual multiprocessor";
-    }
 
     //local_vpu_ = std::make_unique<aggregate_vpu>(std::make_unique<round_robin_scheduler>());
 

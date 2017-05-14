@@ -4,6 +4,10 @@
 
 #include <qubus/basic_address_space.hpp>
 
+#include <qubus/util/get_prefix.hpp>
+
+#include <qubus/logging.hpp>
+
 #include <qubus/hpx_utils.hpp>
 
 #include <qubus/util/unused.hpp>
@@ -29,6 +33,18 @@ namespace qubus
 
 runtime_server::runtime_server()
 {
+    init_logging();
+
+    {
+        BOOST_LOG_NAMED_SCOPE("runtime");
+
+        logger slg;
+
+        QUBUS_LOG(slg, normal) << "Initialize the Qubus runtime";
+
+        QUBUS_LOG(slg, normal) << "Runtime prefix: " << util::get_prefix("qubus");
+    }
+
     auto addr_space_impl = std::make_unique<basic_address_space>();
 
     global_address_space_ = new_here<virtual_address_space_wrapper>(std::move(addr_space_impl));
@@ -42,6 +58,14 @@ runtime_server::runtime_server()
     }
 
     obj_factory_ = hpx::new_<object_factory>(hpx::find_here(), abi_info(), local_runtimes_);
+
+    {
+        BOOST_LOG_NAMED_SCOPE("runtime");
+
+        logger slg;
+
+        QUBUS_LOG(slg, normal) << "Bootstrapping virtual multiprocessor";
+    }
 
     global_vpu_ = aggregate_vpu(std::make_unique<uniform_fill_scheduler>());
 
@@ -63,6 +87,8 @@ void runtime_server::shutdown()
     }
 
     global_address_space_.reset();
+
+    finalize_logging();
 }
 
 void runtime_server::execute(computelet c, kernel_arguments kernel_args)
