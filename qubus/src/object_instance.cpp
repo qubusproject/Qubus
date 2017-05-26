@@ -135,6 +135,18 @@ object_instance::object_instance(local_address_space::handle local_handle_)
 
 object_instance::~object_instance() = default;
 
+object_instance::object_instance(const object_instance& other)
+: impl_(std::make_unique<impl>(*other.impl_))
+{
+}
+
+object_instance& object_instance::operator=(const object_instance& other)
+{
+    impl_ = std::make_unique<impl>(*other.impl_);
+
+    return *this;
+}
+
 object_instance::object_instance(object_instance&& other) noexcept = default;
 object_instance& object_instance::operator=(object_instance&& other) noexcept = default;
 

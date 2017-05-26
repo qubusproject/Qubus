@@ -17,9 +17,12 @@ class object_instance
 {
 public:
     object_instance();
-    object_instance(local_address_space::handle local_handle_);
+    explicit object_instance(local_address_space::handle local_handle_);
 
     ~object_instance();
+
+    object_instance(const object_instance& other);
+    object_instance& operator=(const object_instance& other);
 
     object_instance(object_instance&& other) noexcept;
     object_instance& operator=(object_instance&& other) noexcept;
