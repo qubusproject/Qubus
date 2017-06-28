@@ -38,7 +38,7 @@ endforeach()
 add_library(qubus_ir SHARED ${qubus_pattern_header_files} ${qubus_ir_header_files} ${qubus_ir_source_files})
 
 target_include_directories(qubus_ir PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
-set_target_properties(qubus_ir PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
+target_compile_features(qubus_ir PUBLIC cxx_std_17)
 target_link_libraries(qubus_ir qubus_util)
 hpx_setup_target(qubus_ir)
 qubus_set_output_name(qubus_ir qubus_ir)
