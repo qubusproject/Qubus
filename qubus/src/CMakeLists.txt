@@ -38,7 +38,7 @@ set(qubus_source_files allocator.cpp loop_optimizer.cpp
 add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 
 target_include_directories(qubus PUBLIC ${Boost_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
-target_compile_features(qubus PUBLIC cxx_std_17)
+target_compile_features(qubus PUBLIC cxx_std_14)
 target_link_libraries(qubus qubus_ir qubus_isl qubus_util ${Boost_LIBRARIES} qubus_cpu_backend qubus_cuda_backend)
 
 target_compile_definitions(qubus PUBLIC -DBOOST_LOG_DYN_LINK)
