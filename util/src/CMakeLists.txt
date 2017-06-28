@@ -18,7 +18,7 @@ find_package(Boost COMPONENTS filesystem REQUIRED)
 find_package(Threads REQUIRED)
 
 add_library(qubus_util ${util_header_files} ${util_source_files})
-target_compile_options(qubus_util PUBLIC -std=c++14)
+set_target_properties(qubus_util PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
 target_include_directories(qubus_util PUBLIC ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/util/include/>)
 target_link_libraries(qubus_util PUBLIC Threads::Threads ${Boost_LIBRARIES})
 set_target_properties(qubus_util PROPERTIES POSITION_INDEPENDENT_CODE True)
