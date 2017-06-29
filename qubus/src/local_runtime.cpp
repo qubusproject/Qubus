@@ -31,6 +31,8 @@ HPX_REGISTER_ACTION(get_local_vpu_action);
 namespace qubus
 {
 
+extern "C" unsigned long int cpu_backend_get_api_version();
+
 namespace
 {
 
@@ -40,6 +42,10 @@ std::unique_ptr<local_runtime> local_qubus_runtime;
 local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_address_space_)
 : service_executor_(1), global_address_space_(std::move(global_address_space_))
 {
+    // Force the CPU backend to be linked.
+    // FIXME: After we have fixed our lifetime issues, we should remove this line.
+    cpu_backend_get_api_version();
+
     scan_for_backends();
 
     QUBUS_ASSERT(static_cast<bool>(backend_registry_.get_host_backend()),
