@@ -6,8 +6,6 @@
 #include <qubus/pattern/IR.hpp>
 #include <qubus/pattern/core.hpp>
 
-#include <qubus/qtl/pattern/all.hpp>
-
 #include <qubus/util/handle.hpp>
 #include <qubus/util/multi_method.hpp>
 #include <qubus/util/unique_name_generator.hpp>
@@ -194,103 +192,6 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << " " << translate_unary_op_tag(utag.get());
                        print(a.get(), ctx, print_types);
                    })
-            .case_(qtl::pattern::sum_multi(a, index_decls, decl),
-                   [&] {
-                       std::cout << "sum(";
-
-                       print(a.get(), ctx, print_types);
-
-                       std::cout << ", ";
-
-                       if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
-                       {
-                           std::cout << debug_name.as<std::string>();
-                       }
-                       else
-                       {
-                           std::cout << ctx.get_name_for_handle(decl.get().id());
-                       }
-
-                       std::cout << " = ";
-
-                       if (index_decls.get().size() > 1)
-                       {
-                           std::cout << "(";
-
-                           for (const auto& idx : index_decls.get())
-                           {
-                               if (auto debug_name = idx.annotations().lookup("qubus.debug.name"))
-                               {
-                                   std::cout << debug_name.as<std::string>();
-                               }
-                               else
-                               {
-                                   std::cout << ctx.get_name_for_handle(idx.id());
-                               }
-
-                               std::cout << ",";
-                           }
-
-                           std::cout << ")";
-                       }
-                       else
-                       {
-                           if (auto debug_name =
-                                   index_decls.get()[0].annotations().lookup("qubus.debug.name"))
-                           {
-                               std::cout << debug_name.as<std::string>();
-                           }
-                           else
-                           {
-                               std::cout << ctx.get_name_for_handle(index_decls.get()[0].id());
-                           }
-                       }
-
-                       std::cout << ")";
-                   })
-            .case_(qtl::pattern::sum_multi(a, index_decls),
-                   [&] {
-                       std::cout << "sum(";
-
-                       print(a.get(), ctx, print_types);
-
-                       std::cout << ", ";
-
-                       if (index_decls.get().size() > 1)
-                       {
-                           std::cout << "(";
-
-                           for (const auto& idx : index_decls.get())
-                           {
-                               if (auto debug_name = idx.annotations().lookup("qubus.debug.name"))
-                               {
-                                   std::cout << debug_name.as<std::string>();
-                               }
-                               else
-                               {
-                                   std::cout << ctx.get_name_for_handle(idx.id());
-                               }
-
-                               std::cout << ",";
-                           }
-
-                           std::cout << ")";
-                       }
-                       else
-                       {
-                           if (auto debug_name =
-                                   index_decls.get()[0].annotations().lookup("qubus.debug.name"))
-                           {
-                               std::cout << debug_name.as<std::string>();
-                           }
-                           else
-                           {
-                               std::cout << ctx.get_name_for_handle(index_decls.get()[0].id());
-                           }
-                       }
-
-                       std::cout << ")";
-                   })
             .case_(subscription(a, indices),
                    [&] {
                        print(a.get(), ctx, print_types);
@@ -354,16 +255,6 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        }
 
                        std::cout << "}\n";
-                   })
-            .case_(qtl::pattern::delta(a, b),
-                   [&] {
-                       std::cout << "delta[";
-
-                       print(a.get(), ctx, print_types);
-                       std::cout << ", ";
-                       print(b.get(), ctx, print_types);
-
-                       std::cout << "]";
                    })
             .case_(intrinsic_function(id, args),
                    [&] {
@@ -453,99 +344,6 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        std::cout << "]";
                        std::cout << "\n{\n";
                        print(d.get(), ctx, print_types);
-                       std::cout << "\n}";
-                   })
-            .case_(qtl::pattern::for_all_multi(index_decls, decl, b),
-                   [&] {
-                       std::cout << "for all ";
-
-                       if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
-                       {
-                           std::cout << debug_name.as<std::string>();
-                       }
-                       else
-                       {
-                           std::cout << ctx.get_name_for_handle(decl.get().id());
-                       }
-
-                       std::cout << " = ";
-
-                       if (index_decls.get().size() > 1)
-                       {
-                           std::cout << "(";
-
-                           for (const auto& idx : index_decls.get())
-                           {
-                               if (auto debug_name = idx.annotations().lookup("qubus.debug.name"))
-                               {
-                                   std::cout << debug_name.as<std::string>();
-                               }
-                               else
-                               {
-                                   std::cout << ctx.get_name_for_handle(idx.id());
-                               }
-
-                               std::cout << ",";
-                           }
-
-                           std::cout << ")";
-                       }
-                       else
-                       {
-                           if (auto debug_name =
-                                   index_decls.get()[0].annotations().lookup("qubus.debug.name"))
-                           {
-                               std::cout << debug_name.as<std::string>();
-                           }
-                           else
-                           {
-                               std::cout << ctx.get_name_for_handle(index_decls.get()[0].id());
-                           }
-                       }
-
-                       std::cout << "\n{\n";
-                       print(b.get(), ctx, print_types);
-                       std::cout << "\n}";
-                   })
-            .case_(qtl::pattern::for_all_multi(index_decls, b),
-                   [&] {
-                       std::cout << "for all ";
-
-                       if (index_decls.get().size() > 1)
-                       {
-                           std::cout << "(";
-
-                           for (const auto& idx : index_decls.get())
-                           {
-                               if (auto debug_name = idx.annotations().lookup("qubus.debug.name"))
-                               {
-                                   std::cout << debug_name.as<std::string>();
-                               }
-                               else
-                               {
-                                   std::cout << ctx.get_name_for_handle(idx.id());
-                               }
-
-                               std::cout << ",";
-                           }
-
-                           std::cout << ")";
-                       }
-                       else
-                       {
-                           if (auto debug_name =
-                                   index_decls.get()[0].annotations().lookup("qubus.debug.name"))
-                           {
-                               std::cout << debug_name.as<std::string>();
-                           }
-                           else
-                           {
-                               std::cout << ctx.get_name_for_handle(index_decls.get()[0].id());
-                           }
-                       }
-
-                       std::cout << "\n{\n";
-                       print(b.get(), ctx, print_types);
                        std::cout << "\n}";
                    })
             .case_(if_(a, b, opt_expr),
