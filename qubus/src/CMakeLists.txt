@@ -46,7 +46,12 @@ if (TARGET qubus_cuda_backend)
 endif()
 
 target_compile_definitions(qubus PUBLIC -DBOOST_LOG_DYN_LINK)
-add_dependencies(qubus qubus_cpu_backend qubus_cuda_backend)
+add_dependencies(qubus qubus_cpu_backend)
+
+if (TARGET qubus_cuda_backend)
+    add_dependencies(qubus qubus_cuda_backend)
+endif()
+
 hpx_setup_target(qubus COMPONENT_DEPENDENCIES iostreams)
 qubus_set_output_name(qubus qubus)
 
