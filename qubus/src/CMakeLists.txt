@@ -52,6 +52,7 @@ if (TARGET qubus_cuda_backend)
     add_dependencies(qubus qubus_cuda_backend)
 endif()
 
+set_target_properties(qubus PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${QUBUS_HAS_LTO_SUPPORT})
 hpx_setup_target(qubus COMPONENT_DEPENDENCIES iostreams)
 qubus_set_output_name(qubus qubus)
 
