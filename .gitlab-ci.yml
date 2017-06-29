@@ -70,6 +70,74 @@ test:gcc:debug:
   - docker
   - cuda
 
+test:ubuntu:clang:release:
+  script:
+  - "sudo chown -R `whoami`: ."
+  - git submodule update --init
+  - ls -la
+  - export CC=clang
+  - export CXX=clang++
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - make
+  - ctest -E cuda
+  stage: test
+  image: localhost:5000/td-quantum/ubuntu-ci
+  tags:
+  - docker
+
+test:ubuntu:gcc:release:
+  script:
+  - "sudo chown -R `whoami`: ."
+  - git submodule update --init
+  - ls -la
+  - export CC=gcc-7
+  - export CXX=g++-7
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - make
+  - ctest -E cuda
+  stage: test
+  image: localhost:5000/td-quantum/ubuntu-ci
+  tags:
+  - docker
+
+test:ubuntu:clang:debug:
+  script:
+  - "sudo chown -R `whoami`: ."
+  - git submodule update --init
+  - ls -la
+  - export CC=clang
+  - export CXX=clang++
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Debug -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - make
+  - ctest -E cuda
+  stage: test
+  image: localhost:5000/td-quantum/ubuntu-ci
+  tags:
+  - docker
+
+test:ubuntu:gcc:debug:
+  script:
+  - "sudo chown -R `whoami`: ."
+  - git submodule update --init
+  - ls -la
+  - export CC=gcc-7
+  - export CXX=g++-7
+  - mkdir build
+  - cd build
+  - cmake -DCMAKE_BUILD_TYPE=Debug  -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
+  - make
+  - ctest -E cuda
+  stage: test
+  image: localhost:5000/td-quantum/ubuntu-ci
+  tags:
+  - docker
+
 # We need to separate the doc build and deploy steps. Otherwise the documentation build itself
 # might fail but the (incomplete) documentation would still be deployed.
 build:doc:
