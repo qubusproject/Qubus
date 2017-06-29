@@ -4,9 +4,9 @@
 
 #include <qubus/logging.hpp>
 
-#include <qubus/hpx_utils.hpp>
+#include <qubus/prefix.hpp>
 
-#include <qubus/util/get_prefix.hpp>
+#include <qubus/hpx_utils.hpp>
 
 #include <hpx/include/lcos.hpp>
 
@@ -259,7 +259,7 @@ void local_runtime::scan_for_backends()
         QUBUS_LOG(slg, normal) << "Scanning for backends";
     }
 
-    auto backend_search_path = util::get_prefix("qubus") / "qubus/backends";
+    auto backend_search_path = get_prefix() / "qubus/backends";
 
     auto first = boost::filesystem::directory_iterator(backend_search_path);
     auto last = boost::filesystem::directory_iterator();
