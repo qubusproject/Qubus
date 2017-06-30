@@ -261,12 +261,14 @@ void local_runtime::scan_for_backends()
 
     auto backend_search_path = get_prefix() / "qubus/backends";
 
-    auto first = boost::filesystem::directory_iterator(backend_search_path);
-    auto last = boost::filesystem::directory_iterator();
-
-    for (auto iter = first; iter != last; ++iter)
     {
-        try_to_load_host_backend(iter->path());
+        auto first = boost::filesystem::directory_iterator(backend_search_path);
+        auto last = boost::filesystem::directory_iterator();
+
+        for (auto iter = first; iter != last; ++iter)
+        {
+            try_to_load_host_backend(iter->path());
+        }
     }
 
     host_backend* the_host_backend;
@@ -285,9 +287,14 @@ void local_runtime::scan_for_backends()
         throw 0; // No valid host backend.
     }
 
-    for (auto iter = first; iter != last; ++iter)
     {
-        try_to_load_backend(iter->path(), *the_host_backend);
+        auto first = boost::filesystem::directory_iterator(backend_search_path);
+        auto last = boost::filesystem::directory_iterator();
+
+        for (auto iter = first; iter != last; ++iter)
+        {
+            try_to_load_backend(iter->path(), *the_host_backend);
+        }
     }
 }
 
