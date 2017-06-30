@@ -4,9 +4,9 @@
 
 #include <qubus/logging.hpp>
 
-#include <qubus/hpx_utils.hpp>
+#include <qubus/prefix.hpp>
 
-#include <qubus/util/get_prefix.hpp>
+#include <qubus/hpx_utils.hpp>
 
 #include <hpx/include/lcos.hpp>
 
@@ -31,6 +31,8 @@ HPX_REGISTER_ACTION(get_local_vpu_action);
 namespace qubus
 {
 
+extern "C" unsigned long int cpu_backend_get_api_version();
+
 namespace
 {
 
@@ -40,6 +42,10 @@ std::unique_ptr<local_runtime> local_qubus_runtime;
 local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_address_space_)
 : service_executor_(1), global_address_space_(std::move(global_address_space_))
 {
+    // Force the CPU backend to be linked.
+    // FIXME: After we have fixed our lifetime issues, we should remove this line.
+    cpu_backend_get_api_version();
+
     scan_for_backends();
 
     QUBUS_ASSERT(static_cast<bool>(backend_registry_.get_host_backend()),
@@ -253,14 +259,16 @@ void local_runtime::scan_for_backends()
         QUBUS_LOG(slg, normal) << "Scanning for backends";
     }
 
-    auto backend_search_path = util::get_prefix("qubus") / "qubus/backends";
+    auto backend_search_path = get_prefix() / "qubus/backends";
 
-    auto first = boost::filesystem::directory_iterator(backend_search_path);
-    auto last = boost::filesystem::directory_iterator();
-
-    for (auto iter = first; iter != last; ++iter)
     {
-        try_to_load_host_backend(iter->path());
+        auto first = boost::filesystem::directory_iterator(backend_search_path);
+        auto last = boost::filesystem::directory_iterator();
+
+        for (auto iter = first; iter != last; ++iter)
+        {
+            try_to_load_host_backend(iter->path());
+        }
     }
 
     host_backend* the_host_backend;
@@ -279,9 +287,14 @@ void local_runtime::scan_for_backends()
         throw 0; // No valid host backend.
     }
 
-    for (auto iter = first; iter != last; ++iter)
     {
-        try_to_load_backend(iter->path(), *the_host_backend);
+        auto first = boost::filesystem::directory_iterator(backend_search_path);
+        auto last = boost::filesystem::directory_iterator();
+
+        for (auto iter = first; iter != last; ++iter)
+        {
+            try_to_load_backend(iter->path(), *the_host_backend);
+        }
     }
 }
 

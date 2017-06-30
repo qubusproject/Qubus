@@ -12,6 +12,18 @@ add_subdirectory(jit)
 add_subdirectory(cuda)
 add_subdirectory(backends)
 
+add_library(qubus_build_prefix STATIC prefix.cpp)
+target_include_directories(qubus_build_prefix PUBLIC ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
+target_link_libraries(qubus_build_prefix PUBLIC ${Boost_LIBRARIES})
+set_target_properties(qubus_build_prefix PROPERTIES POSITION_INDEPENDENT_CODE True)
+target_compile_definitions(qubus_build_prefix PRIVATE -DQUBUS_PREFIX=${CMAKE_CURRENT_BINARY_DIR})
+
+add_library(qubus_prefix STATIC prefix.cpp)
+target_include_directories(qubus_prefix PUBLIC ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
+target_link_libraries(qubus_prefix PUBLIC ${Boost_LIBRARIES})
+set_target_properties(qubus_prefix PROPERTIES POSITION_INDEPENDENT_CODE True)
+target_compile_definitions(qubus_prefix PRIVATE -DQUBUS_PREFIX=${CMAKE_INSTALL_PREFIX})
+
 set(qubus_header_file_names allocator.hpp generic_ptr.hpp loop_optimizer.hpp
                             memory_block.hpp object.hpp)
 
@@ -37,12 +49,23 @@ set(qubus_source_files allocator.cpp loop_optimizer.cpp
 
 add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 
+set_target_properties(qubus PROPERTIES INTERFACE_LINK_LIBRARIES "$<BUILD_INTERFACE:qubus_build_prefix>;$<INSTALL_INTERFACE:qubus_prefix>")
 target_include_directories(qubus PUBLIC ${Boost_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 target_compile_features(qubus PUBLIC cxx_std_14)
-target_link_libraries(qubus qubus_ir qubus_isl qubus_util ${Boost_LIBRARIES} qubus_cpu_backend qubus_cuda_backend)
+target_link_libraries(qubus qubus_ir qubus_isl qubus_util ${Boost_LIBRARIES} qubus_cpu_backend)
+
+if (TARGET qubus_cuda_backend)
+    target_link_libraries(qubus qubus_cuda_backend)
+endif()
 
 target_compile_definitions(qubus PUBLIC -DBOOST_LOG_DYN_LINK)
-add_dependencies(qubus qubus_cpu_backend qubus_cuda_backend)
+add_dependencies(qubus qubus_cpu_backend)
+
+if (TARGET qubus_cuda_backend)
+    add_dependencies(qubus qubus_cuda_backend)
+endif()
+
+set_target_properties(qubus PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${QUBUS_HAS_LTO_SUPPORT})
 hpx_setup_target(qubus COMPONENT_DEPENDENCIES iostreams)
 qubus_set_output_name(qubus qubus)
 
@@ -53,10 +76,11 @@ set_property(TARGET qubus PROPERTY INTERFACE_qubus_MINOR_VERSION 1)
 set_property(TARGET qubus APPEND PROPERTY COMPATIBLE_INTERFACE_STRING qubus_MAJOR_VERSION)
 set_property(TARGET qubus APPEND PROPERTY COMPATIBLE_INTERFACE_STRING qubus_MINOR_VERSION)
         
-install(TARGETS qubus EXPORT qubus-targets
-                      RUNTIME DESTINATION bin
-                      INCLUDES DESTINATION include
-                      LIBRARY DESTINATION lib
-                      ARCHIVE DESTINATION lib)
+install(TARGETS qubus qubus_prefix
+        EXPORT qubus-targets
+        RUNTIME DESTINATION bin
+        INCLUDES DESTINATION include
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib)
 
 add_subdirectory(qtl)

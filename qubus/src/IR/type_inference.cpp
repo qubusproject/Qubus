@@ -4,8 +4,6 @@
 #include <qubus/pattern/IR.hpp>
 #include <qubus/pattern/core.hpp>
 
-#include <qubus/qtl/IR/all.hpp>
-
 #include <qubus/util/assert.hpp>
 #include <qubus/util/multi_method.hpp>
 #include <qubus/util/unused.hpp>
@@ -185,18 +183,6 @@ type infer_type_unary_op_expr(const unary_operator_expr& expr)
     return arg_type;
 }
 
-type infer_type_sum_expr(const qtl::sum_expr& expr)
-{
-    type body_type = typeof_(expr.body());
-
-    return body_type;
-}
-
-type infer_type_for_all_expr(const qtl::for_all_expr& /*unused*/)
-{
-    return types::unknown{};
-}
-
 type infer_type_for_expr(const for_expr& /*unused*/)
 {
     return types::unknown{};
@@ -291,11 +277,6 @@ type infer_type_construct_expr(const construct_expr& expr)
     return expr.result_type();
 }
 
-type infer_type_kronecker_delta_expr(const qtl::kronecker_delta_expr& QUBUS_UNUSED(expr))
-{
-    return types::integer();
-}
-
 type infer_type_member_access_expr(const member_access_expr& expr)
 {
     auto obj_type = typeof_(expr.object()).as<types::struct_>();
@@ -324,8 +305,6 @@ void init_infer_type()
 {
     infer_type.add_specialization(infer_type_binary_op_expr);
     infer_type.add_specialization(infer_type_unary_op_expr);
-    infer_type.add_specialization(infer_type_sum_expr);
-    infer_type.add_specialization(infer_type_for_all_expr);
     infer_type.add_specialization(infer_type_for_expr);
     infer_type.add_specialization(infer_type_if_expr);
     infer_type.add_specialization(infer_type_subscription_expr);
@@ -339,7 +318,6 @@ void init_infer_type()
     infer_type.add_specialization(infer_type_spawn_expr);
     infer_type.add_specialization(infer_type_local_variable_def_expr);
     infer_type.add_specialization(infer_type_construct_expr);
-    infer_type.add_specialization(infer_type_kronecker_delta_expr);
     infer_type.add_specialization(infer_type_member_access_expr);
     infer_type.add_specialization(infer_type_foreign_call_expr);
     infer_type.add_specialization(infer_type_array_slice_expr);
