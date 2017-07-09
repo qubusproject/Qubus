@@ -19,8 +19,7 @@ if(QUBUS_BUILD_BENCHMARKS)
 
     add_executable(expression_equality_benchmark expression_equality.cpp)
     target_include_directories(expression_equality_benchmark PUBLIC ${CMAKE_SOURCE_DIR}/external/nonius/include)
-    target_compile_options(expression_equality_benchmark PUBLIC -std=c++14)
-    target_link_libraries(expression_equality_benchmark PUBLIC qubus_qtl qubus_ir ${CMAKE_THREAD_LIBS_INIT})
+    target_link_libraries(expression_equality_benchmark PUBLIC qubus_ir ${CMAKE_THREAD_LIBS_INIT})
 
     add_executable(const_init_bench const_init_bench.cpp)
     target_link_libraries(const_init_bench PUBLIC qubus_qtl qubus hpx_init)

@@ -4,7 +4,7 @@
 
 #include <qubus/basic_address_space.hpp>
 
-#include <qubus/util/get_prefix.hpp>
+#include <qubus/prefix.hpp>
 
 #include <qubus/logging.hpp>
 
@@ -42,7 +42,7 @@ runtime_server::runtime_server()
 
         QUBUS_LOG(slg, normal) << "Initialize the Qubus runtime";
 
-        QUBUS_LOG(slg, normal) << "Runtime prefix: " << util::get_prefix("qubus");
+        QUBUS_LOG(slg, normal) << "Runtime prefix: " << get_prefix();
     }
 
     auto addr_space_impl = std::make_unique<basic_address_space>();

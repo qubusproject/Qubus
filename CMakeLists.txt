@@ -1,4 +1,4 @@
-cmake_minimum_required (VERSION 3.5.0)
+cmake_minimum_required (VERSION 3.8.0)
 enable_testing()
 
 project(Qubus)
@@ -11,6 +11,10 @@ endif()
 
 if(POLICY CMP0054)
   cmake_policy(SET CMP0054 NEW)
+endif()
+
+if(POLICY CMP0069)
+    cmake_policy(SET CMP0069 NEW)
 endif()
 
 if (NOT CMAKE_BUILD_TYPE)
@@ -46,14 +50,21 @@ include(FeatureSummary)
 
 include (CheckSIMD)
 include (CheckFMA)
-include (CheckLTO)
 
 CheckSIMD()
 CheckFMA()
-CheckLTO()
 
-add_compile_options(${QUBUS_LTO_FLAGS})
-link_libraries(${QUBUS_LTO_FLAGS})
+if (CMAKE_VERSION VERSION_LESS 3.9)
+    set(QUBUS_HAS_LTO_SUPPORT NO)
+    set(QUBUS_LTO_ERROR_MSG "CMake versions < 3.9")
+else()
+    include(CheckIPOSupport)
+    check_ipo_supported(RESULT QUBUS_HAS_LTO_SUPPORT OUTPUT QUBUS_LTO_ERROR_MSG LANGUAGES cxx)
+endif()
+
+if (NOT QUBUS_HAS_LTO_SUPPORT)
+    message(STATUS "LTO is not supported: ${QUBUS_LTO_ERROR_MSG}")
+endif()
 
 if (CXX_COMPILER_ID STREQUAL "GNU" OR CXX_COMPILER_ID STREQUAL "Clang")
     add_compile_options(-Wall -Wextra)
