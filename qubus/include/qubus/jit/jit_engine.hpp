@@ -7,6 +7,10 @@
 
 #include <llvm/ExecutionEngine/Orc/IRCompileLayer.h>
 #include <llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h>
+#if LLVM_VERSION_MAJOR >= 5
+#include <llvm/ExecutionEngine/Orc/CompileUtils.h>
+#include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
+#endif
 
 #include <llvm/IR/Module.h>
 
@@ -20,9 +24,15 @@ namespace qubus
 class jit_engine
 {
 public:
+#if LLVM_VERSION_MAJOR >= 5
+    using object_layer_type = llvm::orc::RTDyldObjectLinkingLayer;
+    using compile_layer_type = llvm::orc::IRCompileLayer<object_layer_type, llvm::orc::SimpleCompiler>;
+    using module_handle_type = compile_layer_type::ModuleHandleT;
+#else
     using object_layer_type = llvm::orc::ObjectLinkingLayer<>;
     using compile_layer_type = llvm::orc::IRCompileLayer<object_layer_type>;
     using module_handle_type = compile_layer_type::ModuleSetHandleT;
+#endif
 
     explicit jit_engine(std::unique_ptr<llvm::TargetMachine> target_machine_);
 
@@ -51,7 +61,7 @@ private:
 
 #if LLVM_VERSION_MAJOR < 4
     llvm::orc::JITSymbol find_mangled_symbol(const std::string& name);
-#else
+#elif LLVM_VERSION_MAJOR < 5
     llvm::JITSymbol find_mangled_symbol(const std::string& name);
 #endif
 
@@ -59,7 +69,9 @@ private:
     llvm::DataLayout data_layout_;
     object_layer_type object_layer_;
     compile_layer_type compile_layer_;
+#if LLVM_VERSION_MAJOR < 5
     std::vector<module_handle_type> module_handles_;
+#endif
 };
 }
 

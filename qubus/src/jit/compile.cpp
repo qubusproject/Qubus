@@ -475,7 +475,7 @@ reference compile(const expression& expr, compiler& comp)
 
                     for (std::size_t i = 0; i < plan_ptr->arg_size(); ++i)
                     {
-                        plan_ptr->setDoesNotAlias(i + 1);
+                        plan_ptr->addAttribute(i + 1, llvm::Attribute::AttrKind::NoAlias);
                     }
 
                     ctx.add_plan_to_compile(plan.get());

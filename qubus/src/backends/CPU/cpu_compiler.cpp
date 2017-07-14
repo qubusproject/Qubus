@@ -118,7 +118,13 @@ std::unique_ptr<cpu_plan> compile(function_declaration entry_point, jit::compile
 
     auto entry = engine.find_symbol(mod->get_namespace());
 
-    return util::make_unique<cpu_plan_impl>(reinterpret_cast<entry_t>(entry.getAddress()), std::move(mod));
+#if LLVM_VERSION_MAJOR >= 5
+    auto address = reinterpret_cast<entry_t>(cantFail(entry.getAddress()));
+#else
+    auto address = reinterpret_cast<entry_t>(entry.getAddress());
+#endif
+
+    return util::make_unique<cpu_plan_impl>(address, std::move(mod));
 }
 }
 

@@ -126,9 +126,6 @@ void add_function_simplification_passes(llvm::legacy::PassManager& manager,
     if (use_experimental_passes)
         manager.add(createLoopRerollPass());
 
-    if (use_experimental_passes)
-        manager.add(createLoadCombinePass());
-
     manager.add(createAggressiveDCEPass());     // Delete dead instructions
     manager.add(createCFGSimplificationPass()); // Merge & remove BBs
     // Clean up after everything.
