@@ -58,7 +58,7 @@ void compile_function(const function_declaration& plan, compiler& comp)
 
     for (std::size_t i = 0; i < compiled_plan->arg_size(); ++i)
     {
-        compiled_plan->setDoesNotAlias(i + 1);
+        compiled_plan->addAttribute(i + 1, llvm::Attribute::AttrKind::NoAlias);
     }
 
     env.set_current_function(compiled_plan);
@@ -113,7 +113,7 @@ llvm::Function* compile_entry_point(const function_declaration& plan, compiler& 
 
     for (std::size_t i = 0; i < kernel->arg_size(); ++i)
     {
-        kernel->setDoesNotAlias(i + 1);
+        kernel->addAttribute(i + 1, llvm::Attribute::AttrKind::NoAlias);
     }
 
     env.set_current_function(kernel);

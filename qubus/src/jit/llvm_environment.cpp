@@ -85,7 +85,7 @@ void llvm_environment::init_assume_align()
 
     assume_align_->addFnAttr(llvm::Attribute::AlwaysInline);
 
-    assume_align_->setDoesNotAlias(1);
+    assume_align_->addAttribute(1, llvm::Attribute::AttrKind::NoAlias);
 
     set_current_function(assume_align_);
 
@@ -113,8 +113,8 @@ void llvm_environment::init_alloc_scratch_mem()
     alloc_scratch_mem_ = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
                                                 "QUBUS_cpurt_alloc_scatch_mem", &module());
 
-    alloc_scratch_mem_->setDoesNotCapture(1);
-    alloc_scratch_mem_->setDoesNotAlias(1);
+    alloc_scratch_mem_->addAttribute(1, llvm::Attribute::AttrKind::NoCapture);
+    alloc_scratch_mem_->addAttribute(1, llvm::Attribute::AttrKind::NoAlias);
     alloc_scratch_mem_->setDoesNotThrow();
 }
 
@@ -131,8 +131,8 @@ void llvm_environment::init_dealloc_scratch_mem()
     dealloc_scratch_mem_ = llvm::Function::Create(FT, llvm::Function::ExternalLinkage,
                                                   "QUBUS_cpurt_dealloc_scratch_mem", &module());
 
-    dealloc_scratch_mem_->setDoesNotCapture(1);
-    dealloc_scratch_mem_->setDoesNotAlias(1);
+    dealloc_scratch_mem_->addAttribute(1, llvm::Attribute::AttrKind::NoCapture);
+    dealloc_scratch_mem_->addAttribute(1, llvm::Attribute::AttrKind::NoAlias);
     dealloc_scratch_mem_->setDoesNotThrow();
 }
 
