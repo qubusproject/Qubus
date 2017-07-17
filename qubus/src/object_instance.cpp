@@ -110,6 +110,8 @@ public:
 
     hpx::future<void> copy(util::span<char> buffer) const;
 
+    hpx::future<hpx::naming::id_type> location() const;
+
 private:
     static void transfer_data(util::span<char> recv, hpx::future<transfer_buffer_type> f)
     {
@@ -158,6 +160,11 @@ object_instance::operator bool() const
 hpx::future<void> object_instance::copy(util::span<char> buffer) const
 {
     return impl_->copy(buffer);
+}
+
+hpx::future<hpx::naming::id_type> object_instance::location() const
+{
+    return impl_->location();
 }
 
 void object_instance::load(hpx::serialization::input_archive& ar, unsigned QUBUS_UNUSED(version))
@@ -215,5 +222,10 @@ hpx::future<void> object_instance::impl::copy(util::span<char> buffer) const
         .then([buffer](hpx::future<transfer_buffer_type> buff) {
             transfer_data(buffer, std::move(buff));
         });
+}
+
+hpx::future<hpx::naming::id_type> object_instance::impl::location() const
+{
+    return hpx::get_colocation_id(this->get_id());
 }
 }
