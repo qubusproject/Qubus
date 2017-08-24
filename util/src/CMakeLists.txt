@@ -22,7 +22,7 @@ target_compile_features(qubus_util PUBLIC cxx_std_14)
 target_include_directories(qubus_util PUBLIC ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/util/include/>)
 target_link_libraries(qubus_util PUBLIC Threads::Threads ${Boost_LIBRARIES})
 set_target_properties(qubus_util PROPERTIES POSITION_INDEPENDENT_CODE True)
-set_target_properties(qubus_util PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${QUBUS_HAS_LTO_SUPPORT})
+#set_target_properties(qubus_util PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${QUBUS_HAS_LTO_SUPPORT})
 
 set_property(TARGET qubus_util PROPERTY VERSION ${QUBUS_VERSION})
 set_property(TARGET qubus_util PROPERTY SOVERSION 0)
