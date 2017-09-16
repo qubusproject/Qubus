@@ -7,6 +7,7 @@
 #pragma push_macro("DEBUG")
 #undef DEBUG
 
+#include <llvm/ExecutionEngine/ExecutionEngine.h>
 #include <llvm/ExecutionEngine/JITEventListener.h>
 
 #include <llvm/Support/TargetSelect.h>

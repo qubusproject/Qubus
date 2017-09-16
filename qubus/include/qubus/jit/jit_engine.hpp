@@ -6,10 +6,11 @@
 #undef DEBUG
 
 #include <llvm/ExecutionEngine/Orc/IRCompileLayer.h>
-#include <llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h>
 #if LLVM_VERSION_MAJOR >= 5
 #include <llvm/ExecutionEngine/Orc/CompileUtils.h>
 #include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
+#else
+#include <llvm/ExecutionEngine/Orc/ObjectLinkingLayer.h>
 #endif
 
 #include <llvm/IR/Module.h>
