@@ -6,6 +6,9 @@
 #endif
 #include <llvm/ExecutionEngine/Orc/LambdaResolver.h>
 #include <llvm/ExecutionEngine/RTDyldMemoryManager.h>
+#if LLVM_VERSION_MAJOR >= 5
+#include <llvm/ExecutionEngine/SectionMemoryManager.h>
+#endif
 
 #include <llvm/IR/Mangler.h>
 #include <llvm/Support/DynamicLibrary.h>
