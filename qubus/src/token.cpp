@@ -1,7 +1,5 @@
 #include <qubus/token.hpp>
 
-#include <qubus/hpx_utils.hpp>
-
 #include <qubus/util/assert.hpp>
 
 #include <utility>
@@ -12,11 +10,9 @@ using server_type = hpx::components::component<qubus::token_server>;
 HPX_REGISTER_COMPONENT(server_type, qubus_token_server);
 
 using when_valid_action = qubus::token_server::when_valid_action;
-HPX_REGISTER_ACTION_DECLARATION(when_valid_action, qubus_token_server_when_valid_action);
 HPX_REGISTER_ACTION(when_valid_action, qubus_token_server_when_valid_action);
 
 using when_expired_action = qubus::token_server::when_expired_action;
-HPX_REGISTER_ACTION_DECLARATION(when_expired_action, qubus_token_server_when_expired_action);
 HPX_REGISTER_ACTION(when_expired_action, qubus_token_server_when_expired_action);
 
 namespace qubus
@@ -60,7 +56,7 @@ token::token(hpx::shared_future<void> is_valid_)
 }
 
 token::token(distributed_future<void> is_valid_)
-: base_type(new_here<token_server>(std::move(is_valid_)))
+: base_type(hpx::local_new<token_server>(std::move(is_valid_)))
 {
 }
 

@@ -1,8 +1,6 @@
 #ifndef QUBUS_DISTRIBUTED_FUTURE_HPP
 #define QUBUS_DISTRIBUTED_FUTURE_HPP
 
-#include <qubus/hpx_utils.hpp>
-
 #include <hpx/include/actions.hpp>
 #include <hpx/include/components.hpp>
 #include <hpx/include/lcos.hpp>
@@ -384,7 +382,7 @@ public:
     using base_type =
     hpx::components::client_base<distributed_promise<T>, distributed_promise_state<T>>;
 
-    distributed_promise() : base_type(new_here<distributed_promise_state<T>>())
+    distributed_promise() : base_type(hpx::local_new<distributed_promise<T>>())
     {
     }
 
@@ -414,7 +412,7 @@ public:
     using base_type =
         hpx::components::client_base<distributed_promise<void>, distributed_promise_state<void>>;
 
-    distributed_promise() : base_type(new_here<distributed_promise_state<void>>())
+    distributed_promise() : base_type(hpx::local_new<distributed_promise_state<void>>())
     {
     }
 
@@ -440,7 +438,7 @@ auto make_distributed_future(hpx::future<T> future)
 
     QUBUS_ASSERT(future.valid(), "Invalid future.");
 
-    return distributed_future<T>(new_here<distributed_future_type>(std::move(future)));
+    return distributed_future<T>(hpx::local_new<distributed_future_type>(std::move(future)));
 }
 
 template <typename T>
@@ -450,7 +448,7 @@ auto make_distributed_future(hpx::shared_future<T> future)
 
     QUBUS_ASSERT(future.valid(), "Invalid future.");
 
-    return distributed_future<T>(new_here<distributed_future_type>(std::move(future)));
+    return distributed_future<T>(hpx::local_new<distributed_future_type>(std::move(future)));
 }
 
 template <typename T>

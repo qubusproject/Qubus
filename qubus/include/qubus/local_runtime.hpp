@@ -18,7 +18,7 @@
 #include <qubus/local_object_factory.hpp>
 
 #include <hpx/include/components.hpp>
-#include <hpx/include/thread_executors.hpp>
+#include <hpx/runtime/threads/executors/pool_executor.hpp>
 
 #include <boost/filesystem.hpp>
 
@@ -62,7 +62,7 @@ private:
     hpx::future<local_address_space::address_entry>
     resolve_page_fault(const object& obj, local_address_space::page_fault_context ctx);
 
-    hpx::threads::executors::local_priority_queue_os_executor service_executor_;
+    hpx::threads::executors::pool_executor service_executor_;
 
     abi_info abi_info_;
 

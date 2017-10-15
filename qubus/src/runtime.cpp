@@ -1,14 +1,9 @@
 #include <qubus/runtime.hpp>
 
 #include <qubus/scheduling/uniform_fill_scheduler.hpp>
-
 #include <qubus/basic_address_space.hpp>
-
 #include <qubus/prefix.hpp>
-
 #include <qubus/logging.hpp>
-
-#include <qubus/hpx_utils.hpp>
 
 #include <qubus/util/unused.hpp>
 
@@ -16,16 +11,12 @@ using server_type = hpx::components::component<qubus::runtime_server>;
 HPX_REGISTER_COMPONENT(server_type, qubus_runtime_server);
 
 typedef qubus::runtime_server::shutdown_action shutdown_action;
-HPX_REGISTER_ACTION_DECLARATION(shutdown_action, runtime_server_shutdown_action);
 HPX_REGISTER_ACTION(shutdown_action, runtime_server_shutdown_action);
 
 typedef qubus::runtime_server::execute_action execute_action;
-HPX_REGISTER_ACTION_DECLARATION(execute_action, runtime_server_execute_action);
 HPX_REGISTER_ACTION(execute_action, runtime_server_execute_action);
 
 typedef qubus::runtime_server::get_object_factory_action get_object_factory_action;
-HPX_REGISTER_ACTION_DECLARATION(get_object_factory_action,
-                                runtime_server_get_object_factory_action);
 HPX_REGISTER_ACTION(get_object_factory_action, runtime_server_get_object_factory_action);
 
 namespace qubus
@@ -35,7 +26,7 @@ runtime_server::runtime_server()
 {
     init_logging();
 
-    {
+    /*{
         BOOST_LOG_NAMED_SCOPE("runtime");
 
         logger slg;
@@ -43,11 +34,11 @@ runtime_server::runtime_server()
         QUBUS_LOG(slg, normal) << "Initialize the Qubus runtime";
 
         QUBUS_LOG(slg, normal) << "Runtime prefix: " << get_prefix();
-    }
+    }*/
 
     auto addr_space_impl = std::make_unique<basic_address_space>();
 
-    global_address_space_ = new_here<virtual_address_space_wrapper>(std::move(addr_space_impl));
+    global_address_space_ = hpx::local_new<virtual_address_space_wrapper>(std::move(addr_space_impl));
 
     QUBUS_ASSERT(static_cast<bool>(global_address_space_),
                  "This subsystem is not properly initialized.");
@@ -59,13 +50,13 @@ runtime_server::runtime_server()
 
     obj_factory_ = hpx::new_<object_factory>(hpx::find_here(), abi_info(), local_runtimes_);
 
-    {
+    /*{
         BOOST_LOG_NAMED_SCOPE("runtime");
 
         logger slg;
 
         QUBUS_LOG(slg, normal) << "Bootstrapping virtual multiprocessor";
-    }
+    }*/
 
     global_vpu_ = aggregate_vpu(std::make_unique<uniform_fill_scheduler>());
 
@@ -166,7 +157,15 @@ hpx::future<void> runtime::execute(computelet c, kernel_arguments args)
 
 object_factory runtime::get_object_factory() const
 {
-    return hpx::async<runtime_server::get_object_factory_action>(this->get_id());
+    // FIXME: Reevaluate the impact of the manual unwrapping of the future.
+    return hpx::async<runtime_server::get_object_factory_action>(this->get_id()).get();
+}
+
+void setup(hpx::resource::partitioner& resource_partitioner)
+{
+    resource_partitioner.create_thread_pool("/qubus/service", hpx::resource::scheduling_policy::local_priority_fifo);
+
+    resource_partitioner.add_resource(resource_partitioner.numa_domains()[0].cores()[0].pus()[0], "/qubus/service");
 }
 
 void init(int QUBUS_UNUSED(argc), char** QUBUS_UNUSED(argv))

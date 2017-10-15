@@ -8,7 +8,6 @@ using server_type = hpx::components::component<qubus::computelet_server>;
 HPX_REGISTER_COMPONENT(server_type, qubus_computelet_server);
 
 typedef qubus::computelet_server::code_action code_action;
-HPX_REGISTER_ACTION_DECLARATION(code_action);
 HPX_REGISTER_ACTION(code_action);
 
 namespace qubus

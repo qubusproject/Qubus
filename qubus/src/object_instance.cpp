@@ -3,7 +3,6 @@
 #include <hpx/include/actions.hpp>
 #include <hpx/include/components.hpp>
 
-#include <qubus/hpx_utils.hpp>
 #include <qubus/util/unused.hpp>
 
 #include <cstdint>
@@ -131,7 +130,7 @@ object_instance::object_instance() : impl_(std::make_unique<impl>())
 }
 
 object_instance::object_instance(local_address_space::handle local_handle_)
-: impl_(std::make_unique<impl>(new_here<object_instance_server>(std::move(local_handle_))))
+: impl_(std::make_unique<impl>(hpx::local_new<object_instance_server>(std::move(local_handle_))))
 {
 }
 

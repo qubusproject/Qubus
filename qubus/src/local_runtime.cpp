@@ -6,8 +6,6 @@
 
 #include <qubus/prefix.hpp>
 
-#include <qubus/hpx_utils.hpp>
-
 #include <hpx/include/lcos.hpp>
 
 #include <boost/dll.hpp>
@@ -21,11 +19,9 @@ HPX_REGISTER_COMPONENT(server_type, qubus_local_runtime_reference_server);
 
 typedef qubus::local_runtime_reference_server::get_local_object_factory_action
     get_local_object_factory_action;
-HPX_REGISTER_ACTION_DECLARATION(get_local_object_factory_action);
 HPX_REGISTER_ACTION(get_local_object_factory_action)
 
 typedef qubus::local_runtime_reference_server::get_local_vpu_action get_local_vpu_action;
-HPX_REGISTER_ACTION_DECLARATION(get_local_vpu_action);
 HPX_REGISTER_ACTION(get_local_vpu_action);
 
 namespace qubus
@@ -39,8 +35,8 @@ namespace
 std::unique_ptr<local_runtime> local_qubus_runtime;
 }
 
-local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_address_space_)
-: service_executor_(1), global_address_space_(std::move(global_address_space_))
+local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_address_space_) try
+: service_executor_("/qubus/service"), global_address_space_(std::move(global_address_space_))
 {
     // Force the CPU backend to be linked.
     // FIXME: After we have fixed our lifetime issues, we should remove this line.
@@ -63,7 +59,7 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
 
     scan_for_vpu_backends();
 
-    object_factory_ = new_here<local_object_factory_server>(address_space_.get());
+    object_factory_ = hpx::local_new<local_object_factory>(address_space_.get());
 
     //local_vpu_ = std::make_unique<aggregate_vpu>(std::make_unique<round_robin_scheduler>());
 
@@ -73,6 +69,10 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
     }*/
 
     local_vpu_ = std::move(the_host_backend.create_vpus()[0]);
+}
+catch (const std::exception&)
+{
+
 }
 
 local_object_factory local_runtime::get_local_object_factory() const
@@ -366,7 +366,7 @@ hpx::future<hpx::id_type> local_runtime_reference_server::get_local_object_facto
 std::unique_ptr<remote_vpu_reference> local_runtime_reference_server::get_local_vpu() const
 {
     return std::make_unique<remote_vpu_reference>(
-        new_here<remote_vpu_reference_server>(&runtime_->get_local_vpu()));
+        hpx::local_new<remote_vpu_reference>(&runtime_->get_local_vpu()));
 }
 
 local_runtime_reference::local_runtime_reference(hpx::future<hpx::id_type>&& id)
@@ -376,8 +376,9 @@ local_runtime_reference::local_runtime_reference(hpx::future<hpx::id_type>&& id)
 
 local_object_factory local_runtime_reference::get_local_object_factory() const
 {
+    // FIXME: Reevaluate the impact of the manual unwrapping of the future.
     return hpx::async<local_runtime_reference_server::get_local_object_factory_action>(
-        this->get_id());
+        this->get_id()).get();
 }
 
 std::unique_ptr<remote_vpu_reference> local_runtime_reference::get_local_vpu() const
@@ -413,7 +414,7 @@ init_local_runtime_remote(virtual_address_space_wrapper::client global_addr_spac
     auto copy =
         std::make_unique<virtual_address_space_wrapper::client>(std::move(global_addr_space));
 
-    return new_here<local_runtime_reference_server>(&init_local_runtime(std::move(copy)));
+    return hpx::local_new<local_runtime_reference_server>(&init_local_runtime(std::move(copy)));
 }
 
 void shutdown_local_runtime_remote()
@@ -423,7 +424,7 @@ void shutdown_local_runtime_remote()
 
 hpx::future<hpx::id_type> get_local_runtime_remote()
 {
-    return new_here<local_runtime_reference_server>(&get_local_runtime());
+    return hpx::local_new<local_runtime_reference_server>(&get_local_runtime());
 }
 
 HPX_DEFINE_PLAIN_ACTION(init_local_runtime_remote, init_local_runtime_remote_action);
@@ -434,7 +435,8 @@ local_runtime_reference
 init_local_runtime_on_locality(const hpx::id_type& locality,
                                virtual_address_space_wrapper::client superior_addr_space)
 {
-    return hpx::async<init_local_runtime_remote_action>(locality, std::move(superior_addr_space));
+    // FIXME: Reevaluate the impact of the manual unwrapping of the future.
+    return hpx::async<init_local_runtime_remote_action>(locality, std::move(superior_addr_space)).get();
 }
 
 void shutdown_local_runtime_on_locality(const hpx::id_type& locality)
@@ -444,7 +446,8 @@ void shutdown_local_runtime_on_locality(const hpx::id_type& locality)
 
 local_runtime_reference get_local_runtime_on_locality(const hpx::id_type& locality)
 {
-    return hpx::async<get_local_runtime_remote_action>(locality);
+    // FIXME: Reevaluate the impact of the manual unwrapping of the future.
+    return hpx::async<get_local_runtime_remote_action>(locality).get();
 }
 }
 

@@ -63,7 +63,7 @@ TEST_P(sparse_support, sparse_matrix_vector_product)
     tensor<double, 1> B(N);
     tensor<double, 1> C(N);
 
-    kernel spmv = [A, B, C]{
+    kernel spmv = [A, B, C] {
         qtl::index i, j;
 
         C(i) = sum(j, A(i, j) * B(j));
@@ -218,5 +218,10 @@ int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
 
-    return hpx::init(argc, argv, qubus::get_hpx_config());
+    hpx::resource::partitioner rp(argc, argv, qubus::get_hpx_config(),
+                                  hpx::resource::partitioner_mode::mode_allow_oversubscription);
+
+    qubus::setup(rp);
+
+    return hpx::init();
 }

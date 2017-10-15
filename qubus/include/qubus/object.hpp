@@ -72,7 +72,7 @@ public:
     using base_type = hpx::components::client_base<object, object_server>;
 
     object() = default;
-    object(hpx::id_type&& id);
+    object(hpx::id_type id);
     object(hpx::future<hpx::id_type>&& id);
 
     type object_type() const;

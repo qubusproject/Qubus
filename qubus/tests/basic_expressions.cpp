@@ -333,6 +333,8 @@ TEST(basic_expressions, complex_division)
 
 int hpx_main(int argc, char** argv)
 {
+    hpx::resource::get_partitioner().print_init_pool_data(std::cout);
+
     qubus::init(argc, argv);
 
     auto result = RUN_ALL_TESTS();
@@ -348,5 +350,12 @@ int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
 
-    return hpx::init(argc, argv, qubus::get_hpx_config());
+    hpx::resource::partitioner rp(argc, argv, qubus::get_hpx_config(),
+                                  hpx::resource::partitioner_mode::mode_allow_oversubscription);
+
+    qubus::setup(rp);
+
+    hpx::resource::get_partitioner().print_init_pool_data(std::cout);
+
+    return hpx::init();
 }

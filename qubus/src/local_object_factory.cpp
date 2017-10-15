@@ -2,8 +2,6 @@
 
 #include <qubus/host_object_views.hpp>
 
-#include <qubus/hpx_utils.hpp>
-
 #include <qubus/util/assert.hpp>
 #include <qubus/util/integers.hpp>
 #include <qubus/util/unused.hpp>
@@ -15,18 +13,12 @@ using server_type = hpx::components::component<qubus::local_object_factory_serve
 HPX_REGISTER_COMPONENT(server_type, qubus_local_object_factory_server);
 
 using create_scalar_action = qubus::local_object_factory_server::create_scalar_action;
-HPX_REGISTER_ACTION_DECLARATION(create_scalar_action,
-                                qubus_local_object_factory_create_scalar_action);
 HPX_REGISTER_ACTION(create_scalar_action, qubus_local_object_factory_create_scalar_action);
 
 using create_array_action = qubus::local_object_factory_server::create_array_action;
-HPX_REGISTER_ACTION_DECLARATION(create_array_action,
-                                qubus_local_object_factory_create_array_action);
 HPX_REGISTER_ACTION(create_array_action, qubus_local_object_factory_create_array_action);
 
 using create_struct_action = qubus::local_object_factory_server::create_struct_action;
-HPX_REGISTER_ACTION_DECLARATION(create_struct_action,
-                                qubus_local_object_factory_create_struct_action);
 HPX_REGISTER_ACTION(create_struct_action, qubus_local_object_factory_create_struct_action);
 
 namespace qubus
@@ -44,7 +36,7 @@ hpx::future<hpx::id_type> local_object_factory_server::create_scalar(type data_t
     auto size = abi_.get_size_of(data_type);
     auto alignment = abi_.get_align_of(data_type);
 
-    object obj = new_here<object_server>(data_type, size, alignment);
+    object obj = hpx::local_new<object>(data_type, size, alignment);
 
     auto instance = address_space_->allocate_object_page(obj, size, alignment);
 
@@ -62,7 +54,7 @@ local_object_factory_server::create_array(type value_type, std::vector<util::ind
 
     auto layout = abi_.get_array_layout(value_type, shape);
 
-    object obj = new_here<object_server>(std::move(obj_type), layout.size(), layout.alignment());
+    object obj = hpx::local_new<object>(std::move(obj_type), layout.size(), layout.alignment());
 
     auto instance = address_space_->allocate_object_page(obj, util::to_uindex(layout.size()),
                                                          util::to_uindex(layout.alignment()));
@@ -94,7 +86,7 @@ hpx::future<hpx::id_type> local_object_factory_server::create_struct(type struct
                                                                      std::vector<object> members)
 {
     // TODO: What should be the alignment of a struct?
-    object obj = new_here<object_server>(struct_type, 0, sizeof(void*));
+    object obj = hpx::local_new<object>(struct_type, 0, sizeof(void*));
 
     auto obj_ptr = hpx::get_ptr<object_server>(hpx::launch::sync, obj.get_id());
 
@@ -106,26 +98,35 @@ hpx::future<hpx::id_type> local_object_factory_server::create_struct(type struct
     return hpx::make_ready_future(obj.get());
 }
 
+local_object_factory::local_object_factory(hpx::id_type id)
+: base_type(std::move(id))
+{
+}
+
 local_object_factory::local_object_factory(hpx::future<hpx::id_type>&& id)
 : base_type(std::move(id))
 {
 }
 
 object local_object_factory::create_scalar(type data_type)
+
 {
+    // FIXME: Reevaluate the impact of the manual unwrapping of the future.
     return hpx::async<local_object_factory_server::create_scalar_action>(this->get_id(),
-                                                                         std::move(data_type));
+                                                                         std::move(data_type)).get();
 }
 
 object local_object_factory::create_array(type value_type, std::vector<util::index_t> shape)
 {
+    // FIXME: Reevaluate the impact of the manual unwrapping of the future.
     return hpx::async<local_object_factory_server::create_array_action>(
-        this->get_id(), std::move(value_type), std::move(shape));
+        this->get_id(), std::move(value_type), std::move(shape)).get();
 }
 
 object local_object_factory::create_struct(type struct_type, std::vector<object> members)
 {
+    // FIXME: Reevaluate the impact of the manual unwrapping of the future.
     return hpx::async<local_object_factory_server::create_struct_action>(
-        this->get_id(), std::move(struct_type), std::move(members));
+        this->get_id(), std::move(struct_type), std::move(members)).get();
 }
 }

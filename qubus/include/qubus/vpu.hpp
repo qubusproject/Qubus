@@ -65,6 +65,7 @@ public:
 
     remote_vpu() = default;
 
+    remote_vpu(hpx::id_type id);
     remote_vpu(hpx::future<hpx::id_type>&& id);
 
     hpx::future<void> execute(computelet c, execution_context ctx) override;
@@ -102,6 +103,7 @@ public:
 
     remote_vpu_reference() = default;
 
+    remote_vpu_reference(hpx::id_type id);
     remote_vpu_reference(hpx::future<hpx::id_type>&& id);
 
     hpx::future<void> execute(computelet c, execution_context ctx) override;

@@ -21,8 +21,6 @@
 #include <hpx/include/lcos.hpp>
 #include <hpx/include/threads.hpp>
 
-#include <qubus/hpx_utils.hpp>
-
 #include <memory>
 #include <mutex>
 #include <unordered_map>

@@ -2,43 +2,33 @@
 
 #include <qubus/local_runtime.hpp>
 
-#include <qubus/hpx_utils.hpp>
-
 #include <utility>
 
 using server_type = hpx::components::component<qubus::object_server>;
 HPX_REGISTER_COMPONENT(server_type, qubus_object_server);
 
 using object_type_action = qubus::object_server::object_type_action;
-HPX_REGISTER_ACTION_DECLARATION(object_type_action, qubus_object_server_type_action);
 HPX_REGISTER_ACTION(object_type_action, qubus_object_server_type_action);
 
 using size_action = qubus::object_server::size_action;
-HPX_REGISTER_ACTION_DECLARATION(size_action, qubus_object_server_size_action);
 HPX_REGISTER_ACTION(size_action, qubus_object_server_size_action);
 
 using alignment_action = qubus::object_server::alignment_action;
-HPX_REGISTER_ACTION_DECLARATION(alignment_action, qubus_object_server_alignment_action);
 HPX_REGISTER_ACTION(alignment_action, qubus_object_server_alignment_action);
 
 using primary_instance_action = qubus::object_server::primary_instance_action;
-HPX_REGISTER_ACTION_DECLARATION(primary_instance_action, qubus_object_server_primary_instance_action);
 HPX_REGISTER_ACTION(primary_instance_action, qubus_object_server_primary_instance_action);
 
 using has_data_action = qubus::object_server::has_data_action;
-HPX_REGISTER_ACTION_DECLARATION(has_data_action, qubus_object_server_has_data_action);
 HPX_REGISTER_ACTION(has_data_action, qubus_object_server_has_data_action);
 
 using acquire_read_access_action = qubus::object_server::acquire_read_access_action;
-HPX_REGISTER_ACTION_DECLARATION(acquire_read_access_action, qubus_object_server_acquire_read_access_action);
 HPX_REGISTER_ACTION(acquire_read_access_action, qubus_object_server_acquire_read_access_action);
 
 using acquire_write_access_action = qubus::object_server::acquire_write_access_action;
-HPX_REGISTER_ACTION_DECLARATION(acquire_write_access_action, qubus_object_server_acquire_write_access_action);
 HPX_REGISTER_ACTION(acquire_write_access_action, qubus_object_server_acquire_write_access_action);
 
 using components_action = qubus::object_server::components_action;
-HPX_REGISTER_ACTION_DECLARATION(components_action, qubus_object_server_components_action);
 HPX_REGISTER_ACTION(components_action, qubus_object_server_components_action);
 
 namespace qubus
@@ -117,7 +107,7 @@ const object& object_server::operator()(long int index) const
     return components_.at(index);
 }
 
-object::object(hpx::id_type&& id) : base_type(std::move(id))
+object::object(hpx::id_type id) : base_type(std::move(id))
 {
 }
 

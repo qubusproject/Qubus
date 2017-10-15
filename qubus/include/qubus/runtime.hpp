@@ -17,6 +17,7 @@
 
 #include <hpx/include/components.hpp>
 #include <hpx/include/actions.hpp>
+#include <hpx/include/resource_partitioner.hpp>
 
 #include <string>
 #include <vector>
@@ -63,6 +64,7 @@ public:
     // const abi_info& abi();
 };
 
+void setup(hpx::resource::partitioner& resource_partitioner);
 void init(int argc, char** argv);
 void finalize();
 runtime get_runtime();
