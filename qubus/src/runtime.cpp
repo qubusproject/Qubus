@@ -1,9 +1,9 @@
 #include <qubus/runtime.hpp>
 
-#include <qubus/scheduling/uniform_fill_scheduler.hpp>
 #include <qubus/basic_address_space.hpp>
-#include <qubus/prefix.hpp>
 #include <qubus/logging.hpp>
+#include <qubus/prefix.hpp>
+#include <qubus/scheduling/uniform_fill_scheduler.hpp>
 
 #include <qubus/util/unused.hpp>
 
@@ -38,7 +38,8 @@ runtime_server::runtime_server()
 
     auto addr_space_impl = std::make_unique<basic_address_space>();
 
-    global_address_space_ = hpx::local_new<virtual_address_space_wrapper>(std::move(addr_space_impl));
+    global_address_space_ =
+        hpx::local_new<virtual_address_space_wrapper>(std::move(addr_space_impl));
 
     QUBUS_ASSERT(static_cast<bool>(global_address_space_),
                  "This subsystem is not properly initialized.");
@@ -119,9 +120,15 @@ void runtime_server::execute(computelet c, kernel_arguments kernel_args)
 
     hpx::future<void> dependencies_ready = hpx::when_all(std::move(dependencies));
 
-    execution_context ctx(std::move(args), std::move(results), std::move(dependencies_ready));
+    execution_context ctx(std::move(args), std::move(results));
 
-    auto is_finished = global_vpu_->execute(std::move(c), std::move(ctx));
+    hpx::future<void> is_finished = dependencies_ready.then(
+        get_local_runtime().get_service_executor(),
+        [ this, c = std::move(c), ctx = std::move(ctx) ](hpx::future<void> dependencies_ready) {
+            dependencies_ready.get();
+
+            return global_vpu_->execute(std::move(c), std::move(ctx));
+        });
 
     is_finished.then([tokens = std::move(tokens)](hpx::future<void> is_finished) mutable {
         is_finished.get();
@@ -163,9 +170,11 @@ object_factory runtime::get_object_factory() const
 
 void setup(hpx::resource::partitioner& resource_partitioner)
 {
-    resource_partitioner.create_thread_pool("/qubus/service", hpx::resource::scheduling_policy::local_priority_fifo);
+    resource_partitioner.create_thread_pool("/qubus/service",
+                                            hpx::resource::scheduling_policy::local_priority_fifo);
 
-    resource_partitioner.add_resource(resource_partitioner.numa_domains()[0].cores()[0].pus()[0], "/qubus/service");
+    resource_partitioner.add_resource(resource_partitioner.numa_domains()[0].cores()[0].pus()[0],
+                                      "/qubus/service");
 }
 
 void init(int QUBUS_UNUSED(argc), char** QUBUS_UNUSED(argv))

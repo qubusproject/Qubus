@@ -51,9 +51,11 @@ public:
         {
             hpx::threads::executors::default_executor executor(hpx::threads::thread_stacksize_huge);
 
-            auto compilation = hpx::async(executor, [&c, this] {
-                                   return underlying_compiler_.compile_computelet(c.code().get());
-                               }).get();
+            auto compilation =
+                hpx::async(
+                    executor,
+                    [&c, this] { return underlying_compiler_.compile_computelet(c.code().get()); })
+                    .get();
 
             pos = compilation_cache_.emplace(c.get_id().get_gid(), std::move(compilation)).first;
 
@@ -76,9 +78,9 @@ public:
       cuda_ctx_(this->dev_),
       address_space_(std::make_unique<cuda_allocator>(this->cuda_ctx_))
     {
-        auto page_fault_handler = [this, &local_addr_space_](
-            const object& obj,
-            address_space::page_fault_context ctx) -> hpx::future<address_space::address_entry> {
+        auto page_fault_handler = [this, &local_addr_space_](const object& obj,
+                                                             address_space::page_fault_context ctx)
+            -> hpx::future<address_space::address_entry> {
             auto host_handle = local_addr_space_.resolve_object(obj);
 
             return host_handle.then(
@@ -122,10 +124,8 @@ public:
 
         const auto& compilation = compiler_.compile(c);
 
-        auto deps_ready = ctx.when_ready();
-
-        hpx::future<void> task_done = deps_ready.then(
-            get_local_runtime().get_service_executor(), [this, &compilation, c, ctx](auto) mutable {
+        hpx::future<void> task_done = hpx::async(
+            get_local_runtime().get_service_executor(), [this, &compilation, c, ctx]() mutable {
                 std::vector<void*> task_args;
 
                 std::vector<address_space::handle> pages;

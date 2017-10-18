@@ -134,11 +134,8 @@ public:
     {
         const auto& compilation = compiler_.compile(c);
 
-        auto deps_ready = ctx.when_ready();
-
-        hpx::future<void> task_done = hpx::dataflow(
-            [this, &compilation, c, ctx](hpx::future<void> deps_ready) mutable {
-                deps_ready.get();
+        hpx::future<void> task_done = hpx::async(
+            [this, &compilation, c, ctx] () mutable {
 
                 auto task_start = std::chrono::steady_clock::now();
 
@@ -174,8 +171,7 @@ public:
                     std::chrono::duration_cast<std::chrono::microseconds>(task_end - task_start);
 
                 perf_model_.sample_execution_time(c, ctx, std::move(task_duration));
-            },
-            std::move(deps_ready));
+            });
 
         return task_done;
     }
