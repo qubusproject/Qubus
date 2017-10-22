@@ -92,7 +92,7 @@ local_address_space& local_runtime::get_address_space() const
 
 void local_runtime::try_to_load_host_backend(const boost::filesystem::path& library_path)
 {
-    BOOST_LOG_NAMED_SCOPE("runtime");
+    //BOOST_LOG_NAMED_SCOPE("runtime");
 
     logger slg;
 
@@ -105,15 +105,15 @@ void local_runtime::try_to_load_host_backend(const boost::filesystem::path& libr
     {
         auto backend_name = match[1];
 
-        QUBUS_LOG(slg, normal) << "Loading backend '" << backend_name << "' (located at "
-                               << library_path << ")";
+        //QUBUS_LOG(slg, normal) << "Loading backend '" << backend_name << "' (located at "
+        //                       << library_path << ")";
 
         boost::dll::shared_library backend_library(library_path);
 
         if (!backend_library)
         {
-            QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
-                                    << "' (located at " << library_path << ")";
+            //QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+            //                        << "' (located at " << library_path << ")";
 
             return;
         }
@@ -122,8 +122,8 @@ void local_runtime::try_to_load_host_backend(const boost::filesystem::path& libr
 
         if (!backend_library.has(get_type_name))
         {
-            QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
-                                    << "': Missing backend type accessor.";
+            //QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+            //                        << "': Missing backend type accessor.";
 
             return;
         }
@@ -140,8 +140,8 @@ void local_runtime::try_to_load_host_backend(const boost::filesystem::path& libr
 
             if (!backend_library.has(init_func_name))
             {
-                QUBUS_LOG(slg, warning)
-                    << "Failed to load backend '" << backend_name << "': No viable init function.";
+                //QUBUS_LOG(slg, warning)
+                //    << "Failed to load backend '" << backend_name << "': No viable init function.";
 
                 return;
             }
@@ -154,8 +154,8 @@ void local_runtime::try_to_load_host_backend(const boost::filesystem::path& libr
 
             if (!backend)
             {
-                QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
-                                        << "': Backend initialization failed.";
+                //QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+                //                        << "': Backend initialization failed.";
 
                 return;
             }
@@ -167,8 +167,8 @@ void local_runtime::try_to_load_host_backend(const boost::filesystem::path& libr
             }
             catch (const host_backend_already_set_exception& /*unused*/)
             {
-                QUBUS_LOG(slg, warning)
-                    << "Host backend has already been chosen. Ignoring new backend.";
+                //QUBUS_LOG(slg, warning)
+                //    << "Host backend has already been chosen. Ignoring new backend.";
             }
         }
     }
@@ -176,9 +176,9 @@ void local_runtime::try_to_load_host_backend(const boost::filesystem::path& libr
 
 void local_runtime::try_to_load_backend(const boost::filesystem::path& library_path)
 {
-    BOOST_LOG_NAMED_SCOPE("runtime");
+    //BOOST_LOG_NAMED_SCOPE("runtime");
 
-    logger slg;
+    //logger slg;
 
     boost::regex backend_pattern("^libqubus_([\\S]+)\\.so$");
 
@@ -189,15 +189,15 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
     {
         auto backend_name = match[1];
 
-        QUBUS_LOG(slg, normal) << "Loading backend '" << backend_name << "' (located at "
-                               << library_path << ")";
+        //QUBUS_LOG(slg, normal) << "Loading backend '" << backend_name << "' (located at "
+        //                       << library_path << ")";
 
         boost::dll::shared_library backend_library(library_path);
 
         if (!backend_library)
         {
-            QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
-                                    << "' (located at " << library_path << ")";
+            //QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+            //                        << "' (located at " << library_path << ")";
 
             return;
         }
@@ -206,8 +206,8 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
 
         if (!backend_library.has(get_type_name))
         {
-            QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
-                                    << "': Missing backend type accessor.";
+            //QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+            //                        << "': Missing backend type accessor.";
 
             return;
         }
@@ -224,8 +224,8 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
 
             if (!backend_library.has(init_func_name))
             {
-                QUBUS_LOG(slg, warning)
-                    << "Failed to load backend '" << backend_name << "': No viable init function.";
+                //QUBUS_LOG(slg, warning)
+                //    << "Failed to load backend '" << backend_name << "': No viable init function.";
 
                 return;
             }
@@ -240,8 +240,8 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
 
             if (!backend)
             {
-                QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
-                                        << "': Backend initialization failed.";
+                //QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+                //                        << "': Backend initialization failed.";
 
                 return;
             }
@@ -255,11 +255,11 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
 void local_runtime::scan_for_host_backends()
 {
     {
-        BOOST_LOG_NAMED_SCOPE("runtime");
+        //BOOST_LOG_NAMED_SCOPE("runtime");
 
-        logger slg;
+        //logger slg;
 
-        QUBUS_LOG(slg, normal) << "Scanning for host backends";
+        //QUBUS_LOG(slg, normal) << "Scanning for host backends";
     }
 
     auto backend_search_path = get_prefix() / "qubus/backends";
@@ -294,11 +294,11 @@ void local_runtime::scan_for_host_backends()
 void local_runtime::scan_for_vpu_backends()
 {
     {
-        BOOST_LOG_NAMED_SCOPE("runtime");
+        //BOOST_LOG_NAMED_SCOPE("runtime");
 
-        logger slg;
+        //logger slg;
 
-        QUBUS_LOG(slg, normal) << "Scanning for VPU backends";
+        //QUBUS_LOG(slg, normal) << "Scanning for VPU backends";
     }
 
     auto backend_search_path = get_prefix() / "qubus/backends";

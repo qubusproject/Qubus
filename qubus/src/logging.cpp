@@ -2,8 +2,10 @@
 
 #include <qubus/logging.hpp>
 
+#include <hpx/include/actions.hpp>
 #include <hpx/include/components.hpp>
 #include <hpx/include/lcos.hpp>
+#include <hpx/lcos/broadcast.hpp>
 
 #include <boost/date_time/posix_time/posix_time.hpp>
 #include <boost/log/attributes.hpp>
@@ -63,11 +65,9 @@ using server_type = hpx::components::component<qubus::hpx_log_server>;
 HPX_REGISTER_COMPONENT(server_type, qubus_hpx_log_server);
 
 using consume_action = qubus::hpx_log_server::consume_action;
-HPX_REGISTER_ACTION_DECLARATION(consume_action, qubus_hpx_log_server_consume_action);
 HPX_REGISTER_ACTION(consume_action, qubus_hpx_log_server_consume_action);
 
 using flush_action = qubus::hpx_log_server::flush_action;
-HPX_REGISTER_ACTION_DECLARATION(flush_action, qubus_hpx_log_server_flush_action);
 HPX_REGISTER_ACTION(flush_action, qubus_hpx_log_server_flush_action);
 
 namespace qubus
@@ -87,7 +87,6 @@ BOOST_LOG_ATTRIBUTE_KEYWORD(tag_attr, "Tag", std::string)
 BOOST_LOG_ATTRIBUTE_KEYWORD(scope, "Scope", attrs::named_scope::value_type)
 BOOST_LOG_ATTRIBUTE_KEYWORD(timestamp_utc, "TimeStampUTC", attrs::utc_clock::value_type)
 BOOST_LOG_ATTRIBUTE_KEYWORD(locality, "Locality", std::uint32_t)
-}
 
 class hpx_log_client : public hpx::components::client_base<hpx_log_client, hpx_log_server>
 {
@@ -106,7 +105,7 @@ public:
 
     void consume(const std::string& msg)
     {
-        hpx::apply<hpx_log_server::consume_action>(this->get_id(), msg);
+        hpx::async<hpx_log_server::consume_action>(this->get_id(), msg).get();
     }
 
     void flush()
@@ -115,12 +114,10 @@ public:
     }
 };
 
-namespace
-{
 class hpx_log_backend
-    : public boost::log::sinks::basic_formatted_sink_backend<
-          char, boost::log::sinks::combine_requirements<boost::log::sinks::concurrent_feeding,
-                                                        boost::log::sinks::flushing>::type>
+: public boost::log::sinks::basic_formatted_sink_backend<
+      char, boost::log::sinks::combine_requirements<boost::log::sinks::concurrent_feeding,
+                                                    boost::log::sinks::flushing>::type>
 {
 public:
     using base_type = boost::log::sinks::basic_formatted_sink_backend<
@@ -156,26 +153,10 @@ private:
 };
 
 boost::shared_ptr<sinks::synchronous_sink<hpx_log_backend>> logging_sink;
-}
 
-std::ostream& operator<<(std::ostream& strm, severity_level level)
-{
-    static const char* strings[] = {"info",    "normal", "notification",
-                                    "warning", "error",  "critical"};
-
-    if (static_cast<std::size_t>(level) < sizeof(strings) / sizeof(*strings))
-        strm << strings[level];
-    else
-        strm << static_cast<int>(level);
-
-    return strm;
-}
-
-void init_logging()
+void init_local_logging(hpx_log_client log_client)
 {
     logging_sink = boost::make_shared<sinks::synchronous_sink<hpx_log_backend>>();
-
-    auto log_client = hpx::new_<hpx_log_client>(hpx::find_root_locality());
 
     logging_sink->locked_backend()->add_client(std::move(log_client));
 
@@ -197,6 +178,32 @@ void init_logging()
         "Locality", attrs::make_function([] { return hpx::get_locality_id(); }));
 
     logging::core::get()->set_filter(severity >= normal);
+}
+}
+}
+
+HPX_PLAIN_ACTION(qubus::init_local_logging, qubus_init_local_logging_action);
+
+namespace qubus
+{
+std::ostream& operator<<(std::ostream& strm, severity_level level)
+{
+    static const char* strings[] = {"info",    "normal", "notification",
+                                    "warning", "error",  "critical"};
+
+    if (static_cast<std::size_t>(level) < sizeof(strings) / sizeof(*strings))
+        strm << strings[level];
+    else
+        strm << static_cast<int>(level);
+
+    return strm;
+}
+
+void init_logging()
+{
+    auto log_client = hpx::new_<hpx_log_client>(hpx::find_root_locality());
+
+    hpx::lcos::broadcast<qubus_init_local_logging_action>(hpx::find_all_localities(), log_client).get();
 }
 
 void finalize_logging()
