@@ -52,7 +52,7 @@ add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 set_target_properties(qubus PROPERTIES INTERFACE_LINK_LIBRARIES "$<BUILD_INTERFACE:qubus_build_prefix>;$<INSTALL_INTERFACE:qubus_prefix>")
 target_include_directories(qubus PUBLIC ${Boost_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 target_compile_features(qubus PUBLIC cxx_std_14)
-target_link_libraries(qubus qubus_ir qubus_isl qubus_util ${Boost_LIBRARIES} qubus_cpu_backend)
+target_link_libraries(qubus qubus_ir qubus_isl qubus_util ${Boost_LIBRARIES} qubus_cpu_backend hpx)
 
 if (TARGET qubus_cuda_backend)
     target_link_libraries(qubus qubus_cuda_backend)
@@ -66,8 +66,6 @@ if (TARGET qubus_cuda_backend)
 endif()
 
 set_target_properties(qubus PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${QUBUS_HAS_LTO_SUPPORT})
-hpx_setup_target(qubus COMPONENT_DEPENDENCIES iostreams)
-qubus_set_output_name(qubus qubus)
 
 set_property(TARGET qubus PROPERTY VERSION ${QUBUS_VERSION})
 set_property(TARGET qubus PROPERTY SOVERSION 0)

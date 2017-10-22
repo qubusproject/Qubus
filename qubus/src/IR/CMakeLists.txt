@@ -39,10 +39,8 @@ add_library(qubus_ir SHARED ${qubus_pattern_header_files} ${qubus_ir_header_file
 
 target_include_directories(qubus_ir PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 target_compile_features(qubus_ir PUBLIC cxx_std_14)
-target_link_libraries(qubus_ir qubus_util)
+target_link_libraries(qubus_ir qubus_util hpx)
 set_target_properties(qubus_ir PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${QUBUS_HAS_LTO_SUPPORT})
-hpx_setup_target(qubus_ir)
-qubus_set_output_name(qubus_ir qubus_ir)
 
 set_property(TARGET qubus_ir PROPERTY VERSION ${QUBUS_VERSION})
 set_property(TARGET qubus_ir PROPERTY SOVERSION 0)

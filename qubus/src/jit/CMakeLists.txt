@@ -36,10 +36,8 @@ add_library(qubus_jit SHARED compiler.cpp compile.cpp llvm_environment.cpp entry
             compilation_context.cpp reference.cpp jit_engine.cpp cpuinfo.cpp)
 target_include_directories(qubus_jit PUBLIC ${Boost_LIBRARY_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>)
 target_compile_features(qubus_jit PUBLIC cxx_std_14)
-target_link_libraries(qubus_jit ${Boost_LIBRARIES} qubus_ir qubus_util qubus_llvm)
+target_link_libraries(qubus_jit ${Boost_LIBRARIES} qubus_ir qubus_util qubus_llvm hpx)
 set_target_properties(qubus_jit PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${QUBUS_HAS_LTO_SUPPORT})
-hpx_setup_target(qubus_jit)
-qubus_set_output_name(qubus_jit qubus_jit)
 
 install(TARGETS qubus_llvm qubus_jit EXPORT qubus-targets
         RUNTIME DESTINATION bin

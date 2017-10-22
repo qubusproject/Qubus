@@ -5,11 +5,8 @@ if (TARGET qubus_cuda)
     target_include_directories(qubus_cuda_backend PUBLIC ${Boost_LIBRARY_DIRS}
                                $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>)
     target_compile_features(qubus_cuda_backend PUBLIC cxx_std_14)
-    target_link_libraries(qubus_cuda_backend ${Boost_LIBRARIES} qubus_ir qubus_util qubus_jit qubus_cuda)
+    target_link_libraries(qubus_cuda_backend ${Boost_LIBRARIES} qubus_ir qubus_util qubus_jit qubus_cuda hpx)
     set_target_properties(qubus_cuda_backend PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${QUBUS_HAS_LTO_SUPPORT})
-    hpx_setup_target(qubus_cuda_backend COMPONENT_DEPENDENCIES iostreams)
-    hpx_set_lib_name(qubus_cuda_backend qubus_cuda_backend)
-    qubus_set_output_name(qubus_cuda_backend qubus_cuda_backend)
 
     set_target_properties(qubus_cuda_backend PROPERTIES LIBRARY_OUTPUT_DIRECTORY "${QUBUS_BUILD_PREFIX}/qubus/backends")
     set_target_properties(qubus_cuda_backend PROPERTIES CXX_VISIBILITY_PRESET hidden)

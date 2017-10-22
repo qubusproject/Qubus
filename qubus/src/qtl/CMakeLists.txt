@@ -15,10 +15,8 @@ add_library(qubus_qtl SHARED ${qubus_qtl_header_files} ${qubus_qtl_source_files}
 
 target_include_directories(qubus_qtl PUBLIC ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 target_compile_features(qubus_qtl PUBLIC cxx_std_14)
-target_link_libraries(qubus_qtl qubus qubus_ir qubus_util ${Boost_LIBRARIES})
+target_link_libraries(qubus_qtl qubus qubus_ir qubus_util ${Boost_LIBRARIES} hpx)
 set_target_properties(qubus_qtl PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${QUBUS_HAS_LTO_SUPPORT})
-hpx_setup_target(qubus_qtl)
-qubus_set_output_name(qubus_qtl qubus_qtl)
 
 set_property(TARGET qubus_qtl PROPERTY VERSION ${QUBUS_VERSION})
 set_property(TARGET qubus_qtl PROPERTY SOVERSION 0)
