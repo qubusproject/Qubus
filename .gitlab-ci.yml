@@ -16,9 +16,7 @@ test:clang:release:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  - ctest -E cuda
-  after_script:
-  - cat Testing/Temporary/LastTest.log
+  - ctest -E cuda --output-on-failure
   stage: test
   tags:
   - docker
@@ -34,9 +32,7 @@ test:gcc:release:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  - ctest -E cuda
-  after_script:
-  - cat Testing/Temporary/LastTest.log
+  - ctest -E cuda --output-on-failure
   stage: test
   tags:
   - docker
@@ -52,9 +48,7 @@ test:clang:debug:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Debug -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  - ctest -E cuda
-  after_script:
-  - cat Testing/Temporary/LastTest.log
+  - ctest -E cuda --output-on-failure
   stage: test
   tags:
   - docker
@@ -70,9 +64,7 @@ test:gcc:debug:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Debug  -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  - ctest
-  after_script:
-  - cat Testing/Temporary/LastTest.log
+  - ctest --output-on-failure
   stage: test
   tags:
   - docker
@@ -89,9 +81,7 @@ test:ubuntu:clang:release:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  - ctest -E cuda
-  after_script:
-  - cat Testing/Temporary/LastTest.log
+  - ctest -E cuda --output-on-failure
   stage: test
   image: localhost:5000/td-quantum/ubuntu-ci
   tags:
@@ -108,9 +98,7 @@ test:ubuntu:gcc:release:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  - ctest -E cuda
-  after_script:
-  - cat Testing/Temporary/LastTest.log
+  - ctest -E cuda --output-on-failure
   stage: test
   image: localhost:5000/td-quantum/ubuntu-ci
   tags:
@@ -127,9 +115,7 @@ test:ubuntu:clang:debug:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Debug -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  - ctest -E cuda
-  after_script:
-  - cat Testing/Temporary/LastTest.log
+  - ctest -E cuda --output-on-failure
   stage: test
   image: localhost:5000/td-quantum/ubuntu-ci
   tags:
@@ -146,9 +132,7 @@ test:ubuntu:gcc:debug:
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Debug  -DHPX_DIR=/opt/hpx-debug/lib/cmake/HPX -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
   - make
-  - ctest -E cuda
-  after_script:
-  - cat Testing/Temporary/LastTest.log
+  - ctest -E cuda --output-on-failure
   stage: test
   image: localhost:5000/td-quantum/ubuntu-ci
   tags:
