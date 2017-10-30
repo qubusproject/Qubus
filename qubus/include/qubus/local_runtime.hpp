@@ -81,7 +81,7 @@ class local_runtime_reference_server
 {
 public:
     local_runtime_reference_server() = default;
-    explicit local_runtime_reference_server(local_runtime* runtime_);
+    explicit local_runtime_reference_server(std::weak_ptr<local_runtime> runtime_);
 
     hpx::future<hpx::id_type> get_local_object_factory() const;
 
@@ -93,7 +93,7 @@ public:
                                 get_local_vpu_action);
 
 private:
-    local_runtime* runtime_;
+    std::weak_ptr<local_runtime> runtime_;
 };
 
 class local_runtime_reference
@@ -112,7 +112,7 @@ public:
     std::unique_ptr<remote_vpu_reference> get_local_vpu() const;
 };
 
-local_runtime& init_local_runtime(virtual_address_space_wrapper::client global_addr_space);
+std::weak_ptr<local_runtime> init_local_runtime(virtual_address_space_wrapper::client global_addr_space);
 void shutdown_local_runtime();
 local_runtime& get_local_runtime();
 

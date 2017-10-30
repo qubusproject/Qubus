@@ -32,7 +32,7 @@ extern "C" unsigned long int cpu_backend_get_api_version();
 namespace
 {
 
-std::unique_ptr<local_runtime> local_qubus_runtime;
+std::shared_ptr<local_runtime> local_qubus_runtime;
 }
 
 local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_address_space_) try
@@ -353,20 +353,28 @@ local_runtime::resolve_page_fault(const object& obj, local_address_space::page_f
     return page;
 }
 
-local_runtime_reference_server::local_runtime_reference_server(local_runtime* runtime_)
+local_runtime_reference_server::local_runtime_reference_server(std::weak_ptr<local_runtime> runtime_)
 : runtime_(runtime_)
 {
 }
 
 hpx::future<hpx::id_type> local_runtime_reference_server::get_local_object_factory() const
 {
-    return hpx::make_ready_future(runtime_->get_local_object_factory().get());
+    auto runtime = runtime_.lock();
+
+    QUBUS_ASSERT(runtime, "The referenced local runtime is invalid.");
+
+    return hpx::make_ready_future(runtime->get_local_object_factory().get());
 }
 
 std::unique_ptr<remote_vpu_reference> local_runtime_reference_server::get_local_vpu() const
 {
+    auto runtime = runtime_.lock();
+
+    QUBUS_ASSERT(runtime, "The referenced local runtime is invalid.");
+
     return std::make_unique<remote_vpu_reference>(
-        hpx::local_new<remote_vpu_reference>(&runtime_->get_local_vpu()));
+        hpx::local_new<remote_vpu_reference>(&runtime->get_local_vpu()));
 }
 
 local_runtime_reference::local_runtime_reference(hpx::future<hpx::id_type>&& id)
@@ -386,14 +394,14 @@ std::unique_ptr<remote_vpu_reference> local_runtime_reference::get_local_vpu() c
     return hpx::async<local_runtime_reference_server::get_local_vpu_action>(this->get_id()).get();
 }
 
-local_runtime& init_local_runtime(std::unique_ptr<virtual_address_space> global_addr_space)
+std::weak_ptr<local_runtime> init_local_runtime(std::unique_ptr<virtual_address_space> global_addr_space)
 {
     if (local_qubus_runtime)
         throw 0;
 
-    local_qubus_runtime = std::make_unique<local_runtime>(std::move(global_addr_space));
+    local_qubus_runtime = std::make_shared<local_runtime>(std::move(global_addr_space));
 
-    return *local_qubus_runtime;
+    return local_qubus_runtime;
 }
 
 void shutdown_local_runtime()
@@ -414,7 +422,7 @@ init_local_runtime_remote(virtual_address_space_wrapper::client global_addr_spac
     auto copy =
         std::make_unique<virtual_address_space_wrapper::client>(std::move(global_addr_space));
 
-    return hpx::local_new<local_runtime_reference_server>(&init_local_runtime(std::move(copy)));
+    return hpx::local_new<local_runtime_reference_server>(init_local_runtime(std::move(copy)));
 }
 
 void shutdown_local_runtime_remote()
@@ -424,7 +432,7 @@ void shutdown_local_runtime_remote()
 
 hpx::future<hpx::id_type> get_local_runtime_remote()
 {
-    return hpx::local_new<local_runtime_reference_server>(&get_local_runtime());
+    return hpx::local_new<local_runtime_reference_server>(local_qubus_runtime);
 }
 
 HPX_DEFINE_PLAIN_ACTION(init_local_runtime_remote, init_local_runtime_remote_action);

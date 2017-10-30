@@ -65,6 +65,9 @@ runtime_server::runtime_server()
     {
         global_vpu_->add_member_vpu(runtime.get_local_vpu());
     }
+
+    hpx::wait_all(local_runtimes_);
+    hpx::wait_all(obj_factory_);
 }
 
 void runtime_server::shutdown()
@@ -147,6 +150,10 @@ hpx::future<hpx::id_type> runtime_server::get_object_factory() const
     return hpx::make_ready_future(obj_factory_.get());
 }
 
+runtime::runtime(hpx::id_type&& id) : base_type(std::move(id))
+{
+}
+
 runtime::runtime(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
 {
 }
@@ -177,20 +184,24 @@ void setup(hpx::resource::partitioner& resource_partitioner)
                                       "/qubus/service");
 }
 
+namespace
+{
+    runtime global_runtime;
+}
+
 void init(int QUBUS_UNUSED(argc), char** QUBUS_UNUSED(argv))
 {
-    auto global_runtime = hpx::agas::resolve_name(hpx::launch::sync, "/qubus/runtime");
-
     if (!global_runtime)
     {
-        auto new_runtime = hpx::new_<runtime>(hpx::find_here());
-        hpx::agas::register_name(hpx::launch::sync, "/qubus/runtime", new_runtime.get_id());
+        global_runtime = hpx::new_<runtime>(hpx::find_here());
+        hpx::agas::register_name(hpx::launch::sync, "/qubus/runtime", global_runtime.get_id());
     }
 }
 
 void finalize()
 {
-    auto rt = get_runtime();
+    auto rt = global_runtime;
+    global_runtime.free();
 
     hpx::agas::unregister_name("/qubus/runtime");
 
@@ -199,7 +210,12 @@ void finalize()
 
 runtime get_runtime()
 {
-    return hpx::agas::resolve_name("/qubus/runtime");
+    auto rt = hpx::agas::resolve_name(hpx::launch::sync, "/qubus/runtime");
+
+    if (!rt)
+        throw not_initialized_exception();
+
+    return rt;
 }
 
 std::vector<std::string> get_hpx_config()

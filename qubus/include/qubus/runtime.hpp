@@ -11,6 +11,8 @@
 #include <qubus/computelet.hpp>
 #include <qubus/kernel_arguments.hpp>
 
+#include <qubus/exception.hpp>
+
 #include <qubus/object_factory.hpp>
 
 #include <boost/optional.hpp>
@@ -24,6 +26,15 @@
 
 namespace qubus
 {
+
+class not_initialized_exception : public virtual exception, public virtual std::runtime_error
+{
+public:
+    not_initialized_exception()
+    : std::runtime_error("The runtime has not been initialized.")
+    {
+    }
+};
 
 class runtime_server : public hpx::components::component_base<runtime_server>
 {
@@ -53,6 +64,7 @@ public:
 
     runtime() = default;
 
+    runtime(hpx::id_type&& id);
     runtime(hpx::future<hpx::id_type>&& id);
 
     void shutdown();
