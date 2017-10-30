@@ -1,7 +1,5 @@
 find_package(Boost 1.62.0 COMPONENTS log regex thread system REQUIRED)
 
-find_package(HPX 0.9.12 REQUIRED)
-
 find_package(Eigen3 REQUIRED)
 
 set(QUBUS_BUILD_PREFIX ${CMAKE_CURRENT_BINARY_DIR})
@@ -51,7 +49,7 @@ add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
 
 set_target_properties(qubus PROPERTIES INTERFACE_LINK_LIBRARIES "$<BUILD_INTERFACE:qubus_build_prefix>;$<INSTALL_INTERFACE:qubus_prefix>")
 target_include_directories(qubus PUBLIC ${Boost_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
-target_compile_features(qubus PUBLIC cxx_std_14)
+target_compile_features(qubus PUBLIC cxx_std_17)
 target_link_libraries(qubus qubus_ir qubus_isl qubus_util ${Boost_LIBRARIES} qubus_cpu_backend hpx)
 
 if (TARGET qubus_cuda_backend)
