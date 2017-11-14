@@ -21,9 +21,8 @@ namespace jit
 
 class compiler;
 
-reference emit_tensor_access(const variable_declaration& tensor,
-                             const std::vector<std::reference_wrapper<const expression>>& indices,
-                             compiler& comp);
+llvm::Value* load_array_data_ptr(reference array, llvm_environment& env, compilation_context& ctx);
+llvm::Value* load_array_shape_ptr(reference array, llvm_environment& env, compilation_context& ctx);
 
 reference emit_tensor_access(const expression& tensor,
                              const std::vector<std::reference_wrapper<const expression>>& indices,

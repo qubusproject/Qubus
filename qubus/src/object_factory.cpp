@@ -57,7 +57,7 @@ hpx::future<hpx::id_type>
 object_factory_server::create_sparse_tensor(type value_type, std::vector<util::index_t> shape,
                                             const sparse_tensor_layout& layout)
 {
-    auto choosen_factory = local_factories_.at(0);
+    /*auto choosen_factory = local_factories_.at(0);
 
     auto shape_array =
         choosen_factory.create_array(types::integer(), {util::to_uindex(shape.size())});
@@ -95,7 +95,9 @@ object_factory_server::create_sparse_tensor(type value_type, std::vector<util::i
     auto sparse_tensor =
         choosen_factory.create_struct(sparse_tensor_type, std::move(sparse_tensor_members));
 
-    return hpx::make_ready_future(sparse_tensor.get());
+    return hpx::make_ready_future(sparse_tensor.get());*/
+
+    std::terminate(); // TODO: Reimplement this.
 }
 
 object_factory::object_factory(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))

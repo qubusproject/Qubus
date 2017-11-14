@@ -34,8 +34,12 @@ HPX_REGISTER_ACTION(components_action, qubus_object_server_components_action);
 namespace qubus
 {
 
-object_server::object_server(type object_type_, std::size_t size_, std::size_t alignment_)
-: object_type_(std::move(object_type_)), size_(size_), alignment_(alignment_)
+object_server::object_server(type object_type_, std::size_t size_, std::size_t alignment_,
+                             local_address_space::handle data_)
+: object_type_(std::move(object_type_)),
+  size_(size_),
+  alignment_(alignment_),
+  data_(std::move(data_))
 {
 }
 
@@ -59,9 +63,9 @@ object_server::~object_server()
     //TODO: Send a notification to all parts of the memory subsystem that this object is dead.
 }
 
-hpx::id_type object_server::id() const
+object_id object_server::id() const
 {
-    return get_id();
+    return object_id(get_id());
 }
 
 object_instance object_server::primary_instance() const
@@ -92,16 +96,6 @@ std::vector<object> object_server::components() const
     return components_;
 }
 
-void object_server::register_instance(local_address_space::handle data)
-{
-    data_ = std::move(data);
-}
-
-void object_server::add_component(const object& component)
-{
-    components_.push_back(component);
-}
-
 const object& object_server::operator()(long int index) const
 {
     return components_.at(index);
@@ -130,9 +124,9 @@ std::size_t object::alignment() const
     return hpx::async<object_server::alignment_action>(this->get_id()).get();
 }
 
-hpx::id_type object::id() const
+object_id object::id() const
 {
-    return get_id();
+    return object_id(get_id());
 }
 
 object_instance object::primary_instance() const

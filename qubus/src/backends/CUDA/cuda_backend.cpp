@@ -78,9 +78,9 @@ public:
       cuda_ctx_(this->dev_),
       address_space_(std::make_unique<cuda_allocator>(this->cuda_ctx_))
     {
-        auto page_fault_handler = [this, &local_addr_space_](const object& obj,
-                                                             address_space::page_fault_context ctx)
-            -> hpx::future<address_space::address_entry> {
+        auto page_fault_handler = [this, &local_addr_space_](
+            const object& obj,
+            address_space::page_fault_context ctx) -> hpx::future<address_space::handle> {
             auto host_handle = local_addr_space_.resolve_object(obj);
 
             return host_handle.then(
@@ -90,7 +90,7 @@ public:
 
                     auto size = handle.data().size();
 
-                    auto page = ctx.allocate_page(obj, size, 1).get();
+                    auto page = ctx.allocate_page(size, 1);
 
                     auto data = page.data().ptr();
 

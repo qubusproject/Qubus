@@ -12,6 +12,7 @@
 #include <qubus/util/unused.hpp>
 
 #include <tuple>
+#include <type_traits>
 #include <utility>
 
 namespace qubus
@@ -31,77 +32,26 @@ address_space::handle::operator bool() const
     return static_cast<bool>(entry_);
 }
 
-address_space::page_fault_context::page_fault_context(allocator& allocator_,
-                                                      address_space& addr_space_)
-: allocator_(&allocator_), addr_space_(&addr_space_)
+bool address_space::handle::unique() const
+{
+    return entry_.unique();
+}
+
+address_space::page_fault_context::page_fault_context(address_space& addr_space_)
+: addr_space_(&addr_space_)
 {
 }
 
-hpx::future<address_space::address_entry>
-address_space::page_fault_context::allocate_page(const object& obj, long int size,
-                                                 long int alignment)
+address_space::handle address_space::page_fault_context::allocate_page(long int size,
+                                                                       long int alignment)
 {
-    QUBUS_ASSERT(allocator_, "Invalid context.");
     QUBUS_ASSERT(addr_space_, "Invalid context.");
 
-    auto addr = obj.get_id().get_gid();
-
-    auto components = obj.components();
-
-    auto total_size = size + util::integer_cast<long int>(sizeof(void*) * components.size());
-
-    auto data = allocator_->allocate(total_size, alignment);
-
-    std::vector<hpx::future<handle>> referenced_pages;
-    referenced_pages.reserve(components.size());
-
-    QUBUS_ASSERT((alignment + size) % sizeof(void*) == 0, "Invalid alignment for component part.");
-
-    for (const auto& component : components)
-    {
-        auto component_page = addr_space_->resolve_object(component);
-
-        referenced_pages.push_back(std::move(component_page));
-    }
-
-    auto entry =
-        hpx::when_all(std::move(referenced_pages))
-            .then(get_local_runtime().get_service_executor(), [
-                data = std::move(data), size
-            ](hpx::future<std::vector<hpx::future<handle>>> referenced_pages) mutable {
-                auto referenced_pages_v = referenced_pages.get();
-
-                std::vector<handle> referenced_pages_unpacked;
-                referenced_pages_unpacked.reserve(referenced_pages_v.size());
-
-                auto ptr =
-                    static_cast<void**>(static_cast<void*>(static_cast<char*>(data->ptr()) + size));
-
-                for (auto& page : std::move(referenced_pages_v))
-                {
-                    auto page_v = page.get();
-
-                    *ptr = page_v.data().ptr();
-
-                    ++ptr;
-
-                    referenced_pages_unpacked.push_back(std::move(page_v));
-                }
-
-                return address_entry(std::move(data), std::move(referenced_pages_unpacked));
-            });
-
-    return entry;
+    return addr_space_->allocate_page(size, alignment);
 }
 
 address_space::address_entry::address_entry(std::unique_ptr<memory_block> data_)
 : data_(std::move(data_))
-{
-}
-
-address_space::address_entry::address_entry(std::unique_ptr<memory_block> data_,
-                                            std::vector<handle> referenced_pages_)
-: data_(std::move(data_)), referenced_pages_(std::move(referenced_pages_))
 {
 }
 
@@ -110,47 +60,40 @@ memory_block& address_space::address_entry::data() const
     return *data_;
 }
 
-const std::vector<address_space::handle>& address_space::address_entry::referenced_pages() const
-{
-    return referenced_pages_;
-}
-
 address_space::address_space(std::unique_ptr<allocator> allocator_)
 : allocator_(std::make_unique<evicting_allocator>(
       std::move(allocator_), [this](std::size_t hint) { return evict_objects(hint); })),
   on_page_fault_([](const object&, page_fault_context) {
       // TODO: Add correct exception type.
-      return hpx::make_exceptional_future<address_space::address_entry>(
+      return hpx::make_exceptional_future<address_space::handle>(
           std::runtime_error("Page fault"));
   })
 {
 }
 
-address_space::handle address_space::allocate_object_page(const object& obj, long int size,
-                                                          long int alignment)
+address_space::handle address_space::allocate_page(long int size, long int alignment)
 {
-    auto addr = obj.get_id().get_gid();
+    auto data = allocator_->allocate(size, alignment);
 
-    page_fault_context ctx(*allocator_, *this);
+    return handle(std::make_shared<address_entry>(std::move(data)));
+}
 
-    auto page = ctx.allocate_page(obj, size, alignment).get();
-
+void address_space::register_page(const object& obj, handle page)
+{
     bool addr_was_free;
     using entry_table_iterator = decltype(entry_table_.begin());
     entry_table_iterator pos;
 
-    auto entry = std::make_shared<address_entry>(std::move(page));
+    auto addr = obj.get_id().get_gid();
 
     {
         std::unique_lock<hpx::lcos::local::spinlock> guard(address_translation_table_mutex_);
 
         std::tie(pos, addr_was_free) =
-            entry_table_.emplace(addr, hpx::make_ready_future(std::move(entry)));
+            entry_table_.emplace(addr, hpx::make_ready_future(std::move(page)));
     }
 
     QUBUS_ASSERT(addr_was_free, "Address is spuriously occupied.");
-
-    return address_space::handle(pos->second.get());
 }
 
 void address_space::free_object(const object& obj)
@@ -178,9 +121,7 @@ hpx::future<address_space::handle> address_space::resolve_object(const object& o
 
         return entry->second.then(
             get_local_runtime().get_service_executor(),
-            [](const hpx::shared_future<std::shared_ptr<address_entry>>& entry) {
-                return handle(entry.get());
-            });
+            [](const hpx::shared_future<handle>& entry) { return entry.get(); });
     }
 
     // Unlock the mutex since on_page_fault_ might call other member functions/block/... .
@@ -188,7 +129,7 @@ hpx::future<address_space::handle> address_space::resolve_object(const object& o
 
     try
     {
-        auto entry = on_page_fault_(obj, page_fault_context(*allocator_, *this));
+        hpx::future<handle> entry = on_page_fault_(obj, page_fault_context(*this));
 
         // Relock the mutex to add the entry to the address table.
         guard.lock();
@@ -197,20 +138,13 @@ hpx::future<address_space::handle> address_space::resolve_object(const object& o
         using entry_table_iterator = decltype(entry_table_.begin());
         entry_table_iterator pos;
 
-        auto shareable_entry = entry.then(get_local_runtime().get_service_executor(),
-                                          [](hpx::future<address_entry> entry) {
-                                              return std::make_shared<address_entry>(entry.get());
-                                          });
-
-        std::tie(pos, addr_was_free) = entry_table_.emplace(addr, std::move(shareable_entry));
+        std::tie(pos, addr_was_free) = entry_table_.emplace(addr, std::move(entry));
 
         QUBUS_ASSERT(addr_was_free, "Address is spuriously occupied.");
 
         return pos->second.then(
             get_local_runtime().get_service_executor(),
-            [](const hpx::shared_future<std::shared_ptr<address_entry>>& entry) {
-                return address_space::handle(entry.get());
-            });
+            [](const hpx::shared_future<handle>& entry) { return entry.get(); });
     }
     catch (...)
     {
@@ -255,7 +189,7 @@ bool address_space::evict_objects(std::size_t hint)
             {
                 QUBUS_LOG(slg, info) << "evicting object " << entry.first;
 
-                freed_memory += entry.second.get()->data().size();
+                freed_memory += entry.second.get().data().size();
 
                 entry_table_.erase(entry.first);
 
@@ -273,8 +207,7 @@ bool address_space::evict_objects(std::size_t hint)
 }
 
 void address_space::on_page_fault(
-    std::function<hpx::future<address_space::address_entry>(const object&, page_fault_context)>
-        callback)
+    std::function<hpx::future<address_space::handle>(const object&, page_fault_context)> callback)
 {
     on_page_fault_.connect(std::move(callback));
 }
@@ -304,29 +237,28 @@ local_address_space::page_fault_context::page_fault_context(
 {
 }
 
-hpx::future<local_address_space::address_entry>
-local_address_space::page_fault_context::allocate_page(const object& obj, long int size,
-                                                       long int alignment)
+local_address_space::handle
+local_address_space::page_fault_context::allocate_page(long int size, long int alignment)
 {
-    return host_ctx_.allocate_page(obj, size, alignment);
+    return host_ctx_.allocate_page(size, alignment);
 }
 
 local_address_space::local_address_space(host_address_space& host_addr_space_)
 : host_addr_space_(host_addr_space_),
   on_page_fault_(
       [](const object& QUBUS_UNUSED(obj), page_fault_context) { // TODO: Add correct exception type.
-          return hpx::make_exceptional_future<local_address_space::address_entry>(
+          return hpx::make_exceptional_future<local_address_space::handle>(
               std::runtime_error("Page fault"));
       })
 {
     host_addr_space_.on_page_fault(
         [this](const object& obj,
-               address_space::page_fault_context ctx) -> hpx::future<address_space::address_entry> {
+               address_space::page_fault_context ctx) -> hpx::future<address_space::handle> {
             auto components = obj.components();
 
             if (!obj.has_data())
             {
-                auto page = ctx.allocate_page(obj, 0, sizeof(void*));
+                auto page = ctx.allocate_page(0, sizeof(void*));
 
                 return hpx::make_ready_future(std::move(page));
             }
@@ -335,10 +267,14 @@ local_address_space::local_address_space(host_address_space& host_addr_space_)
         });
 }
 
-local_address_space::handle
-local_address_space::allocate_object_page(const object& obj, long int size, long int alignment)
+local_address_space::handle local_address_space::allocate_page(long int size, long int alignment)
 {
-    return host_addr_space_.get().allocate_object_page(obj, size, alignment);
+    return host_addr_space_.get().allocate_page(size, alignment);
+}
+
+void local_address_space::register_page(const object& obj, local_address_space::handle page)
+{
+    host_addr_space_.get().register_page(obj, std::move(page));
 }
 
 void local_address_space::free_object(const object& obj)
@@ -357,8 +293,7 @@ local_address_space::handle local_address_space::try_resolve_object(const object
 }
 
 void local_address_space::on_page_fault(
-    std::function<hpx::future<local_address_space::address_entry>(const object& obj,
-                                                                  page_fault_context)>
+    std::function<hpx::future<local_address_space::handle>(const object& obj, page_fault_context)>
         callback)
 {
     on_page_fault_.connect(std::move(callback));

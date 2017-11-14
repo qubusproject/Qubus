@@ -59,7 +59,7 @@ private:
     void scan_for_host_backends();
     void scan_for_vpu_backends();
 
-    hpx::future<local_address_space::address_entry>
+    hpx::future<local_address_space::handle>
     resolve_page_fault(const object& obj, local_address_space::page_fault_context ctx);
 
     hpx::threads::executors::pool_executor service_executor_;

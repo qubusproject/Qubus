@@ -193,11 +193,13 @@ llvm::Type* llvm_environment::map_qubus_type(const type& t) const
                        })
                 .case_(array_t(subtype, _),
                        [&](const type& total_type) {
-                           llvm::Type* size_type = map_qubus_type(types::integer());
+                           /*llvm::Type* size_type = map_qubus_type(types::integer());
                            std::vector<llvm::Type*> types{
                                llvm::PointerType::get(map_qubus_type(subtype.get()), 0),
                                llvm::PointerType::get(size_type, 0)};
-                           return llvm::StructType::create(types, mangle_type(total_type));
+                           return llvm::StructType::create(types, mangle_type(total_type));*/
+
+                           return llvm::StructType::create(ctx(), mangle_type(total_type));
                        })
                 .case_(array_slice_t(subtype, rank),
                        [&](const type& total_type) {

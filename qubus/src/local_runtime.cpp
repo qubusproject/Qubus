@@ -314,7 +314,7 @@ void local_runtime::scan_for_vpu_backends()
     }
 }
 
-hpx::future<local_address_space::address_entry>
+hpx::future<local_address_space::handle>
 local_runtime::resolve_page_fault(const object& obj, local_address_space::page_fault_context ctx)
 {
     auto instance = global_address_space_->resolve_object(obj);
@@ -332,7 +332,7 @@ local_runtime::resolve_page_fault(const object& obj, local_address_space::page_f
             auto size = obj.size();
             auto alignment = obj.alignment();
 
-            auto page = ctx.allocate_page(obj, size, alignment).get();
+            auto page = ctx.allocate_page(size, alignment);
 
             auto& data = page.data();
 

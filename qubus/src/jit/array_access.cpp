@@ -48,32 +48,6 @@ util::index_t get_rank(const type& array_type)
     return pattern::match(array_type, m);
 }
 
-llvm::Value* load_array_data_ptr(reference array, llvm_environment& env, compilation_context& ctx)
-{
-    auto& builder = env.builder();
-
-    llvm::Value* data_ptr = builder.CreateConstInBoundsGEP2_32(env.map_qubus_type(array.datatype()),
-                                                               array.addr(), 0, 0, "data_ptr");
-
-    auto data_value_type = get_value_type(array.datatype());
-
-    auto data = load_from_ref(reference(data_ptr, array.origin(), data_value_type), env, ctx);
-
-    return data;
-}
-
-llvm::Value* load_array_shape_ptr(reference array, llvm_environment& env, compilation_context& ctx)
-{
-    auto& builder = env.builder();
-
-    llvm::Value* shape_ptr = builder.CreateConstInBoundsGEP2_32(
-        env.map_qubus_type(array.datatype()), array.addr(), 0, 1, "shape_ptr");
-
-    auto shape = load_from_ref(reference(shape_ptr, array.origin(), types::integer{}), env, ctx);
-
-    return shape;
-}
-
 llvm::Value* emit_array_access(llvm::Value* data, const std::vector<llvm::Value*>& shape,
                                const std::vector<llvm::Value*>& indices, llvm_environment& env)
 {
@@ -133,7 +107,7 @@ std::unique_ptr<expression> reassociate_index_expression(const expression& expr)
 
     std::function<std::unique_ptr<expression>(const expression&)> collect_constant_terms =
         [&](const expression& expr) {
-            pattern::variable<const expression &> lhs, rhs;
+            pattern::variable<const expression&> lhs, rhs;
             pattern::variable<util::index_t> value;
 
             auto m = pattern::matcher<expression, std::unique_ptr<expression>>()
@@ -184,49 +158,64 @@ std::vector<llvm::Value*> permute_indices(const std::vector<llvm::Value*>& indic
 
     return permuted_indices;
 }
-}
 
-reference emit_tensor_access(const variable_declaration& tensor,
-                             const std::vector<std::reference_wrapper<const expression>>& indices,
-                             compiler& comp)
+llvm::Value* load_rank(reference array, llvm_environment& env, compilation_context& ctx)
 {
-    auto& env = comp.get_module().env();
-    auto& ctx = comp.get_module().ctx();
-
-    std::unique_ptr<expression> linearized_index = integer_literal(0);
-
-    for (std::size_t i = 0; i < indices.size(); ++i)
-    {
-        std::vector<std::unique_ptr<expression>> args;
-        args.reserve(2);
-        args.push_back(var(tensor));
-        args.push_back(integer_literal(i));
-
-        auto extent = intrinsic_function("extent", std::move(args));
-
-        linearized_index = std::move(extent) * std::move(linearized_index) + clone(indices[i]);
-    }
-
-    linearized_index = reassociate_index_expression(*linearized_index);
-
-    auto linearized_index_ = comp.compile(*linearized_index);
-
-    auto tensor_ = ctx.symbol_table().at(tensor.id());
-
     auto& builder = env.builder();
 
-    llvm::Value* data_ptr = builder.CreateConstInBoundsGEP2_32(
-        env.map_qubus_type(tensor_.datatype()), tensor_.addr(), 0, 0, "data_ptr");
+    auto int_type = env.map_qubus_type(types::integer{});
 
-    auto data_value_type = get_value_type(tensor_.datatype());
+    if (auto array_type = array.datatype().try_as<types::array>())
+    {
+        return llvm::ConstantInt::get(int_type, array_type->rank(), true);
+    }
+    else
+    {
+        auto rank_ptr = builder.CreateBitCast(array.addr(), int_type->getPointerTo(0), "rank_ptr");
 
-    auto data = load_from_ref(reference(data_ptr, tensor_.origin(), tensor_.datatype()), env, ctx);
+        auto rank = builder.CreateLoad(rank_ptr, "rank");
 
-    auto data_ref = reference(builder.CreateInBoundsGEP(env.map_qubus_type(data_value_type), data,
-                                                        load_from_ref(linearized_index_, env, ctx)),
-                              tensor_.origin() / "data", data_value_type);
+        return rank;
+    }
+}
+}
 
-    return data_ref;
+llvm::Value* load_array_data_ptr(reference array, llvm_environment& env, compilation_context& ctx)
+{
+    auto& builder = env.builder();
+
+    auto int_type = env.map_qubus_type(types::integer{});
+
+    auto rank = load_rank(array, env, ctx);
+
+    auto offset =
+        builder.CreateAdd(rank, llvm::ConstantInt::get(int_type, 1, true), "offset", true, true);
+
+    auto base_ptr = builder.CreateBitCast(array.addr(), int_type->getPointerTo(0), "rank_ptr");
+
+    llvm::Value* data_ptr = builder.CreateInBoundsGEP(int_type, base_ptr, offset, "data_ptr");
+
+    // TODO: Substitute this with a generic function.
+    auto value_type = array.datatype().as<types::array>().value_type();
+
+    return builder.CreateBitCast(data_ptr, env.map_qubus_type(value_type)->getPointerTo(0));
+}
+
+llvm::Value* load_array_shape_ptr(reference array, llvm_environment& env, compilation_context& ctx)
+{
+    auto& builder = env.builder();
+
+    auto int_type = env.map_qubus_type(types::integer{});
+
+    auto base_ptr = builder.CreateBitCast(array.addr(), int_type->getPointerTo(0), "rank_ptr");
+
+    auto rank = load_rank(array, env, ctx);
+
+    auto offset = llvm::ConstantInt::get(int_type, 1, true);
+
+    llvm::Value* shape_ptr = builder.CreateInBoundsGEP(int_type, base_ptr, offset, "shape_ptr");
+
+    return shape_ptr;
 }
 
 reference emit_tensor_access(const expression& tensor,

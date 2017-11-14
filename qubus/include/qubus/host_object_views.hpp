@@ -108,6 +108,7 @@ public:
 
         return hpx::make_ready_future(cpu_scalar_view<T>(value, std::move(ctx)));
     }
+
 private:
     cpu_scalar_view(T* value_, std::shared_ptr<host_view_context> ctx_)
     : value_(value_), ctx_(std::move(ctx_))
@@ -122,22 +123,16 @@ private:
 template <typename T>
 struct object_view_traits<cpu_scalar_view<T>>
 {
-static constexpr bool is_immutable = std::is_const<T>::value;
+    static constexpr bool is_immutable = std::is_const<T>::value;
 
-static type associated_type()
-{
-    return associated_qubus_type<T>::get();
-}
+    static type associated_type()
+    {
+        return associated_qubus_type<T>::get();
+    }
 };
 
 template <typename T>
 using host_scalar_view = cpu_scalar_view<T>;
-
-struct array_metadata
-{
-    void* data;
-    void* shape;
-};
 
 template <typename T, util::index_t Rank>
 class cpu_array_view
@@ -205,23 +200,29 @@ public:
 
         auto hnd = addr_space.resolve_object(obj).get();
 
-        auto array_md = static_cast<array_metadata*>(hnd.data().ptr());
+        auto base_ptr = hnd.data().ptr();
+
+        auto shape_ptr = static_cast<util::index_t*>(base_ptr) + 1;
+
+        auto data_ptr = static_cast<T*>(static_cast<void*>(shape_ptr + Rank));
 
         auto ctx = std::make_shared<host_view_context>(std::move(token), std::move(hnd));
 
         return hpx::make_ready_future(
-            cpu_array_view<T, Rank>(Rank, static_cast<util::index_t*>(array_md->shape),
-                                    static_cast<T*>(array_md->data), std::move(ctx)));
+            cpu_array_view<T, Rank>(Rank, shape_ptr, data_ptr, std::move(ctx)));
     }
 
     static cpu_array_view<T, Rank> construct_from_reference(void* ref)
     {
-        auto array_md = static_cast<array_metadata*>(ref);
+        auto base_ptr = ref;
+
+        auto shape_ptr = static_cast<util::index_t*>(base_ptr) + 1;
+
+        auto data_ptr = static_cast<T*>(static_cast<void*>(shape_ptr + Rank));
 
         auto ctx = std::shared_ptr<host_view_context>();
 
-        return cpu_array_view<T, Rank>(Rank, static_cast<util::index_t*>(array_md->shape),
-                                        static_cast<T*>(array_md->data), std::move(ctx));
+        return cpu_array_view<T, Rank>(Rank, shape_ptr, data_ptr, std::move(ctx));
     }
 
     static hpx::future<cpu_array_view<T, Rank>> construct_from_locked_object(object obj)
@@ -230,14 +231,18 @@ public:
 
         auto hnd = addr_space.resolve_object(obj).get();
 
-        auto array_md = static_cast<array_metadata*>(hnd.data().ptr());
+        auto base_ptr = hnd.data().ptr();
+
+        auto shape_ptr = static_cast<util::index_t*>(base_ptr) + 1;
+
+        auto data_ptr = static_cast<T*>(static_cast<void*>(shape_ptr + Rank));
 
         auto ctx = std::make_shared<host_view_context>(token(), std::move(hnd));
 
         return hpx::make_ready_future(
-                cpu_array_view<T, Rank>(Rank, static_cast<util::index_t*>(array_md->shape),
-                                        static_cast<T*>(array_md->data), std::move(ctx)));
+            cpu_array_view<T, Rank>(Rank, shape_ptr, data_ptr, std::move(ctx)));
     }
+
 private:
     cpu_array_view(util::index_t rank_, util::index_t* shape_, T* data_,
                    std::shared_ptr<host_view_context> ctx_)
