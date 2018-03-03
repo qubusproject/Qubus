@@ -1818,6 +1818,9 @@ public:
 
     boost::optional<std::chrono::microseconds> update_cheaply()
     {
+        if (models_.empty())
+            return boost::none;
+
         models_.front().update();
 
         return accuracy();
