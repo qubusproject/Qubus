@@ -24,18 +24,18 @@ target_link_libraries(qubus_prefix PUBLIC ${Boost_LIBRARIES})
 set_target_properties(qubus_prefix PROPERTIES POSITION_INDEPENDENT_CODE True)
 target_compile_definitions(qubus_prefix PRIVATE -DQUBUS_PREFIX=${CMAKE_INSTALL_PREFIX})
 
-set(qubus_header_file_names allocator.hpp generic_ptr.hpp loop_optimizer.hpp
+set(qubus_core_header_file_names allocator.hpp generic_ptr.hpp loop_optimizer.hpp
                             memory_block.hpp object.hpp)
 
-foreach(file_name IN LISTS qubus_header_file_names)
-    list(APPEND qubus_header_files ${qubus_include_dir}/${file_name})
+foreach(file_name IN LISTS qubus_core_header_file_names)
+    list(APPEND qubus_core_header_files ${qubus_include_dir}/${file_name})
 endforeach()
 
-set(qubus_source_files allocator.cpp loop_optimizer.cpp
-                       local_runtime.cpp backend_registry.cpp local_address_space.cpp evicting_allocator.cpp
+set(qubus_core_source_files allocator.cpp loop_optimizer.cpp
+                       local_address_space.cpp evicting_allocator.cpp
                        abi_info.cpp logging.cpp object_factory.cpp
                        make_implicit_conversions_explicit.cpp scheduling/round_robin_scheduler.cpp object.cpp
-                       runtime.cpp host_allocator.cpp
+                       host_allocator.cpp
                        local_object_factory.cpp vpu.cpp aggregate_vpu.cpp
                        architecture_identifier.cpp
                        pass_manager.cpp variable_access_analysis.cpp alias_analysis.cpp axiom_analysis.cpp
@@ -46,21 +46,33 @@ set(qubus_source_files allocator.cpp loop_optimizer.cpp
                        virtual_address_space.cpp basic_address_space.cpp scheduling/uniform_fill_scheduler.cpp global_id.cpp
                        object_description.cpp module_library.cpp dataflow.cpp)
 
-add_library(qubus SHARED ${qubus_header_files} ${qubus_source_files})
+add_library(qubus_core SHARED ${qubus_core_header_files} ${qubus_core_source_files})
+
+target_include_directories(qubus_core PUBLIC ${HPX_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
+target_compile_features(qubus_core PUBLIC cxx_std_17)
+target_link_libraries(qubus_core qubus_ir qubus_isl qubus_util ${Boost_LIBRARIES} hpx)
+target_compile_definitions(qubus_core PUBLIC -DBOOST_LOG_DYN_LINK)
+
+set_target_properties(qubus_core PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${QUBUS_HAS_LTO_SUPPORT})
+
+set_property(TARGET qubus_core PROPERTY VERSION ${QUBUS_VERSION})
+set_property(TARGET qubus_core PROPERTY SOVERSION 0)
+set_property(TARGET qubus_core PROPERTY INTERFACE_qubus_core_MAJOR_VERSION 0)
+set_property(TARGET qubus_core PROPERTY INTERFACE_qubus_core_MINOR_VERSION 1)
+set_property(TARGET qubus_core APPEND PROPERTY COMPATIBLE_INTERFACE_STRING qubus_core_MAJOR_VERSION)
+set_property(TARGET qubus_core APPEND PROPERTY COMPATIBLE_INTERFACE_STRING qubus_core_MINOR_VERSION)
+
+add_library(qubus SHARED local_runtime.cpp backend_registry.cpp runtime.cpp)
 
 set_target_properties(qubus PROPERTIES INTERFACE_LINK_LIBRARIES "$<BUILD_INTERFACE:qubus_build_prefix>;$<INSTALL_INTERFACE:qubus_prefix>")
-target_include_directories(qubus PUBLIC ${HPX_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} ${EIGEN3_INCLUDE_DIR} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
-target_compile_features(qubus PUBLIC cxx_std_17)
-target_link_libraries(qubus qubus_ir qubus_isl qubus_util ${Boost_LIBRARIES} qubus_cpu_backend hpx)
-
-if (TARGET qubus_cuda_backend)
-    target_link_libraries(qubus qubus_cuda_backend)
-endif()
-
+target_include_directories(qubus PUBLIC ${HPX_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 target_compile_definitions(qubus PUBLIC -DBOOST_LOG_DYN_LINK)
+target_link_libraries(qubus qubus_cpu_backend qubus_core qubus_util)
+target_compile_features(qubus PUBLIC cxx_std_17)
 add_dependencies(qubus qubus_cpu_backend)
 
 if (TARGET qubus_cuda_backend)
+    target_link_libraries(qubus qubus_cuda_backend)
     add_dependencies(qubus qubus_cuda_backend)
 endif()
 
@@ -73,7 +85,7 @@ set_property(TARGET qubus PROPERTY INTERFACE_qubus_MINOR_VERSION 1)
 set_property(TARGET qubus APPEND PROPERTY COMPATIBLE_INTERFACE_STRING qubus_MAJOR_VERSION)
 set_property(TARGET qubus APPEND PROPERTY COMPATIBLE_INTERFACE_STRING qubus_MINOR_VERSION)
         
-install(TARGETS qubus qubus_prefix
+install(TARGETS qubus qubus_core qubus_prefix
         EXPORT qubus-targets
         RUNTIME DESTINATION bin
         INCLUDES DESTINATION include
