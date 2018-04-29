@@ -1,3 +1,5 @@
+#include <hpx/config.hpp>
+
 #include <qubus/performance_models/regression_performance_model.hpp>
 
 #include <qubus/performance_models/symbolic_regression.hpp>
@@ -149,7 +151,7 @@ std::vector<double> extract_arguments_from_ctx(const execution_context& ctx)
 class regression_performance_model_impl
 {
 public:
-    void sample_execution_time(const computelet& QUBUS_UNUSED(c), const execution_context& ctx,
+    void sample_execution_time(const symbol_id& QUBUS_UNUSED(func), const execution_context& ctx,
                                std::chrono::microseconds execution_time)
     {
         std::lock_guard<hpx::lcos::local::mutex> guard(regression_analyses_mutex_);
@@ -168,7 +170,7 @@ public:
     }
 
     boost::optional<performance_estimate>
-    try_estimate_execution_time(const computelet& QUBUS_UNUSED(c), const execution_context& ctx) const
+    try_estimate_execution_time(const symbol_id& QUBUS_UNUSED(func), const execution_context& ctx) const
     {
         std::lock_guard<hpx::lcos::local::mutex> guard(regression_analyses_mutex_);
 
@@ -210,21 +212,21 @@ regression_performance_model::regression_performance_model()
 
 regression_performance_model::~regression_performance_model() = default;
 
-void regression_performance_model::sample_execution_time(const computelet& c,
+void regression_performance_model::sample_execution_time(const symbol_id& func,
                                                          const execution_context& ctx,
                                                          std::chrono::microseconds execution_time)
 {
     QUBUS_ASSERT(impl_, "Uninitialized object.");
 
-    impl_->sample_execution_time(c, ctx, std::move(execution_time));
+    impl_->sample_execution_time(func, ctx, std::move(execution_time));
 }
 
 boost::optional<performance_estimate>
-regression_performance_model::try_estimate_execution_time(const computelet& c,
+regression_performance_model::try_estimate_execution_time(const symbol_id& func,
                                                           const execution_context& ctx) const
 {
     QUBUS_ASSERT(impl_, "Uninitialized object.");
 
-    return impl_->try_estimate_execution_time(c, ctx);
+    return impl_->try_estimate_execution_time(func, ctx);
 }
 }

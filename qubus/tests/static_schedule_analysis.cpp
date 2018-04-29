@@ -11,7 +11,7 @@ TEST(static_schedule_analysis, empty_loop)
 {
     using namespace qubus;
 
-    variable_declaration i(types::integer{});
+    variable_declaration i("i", types::integer{});
 
     auto loop = for_(i, integer_literal(0), integer_literal(42),
                      if_(less(var(i), integer_literal(21)), sequenced_tasks({})));
@@ -42,9 +42,9 @@ TEST(static_schedule_analysis, zero_init)
 {
     using namespace qubus;
 
-    variable_declaration i(types::integer{});
+    variable_declaration i("i", types::integer{});
 
-    variable_declaration A(types::array(types::double_{}, 1));
+    variable_declaration A("A", types::array(types::double_{}, 1));
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(var(i));
@@ -81,11 +81,11 @@ TEST(static_schedule_analysis, strip_mined_loop)
 {
     using namespace qubus;
 
-    variable_declaration i(types::integer{});
-    variable_declaration ii(types::integer{});
-    variable_declaration N(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration ii("ii", types::integer{});
+    variable_declaration N("N", types::integer{});
 
-    variable_declaration A(types::array(types::double_{}, 1));
+    variable_declaration A("A", types::array(types::double_{}, 1));
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(var(ii));
@@ -124,10 +124,10 @@ TEST(static_schedule_analysis, multiple_statements)
 {
     using namespace qubus;
 
-    variable_declaration i(types::integer{});
-    variable_declaration N(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration N("N", types::integer{});
 
-    variable_declaration A(types::array(types::double_{}, 1));
+    variable_declaration A("A", types::array(types::double_{}, 1));
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(var(i));
@@ -168,10 +168,10 @@ TEST(static_schedule_analysis, loop_with_guard)
 {
     using namespace qubus;
 
-    variable_declaration i(types::integer{});
-    variable_declaration N(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration N("N", types::integer{});
 
-    variable_declaration A(types::array(types::double_{}, 1));
+    variable_declaration A("A", types::array(types::double_{}, 1));
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(var(i));

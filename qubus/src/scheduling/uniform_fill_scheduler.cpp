@@ -1,3 +1,5 @@
+#include <hpx/config.hpp>
+
 #include <qubus/scheduling/uniform_fill_scheduler.hpp>
 
 #include <qubus/util/assert.hpp>
@@ -7,14 +9,14 @@
 namespace qubus
 {
 
-hpx::future<void> uniform_fill_scheduler::schedule(computelet c, execution_context ctx)
+hpx::future<void> uniform_fill_scheduler::schedule(const symbol_id& func, execution_context ctx)
 {
     std::unique_lock<hpx::lcos::local::mutex> guard(scheduling_mutex_);
 
     auto least_workload = workloads_.top();
     workloads_.pop();
 
-    auto estimate = least_workload.execution_resource->try_estimate_execution_time(c, ctx).get();
+    auto estimate = least_workload.execution_resource->try_estimate_execution_time(func, ctx).get();
 
     if (estimate)
     {
@@ -54,7 +56,7 @@ hpx::future<void> uniform_fill_scheduler::schedule(computelet c, execution_conte
 
     guard.unlock();
 
-    return least_workload.execution_resource->execute(c, ctx);
+    return least_workload.execution_resource->execute(func, ctx);
 }
 
 void uniform_fill_scheduler::add_resource(vpu& execution_resource)

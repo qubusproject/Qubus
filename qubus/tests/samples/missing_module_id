@@ -1,0 +1,5 @@
+function test() -> result :: Int
+    result = 42
+end
+
+

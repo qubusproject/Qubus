@@ -140,20 +140,6 @@ type common_type(const type& t1, const type& t2)
     return common_type_(t1, t2);
 }
 
-type value_type(const type& tensor_type)
-{
-    using pattern::_;
-
-    pattern::variable<type> value_type;
-
-    auto m = pattern::make_matcher<type, type>()
-                 .case_(sparse_tensor_t(value_type), [&] { return value_type.get(); })
-                 .case_(array_t(value_type, _), [&] { return value_type.get(); })
-                 .case_(array_slice_t(value_type, _), [&] { return value_type.get(); });
-
-    return pattern::match(tensor_type, m);
-}
-
 util::multi_method<type(const util::virtual_<expression>&)> infer_type = {};
 
 type infer_type_binary_op_expr(const binary_operator_expr& expr)
@@ -195,28 +181,30 @@ type infer_type_if_expr(const if_expr& /*unused*/)
 
 type infer_type_subscription_expr(const subscription_expr& expr)
 {
-    type tensor_type = typeof_(expr.indexed_expr());
+    auto tensor_type = typeof_(expr.indexed_expr());
+    auto val_type = value_type(tensor_type);
 
-    bool has_abstract_index = false;
+    auto rank = util::to_uindex(expr.indices().size());
 
     for (const auto& index : expr.indices())
     {
         auto index_type = typeof_(index);
 
-        if (index_type == types::index())
+        if (index_type == types::integer{})
         {
-            has_abstract_index = true;
-            break;
+            --rank;
         }
     }
 
-    if (has_abstract_index)
+    bool is_a_slice = rank > 0;
+
+    if (is_a_slice)
     {
-        return tensor_type;
+        return types::array_slice(val_type, rank);
     }
     else
     {
-        return value_type(tensor_type);
+        return val_type;
     }
 }
 
@@ -238,6 +226,11 @@ type infer_type_float_literal_expr(const float_literal_expr& /*unused*/)
 type infer_type_integer_literal_expr(const integer_literal_expr& /*unused*/)
 {
     return types::integer{};
+}
+
+type infer_type_bool_literal_expr(const bool_literal_expr& /*unused*/)
+{
+    return types::bool_{};
 }
 
 type infer_type_intrinsic_function_expr(const intrinsic_function_expr& expr)
@@ -262,11 +255,6 @@ type infer_type_variable_ref_expr(const variable_ref_expr& expr)
     return expr.declaration().var_type();
 }
 
-type infer_type_spawn_expr(const spawn_expr& /*unused*/)
-{
-    return types::unknown{};
-}
-
 type infer_type_local_variable_def_expr(const local_variable_def_expr& /*unused*/)
 {
     return types::unknown{};
@@ -284,21 +272,9 @@ type infer_type_member_access_expr(const member_access_expr& expr)
     return obj_type[expr.member_name()];
 }
 
-type infer_type_foreign_call_expr(const foreign_call_expr& QUBUS_UNUSED(expr))
+type infer_type_integer_range_expr(const integer_range_expr& /*unused*/)
 {
-    return types::unknown{};
-}
-
-type infer_type_array_slice_expr(const array_slice_expr& expr)
-{
-    pattern::variable<type> value_type;
-    pattern::variable<util::index_t> rank;
-
-    auto m = pattern::make_matcher<type, type>().case_(
-        array_t(value_type, rank) || array_slice_t(value_type, rank),
-        [&] { return types::array_slice(value_type.get(), rank.get()); });
-
-    return pattern::match(typeof_(expr.array()), m);
+    return types::integer_range;
 }
 
 void init_infer_type()
@@ -312,15 +288,14 @@ void init_infer_type()
     infer_type.add_specialization(infer_type_double_literal_expr);
     infer_type.add_specialization(infer_type_float_literal_expr);
     infer_type.add_specialization(infer_type_integer_literal_expr);
+    infer_type.add_specialization(infer_type_bool_literal_expr);
     infer_type.add_specialization(infer_type_intrinsic_function_expr);
     infer_type.add_specialization(infer_type_compound_expr);
     infer_type.add_specialization(infer_type_variable_ref_expr);
-    infer_type.add_specialization(infer_type_spawn_expr);
     infer_type.add_specialization(infer_type_local_variable_def_expr);
     infer_type.add_specialization(infer_type_construct_expr);
     infer_type.add_specialization(infer_type_member_access_expr);
-    infer_type.add_specialization(infer_type_foreign_call_expr);
-    infer_type.add_specialization(infer_type_array_slice_expr);
+    infer_type.add_specialization(infer_type_integer_range_expr);
 }
 
 std::once_flag infer_type_init_flag = {};

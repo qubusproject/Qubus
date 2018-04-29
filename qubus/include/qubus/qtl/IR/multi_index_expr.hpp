@@ -16,7 +16,7 @@ namespace qubus
 namespace qtl
 {
 
-class multi_index_expr : public access_expr_base<multi_index_expr>
+class multi_index_expr final : public access_expr_base<multi_index_expr>
 {
 public:
     multi_index_expr() = default;
@@ -36,15 +36,6 @@ public:
 
     std::unique_ptr<expression> substitute_subexpressions(
         std::vector<std::unique_ptr<expression>> new_children) const override final;
-
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar& multi_index_;
-        ar& element_indices_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(multi_index_expr);
 
 private:
     variable_declaration multi_index_;

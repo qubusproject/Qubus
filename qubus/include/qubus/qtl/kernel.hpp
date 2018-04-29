@@ -7,7 +7,6 @@
 
 #include <qubus/runtime.hpp>
 
-#include <qubus/computelet.hpp>
 #include <qubus/kernel_arguments.hpp>
 
 #include <boost/hana/for_each.hpp>
@@ -62,8 +61,9 @@ public:
 
         full_args.insert(full_args.end(), args_.begin(), args_.end());
 
-        if (full_args.size() != code_.code().get().arity() + 1)
-            throw 0;
+        // TODO: Cache the arity.
+        //if (full_args.size() != code_.code().get().lookup_function("entry").arity() + 1)
+        //    throw 0;
 
         kernel_arguments kernel_args;
 
@@ -87,7 +87,7 @@ private:
 
     std::vector<std::unique_ptr<expression>> computations_;
 
-    computelet code_;
+    symbol_id code_;
     std::vector<object> args_;
     std::vector<std::size_t> immutable_argument_map_;
     std::vector<std::size_t> mutable_argument_map_;

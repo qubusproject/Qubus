@@ -12,7 +12,7 @@
 namespace qubus
 {
 
-class type_conversion_expr : public expression_base<type_conversion_expr>
+class type_conversion_expr final : public expression_base<type_conversion_expr>
 {
 public:
     type_conversion_expr() = default;
@@ -33,14 +33,6 @@ public:
     std::unique_ptr<expression> substitute_subexpressions(
             std::vector<std::unique_ptr<expression>> new_children) const override final;
 
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar & target_type_;
-        ar & arg_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(type_conversion_expr);
 private:
     type target_type_;
     std::unique_ptr<expression> arg_;

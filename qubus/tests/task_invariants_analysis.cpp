@@ -11,10 +11,10 @@ TEST(task_invariants_analysis, loop_bound_and_ind_var)
 {
     using namespace qubus;
 
-    variable_declaration var(types::array(types::double_{}, 1));
+    variable_declaration var("var", types::array(types::double_{}, 1));
 
-    variable_declaration i(types::integer{});
-    variable_declaration j(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration j("j", types::integer{});
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(variable_ref(i));

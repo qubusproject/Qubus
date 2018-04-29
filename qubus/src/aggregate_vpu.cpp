@@ -18,17 +18,17 @@ void aggregate_vpu::add_member_vpu(std::unique_ptr<vpu> new_member_vpu)
     scheduler_->add_resource(*member_vpus_.back());
 }
 
-hpx::future<void> aggregate_vpu::execute(computelet c, execution_context ctx)
+hpx::future<void> aggregate_vpu::execute(const symbol_id& func, execution_context ctx)
 {
     if (member_vpus_.empty())
         throw 0;
 
     // For now just forward all tasks immediately.
-    return scheduler_->schedule(std::move(c), std::move(ctx));
+    return scheduler_->schedule(func, std::move(ctx));
 }
 
 hpx::future<boost::optional<performance_estimate>>
-aggregate_vpu::try_estimate_execution_time(const computelet& c, const execution_context& ctx) const
+aggregate_vpu::try_estimate_execution_time(const symbol_id& func, const execution_context& ctx) const
 {
     // We will just forward the task and can simply base our estimate on the estimates of
     // the member VPUs.
@@ -45,7 +45,7 @@ aggregate_vpu::try_estimate_execution_time(const computelet& c, const execution_
 
     for (const auto& vpu : member_vpus_ | boost::adaptors::indirected)
     {
-        auto estimate = vpu.try_estimate_execution_time(c, ctx);
+        auto estimate = vpu.try_estimate_execution_time(func, ctx);
 
         collected_estimates.push_back(std::move(estimate));
     }

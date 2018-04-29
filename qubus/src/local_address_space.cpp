@@ -8,6 +8,8 @@
 
 #include <qubus/logging.hpp>
 
+#include <hpx/parallel/executors.hpp> // Workaround for missing includes.
+
 #include <qubus/util/assert.hpp>
 #include <qubus/util/unused.hpp>
 
@@ -35,6 +37,11 @@ address_space::handle::operator bool() const
 bool address_space::handle::unique() const
 {
     return entry_.unique();
+}
+
+void address_space::handle::free()
+{
+    entry_.reset();
 }
 
 address_space::page_fault_context::page_fault_context(address_space& addr_space_)

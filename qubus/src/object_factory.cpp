@@ -100,6 +100,10 @@ object_factory_server::create_sparse_tensor(type value_type, std::vector<util::i
     std::terminate(); // TODO: Reimplement this.
 }
 
+object_factory::object_factory(hpx::id_type&& id) : base_type(std::move(id))
+{
+}
+
 object_factory::object_factory(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
 {
 }

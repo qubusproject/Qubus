@@ -11,7 +11,7 @@ TEST(axiom_analysis, loop_iteration_range)
 {
     using namespace qubus;
 
-    variable_declaration i(types::integer{});
+    variable_declaration i("i", types::integer{});
 
     auto loop = for_(i, integer_literal(0), integer_literal(42), sequenced_tasks({}));
 
@@ -37,7 +37,7 @@ TEST(axiom_analysis, nonunit_stride_loop_iteration_range)
 {
     using namespace qubus;
 
-    variable_declaration i(types::integer{});
+    variable_declaration i("i", types::integer{});
 
     auto loop = for_(i, integer_literal(0), integer_literal(100), integer_literal(10), sequenced_tasks({}));
 
@@ -63,7 +63,7 @@ TEST(axiom_analysis, if_condition_simple)
 {
     using namespace qubus;
 
-    variable_declaration i(types::integer{});
+    variable_declaration i("i", types::integer{});
 
     auto code = if_(less(variable_ref(i), integer_literal(0)), sequenced_tasks({}));
 
@@ -86,7 +86,7 @@ TEST(axiom_analysis, deep_nest)
 {
     using namespace qubus;
 
-    variable_declaration i(types::integer{});
+    variable_declaration i("i", types::integer{});
 
     std::vector<std::unique_ptr<expression>> tasks;
     tasks.push_back(variable_ref(i));

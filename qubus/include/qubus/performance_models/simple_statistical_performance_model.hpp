@@ -15,11 +15,11 @@ public:
     simple_statistical_performance_model();
     virtual ~simple_statistical_performance_model();
 
-    void sample_execution_time(const computelet& c, const execution_context& ctx,
+    void sample_execution_time(const symbol_id& func, const execution_context& ctx,
                                std::chrono::microseconds execution_time) override;
 
     boost::optional<performance_estimate>
-    try_estimate_execution_time(const computelet& c, const execution_context& ctx) const override;
+    try_estimate_execution_time(const symbol_id& func, const execution_context& ctx) const override;
 private:
     std::unique_ptr<simple_statistical_performance_model_impl> impl_;
 };

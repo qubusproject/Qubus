@@ -7,8 +7,6 @@
 #include <qubus/IR/execution_order.hpp>
 #include <qubus/util/unused.hpp>
 
-#include <hpx/runtime/serialization/vector.hpp>
-
 #include <boost/range/adaptor/indirected.hpp>
 
 #include <vector>
@@ -16,7 +14,7 @@
 namespace qubus
 {
 
-class compound_expr : public expression_base<compound_expr>
+class compound_expr final : public expression_base<compound_expr>
 {
 public:
     compound_expr() = default;
@@ -41,14 +39,6 @@ public:
     std::unique_ptr<expression> substitute_subexpressions(
             std::vector<std::unique_ptr<expression>> new_children) const override final;
 
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar & order_;
-        ar & body_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(compound_expr);
 private:
     execution_order order_;
     std::vector<std::unique_ptr<expression>> body_;

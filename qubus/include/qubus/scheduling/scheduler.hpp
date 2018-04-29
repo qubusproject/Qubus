@@ -5,7 +5,7 @@
 
 #include <qubus/vpu.hpp>
 
-#include <qubus/computelet.hpp>
+#include <qubus/IR/symbol_id.hpp>
 #include <qubus/execution_context.hpp>
 
 #include <hpx/include/lcos.hpp>
@@ -22,7 +22,7 @@ public:
     scheduler(const scheduler&) = delete;
     scheduler& operator=(const scheduler&) = delete;
     
-    virtual hpx::future<void> schedule(computelet c, execution_context ctx) = 0;
+    virtual hpx::future<void> schedule(const symbol_id& func, execution_context ctx) = 0;
     virtual void add_resource(vpu& execution_resource) = 0;
 };
 

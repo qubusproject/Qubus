@@ -15,10 +15,27 @@
 #include <array>
 #include <tuple>
 
+#include <iostream>
+
 namespace qubus
 {
 namespace jit
 {
+extern "C" void qubus_log_int(util::index_t value)
+{
+    std::cout << "Index = " << value << std::endl;
+}
+
+extern "C" void qubus_log_double(double value)
+{
+    std::cout << "Double = " << value << std::endl;
+}
+
+extern "C" void qubus_log_ptr(void* value)
+{
+    std::cout << "Ptr = " << value << std::endl;
+}
+
 namespace
 {
 std::string mangle_type(const type& t)
@@ -33,10 +50,18 @@ std::string mangle_type(const type& t)
                  .case_(pattern::bool_t, [&] { return "bool"; })
                  .case_(pattern::double_t, [&] { return "double"; })
                  .case_(pattern::float_t, [&] { return "float"; })
+                 .case_(pattern::integer_range_t, [&] { return "integer_range"; })
                  .case_(complex_t(subtype), [&] { return "complex_" + mangle_type(subtype.get()); })
-                 .case_(array_t(subtype, rank), [&] { return "array_" + mangle_type(subtype.get()) + "_" + std::to_string(rank.get()); })
+                 .case_(array_t(subtype, rank),
+                        [&] {
+                            return "array_" + mangle_type(subtype.get()) + "_" +
+                                   std::to_string(rank.get());
+                        })
                  .case_(array_slice_t(subtype, rank),
-                        [&] { return "array_slice_" + mangle_type(subtype.get()) + "_" + std::to_string(rank.get()); })
+                        [&] {
+                            return "array_slice_" + mangle_type(subtype.get()) + "_" +
+                                   std::to_string(rank.get());
+                        })
                  .case_(struct_t(_, _), [&](const type& self) {
                      const auto& self_ = self.as<types::struct_>();
 
@@ -45,14 +70,26 @@ std::string mangle_type(const type& t)
 
     return pattern::match(t, m);
 }
-}
+} // namespace
 
 llvm_environment::llvm_environment(llvm::LLVMContext& ctx_)
-: ctx_(&ctx_), builder_(ctx()), md_builder_(ctx()),
+: ctx_(&ctx_),
+  builder_(ctx()),
+  md_builder_(ctx()),
   the_module_(util::make_unique<llvm::Module>("Qubus module", ctx()))
 {
     llvm::FastMathFlags fast_math_flags;
+
+#if LLVM_VERSION_MAJOR < 6
     fast_math_flags.setUnsafeAlgebra();
+#else
+    fast_math_flags.setAllowReassoc();
+    fast_math_flags.setNoNaNs();
+    fast_math_flags.setNoInfs();
+    fast_math_flags.setNoSignedZeros();
+    fast_math_flags.setAllowReciprocal();
+    fast_math_flags.setAllowContract(true);
+#endif
 
     builder_.setFastMathFlags(fast_math_flags);
 
@@ -78,7 +115,7 @@ void llvm_environment::init_assume_align()
     std::vector<llvm::Type*> params = {llvm::Type::getInt8PtrTy(ctx()), int_type};
 
     llvm::FunctionType* FT =
-        llvm::FunctionType::get(llvm::Type::getDoublePtrTy(ctx()), params, false);
+        llvm::FunctionType::get(llvm::Type::getInt8PtrTy(ctx()), params, false);
 
     assume_align_ =
         llvm::Function::Create(FT, llvm::Function::PrivateLinkage, "assume_align", &module());
@@ -183,6 +220,13 @@ llvm::Type* llvm_environment::map_qubus_type(const type& t) const
                 .case_(pattern::bool_t, [&] { return llvm::Type::getInt1Ty(ctx()); })
                 .case_(pattern::double_t, [&] { return llvm::Type::getDoubleTy(ctx()); })
                 .case_(pattern::float_t, [&] { return llvm::Type::getFloatTy(ctx()); })
+                .case_(pattern::integer_range_t,
+                       [&] {
+                           llvm::Type* size_type = map_qubus_type(types::integer());
+
+                           return llvm::StructType::create({size_type, size_type, size_type},
+                                                           mangle_type(types::integer_range));
+                       })
                 .case_(complex_t(subtype),
                        [&](const type& total_type) {
                            llvm::Type* real_type = map_qubus_type(subtype.get());
@@ -287,6 +331,43 @@ llvm::Function* llvm_environment::get_dealloc_scratch_mem() const
     return dealloc_scratch_mem_;
 }
 
+void llvm_environment::log(llvm::Value* value)
+{
+    if (value->getType() == map_qubus_type(types::integer{}))
+    {
+        auto log = the_module_->getOrInsertFunction("qubus_log_int", builder_.getVoidTy(),
+                                                    value->getType());
+
+        std::vector<llvm::Value*> args;
+
+        args.push_back(value);
+
+        builder_.CreateCall(log, args);
+    }
+    else if (value->getType() == map_qubus_type(types::double_{}))
+    {
+        auto log = the_module_->getOrInsertFunction("qubus_log_double", builder_.getVoidTy(),
+                                                    value->getType());
+
+        std::vector<llvm::Value*> args;
+
+        args.push_back(value);
+
+        builder_.CreateCall(log, args);
+    }
+    else
+    {
+        auto log = the_module_->getOrInsertFunction("qubus_log_ptr", builder_.getVoidTy(),
+                                                    value->getType());
+
+        std::vector<llvm::Value*> args;
+
+        args.push_back(value);
+
+        builder_.CreateCall(log, args);
+    }
+}
+
 bool llvm_environment::bind_symbol(const std::string& symbol, llvm::Value* value)
 {
     return symbol_table_.insert(std::make_pair(symbol, value)).second;
@@ -317,5 +398,5 @@ std::unique_ptr<llvm::Module> llvm_environment::detach_module()
 {
     return std::move(the_module_);
 }
-}
-}
+} // namespace jit
+} // namespace qubus

@@ -3,7 +3,7 @@
 
 #include <hpx/config.hpp>
 
-#include <qubus/IR/function_declaration.hpp>
+#include <qubus/IR/function.hpp>
 
 #include <qubus/jit/alias_info.hpp>
 #include <qubus/jit/llvm_environment.hpp>
@@ -85,10 +85,6 @@ public:
 
     const std::map<util::handle, reference>& symbol_table() const;
 
-    boost::optional<function_declaration> get_next_plan_to_compile();
-
-    void add_plan_to_compile(function_declaration fn);
-
     scope& enter_new_scope();
 
     scope& get_current_scope();
@@ -109,7 +105,6 @@ private:
     llvm_environment* env_;
 
     std::map<util::handle, reference> symbol_table_;
-    std::vector<function_declaration> plans_to_compile_;
     std::vector<scope> scopes_;
 
     mutable std::vector<global_alias_info_query> pending_global_alias_queries_;

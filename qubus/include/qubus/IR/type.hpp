@@ -215,7 +215,7 @@ private:
 
     std::unique_ptr<type_interface> self_;
 
-    static util::implementation_table implementation_table_;
+    inline static util::implementation_table implementation_table_;
 };
 
 bool operator==(const type& lhs, const type& rhs);
@@ -354,6 +354,24 @@ private:
     type real_type_;
 };
 
+class integer_range_type : public type_base<integer_range_type>
+{
+public:
+    integer_range_type() = default;
+
+    bool is_primitive() const
+    {
+        return true;
+    }
+
+    template <typename Archive>
+    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
+    {
+    }
+};
+
+constexpr integer_range_type integer_range = {};
+
 class array : public type_base<array>
 {
 public:
@@ -446,6 +464,16 @@ public:
             ar& id;
         }
 
+        friend bool operator==(const member& lhs, const member& rhs)
+        {
+            return lhs.datatype == rhs.datatype && lhs.id == rhs.id;
+        }
+
+        friend bool operator!=(const member& lhs, const member& rhs)
+        {
+            return !(lhs == rhs);
+        }
+
         type datatype;
         std::string id;
     };
@@ -505,6 +533,10 @@ private:
 
 type sparse_tensor(type value_type);
 }
+
+// Helper functions
+
+type value_type(const type& array_like);
 }
 
 namespace std

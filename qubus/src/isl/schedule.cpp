@@ -101,24 +101,6 @@ union_set schedule::get_domain() const
     return union_set(isl_schedule_get_domain(handle_));
 }
 
-namespace
-{
-extern "C" isl_stat add_band_to_forest(isl_band* child, void* user) noexcept;
-}
-
-std::vector<band> schedule::get_band_forest() const
-{
-    std::vector<band> result;
-    
-    isl_band_list* forest = isl_schedule_get_band_forest(handle_);
-    
-    isl_band_list_foreach(forest, add_band_to_forest, &result);
-    
-    isl_band_list_free(forest);
-    
-    return result;
-}
-
 isl_schedule* schedule::native_handle() const
 {
     return handle_;
@@ -134,21 +116,6 @@ isl_schedule* schedule::release() noexcept
 schedule schedule::from_domain(union_set domain)
 {
     return schedule(isl_schedule_from_domain(domain.release()));
-}
-
-namespace
-{
-extern "C" {
-
-isl_stat add_band_to_forest(isl_band* child, void* user) noexcept
-{
-    auto& children = *static_cast<std::vector<band>*>(user);
-
-    children.emplace_back(child);
-
-    return isl_stat_ok;
-}
-}
 }
 
 schedule get_schedule(const schedule_node& node)

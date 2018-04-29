@@ -42,6 +42,8 @@ public:
         explicit operator bool() const;
 
         bool unique() const;
+
+        void free();
     private:
         std::shared_ptr<address_entry> entry_;
     };

@@ -16,7 +16,7 @@ class sparse_support : public ::testing::TestWithParam<long int>
 INSTANTIATE_TEST_CASE_P(base_extents, sparse_support,
                         ::testing::Values(10l, 11l, 100l, 101l, 512l, 1234l));
 
-TEST_P(sparse_support, sparse_matrix_vector_product)
+TEST_P(sparse_support, DISABLED_sparse_matrix_vector_product)
 {
     using namespace qubus;
     using namespace qtl;
@@ -104,7 +104,7 @@ TEST_P(sparse_support, sparse_matrix_vector_product)
     ASSERT_NEAR(error, 0.0, 1e-12);
 }
 
-TEST_P(sparse_support, sparse_matrix_matrix_product)
+TEST_P(sparse_support, DISABLED_sparse_matrix_matrix_product)
 {
     using namespace qubus;
     using namespace qtl;

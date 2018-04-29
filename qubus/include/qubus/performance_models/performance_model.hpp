@@ -1,7 +1,7 @@
 #ifndef QUBUS_PERFORMANCE_MODELS_PERFORMANCE_MODEL_HPP
 #define QUBUS_PERFORMANCE_MODELS_PERFORMANCE_MODEL_HPP
 
-#include <qubus/computelet.hpp>
+#include <qubus/IR/symbol_id.hpp>
 #include <qubus/execution_context.hpp>
 
 #include <qubus/util/hpx/serialization/chrono.hpp>
@@ -40,11 +40,11 @@ public:
     performance_model(performance_model&&) = delete;
     performance_model& operator=(performance_model&&) = delete;
 
-    virtual void sample_execution_time(const computelet& c, const execution_context& ctx,
+    virtual void sample_execution_time(const symbol_id& func, const execution_context& ctx,
                                        std::chrono::microseconds execution_time) = 0;
 
     virtual boost::optional<performance_estimate>
-    try_estimate_execution_time(const computelet& c, const execution_context& ctx) const = 0;
+    try_estimate_execution_time(const symbol_id& func, const execution_context& ctx) const = 0;
 };
 }
 

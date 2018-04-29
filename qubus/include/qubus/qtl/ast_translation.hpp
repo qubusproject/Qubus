@@ -105,27 +105,19 @@ auto translate_ast(subscripted_tensor<Tensor, Indices...> node, domain& dom)
     return subscription(clone(*accessible_tensor), std::move(indices));
 }
 
-template <typename Tensor, typename... Ranges>
-auto translate_ast(sliced_tensor<Tensor, Ranges...> node, domain& dom)
+template <typename Tensor, typename... Indices>
+auto translate_ast(sliced_tensor<Tensor, Indices...> node, domain& dom)
 {
     auto tensor = translate_ast(node.tensor(), dom);
 
-    std::vector<std::unique_ptr<expression>> offset;
-    offset.reserve(sizeof...(Ranges));
+    std::vector<std::unique_ptr<expression>> indices;
+    indices.reserve(sizeof...(Indices));
 
-    std::vector<std::unique_ptr<expression>> shape;
-    shape.reserve(sizeof...(Ranges));
-
-    std::vector<std::unique_ptr<expression>> strides;
-    strides.reserve(sizeof...(Ranges));
-
-    boost::hana::for_each(node.ranges(), [&offset, &shape, &strides](auto range) {
-        offset.push_back(integer_literal(range.start));
-        shape.push_back(integer_literal((range.end - range.start) / range.stride));
-        strides.push_back(integer_literal(range.stride));
+    boost::hana::for_each(node.ranges(), [&indices, &dom](const auto& index) {
+        indices.push_back(translate_ast(index, dom));
     });
 
-    return slice(std::move(tensor), std::move(offset), std::move(shape), std::move(strides));
+    return subscription(std::move(tensor), std::move(indices));
 }
 
 inline auto translate_ast(const index& idx, domain& /*unused*/)
@@ -165,10 +157,19 @@ auto translate_ast(const Tensor& tensor, domain& /*unused*/)
 }
 
 template <typename T,
-          typename /*Enabled*/ = typename std::enable_if<std::is_arithmetic<T>::value>::type>
+        typename /*Enabled*/ = typename std::enable_if<std::is_arithmetic<T>::value>::type>
 auto translate_ast(T node, domain& dom)
 {
     return lit(node);
+}
+
+inline auto translate_ast(const range& r, domain& dom)
+{
+    auto start = translate_ast(r.start, dom);
+    auto end = translate_ast(r.end, dom);
+    auto stride = translate_ast(r.stride, dom);
+
+    return ::qubus::range(std::move(start), std::move(end), std::move(stride));
 }
 
 template <typename FirstIndex, typename SecondIndex>

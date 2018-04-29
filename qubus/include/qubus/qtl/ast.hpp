@@ -355,7 +355,8 @@ template <typename T, long int Rank>
 class tensor_var
 {
 public:
-    tensor_var() : var_(types::array(associated_qubus_type<T>::get(), Rank))
+    // FIXME: Add a proper name for each tensor.
+    tensor_var() : var_("tensor", types::array(associated_qubus_type<T>::get(), Rank))
     {
     }
 
@@ -389,7 +390,8 @@ template <typename T, long int Rank>
 class sparse_tensor_var
 {
 public:
-    sparse_tensor_var() : var_(types::sparse_tensor(associated_qubus_type<T>::get()))
+    // FIXME: Add a proper name for each tensor.
+    sparse_tensor_var() : var_("tensor", types::sparse_tensor(associated_qubus_type<T>::get()))
     {
     }
 

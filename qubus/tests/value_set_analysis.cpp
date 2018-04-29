@@ -11,10 +11,10 @@ TEST(value_set_anaylsis, simple_array_access_in_loop_nest)
 {
     using namespace qubus;
 
-    variable_declaration var(types::array(types::double_{}, 1));
+    variable_declaration var("var", types::array(types::double_{}, 1));
 
-    variable_declaration i(types::integer{});
-    variable_declaration N(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration N("N", types::integer{});
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(variable_ref(i));
@@ -43,10 +43,10 @@ TEST(value_set_anaylsis, array_access_in_loop_nest)
 {
     using namespace qubus;
 
-    variable_declaration var(types::array(types::double_{}, 1));
+    variable_declaration var("var", types::array(types::double_{}, 1));
 
-    variable_declaration i(types::integer{});
-    variable_declaration j(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration j("j", types::integer{});
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(variable_ref(i) + variable_ref(j));
@@ -75,10 +75,10 @@ TEST(value_set_anaylsis, dependent_loops)
 {
     using namespace qubus;
 
-    variable_declaration var(types::array(types::double_{}, 1));
+    variable_declaration var("var", types::array(types::double_{}, 1));
 
-    variable_declaration i(types::integer{});
-    variable_declaration j(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration j("j", types::integer{});
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(variable_ref(j));
@@ -107,13 +107,13 @@ TEST(value_set_anaylsis, blocking)
 {
     using namespace qubus;
 
-    variable_declaration var(types::array(types::double_{}, 1));
+    variable_declaration var("var", types::array(types::double_{}, 1));
 
-    variable_declaration i(types::integer{});
-    variable_declaration j(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration j("j", types::integer{});
 
-    variable_declaration ii(types::integer{});
-    variable_declaration jj(types::integer{});
+    variable_declaration ii("ii", types::integer{});
+    variable_declaration jj("jj", types::integer{});
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(variable_ref(jj));

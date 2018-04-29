@@ -7,8 +7,10 @@
 
 #include <qubus/aggregate_vpu.hpp>
 #include <qubus/virtual_address_space.hpp>
+#include <qubus/module_library.hpp>
+#include <qubus/dataflow.hpp>
 
-#include <qubus/computelet.hpp>
+#include <qubus/IR/symbol_id.hpp>
 #include <qubus/kernel_arguments.hpp>
 
 #include <qubus/exception.hpp>
@@ -43,18 +45,28 @@ public:
 
     void shutdown();
 
-    void execute(computelet c, kernel_arguments args);
+    void execute(const symbol_id& func, kernel_arguments args);
+
+    distributed_access_token acquire_write_access(const object& obj);
+    distributed_access_token acquire_read_access(const object& obj);
 
     hpx::future<hpx::id_type> get_object_factory() const;
+    hpx::future<hpx::id_type> get_module_library() const;
 
     HPX_DEFINE_COMPONENT_ACTION(runtime_server, shutdown, shutdown_action);
     HPX_DEFINE_COMPONENT_ACTION(runtime_server, execute, execute_action);
+    HPX_DEFINE_COMPONENT_ACTION(runtime_server, acquire_write_access, acquire_write_access_action);
+    HPX_DEFINE_COMPONENT_ACTION(runtime_server, acquire_read_access, acquire_read_access_action);
     HPX_DEFINE_COMPONENT_ACTION(runtime_server, get_object_factory, get_object_factory_action);
+    HPX_DEFINE_COMPONENT_ACTION(runtime_server, get_module_library, get_module_library_action);
 private:
+    module_library mod_library_;
     boost::optional<virtual_address_space_wrapper::client> global_address_space_;
     std::vector<local_runtime_reference> local_runtimes_;
     object_factory obj_factory_;
     boost::optional<aggregate_vpu> global_vpu_;
+
+    dataflow_graph df_graph_;
 };
 
 class runtime : public hpx::components::client_base<runtime, runtime_server>
@@ -70,9 +82,12 @@ public:
     void shutdown();
 
     object_factory get_object_factory() const;
+    module_library get_module_library() const;
 
-    hpx::future<void> execute(computelet c, kernel_arguments args);
+    [[nodiscard]] hpx::future<void> execute(const symbol_id& func, kernel_arguments args);
 
+    [[nodiscard]] hpx::future<distributed_access_token> acquire_write_access(const object& obj);
+    [[nodiscard]] hpx::future<distributed_access_token> acquire_read_access(const object& obj);
     // const abi_info& abi();
 };
 
@@ -84,11 +99,11 @@ runtime get_runtime();
 std::vector<std::string> get_hpx_config();
 
 template<typename... Args>
-void execute(const computelet& c, Args&&... args)
+void execute(const symbol_id& func, Args&&... args)
 {
     kernel_arguments kernel_args({std::forward<Args>(args).get_object()...});
 
-    get_runtime().execute(c, std::move(kernel_args));
+    get_runtime().execute(func, std::move(kernel_args));
 }
 
 }

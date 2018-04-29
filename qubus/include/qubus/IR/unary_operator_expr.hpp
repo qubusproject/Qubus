@@ -15,7 +15,7 @@ enum class unary_op_tag
   negate,
   logical_not };
 
-class unary_operator_expr : public expression_base<unary_operator_expr>
+class unary_operator_expr final : public expression_base<unary_operator_expr>
 {
 public:
     unary_operator_expr();
@@ -36,14 +36,6 @@ public:
     std::unique_ptr<expression> substitute_subexpressions(
             std::vector<std::unique_ptr<expression>> new_children) const override final;
 
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar & tag_;
-        ar & arg_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(unary_operator_expr);
 private:
     unary_op_tag tag_;
     std::unique_ptr<expression> arg_;

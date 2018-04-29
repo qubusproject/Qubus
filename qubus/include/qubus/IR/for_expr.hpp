@@ -14,7 +14,7 @@
 namespace qubus
 {
 
-class for_expr : public expression_base<for_expr>
+class for_expr final : public expression_base<for_expr>
 {
 public:
     for_expr() = default;
@@ -50,19 +50,6 @@ public:
 
     std::unique_ptr<expression> substitute_subexpressions(
         std::vector<std::unique_ptr<expression>> new_children) const override final;
-
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar& order_;
-        ar& loop_index_;
-        ar& lower_bound_;
-        ar& upper_bound_;
-        ar& increment_;
-        ar& body_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(for_expr);
 
 private:
     execution_order order_;
@@ -113,6 +100,27 @@ inline std::unique_ptr<for_expr> unordered_for(variable_declaration loop_index,
                                                std::unique_ptr<expression> body)
 {
     return std::make_unique<for_expr>(execution_order::unordered, std::move(loop_index),
+                                      std::move(lower_bound), std::move(upper_bound),
+                                      std::move(increment), std::move(body));
+}
+
+inline std::unique_ptr<for_expr> parallel_for(variable_declaration loop_index,
+                                               std::unique_ptr<expression> lower_bound,
+                                               std::unique_ptr<expression> upper_bound,
+                                               std::unique_ptr<expression> body)
+{
+    return std::make_unique<for_expr>(execution_order::parallel, std::move(loop_index),
+                                      std::move(lower_bound), std::move(upper_bound),
+                                      std::move(body));
+}
+
+inline std::unique_ptr<for_expr> parallel_for(variable_declaration loop_index,
+                                               std::unique_ptr<expression> lower_bound,
+                                               std::unique_ptr<expression> upper_bound,
+                                               std::unique_ptr<expression> increment,
+                                               std::unique_ptr<expression> body)
+{
+    return std::make_unique<for_expr>(execution_order::parallel, std::move(loop_index),
                                       std::move(lower_bound), std::move(upper_bound),
                                       std::move(increment), std::move(body));
 }

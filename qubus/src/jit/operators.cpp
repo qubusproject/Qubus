@@ -29,22 +29,23 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
 
     auto& builder = env.builder();
 
-    llvm::Instruction* left_value = load_from_ref(left_value_ptr, env, ctx);
-
     llvm::Instruction* right_value = load_from_ref(right_value_ptr, env, ctx);
 
     type result_type = typeof_(left);
 
     llvm::Value* result;
 
+    if (tag == binary_op_tag::assign)
+    {
+        store_to_ref(left_value_ptr, right_value, env, ctx);
+
+        return reference();
+    }
+
+    llvm::Instruction* left_value = load_from_ref(left_value_ptr, env, ctx);
+
     switch (tag)
     {
-        case binary_op_tag::assign:
-        {
-            store_to_ref(left_value_ptr, right_value, env, ctx);
-
-            return reference();
-        }
         case binary_op_tag::plus_assign:
         {
             auto m =

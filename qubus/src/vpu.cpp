@@ -1,3 +1,5 @@
+#include <hpx/config.hpp>
+
 #include <qubus/vpu.hpp>
 
 #include <utility>
@@ -32,16 +34,16 @@ remote_vpu_server::remote_vpu_server(std::unique_ptr<vpu> underlying_vpu_)
 {
 }
 
-void remote_vpu_server::execute(computelet c, execution_context ctx)
+void remote_vpu_server::execute(const symbol_id& func, execution_context ctx)
 {
-    underlying_vpu_->execute(std::move(c), std::move(ctx)).get();
+    underlying_vpu_->execute(func, std::move(ctx)).get();
 }
 
 boost::optional<performance_estimate>
-remote_vpu_server::try_estimate_execution_time(const computelet& c,
+remote_vpu_server::try_estimate_execution_time(const symbol_id& func,
                                                const execution_context& ctx) const
 {
-    return underlying_vpu_->try_estimate_execution_time(c, ctx).get();
+    return underlying_vpu_->try_estimate_execution_time(func, ctx).get();
 }
 
 remote_vpu::remote_vpu(hpx::id_type id) : base_type(std::move(id))
@@ -52,16 +54,16 @@ remote_vpu::remote_vpu(hpx::future<hpx::id_type>&& id) : base_type(std::move(id)
 {
 }
 
-hpx::future<void> remote_vpu::execute(computelet c, execution_context ctx)
+hpx::future<void> remote_vpu::execute(const symbol_id& func, execution_context ctx)
 {
-    return hpx::async<remote_vpu_server::execute_action>(this->get_id(), std::move(c),
+    return hpx::async<remote_vpu_server::execute_action>(this->get_id(), func,
                                                          std::move(ctx));
 }
 
 hpx::future<boost::optional<performance_estimate>>
-remote_vpu::try_estimate_execution_time(const computelet& c, const execution_context& ctx) const
+remote_vpu::try_estimate_execution_time(const symbol_id& func, const execution_context& ctx) const
 {
-    return hpx::async<remote_vpu_server::try_estimate_execution_time_action>(this->get_id(), c,
+    return hpx::async<remote_vpu_server::try_estimate_execution_time_action>(this->get_id(), func,
                                                                              ctx);
 }
 
@@ -70,16 +72,16 @@ remote_vpu_reference_server::remote_vpu_reference_server(vpu* underlying_vpu_)
 {
 }
 
-void remote_vpu_reference_server::execute(computelet c, execution_context ctx)
+void remote_vpu_reference_server::execute(const symbol_id& func, execution_context ctx)
 {
-    underlying_vpu_->execute(std::move(c), std::move(ctx)).get();
+    underlying_vpu_->execute(func, std::move(ctx)).get();
 }
 
 boost::optional<performance_estimate>
-remote_vpu_reference_server::try_estimate_execution_time(const computelet& c,
+remote_vpu_reference_server::try_estimate_execution_time(const symbol_id& func,
                                                          const execution_context& ctx) const
 {
-    return underlying_vpu_->try_estimate_execution_time(c, ctx).get();
+    return underlying_vpu_->try_estimate_execution_time(func, ctx).get();
 }
 
 remote_vpu_reference::remote_vpu_reference(hpx::id_type id) : base_type(std::move(id))
@@ -91,17 +93,17 @@ remote_vpu_reference::remote_vpu_reference(hpx::future<hpx::id_type>&& id)
 {
 }
 
-hpx::future<void> remote_vpu_reference::execute(computelet c, execution_context ctx)
+hpx::future<void> remote_vpu_reference::execute(const symbol_id& func, execution_context ctx)
 {
-    return hpx::async<remote_vpu_reference_server::execute_action>(this->get_id(), std::move(c),
+    return hpx::async<remote_vpu_reference_server::execute_action>(this->get_id(), func,
                                                                    std::move(ctx));
 }
 
 hpx::future<boost::optional<performance_estimate>>
-remote_vpu_reference::try_estimate_execution_time(const computelet& c,
+remote_vpu_reference::try_estimate_execution_time(const symbol_id& func,
                                                   const execution_context& ctx) const
 {
     return hpx::async<remote_vpu_reference_server::try_estimate_execution_time_action>(
-        this->get_id(), c, ctx);
+        this->get_id(), func, ctx);
 }
 }

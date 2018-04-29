@@ -1,0 +1,6 @@
+module test
+
+function test() -> result :: Int
+    let N = 0
+end
+

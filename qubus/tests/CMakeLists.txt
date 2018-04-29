@@ -42,8 +42,37 @@ if(QUBUS_BUILD_TESTS)
   qubus_qtl_add_simple_test(slicing)
   qubus_add_simple_test(symbolic_regression)
   qubus_add_simple_test(variable_access_analysis)
-  qubus_qtl_add_simple_test(foreign_kernels)
+  #qubus_qtl_add_simple_test(foreign_kernels)
   qubus_qtl_add_simple_test(scalar_support)
+  qubus_add_simple_test(symbol_id)
+  qubus_add_simple_test(module)
+  qubus_add_simple_test(lang)
+
+  add_executable(parsing parsing.cpp)
+  target_include_directories(parsing PUBLIC ${GTEST_INCLUDE_DIRS})
+  target_link_libraries(parsing PRIVATE qubus_ir ${GTEST_BOTH_LIBRARIES})
+  add_test(parsing ${CMAKE_CURRENT_BINARY_DIR}/parsing)
+
+  add_custom_command(TARGET parsing POST_BUILD
+          COMMAND ${CMAKE_COMMAND} -E copy_directory
+          ${CMAKE_CURRENT_SOURCE_DIR}/samples $<TARGET_FILE_DIR:parsing>/samples)
+
+  add_executable(pretty_print pretty_print.cpp)
+  target_include_directories(pretty_print PUBLIC ${GTEST_INCLUDE_DIRS})
+  target_link_libraries(pretty_print PRIVATE qubus_ir ${GTEST_BOTH_LIBRARIES})
+  add_test(pretty_print ${CMAKE_CURRENT_BINARY_DIR}/pretty_print)
+
+  if (QUBUS_HAS_FUZZING_SUPPORT)
+    add_executable(parsing_fuzz parsing_fuzz.cpp)
+    target_link_libraries(parsing_fuzz PRIVATE qubus_ir)
+    target_compile_options(parsing_fuzz PRIVATE ${QUBUS_FUZZING_FLAGS})
+    target_link_libraries(parsing_fuzz PRIVATE ${QUBUS_FUZZING_LINK_FLAGS})
+    add_test(parsing_fuzz ${CMAKE_CURRENT_BINARY_DIR}/parsing)
+
+    add_custom_command(TARGET parsing_fuzz POST_BUILD
+            COMMAND ${CMAKE_COMMAND} -E copy_directory
+            ${CMAKE_CURRENT_SOURCE_DIR}/samples $<TARGET_FILE_DIR:parsing_fuzz>/corpus)
+  endif()
 
   if (TARGET qubus_cuda)
     add_executable(cuda cuda.cpp)

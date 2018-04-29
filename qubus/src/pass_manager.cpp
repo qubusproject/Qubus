@@ -112,7 +112,7 @@ pass_manager::pass_manager() : analysis_man_(resource_manager_)
 {
 }
 
-preserved_analyses_info pass_manager::run(function_declaration& fun)
+preserved_analyses_info pass_manager::run(function& fun)
 {
     for (const auto& transformation : optimization_pipeline_)
     {

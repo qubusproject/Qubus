@@ -7,6 +7,7 @@
 #include <qubus/IR/variable_declaration.hpp>
 
 #include <qubus/jit/compilation_context.hpp>
+#include <qubus/jit/exception.hpp>
 #include <qubus/jit/llvm_environment.hpp>
 #include <qubus/jit/reference.hpp>
 
@@ -21,20 +22,16 @@ namespace jit
 
 class compiler;
 
+llvm::Value* load_rank(reference array, llvm_environment& env, compilation_context& ctx);
 llvm::Value* load_array_data_ptr(reference array, llvm_environment& env, compilation_context& ctx);
 llvm::Value* load_array_shape_ptr(reference array, llvm_environment& env, compilation_context& ctx);
 
-reference emit_tensor_access(const expression& tensor,
-                             const std::vector<std::reference_wrapper<const expression>>& indices,
-                             compiler& comp);
+reference extent(const expression& array_like, const expression& dim, compiler& comp);
 
-reference emit_array_slice_access(const reference& slice, const std::vector<llvm::Value*>& indices,
-                                  compiler& comp);
-
-reference emit_array_slice(const reference& array, const std::vector<llvm::Value*>& offset,
-                           const std::vector<llvm::Value*>& shape,
-                           const std::vector<llvm::Value*>& strides, compiler& comp);
-}
-}
+reference emit_subscription(const expression& array_like,
+                            const std::vector<std::reference_wrapper<const expression>>& indices,
+                            compiler& comp);
+} // namespace jit
+} // namespace qubus
 
 #endif

@@ -14,11 +14,15 @@ namespace jit
 {
 llvm::LoadInst* load_from_ref(const reference& ref, llvm_environment& env, compilation_context& ctx)
 {
+    //env.log(ref.addr());
+
     auto& builder = env.builder();
 
     auto value = builder.CreateLoad(ref.addr());
 
-    llvm::MDNode* alias_scopes = llvm::MDNode::get(env.ctx(), {});
+    //env.log(value);
+
+    /*llvm::MDNode* alias_scopes = llvm::MDNode::get(env.ctx(), {});
     llvm::MDNode* noalias_set = llvm::MDNode::get(env.ctx(), {});
     value->setMetadata("alias.scope", alias_scopes);
     value->setMetadata("noalias", noalias_set);
@@ -58,7 +62,7 @@ llvm::LoadInst* load_from_ref(const reference& ref, llvm_environment& env, compi
                             });
 
         ctx.register_pending_task(std::move(f));
-    }
+    }*/
 
     return value;
 }
@@ -66,11 +70,15 @@ llvm::LoadInst* load_from_ref(const reference& ref, llvm_environment& env, compi
 llvm::StoreInst* store_to_ref(const reference& ref, llvm::Value* value, llvm_environment& env,
                               compilation_context& ctx)
 {
+    //env.log(ref.addr());
+
+    //env.log(value);
+
     auto& builder = env.builder();
 
     auto store = builder.CreateStore(value, ref.addr());
 
-    llvm::MDNode* alias_scopes = llvm::MDNode::get(env.ctx(), {});
+    /*llvm::MDNode* alias_scopes = llvm::MDNode::get(env.ctx(), {});
     llvm::MDNode* noalias_set = llvm::MDNode::get(env.ctx(), {});
     store->setMetadata("alias.scope", alias_scopes);
     store->setMetadata("noalias", noalias_set);
@@ -108,7 +116,7 @@ llvm::StoreInst* store_to_ref(const reference& ref, llvm::Value* value, llvm_env
                             });
 
         ctx.register_pending_task(std::move(f));
-    }
+    }*/
 
     return store;
 }

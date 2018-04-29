@@ -9,6 +9,7 @@
 
 #include <qubus/abi_info.hpp>
 #include <qubus/local_address_space.hpp>
+#include <qubus/module_library.hpp>
 #include <qubus/performance_models/unified_performance_model.hpp>
 
 #include <qubus/qubus_export.h>
@@ -37,11 +38,18 @@ namespace
 class caching_cuda_comiler
 {
 public:
-    const cuda_plan& compile(const computelet& c) const
+    explicit caching_cuda_comiler(module_library mod_library_)
+    : mod_library_(std::move(mod_library_))
     {
+    }
+
+    const cuda_plan& compile(const symbol_id& func) const
+    {
+        auto module_id = func.get_prefix();
+
         std::unique_lock<hpx::lcos::local::mutex> guard(cache_mutex_);
 
-        auto pos = compilation_cache_.find(c.get_id().get_gid());
+        auto pos = compilation_cache_.find(module_id);
 
         if (pos != compilation_cache_.end())
         {
@@ -52,35 +60,42 @@ public:
             hpx::threads::executors::default_executor executor(hpx::threads::thread_stacksize_huge);
 
             auto compilation =
-                hpx::async(
-                    executor,
-                    [&c, this] { return underlying_compiler_.compile_computelet(c.code().get()); })
+                hpx::async(executor,
+                           [module_id, this] {
+                               auto code = mod_library_.lookup(module_id).get();
+
+                               return underlying_compiler_.compile_computelet(std::move(code));
+                           })
                     .get();
 
-            pos = compilation_cache_.emplace(c.get_id().get_gid(), std::move(compilation)).first;
+            pos = compilation_cache_.emplace(module_id, std::move(compilation)).first;
 
             return *pos->second;
         }
     }
 
 private:
+    module_library mod_library_;
     mutable cuda_compiler underlying_compiler_; // FIXME: Make the compiler non-mutable.
-    mutable std::unordered_map<hpx::naming::gid_type, std::unique_ptr<cuda_plan>>
-        compilation_cache_;
+    mutable std::unordered_map<symbol_id, std::unique_ptr<cuda_plan>> compilation_cache_;
     mutable hpx::lcos::local::mutex cache_mutex_;
 };
 
 class cuda_vpu final : public vpu
 {
 public:
-    explicit cuda_vpu(cuda::device dev_, local_address_space& local_addr_space_)
-    : dev_(std::move(dev_)),
+    explicit cuda_vpu(cuda::device dev_, local_address_space& local_addr_space_,
+                      module_library mod_library_)
+    : compiler_(mod_library_),
+      dev_(std::move(dev_)),
       cuda_ctx_(this->dev_),
-      address_space_(std::make_unique<cuda_allocator>(this->cuda_ctx_))
+      address_space_(std::make_unique<cuda_allocator>(this->cuda_ctx_)),
+      perf_model_(mod_library_)
     {
-        auto page_fault_handler = [this, &local_addr_space_](
-            const object& obj,
-            address_space::page_fault_context ctx) -> hpx::future<address_space::handle> {
+        auto page_fault_handler =
+            [this, &local_addr_space_](
+                const object& obj,
+                address_space::page_fault_context ctx) -> hpx::future<address_space::handle> {
             auto host_handle = local_addr_space_.resolve_object(obj);
 
             return host_handle.then(
@@ -118,14 +133,14 @@ public:
         address_space_.on_page_fault(std::move(page_fault_handler));
     }
 
-    hpx::future<void> execute(computelet c, execution_context ctx) override
+    hpx::future<void> execute(const symbol_id& func, execution_context ctx) override
     {
         cuda::context_guard guard(cuda_ctx_);
 
-        const auto& compilation = compiler_.compile(c);
+        const auto& compilation = compiler_.compile(func);
 
         hpx::future<void> task_done = hpx::async(
-            get_local_runtime().get_service_executor(), [this, &compilation, c, ctx]() mutable {
+            get_local_runtime().get_service_executor(), [this, &compilation, func, ctx]() mutable {
                 std::vector<void*> task_args;
 
                 std::vector<address_space::handle> pages;
@@ -151,7 +166,7 @@ public:
                 cuda::context_guard guard(cuda_ctx_);
 
                 cuda::event start_exec(stream_);
-                compilation.execute(task_args, stream_);
+                compilation.execute(func, task_args, stream_);
                 cuda::event end_exec(stream_);
 
                 guard.deactivate();
@@ -163,16 +178,16 @@ public:
                 auto task_duration = std::chrono::duration_cast<std::chrono::microseconds>(
                     cuda::compute_elapsed_time(start_exec, end_exec));
 
-                perf_model_.sample_execution_time(c, ctx, std::move(task_duration));
+                perf_model_.sample_execution_time(func, ctx, std::move(task_duration));
             });
 
         return task_done;
     }
 
     hpx::future<boost::optional<performance_estimate>>
-    try_estimate_execution_time(const computelet& c, const execution_context& ctx) const override
+    try_estimate_execution_time(const symbol_id& func, const execution_context& ctx) const override
     {
-        auto estimate = perf_model_.try_estimate_execution_time(c, ctx);
+        auto estimate = perf_model_.try_estimate_execution_time(func, ctx);
 
         return hpx::make_ready_future(std::move(estimate));
     }
@@ -192,8 +207,9 @@ private:
 class cuda_backend final : public backend
 {
 public:
-    cuda_backend(const abi_info& abi_, local_address_space& local_addr_space_)
-    : abi_(&abi_), local_addr_space_(&local_addr_space_)
+    cuda_backend(const abi_info& abi_, local_address_space& local_addr_space_,
+                 module_library mod_library_)
+    : abi_(&abi_), local_addr_space_(&local_addr_space_), mod_library_(std::move(mod_library_))
     {
     }
 
@@ -214,7 +230,8 @@ public:
 
             for (auto&& device : cuda::get_devices())
             {
-                vpus.push_back(std::make_unique<cuda_vpu>(std::move(device), *local_addr_space_));
+                vpus.push_back(std::make_unique<cuda_vpu>(std::move(device), *local_addr_space_,
+                                                          mod_library_));
             }
 
             return vpus;
@@ -230,6 +247,7 @@ public:
 private:
     const abi_info* abi_;
     local_address_space* local_addr_space_;
+    module_library mod_library_;
 };
 }
 
@@ -250,13 +268,14 @@ std::once_flag cuda_backend_init_flag;
 }
 
 extern "C" QUBUS_EXPORT backend* init_cuda_backend(const abi_info* abi,
-                                                   local_address_space* local_addr_space)
+                                                   local_address_space* local_addr_space,
+                                                   module_library mod_library)
 {
     QUBUS_ASSERT(abi, "Expected argument to be non-null.");
     QUBUS_ASSERT(local_addr_space, "Expected argument to be non-null.");
 
     std::call_once(cuda_backend_init_flag, [&] {
-        the_cuda_backend = std::make_unique<cuda_backend>(*abi, *local_addr_space);
+        the_cuda_backend = std::make_unique<cuda_backend>(*abi, *local_addr_space, std::move(mod_library));
     });
 
     return the_cuda_backend.get();

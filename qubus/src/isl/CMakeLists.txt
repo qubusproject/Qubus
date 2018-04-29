@@ -1,7 +1,7 @@
 set(qubus_isl_header_file_names affine_expr.hpp ast.hpp ast_builder.hpp constraint.hpp
                                 context.hpp flow.hpp local_space.hpp map.hpp
                                 printer.hpp schedule.hpp set.hpp space.hpp value.hpp
-                                id.hpp band.hpp)
+                                id.hpp)
                
 set(qubus_isl_include_dir ${CMAKE_SOURCE_DIR}/qubus/include/qubus/isl)
 
@@ -12,18 +12,19 @@ endforeach()
 set(qubus_isl_source_files affine_expr.cpp ast.cpp ast_builder.cpp constraint.cpp
                            context.cpp flow.cpp local_space.cpp map.cpp
                            printer.cpp schedule.cpp set.cpp space.cpp value.cpp
-                           id.cpp band.cpp schedule_node.cpp
+                           id.cpp schedule_node.cpp
                            multi_union_pw_affine_expr.cpp pw_aff.cpp pw_multi_aff.cpp multi_affine_expr.cpp)
 
 find_package(ISL MODULE REQUIRED)               
 
-add_library(qubus_isl SHARED ${qubus_isl_header_files} ${qubus_isl_source_files})
+add_library(qubus_isl STATIC ${qubus_isl_header_files} ${qubus_isl_source_files})
 
 target_include_directories(qubus_isl PUBLIC $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 
 target_compile_features(qubus_isl PUBLIC cxx_std_17)
 target_link_libraries(qubus_isl PUBLIC isl::isl qubus_util)
-set_target_properties(qubus_isl PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${QUBUS_HAS_LTO_SUPPORT})
+#set_target_properties(qubus_isl PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${QUBUS_HAS_LTO_SUPPORT})
+set_property(TARGET qubus_isl PROPERTY POSITION_INDEPENDENT_CODE ON)
 
 set_property(TARGET qubus_isl PROPERTY VERSION ${QUBUS_VERSION})
 set_property(TARGET qubus_isl PROPERTY SOVERSION 0)

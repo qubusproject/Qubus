@@ -180,11 +180,5 @@ std::unique_ptr<expression> expand_multi_indices(const expression& expr)
     return qubus::pattern::substitute(expr, m);
 }
 
-function_declaration expand_multi_indices(function_declaration decl)
-{
-    auto new_body = expand_multi_indices(decl.body());
-
-    return function_declaration(decl.name(), decl.params(), decl.result(), std::move(new_body));
-}
 }
 }

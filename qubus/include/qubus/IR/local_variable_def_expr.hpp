@@ -11,7 +11,7 @@
 namespace qubus
 {
 
-class local_variable_def_expr : public expression_base<local_variable_def_expr>
+class local_variable_def_expr final : public expression_base<local_variable_def_expr>
 {
 public:
     local_variable_def_expr() = default;
@@ -30,15 +30,6 @@ public:
 
     std::unique_ptr<expression> substitute_subexpressions(
         std::vector<std::unique_ptr<expression>> new_children) const override final;
-
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar& decl_;
-        ar& initializer_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(local_variable_def_expr);
 
 private:
     variable_declaration decl_;

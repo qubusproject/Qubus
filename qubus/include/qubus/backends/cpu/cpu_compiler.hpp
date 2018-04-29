@@ -3,10 +3,11 @@
 
 #include <hpx/config.hpp>
 
-#include <qubus/IR/function_declaration.hpp>
+#include <qubus/IR/module.hpp>
+#include <qubus/IR/symbol_id.hpp>
 
-#include <memory>
 #include <functional>
+#include <memory>
 #include <vector>
 
 namespace qubus
@@ -23,7 +24,8 @@ public:
     cpu_plan(const cpu_plan&) = delete;
     cpu_plan& operator=(const cpu_plan&) = delete;
 
-    virtual void execute(const std::vector<void*>& args, cpu_runtime& runtime) const = 0;
+    virtual void execute(const symbol_id& entry_point, const std::vector<void*>& args,
+                         cpu_runtime& runtime) const = 0;
 };
 
 class cpu_compiler_impl;
@@ -38,7 +40,8 @@ public:
     cpu_compiler& operator=(const cpu_compiler&) = delete;
     cpu_compiler& operator=(cpu_compiler&&) = delete;
 
-    std::unique_ptr<cpu_plan> compile_computelet(const function_declaration& computelet);
+    std::unique_ptr<cpu_plan> compile_computelet(std::unique_ptr<module> program);
+
 private:
     std::shared_ptr<cpu_compiler_impl> impl_;
 };

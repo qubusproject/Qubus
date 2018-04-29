@@ -15,9 +15,8 @@ namespace qubus
 namespace
 {
 
-util::sparse_multi_method<bool(const util::virtual_<type>&,
-                                    const util::virtual_<type>&)>
-    type_eq = {};
+util::sparse_multi_method<bool(const util::virtual_<type>&, const util::virtual_<type>&)> type_eq =
+    {};
 
 bool type_eq_double(const types::double_& /*unused*/, const types::double_& /*unused*/)
 {
@@ -49,6 +48,12 @@ bool type_eq_complex(const types::complex& lhs, const types::complex& rhs)
     return lhs.real_type() == rhs.real_type();
 }
 
+bool type_eq_integer_range(const types::integer_range_type& lhs,
+                           const types::integer_range_type& rhs)
+{
+    return true;
+}
+
 bool type_eq_array(const types::array& lhs, const types::array& rhs)
 {
     return lhs.value_type() == rhs.value_type() && lhs.rank() == rhs.rank();
@@ -77,6 +82,7 @@ void init_type_eq()
     type_eq.add_specialization(type_eq_bool);
     type_eq.add_specialization(type_eq_index);
     type_eq.add_specialization(type_eq_complex);
+    type_eq.add_specialization(type_eq_integer_range);
     type_eq.add_specialization(type_eq_array);
     type_eq.add_specialization(type_eq_array_slice);
     type_eq.add_specialization(type_eq_struct);
@@ -85,7 +91,7 @@ void init_type_eq()
 }
 
 std::once_flag type_eq_init_flag = {};
-}
+} // namespace
 
 bool operator==(const type& lhs, const type& rhs)
 {
@@ -98,8 +104,6 @@ bool operator!=(const type& lhs, const type& rhs)
 {
     return !(lhs == rhs);
 }
-
-util::implementation_table type::implementation_table_ = {};
 
 namespace types
 {
@@ -139,8 +143,22 @@ type sparse_tensor(type value_type)
 
     return sparse_tensor_type;
 }
+} // namespace types
+
+type value_type(const type& array_like)
+{
+    using pattern::_;
+
+    pattern::variable<type> value_type;
+
+    auto m = pattern::make_matcher<type, type>()
+                 .case_(array_t(value_type, _), [&] { return value_type.get(); })
+                 .case_(array_slice_t(value_type, _), [&] { return value_type.get(); })
+                 .case_(_, []() -> type { throw 0; });
+
+    return pattern::match(array_like, m);
 }
-}
+} // namespace qubus
 
 namespace std
 {
@@ -152,60 +170,61 @@ std::size_t hash<qubus::type>::operator()(const qubus::type& value) const noexce
     pattern::variable<type> t;
     pattern::variable<util::index_t> rank;
 
-    auto m =
-        pattern::make_matcher<type, std::size_t>()
-            .case_(pattern::double_t,
-                   [&] { return std::hash<std::type_index>()(typeid(types::double_)); })
-            .case_(pattern::float_t,
-                   [&] { return std::hash<std::type_index>()(typeid(types::float_)); })
-            .case_(pattern::integer_t,
-                   [&] { return std::hash<std::type_index>()(typeid(types::integer)); })
-            .case_(pattern::index_t,
-                   [&] { return std::hash<std::type_index>()(typeid(types::index)); })
-            .case_(pattern::complex_t(t),
-                   [&] {
-                       std::size_t seed = 0;
+    auto m = pattern::make_matcher<type, std::size_t>()
+                 .case_(pattern::double_t,
+                        [&] { return std::hash<std::type_index>()(typeid(types::double_)); })
+                 .case_(pattern::float_t,
+                        [&] { return std::hash<std::type_index>()(typeid(types::float_)); })
+                 .case_(pattern::integer_t,
+                        [&] { return std::hash<std::type_index>()(typeid(types::integer)); })
+                 .case_(pattern::index_t,
+                        [&] { return std::hash<std::type_index>()(typeid(types::index)); })
+                 .case_(pattern::complex_t(t),
+                        [&] {
+                            std::size_t seed = 0;
 
-                       util::hash_combine(seed, std::type_index(typeid(types::complex)));
-                       util::hash_combine(seed, t.get());
+                            util::hash_combine(seed, std::type_index(typeid(types::complex)));
+                            util::hash_combine(seed, t.get());
 
-                       return seed;
-                   })
-            .case_(pattern::array_t(t, rank),
-                   [&] {
-                       std::size_t seed = 0;
+                            return seed;
+                        })
+                 .case_(pattern::integer_range_t,
+                        [&] { return std::hash<std::type_index>()(typeid(types::integer_range)); })
+                 .case_(pattern::array_t(t, rank),
+                        [&] {
+                            std::size_t seed = 0;
 
-                       util::hash_combine(seed, std::type_index(typeid(types::array)));
-                       util::hash_combine(seed, t.get());
-                       util::hash_combine(seed, rank.get());
+                            util::hash_combine(seed, std::type_index(typeid(types::array)));
+                            util::hash_combine(seed, t.get());
+                            util::hash_combine(seed, rank.get());
 
-                       return seed;
-                   })
-            .case_(pattern::array_slice_t(t, rank),
-                   [&] {
-                       std::size_t seed = 0;
+                            return seed;
+                        })
+                 .case_(pattern::array_slice_t(t, rank),
+                        [&] {
+                            std::size_t seed = 0;
 
-                       util::hash_combine(seed, std::type_index(typeid(types::array_slice)));
-                       util::hash_combine(seed, t.get());
-                       util::hash_combine(seed, rank.get());
+                            util::hash_combine(seed, std::type_index(typeid(types::array_slice)));
+                            util::hash_combine(seed, t.get());
+                            util::hash_combine(seed, rank.get());
 
-                       return seed;
-                   })
-            .case_(pattern::struct_t(_, _), [&](const type& self) {
-                const auto& stype = self.as<types::struct_>();
+                            return seed;
+                        })
+                 .case_(pattern::struct_t(_, _), [&](const type& self) {
+                     const auto& stype = self.as<types::struct_>();
 
-                std::size_t seed = 0;
+                     std::size_t seed = 0;
 
-                util::hash_combine(seed, std::type_index(typeid(types::struct_)));
-                util::hash_combine(seed, stype.id());
+                     util::hash_combine(seed, std::type_index(typeid(types::struct_)));
+                     util::hash_combine(seed, stype.id());
 
-                for (const auto& member : stype)
-                {
-                    util::hash_combine(seed, member);
-                }
+                     for (const auto& member : stype)
+                     {
+                         util::hash_combine(seed, member);
+                     }
 
-                return seed;
-            });
+                     return seed;
+                 });
 
     return pattern::match(value, m);
 }
@@ -220,4 +239,4 @@ operator()(const qubus::types::struct_::member& value) const noexcept
 
     return seed;
 }
-}
+} // namespace std
