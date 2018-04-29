@@ -30,7 +30,7 @@ set(qubus_pattern_header_files access.hpp all_of.hpp any.hpp any_of.hpp binary_o
                                substitute.hpp tuple.hpp type.hpp type_conversion.hpp unary_operator.hpp value.hpp variable.hpp
                                variable_ref.hpp variable_scope.hpp typeof.hpp)
 
-add_library(qubus_ir STATIC ${qubus_ir_source_files})
+add_library(qubus_ir SHARED ${qubus_ir_source_files})
 qubus_target_header_files(TARGET qubus_ir ROOT ${qubus_include_dir}/IR FILES ${qubus_ir_header_files})
 qubus_target_header_files(TARGET qubus_ir ROOT ${qubus_include_dir}/pattern FILES ${qubus_pattern_header_files})
 
