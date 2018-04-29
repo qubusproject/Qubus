@@ -1,7 +1,5 @@
 #include <qubus/backend.hpp>
 
-#include <qubus/local_runtime.hpp>
-
 #include <qubus/backend.hpp>
 
 #include <qubus/backends/cuda/cuda_allocator.hpp>
@@ -20,6 +18,7 @@
 #include <hpx/async.hpp>
 
 #include <hpx/include/lcos.hpp>
+#include <hpx/include/thread_executors.hpp>
 #include <hpx/include/threads.hpp>
 
 #include <memory>
@@ -98,8 +97,10 @@ public:
                 address_space::page_fault_context ctx) -> hpx::future<address_space::handle> {
             auto host_handle = local_addr_space_.resolve_object(obj);
 
+            hpx::threads::executors::pool_executor service_executor("/qubus/service");
+
             return host_handle.then(
-                get_local_runtime().get_service_executor(),
+                service_executor,
                 [this, &obj, ctx](hpx::future<host_address_space::handle> host_handle) mutable {
                     auto handle = host_handle.get();
 
@@ -119,10 +120,11 @@ public:
 
                     cuda::async_memcpy(ptr, handle.data().ptr(), size, stream_);
 
+                    hpx::threads::executors::pool_executor service_executor("/qubus/service");
+
                     return cuda::when_finished(stream_).then(
-                        get_local_runtime().get_service_executor(), [page = std::move(page)](
-                                                                        hpx::future<void>
-                                                                            when_finished) mutable {
+                        service_executor,
+                        [page = std::move(page)](hpx::future<void> when_finished) mutable {
                             when_finished.get();
 
                             return std::move(page);
@@ -139,8 +141,10 @@ public:
 
         const auto& compilation = compiler_.compile(func);
 
-        hpx::future<void> task_done = hpx::async(
-            get_local_runtime().get_service_executor(), [this, &compilation, func, ctx]() mutable {
+        hpx::threads::executors::pool_executor service_executor("/qubus/service");
+
+        hpx::future<void> task_done =
+            hpx::async(service_executor, [this, &compilation, func, ctx]() mutable {
                 std::vector<void*> task_args;
 
                 std::vector<address_space::handle> pages;
@@ -249,7 +253,7 @@ private:
     local_address_space* local_addr_space_;
     module_library mod_library_;
 };
-}
+} // namespace
 
 extern "C" QUBUS_EXPORT unsigned int cuda_backend_get_backend_type()
 {
@@ -265,7 +269,7 @@ namespace
 {
 std::unique_ptr<cuda_backend> the_cuda_backend;
 std::once_flag cuda_backend_init_flag;
-}
+} // namespace
 
 extern "C" QUBUS_EXPORT backend* init_cuda_backend(const abi_info* abi,
                                                    local_address_space* local_addr_space,
@@ -275,9 +279,10 @@ extern "C" QUBUS_EXPORT backend* init_cuda_backend(const abi_info* abi,
     QUBUS_ASSERT(local_addr_space, "Expected argument to be non-null.");
 
     std::call_once(cuda_backend_init_flag, [&] {
-        the_cuda_backend = std::make_unique<cuda_backend>(*abi, *local_addr_space, std::move(mod_library));
+        the_cuda_backend =
+            std::make_unique<cuda_backend>(*abi, *local_addr_space, std::move(mod_library));
     });
 
     return the_cuda_backend.get();
 }
-}
+} // namespace qubus

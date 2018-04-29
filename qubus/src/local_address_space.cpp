@@ -1,7 +1,5 @@
 #include <qubus/local_address_space.hpp>
 
-#include <qubus/local_runtime.hpp>
-
 #include <qubus/object.hpp>
 
 #include <qubus/evicting_allocator.hpp>
@@ -9,6 +7,7 @@
 #include <qubus/logging.hpp>
 
 #include <hpx/parallel/executors.hpp> // Workaround for missing includes.
+#include <hpx/runtime/threads/executors/pool_executor.hpp>
 
 #include <qubus/util/assert.hpp>
 #include <qubus/util/unused.hpp>
@@ -72,8 +71,7 @@ address_space::address_space(std::unique_ptr<allocator> allocator_)
       std::move(allocator_), [this](std::size_t hint) { return evict_objects(hint); })),
   on_page_fault_([](const object&, page_fault_context) {
       // TODO: Add correct exception type.
-      return hpx::make_exceptional_future<address_space::handle>(
-          std::runtime_error("Page fault"));
+      return hpx::make_exceptional_future<address_space::handle>(std::runtime_error("Page fault"));
   })
 {
 }
@@ -126,9 +124,10 @@ hpx::future<address_space::handle> address_space::resolve_object(const object& o
             return hpx::make_ready_future(handle(entry->second.get()));
         }
 
+        hpx::threads::executors::pool_executor service_executor("/qubus/service");
+
         return entry->second.then(
-            get_local_runtime().get_service_executor(),
-            [](const hpx::shared_future<handle>& entry) { return entry.get(); });
+            service_executor, [](const hpx::shared_future<handle>& entry) { return entry.get(); });
     }
 
     // Unlock the mutex since on_page_fault_ might call other member functions/block/... .
@@ -149,9 +148,10 @@ hpx::future<address_space::handle> address_space::resolve_object(const object& o
 
         QUBUS_ASSERT(addr_was_free, "Address is spuriously occupied.");
 
+        hpx::threads::executors::pool_executor service_executor("/qubus/service");
+
         return pos->second.then(
-            get_local_runtime().get_service_executor(),
-            [](const hpx::shared_future<handle>& entry) { return entry.get(); });
+            service_executor, [](const hpx::shared_future<handle>& entry) { return entry.get(); });
     }
     catch (...)
     {
@@ -305,4 +305,4 @@ void local_address_space::on_page_fault(
 {
     on_page_fault_.connect(std::move(callback));
 }
-}
+} // namespace qubus
