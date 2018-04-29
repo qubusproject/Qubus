@@ -5,6 +5,9 @@ check_cxx_source_compiles("#include <cstdint>
 unset(CMAKE_REQUIRED_FLAGS)
 unset(CMAKE_REQUIRED_LIBRARIES)
 
+# Disable fuzzing support since it is currently broken.
+set(QUBUS_HAS_FUZZING_SUPPORT OFF)
+
 if (QUBUS_HAS_FUZZING_SUPPORT)
     message(STATUS "Fuzzing is supported.")
 
