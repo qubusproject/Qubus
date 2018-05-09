@@ -1,3 +1,5 @@
+#include <hpx/config.hpp>
+
 #include <qubus/IR/pretty_printer.hpp>
 
 #include <qubus/IR/qir.hpp>
@@ -27,47 +29,16 @@ namespace qubus
 namespace
 {
 
-class pretty_printer_context
+enum class precedence_level
 {
-public:
-    pretty_printer_context() = default;
-
-    pretty_printer_context(const pretty_printer_context&) = delete;
-    pretty_printer_context& operator=(const pretty_printer_context&) = delete;
-
-    const std::string& get_name_for_handle(const util::handle& h) const
-    {
-        auto iter = symbol_table_.find(h);
-
-        if (iter != symbol_table_.end())
-            return iter->second;
-
-        iter = symbol_table_.emplace(h, name_generator.get()).first;
-
-        return iter->second;
-    }
-
-    void add_function_to_print(function_declaration fn)
-    {
-        functions_to_print_.push_back(std::move(fn));
-    }
-
-    boost::optional<function_declaration> get_next_function_to_print()
-    {
-        if (functions_to_print_.empty())
-            return boost::none;
-
-        auto next_function = functions_to_print_.back();
-
-        functions_to_print_.pop_back();
-
-        return next_function;
-    }
-
-private:
-    mutable std::map<util::handle, std::string> symbol_table_;
-    util::unique_name_generator name_generator;
-    std::vector<function_declaration> functions_to_print_;
+    statement = 0,
+    assignment = 1,
+    logical = 2,
+    comparison = 3,
+    addition = 4,
+    multiplication = 5,
+    unary = 6,
+    qualifier = 7
 };
 
 const char* translate_binary_op_tag(binary_op_tag tag)
@@ -112,6 +83,37 @@ const char* translate_binary_op_tag(binary_op_tag tag)
     }
 }
 
+precedence_level get_op_precedence_level(binary_op_tag tag)
+{
+    switch (tag)
+    {
+    case binary_op_tag::assign:
+    case binary_op_tag::plus_assign:
+        return precedence_level::assignment;
+    case binary_op_tag::logical_and:
+    case binary_op_tag::logical_or:
+        return precedence_level::logical;
+    case binary_op_tag::equal_to:
+    case binary_op_tag::not_equal_to:
+    case binary_op_tag::greater:
+    case binary_op_tag::less:
+    case binary_op_tag::greater_equal:
+    case binary_op_tag::less_equal:
+        return precedence_level::comparison;
+    case binary_op_tag::plus:
+    case binary_op_tag::minus:
+        return precedence_level::addition;
+    case binary_op_tag::multiplies:
+    case binary_op_tag::divides:
+    case binary_op_tag::modulus:
+    case binary_op_tag::div_floor:
+        return precedence_level::multiplication;
+    default:
+        QUBUS_ASSERT(false, "default case should never be reached");
+        QUBUS_UNREACHABLE();
+    }
+}
+
 const char* translate_unary_op_tag(unary_op_tag tag)
 {
     switch (tag)
@@ -121,36 +123,71 @@ const char* translate_unary_op_tag(unary_op_tag tag)
     case unary_op_tag::negate:
         return "-";
     case unary_op_tag::logical_not:
-        return "*";
+        return "!";
     default:
         QUBUS_ASSERT(false, "default case should never be reached");
         QUBUS_UNREACHABLE();
     }
 }
 
-void print_type(const type& t)
+precedence_level get_op_precedence_level(unary_op_tag tag)
 {
-    pattern::variable<type> subtype;
-
-    auto m = pattern::make_matcher<type, void>()
-                 .case_(pattern::double_t, [&] { std::cout << "double"; })
-                 .case_(pattern::integer_t, [&] { std::cout << "integer"; })
-                 .case_(pattern::bool_t, [&] { std::cout << "bool"; })
-                 .case_(complex_t(subtype),
-                        [&] {
-                            std::cout << "complex<";
-
-                            print_type(subtype.get());
-
-                            std::cout << ">";
-                        })
-                 .case_(pattern::_, [&] {});
-
-    pattern::match(t, m);
+    return precedence_level::unary;
 }
 
-void print(const expression& expr, pretty_printer_context& ctx, bool print_types)
+carrot::block print_type(const type& t)
 {
+    using pattern::_;
+
+    using carrot::text;
+
+    pattern::variable<type> subtype;
+    pattern::variable<util::index_t> rank;
+    pattern::variable<std::string> id;
+
+    auto m = pattern::make_matcher<type, carrot::block>()
+                 .case_(pattern::double_t, [&] { return text("Double"); })
+                 .case_(pattern::float_t, [&] { return text("Float"); })
+                 .case_(pattern::integer_t, [&] { return text("Int"); })
+                 .case_(pattern::bool_t, [&] { return text("Bool"); })
+                 .case_(pattern::complex_t(subtype),
+                        [&] { return text("Complex{") << print_type(subtype.get()) << text("}"); })
+                 .case_(pattern::array_t(subtype, rank),
+                        [&] {
+                            return text("Array{") << print_type(subtype.get()) << text(", ")
+                                                  << text(std::to_string(rank.get())) << text("}");
+                        })
+                 .case_(pattern::array_slice_t(subtype, rank),
+                        [&] {
+                            return text("Slice{") << print_type(subtype.get()) << text(", ")
+                                                  << text(std::to_string(rank.get())) << text("}");
+                        })
+                 .case_(pattern::struct_t(id, _), [&] { return text(id.get()); });
+
+    try
+    {
+        return pattern::match(t, m);
+    }
+    catch (const std::logic_error&)
+    {
+        throw printing_error("Encountered an unknown type.");
+    }
+}
+
+carrot::block bracket(carrot::block b, bool enabled = true)
+{
+    using carrot::text;
+
+    if (enabled)
+        return text("(") << std::move(b) << text(")");
+
+    return std::move(b);
+}
+
+carrot::block print(const expression& expr, precedence_level prec_level)
+{
+    using carrot::text;
+
     using pattern::_;
 
     pattern::variable<std::reference_wrapper<const expression>> a, b, c, d;
@@ -162,244 +199,200 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
     pattern::variable<std::vector<std::reference_wrapper<const expression>>> subexprs;
     pattern::variable<std::vector<std::reference_wrapper<const expression>>> args;
     pattern::variable<std::vector<std::reference_wrapper<const expression>>> offset;
-    pattern::variable<std::vector<std::reference_wrapper<const expression>>> shape;
+    pattern::variable<std::vector<std::reference_wrapper<const expression>>> bounds;
     pattern::variable<std::vector<std::reference_wrapper<const expression>>> strides;
     pattern::variable<std::string> id;
 
     pattern::variable<double> dval;
     pattern::variable<float> fval;
     pattern::variable<util::index_t> ival;
+    pattern::variable<bool> bval;
 
     pattern::variable<variable_declaration> decl;
-    pattern::variable<function_declaration> plan;
+    pattern::variable<const function&> plan;
     pattern::variable<type> t;
+
+    pattern::variable<execution_order> order;
 
     pattern::variable<std::vector<variable_declaration>> params;
     pattern::variable<std::vector<variable_declaration>> index_decls;
 
     auto m =
-        pattern::make_matcher<expression, void>()
+        pattern::make_matcher<expression, carrot::block>()
             .case_(binary_operator(btag, a, b),
                    [&] {
-                       std::cout << "(";
-                       print(a.get(), ctx, print_types);
-                       std::cout << " " << translate_binary_op_tag(btag.get()) << " ";
-                       print(b.get(), ctx, print_types);
-                       std::cout << ")";
+                       auto new_prec_level = get_op_precedence_level(btag.get());
+
+                       return bracket(print(a.get(), new_prec_level)
+                                          << text(" ") << text(translate_binary_op_tag(btag.get()))
+                                          << text(" ") << print(b.get(), new_prec_level),
+                                      new_prec_level < prec_level);
                    })
             .case_(unary_operator(utag, a),
                    [&] {
-                       std::cout << " " << translate_unary_op_tag(utag.get());
-                       print(a.get(), ctx, print_types);
+                       auto new_prec_level = get_op_precedence_level(utag.get());
+
+                       return bracket(text(translate_unary_op_tag(utag.get()))
+                                          << print(a.get(), new_prec_level),
+                                      new_prec_level < prec_level);
                    })
-            .case_(subscription(a, indices),
+            .case_(variable_ref(decl), [&] { return text(decl.get().name()); })
+            // TODO: Improve float literal printing.
+            .case_(double_literal(dval), [&] { return text(std::to_string(dval.get())); })
+            .case_(float_literal(fval), [&] { return text(std::to_string(fval.get())); })
+            .case_(integer_literal(ival), [&] { return text(std::to_string(ival.get())); })
+            .case_(bool_literal(bval),
                    [&] {
-                       print(a.get(), ctx, print_types);
-
-                       std::cout << "[";
-
-                       for (const auto& index : indices.get())
+                       if (bval.get())
                        {
-                           print(index, ctx, print_types);
-                           std::cout << ", ";
-                       }
-
-                       std::cout << "]";
-                   })
-            .case_(variable_ref(decl),
-                   [&] {
-                       if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
-                       {
-                           std::cout << debug_name.as<std::string>();
+                           return text("true");
                        }
                        else
                        {
-                           std::cout << ctx.get_name_for_handle(decl.get().id());
-                       }
-
-                       if (print_types)
-                       {
-                           std::cout << " :: ";
-
-                           print_type(decl.get().var_type());
+                           return text("false");
                        }
                    })
-            .case_(type_conversion(t, a),
+            .case_(integer_range(a, b, c),
                    [&] {
-                       std::cout << "cast<";
-                       print_type(t.get());
-                       std::cout << ">(";
-                       print(a.get(), ctx, print_types);
-                       std::cout << ")";
+                       carrot::block result = print(a.get(), precedence_level::statement)
+                                              << text(":");
+
+                       result = result << print(c.get(), precedence_level::statement) << text(":");
+
+                       result = result << print(b.get(), precedence_level::statement);
+
+                       return result;
                    })
             .case_(sequenced_tasks(subexprs),
                    [&] {
-                       std::cout << "do\n{\n";
+                       auto sequence = carrot::make_line(carrot::growth_direction::down);
 
                        for (const auto& sub_expr : subexprs.get())
                        {
-                           print(sub_expr, ctx, print_types);
-                           std::cout << " \n";
+                           sequence.add(print(sub_expr, precedence_level::statement));
                        }
 
-                       std::cout << "}\n";
+                       return sequence;
+                   })
+            .case_(subscription(a, indices),
+                   [&] {
+                       carrot::block result = print(a.get(), precedence_level::qualifier)
+                                              << text("[");
+
+                       for (auto iter = indices.get().begin(), end = indices.get().end();
+                            iter != end; ++iter)
+                       {
+                           result = result << print(*iter, precedence_level::statement);
+
+                           if (iter != end - 1)
+                           {
+                               result = result << text(", ");
+                           }
+                       }
+
+                       result = result << text("]");
+
+                       return bracket(std::move(result), precedence_level::qualifier < prec_level);
+                   })
+            .case_(type_conversion(t, a),
+                   [&] {
+                       return text("convert")
+                              << text("{") << print_type(t.get()) << text("}") << text("(")
+                              << print(a.get(), precedence_level::statement) << text(")");
                    })
             .case_(unordered_tasks(subexprs),
                    [&] {
-                       std::cout << "unordered do\n{\n";
+                       auto result = carrot::make_line(carrot::growth_direction::down);
+
+                       result.add(text("unordered do"));
+
+                       auto body = carrot::make_line(carrot::growth_direction::down);
 
                        for (const auto& sub_expr : subexprs.get())
                        {
-                           print(sub_expr, ctx, print_types);
-                           std::cout << " \n";
+                           body.add(print(sub_expr, precedence_level::statement));
                        }
 
-                       std::cout << "}\n";
+                       result.add(indent(std::move(body)));
+                       result.add(text("end"));
+
+                       return result;
                    })
             .case_(intrinsic_function(id, args),
                    [&] {
-                       std::cout << id.get() << "(";
+                       carrot::block result = carrot::text(id.get()) << text("(");
 
-                       for (const auto& arg : args.get())
+                       for (auto iter = args.get().begin(), end = args.get().end(); iter != end;
+                            ++iter)
                        {
-                           print(arg, ctx, print_types);
-                           std::cout << ", ";
+                           result = result << print(*iter, precedence_level::statement);
+
+                           if (iter != end - 1)
+                               result = result << text(", ");
                        }
 
-                       std::cout << ")";
+                       result = result << text(")");
+
+                       return result;
                    })
-            .case_(double_literal(dval),
+            .case_(for_(order, decl, a, b, c, d),
                    [&] {
-                       std::cout << dval.get();
+                       auto result = carrot::make_line(carrot::growth_direction::down);
 
-                       if (print_types)
-                       {
-                           std::cout << " :: ";
-                           print_type(types::double_{});
-                       }
-                   })
-            .case_(float_literal(fval),
-                   [&] {
-                       std::cout << fval.get();
+                       carrot::block loop_head = [&order] {
+                           switch (order.get())
+                           {
+                           case execution_order::sequential:
+                               return text("for ");
+                           case execution_order::unordered:
+                               return text("unordered for ");
+                           case execution_order::parallel:
+                               return text("parallel for ");
+                           }
+                       }();
 
-                       if (print_types)
-                       {
-                           std::cout << " :: ";
-                           print_type(types::float_{});
-                       }
-                   })
-            .case_(integer_literal(ival),
-                   [&] {
-                       std::cout << ival.get();
+                       loop_head = loop_head
+                                   << text(decl.get().name()) << text(" :: ")
+                                   << print_type(decl.get().var_type()) << text(" in ")
+                                   << print(a.get(), precedence_level::statement) << text(":")
+                                   << print(c.get(), precedence_level::statement) << text(":")
+                                   << print(b.get(), precedence_level::statement);
+                       result.add(std::move(loop_head));
 
-                       if (print_types)
-                       {
-                           std::cout << " :: ";
-                           print_type(types::integer{});
-                       }
-                   })
-            .case_(sequential_for(decl, a, b, c, d),
-                   [&] {
-                       std::cout << "for ";
+                       result.add(indent(print(d.get(), precedence_level::statement)));
 
-                       if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
-                       {
-                           std::cout << debug_name.as<std::string>();
-                       }
-                       else
-                       {
-                           std::cout << ctx.get_name_for_handle(decl.get().id());
-                       }
+                       result.add(text("end"));
 
-                       std::cout << " in [";
-                       print(a.get(), ctx, print_types);
-                       std::cout << ", ";
-                       print(b.get(), ctx, print_types);
-                       std::cout << ", ";
-                       print(c.get(), ctx, print_types);
-                       std::cout << "]";
-                       std::cout << "\n{\n";
-                       print(d.get(), ctx, print_types);
-                       std::cout << "\n}";
-                   })
-            .case_(unordered_for(decl, a, b, c, d),
-                   [&] {
-                       std::cout << "unordered for ";
-
-                       if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
-                       {
-                           std::cout << debug_name.as<std::string>();
-                       }
-                       else
-                       {
-                           std::cout << ctx.get_name_for_handle(decl.get().id());
-                       }
-
-                       std::cout << " in [";
-                       print(a.get(), ctx, print_types);
-                       std::cout << ", ";
-                       print(b.get(), ctx, print_types);
-                       std::cout << ", ";
-                       print(c.get(), ctx, print_types);
-                       std::cout << "]";
-                       std::cout << "\n{\n";
-                       print(d.get(), ctx, print_types);
-                       std::cout << "\n}";
+                       return result;
                    })
             .case_(if_(a, b, opt_expr),
                    [&] {
-                       std::cout << "if (";
+                       auto result = carrot::make_line(carrot::growth_direction::down);
 
-                       print(a.get(), ctx, print_types);
+                       auto if_head = text("if ") << print(a.get(), precedence_level::statement);
 
-                       std::cout << ")";
-                       std::cout << "\n{\n";
+                       result.add(std::move(if_head));
 
-                       print(b.get(), ctx, print_types);
-
-                       std::cout << "\n}";
+                       result.add(indent(print(b.get(), precedence_level::statement)));
 
                        if (opt_expr.get())
                        {
-                           std::cout << "\nelse\n{\n";
+                           result.add(text("else"));
 
-                           print(*opt_expr.get(), ctx, print_types);
-
-                           std::cout << "\n}";
+                           result.add(indent(print(*opt_expr.get(), precedence_level::statement)));
                        }
+
+                       result.add(text("end"));
+
+                       return result;
                    })
             .case_(local_variable_def(decl, a),
                    [&] {
-                       std::cout << "let ";
-
-                       if (auto debug_name = decl.get().annotations().lookup("qubus.debug.name"))
-                       {
-                           std::cout << debug_name.as<std::string>();
-                       }
-                       else
-                       {
-                           std::cout << ctx.get_name_for_handle(decl.get().id());
-                       }
-
-                       std::cout << " := ";
-
-                       print(a.get(), ctx, print_types);
+                       return text("let ") << text(decl.get().name()) << text(" :: ")
+                                           << print_type(decl.get().var_type()) << text(" = ")
+                                           << print(a.get(), precedence_level::statement);
                    })
-            .case_(spawn(plan, args),
-                   [&] {
-                       ctx.add_function_to_print(plan.get());
-
-                       std::cout << "spawn " << plan.get().name() << "(";
-
-                       for (const auto& arg : args.get())
-                       {
-                           print(arg, ctx, print_types);
-                           std::cout << ", ";
-                       }
-
-                       std::cout << ")";
-                   })
-            .case_(construct(t, args),
+            /*.case_(construct(t, args),
                    [&] {
                        print_type(t.get());
                        std::cout << "(";
@@ -411,134 +404,114 @@ void print(const expression& expr, pretty_printer_context& ctx, bool print_types
                        }
 
                        std::cout << ")";
-                   })
-            .case_(macro(params, a),
-                   [&] {
-                       std::cout << "macro(";
-
-                       for (const auto& param : params.get())
-                       {
-                           std::cout << ctx.get_name_for_handle(param.id());
-
-                           std::cout << ", ";
-                       }
-
-                       std::cout << ")\n{\n";
-
-                       print(a.get(), ctx, print_types);
-
-                       std::cout << "\n}\n" << std::flush;
-
-                   })
+                   })*/
             .case_(member_access(a, id),
                    [&] {
-                       print(a.get(), ctx, print_types);
-
-                       std::cout << "." << id.get();
-                   })
-            .case_(call_foreign(_, args, a),
-                   [&] {
-                       std::cout << "foreign call (";
-
-                       for (const auto& arg : args.get())
-                       {
-                           print(arg, ctx, print_types);
-                           std::cout << ", ";
-                       }
-
-                       std::cout << ") -> ";
-
-                       print(a.get(), ctx, print_types);
-                   })
-            .case_(array_slice(a, offset, shape, strides), [&] {
-                print(a.get(), ctx, print_types);
-
-                auto rank = shape.get().size();
-
-                std::cout << "[";
-
-                for (std::size_t i = 0; i < rank; ++i)
-                {
-                    print(offset.get()[i], ctx, print_types);
-                    std::cout << ':';
-                    print(shape.get()[i], ctx, print_types);
-                    std::cout << ':';
-                    print(strides.get()[i], ctx, print_types);
-                    std::cout << ", ";
-                }
-
-                std::cout << "]";
-            });
+                       return bracket(print(a.get(), precedence_level::qualifier)
+                                          << text(".") << text(id.get()),
+                                      precedence_level::qualifier < prec_level);
+                   });
 
     try
     {
-        pattern::match(expr, m);
+        return pattern::match(expr, m);
     }
-    catch (...)
+    catch (const std::logic_error&)
     {
-        throw 0;
+        throw printing_error("Encountered an unknown expression.");
     }
 }
-}
 
-void pretty_print(const expression& expr, bool print_types)
+carrot::block pretty_print_user_defined_type(const types::struct_& t)
 {
-    pretty_printer_context ctx;
+    using carrot::text;
 
-    print(expr, ctx, print_types);
-}
+    auto result = carrot::make_line(carrot::growth_direction::down);
 
-namespace
-{
+    auto struct_header = text("struct ") << text(t.id());
 
-const char* intent_to_string(variable_intent intent)
-{
-    switch (intent)
+    result.add(std::move(struct_header));
+
+    auto struct_body = carrot::make_line(carrot::growth_direction::down);
+
+    for (const auto& member : t.members())
     {
-    case variable_intent::generic:
-        return "";
-    case variable_intent::in:
-        return "in ";
-    case variable_intent::out:
-        return "out ";
-    }
-}
-}
+        auto member_declaration = text(member.id) << text(" :: ") << print_type(member.datatype);
 
-void pretty_print(const function_declaration& decl, bool print_types)
+        struct_body.add(std::move(member_declaration));
+    }
+
+    result.add(indent(std::move(struct_body)));
+
+    result.add(text("end"));
+
+    return result;
+}
+} // namespace
+
+printing_error::printing_error(const char* what_) : std::logic_error(what_)
 {
-    pretty_printer_context ctx;
-
-    std::cout << "def " << decl.name() << "(";
-
-    for (const auto& param : decl.params())
-    {
-        std::cout << intent_to_string(param.intent());
-
-        std::cout << ctx.get_name_for_handle(param.id());
-
-        std::cout << ", ";
-    }
-
-    std::cout << ")";
-
-    std::cout << " -> (" << ctx.get_name_for_handle(decl.result().id()) << ")";
-
-    std::cout << "\n{\n";
-
-    print(decl.body(), ctx, print_types);
-
-    std::cout << "\n}" << std::endl;
-
-    while (auto next_fn = ctx.get_next_function_to_print())
-    {
-        std::cout << "\n";
-        pretty_print(*next_fn, print_types);
-    }
 }
 
-void pretty_print_type(const type& t)
+printing_error::printing_error(const std::string& what_) : std::logic_error(what_)
 {
-    print_type(t);
 }
+
+carrot::block pretty_print(const expression& expr)
+{
+    return print(expr, precedence_level::statement);
 }
+
+carrot::block pretty_print(const function& func)
+{
+    using carrot::text;
+
+    auto result = carrot::make_line(carrot::growth_direction::down);
+
+    auto function_declaration = text("function ") << text(func.name()) << text("(");
+
+    for (auto iter = func.params().begin(), end = func.params().end(); iter != end; ++iter)
+    {
+        function_declaration = function_declaration << text(iter->name()) << text(" :: ")
+                                                    << print_type(iter->var_type());
+
+        if (iter != end - 1)
+            function_declaration = function_declaration << text(", ");
+    }
+
+    function_declaration = function_declaration << text(") -> ") << text(func.result().name())
+                                                << text(" :: ")
+                                                << print_type(func.result().var_type());
+
+    result.add(std::move(function_declaration));
+
+    result.add(indent(pretty_print(func.body())));
+
+    result.add(text("end"));
+
+    return result;
+}
+
+carrot::block pretty_print(const module& mod)
+{
+    auto module_declaration = carrot::text("module ") << carrot::text(mod.id().string());
+
+    auto module = carrot::make_line(carrot::growth_direction::down);
+
+    module.add(std::move(module_declaration));
+
+    module.add(carrot::text(""));
+
+    for (const auto& type : mod.types())
+    {
+        module.add(pretty_print_user_defined_type(type));
+    }
+
+    for (const auto& function : mod.functions())
+    {
+        module.add(pretty_print(function));
+    }
+
+    return module;
+}
+} // namespace qubus

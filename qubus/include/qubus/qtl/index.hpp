@@ -53,12 +53,13 @@ private:
     class index_info
     {
     public:
-        index_info() : var_(types::index{}), debug_name_(nullptr)
+        // FIXME: Add a proper name for each index.
+        index_info() : var_("index", types::index{}), debug_name_(nullptr)
         {
         }
 
         explicit index_info(const char* debug_name_)
-        : var_(types::index{}), debug_name_(debug_name_)
+        : var_(debug_name_, types::index{}), debug_name_(debug_name_)
         {
         }
 
@@ -149,24 +150,26 @@ private:
     class multi_index_info
     {
     public:
-        multi_index_info() : var_(types::multi_index(Rank)), debug_name_(nullptr)
+        // FIXME: Add a proper name for each index.
+        multi_index_info() : var_("multiindex", types::multi_index(Rank)), debug_name_(nullptr)
         {
         }
 
         explicit multi_index_info(const char* debug_name_)
-        : var_(types::multi_index(Rank)), debug_name_(debug_name_)
+        : var_(debug_name_, types::multi_index(Rank)), debug_name_(debug_name_)
         {
         }
 
+        // FIXME: Add a proper name for each index.
         explicit multi_index_info(std::array<index, Rank> element_indices_)
-        : var_(types::multi_index(Rank)),
+        : var_("multiindex", types::multi_index(Rank)),
           element_indices_(std::move(element_indices_)),
           debug_name_(nullptr)
         {
         }
 
         explicit multi_index_info(std::array<index, Rank> element_indices_, const char* debug_name_)
-        : var_(types::multi_index(Rank)),
+        : var_(debug_name_, types::multi_index(Rank)),
           element_indices_(std::move(element_indices_)),
           debug_name_(debug_name_)
         {

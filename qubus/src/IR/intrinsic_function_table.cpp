@@ -84,10 +84,15 @@ public:
             {
                 add_intrinsic_function("extent", {types::array(t, rank), types::integer{}},
                                        types::integer{});
+                add_intrinsic_function("extent", {types::array_slice(t, rank), types::integer{}},
+                                       types::integer{});
             }
 
             add_intrinsic_function("extent",
                                    {types::array(types::integer{}, rank), types::integer{}},
+                                   types::integer{});
+            add_intrinsic_function("extent",
+                                   {types::array_slice(types::integer{}, rank), types::integer{}},
                                    types::integer{});
         }
 
@@ -152,7 +157,7 @@ void init_intrinsic_function_table() noexcept
 }
 
 std::once_flag intrinsic_function_table_init_flag = {};
-}
+} // namespace
 
 type lookup_intrinsic_result_type(const std::string& name, const std::vector<type>& arg_types)
 {
@@ -160,4 +165,4 @@ type lookup_intrinsic_result_type(const std::string& name, const std::vector<typ
 
     return intrinsic_function_table_->lookup_result_type(name, arg_types);
 }
-}
+} // namespace qubus

@@ -1,0 +1,9 @@
+module slicing
+
+function calc(x :: Array{Double, 1}) -> r :: Double
+    r = 0.0
+
+    for i :: Int in 0:10
+        r += x[10:20][i]
+    end
+end

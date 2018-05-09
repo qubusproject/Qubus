@@ -1711,7 +1711,7 @@ function_declaration optimize_loops(function_declaration decl)
 
 namespace qubus
 {
-function_declaration optimize_loops(function_declaration decl)
+std::unique_ptr<function> optimize_loops(const function& decl)
 {
     throw 0;
 }

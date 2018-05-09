@@ -35,14 +35,14 @@ struct collect_bubbles_context
 
 void collect_bubbles(const expression& expr, collect_bubbles_context& ctx)
 {
-    using qubus::pattern::value;
-    using qubus::pattern::_;
-    using qubus::pattern::variable;
-    using pattern::sum_multi;
     using pattern::delta;
     using pattern::index;
+    using pattern::sum_multi;
+    using qubus::pattern::_;
+    using qubus::pattern::value;
+    using qubus::pattern::variable;
 
-    variable<const expression &> a, b;
+    variable<const expression&> a, b;
     variable<variable_declaration> i, j;
     variable<std::vector<variable_declaration>> indices;
 
@@ -121,9 +121,9 @@ contains_bubble_with_index(const variable_declaration& index, const std::vector<
 
 std::unique_ptr<expression> eliminate_trivial_deltas(const expression& expr)
 {
-    using qubus::pattern::variable;
     using pattern::delta;
     using pattern::index;
+    using qubus::pattern::variable;
 
     variable<variable_declaration> i;
 
@@ -137,8 +137,8 @@ std::unique_ptr<expression> substitute_index(const expression& expr,
                                              const variable_declaration& idx,
                                              const variable_declaration& other_idx)
 {
-    using qubus::pattern::value;
     using pattern::index;
+    using qubus::pattern::value;
 
     auto m2 = qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
         index(value(idx)), [&] { return var(other_idx); });
@@ -149,8 +149,8 @@ std::unique_ptr<expression> substitute_index(const expression& expr,
 
 std::unique_ptr<expression> fold_kronecker_deltas(const expression& expr)
 {
-    using qubus::pattern::variable;
     using pattern::sum_multi;
+    using qubus::pattern::variable;
 
     variable<const expression&> body;
     variable<std::vector<variable_declaration>> indices;
@@ -192,11 +192,5 @@ std::unique_ptr<expression> fold_kronecker_deltas(const expression& expr)
     return qubus::pattern::substitute(expr, m);
 }
 
-function_declaration fold_kronecker_deltas(function_declaration decl)
-{
-    decl.substitute_body(fold_kronecker_deltas(decl.body()));
-
-    return decl;
-}
 }
 }

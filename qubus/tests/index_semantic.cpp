@@ -55,6 +55,11 @@ int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
 
-    return hpx::init(argc, argv, qubus::get_hpx_config());
+    hpx::resource::partitioner rp(argc, argv, qubus::get_hpx_config(),
+                                  hpx::resource::partitioner_mode::mode_allow_oversubscription);
+
+    qubus::setup(rp);
+
+    return hpx::init();
 }
 

@@ -21,7 +21,7 @@ bool contains(const Range& range, const T& value)
 }
 }
 
-function_declaration wrap_code_in_task(std::unique_ptr<expression> expr)
+std::unique_ptr<module> wrap_code_in_task(std::unique_ptr<expression> expr)
 {
     pass_resource_manager resource_man;
     analysis_manager analysis_man(resource_man);
@@ -55,10 +55,14 @@ function_declaration wrap_code_in_task(std::unique_ptr<expression> expr)
 
     QUBUS_ASSERT(mutable_params.size() == 1, "Only one mutable param is currently allowed.");
 
-    function_declaration func("entry", std::move(immutable_params), std::move(mutable_params[0]),
-                              std::move(expr));
+    static long int counter = 0;
 
-    return func;
+    auto mod = std::make_unique<module>(symbol_id("dummy" + std::to_string(counter++)));
+
+    mod->add_function("entry", std::move(immutable_params), std::move(mutable_params[0]),
+                      std::move(expr));
+
+    return mod;
 }
 }
 }

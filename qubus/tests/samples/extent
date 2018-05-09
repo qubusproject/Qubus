@@ -1,0 +1,9 @@
+module extent
+
+function test1(a :: Array{Double, 1}) -> r :: Int
+    r = extent(a, 0)
+end
+
+function test2(a :: Array{Double, 1}) -> r :: Int
+    r = extent(a[10:2:41], 0)
+end

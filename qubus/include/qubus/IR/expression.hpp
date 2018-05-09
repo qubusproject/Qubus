@@ -7,8 +7,6 @@
 
 #include <qubus/util/multi_method.hpp>
 
-#include <hpx/include/serialization.hpp>
-
 #include <boost/range/adaptor/transformed.hpp>
 #include <boost/range/any_range.hpp>
 #include <boost/range/irange.hpp>
@@ -118,15 +116,8 @@ public:
 
     virtual util::index_t type_tag() const = 0;
 
-    template <typename Archive>
-    void serialize(Archive& QUBUS_UNUSED(ar), unsigned QUBUS_UNUSED(version))
-    {
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC_ABSTRACT(expression);
-
 protected:
-    static util::implementation_table implementation_table_;
+    inline static util::implementation_table implementation_table_;
 };
 
 bool operator==(const expression& lhs, const expression& rhs);
@@ -229,7 +220,7 @@ std::unique_ptr<Expression> clone(const expression_base<Expression>& expr)
     return std::unique_ptr<Expression>(static_cast<const Expression&>(expr).clone());
 }
 
-extern util::multi_method<bool(const util::virtual_<expression>&,
+inline util::multi_method<bool(const util::virtual_<expression>&,
                                     const util::virtual_<expression>&)>
     equal;
 }

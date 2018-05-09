@@ -3,13 +3,16 @@
 
 #include <qubus/object.hpp>
 
+#include <qubus/dataflow.hpp>
+#include <qubus/local_address_space.hpp>
+
 #include <qubus/IR/type.hpp>
 #include <qubus/associated_qubus_type.hpp>
 #include <qubus/object_view_traits.hpp>
 
-#include <qubus/local_runtime.hpp>
-
 #include <hpx/include/lcos.hpp>
+#include <hpx/parallel/executors.hpp> // Workaround for missing includes.
+#include <hpx/runtime/threads/executors/pool_executor.hpp>
 
 #include <qubus/util/assert.hpp>
 #include <qubus/util/integers.hpp>
@@ -25,7 +28,8 @@ namespace qubus
 class host_view_context
 {
 public:
-    explicit host_view_context(token access_token_, local_address_space::handle associated_handle_)
+    explicit host_view_context(distributed_access_token access_token_,
+                               local_address_space::handle associated_handle_)
     : access_token_(std::move(access_token_)), associated_handle_(std::move(associated_handle_))
     {
     }
@@ -37,22 +41,9 @@ public:
     host_view_context& operator=(host_view_context&&) = delete;
 
 private:
-    token access_token_;
+    distributed_access_token access_token_;
     local_address_space::handle associated_handle_;
 };
-
-template <typename View>
-token acquire_access_for_view(object& obj)
-{
-    if (!object_view_traits<View>::is_immutable)
-    {
-        return obj.acquire_write_access();
-    }
-    else
-    {
-        return obj.acquire_read_access();
-    }
-}
 
 template <typename T>
 class cpu_scalar_view
@@ -70,19 +61,16 @@ public:
         return *value_;
     }
 
-    static hpx::future<cpu_scalar_view<T>> construct(object obj)
+    template <typename AddressSpace>
+    [[nodiscard]] static hpx::future<cpu_scalar_view<T>>
+    construct(object obj, hpx::future<distributed_access_token> access_token,
+              AddressSpace& addr_space)
     {
-        auto token = acquire_access_for_view<cpu_scalar_view<T>>(obj);
-
-        token.when_valid().get();
-
-        auto& addr_space = get_local_runtime().get_address_space();
-
         auto hnd = addr_space.resolve_object(obj).get();
 
         auto value = static_cast<T*>(hnd.data().ptr());
 
-        auto ctx = std::make_shared<host_view_context>(std::move(token), std::move(hnd));
+        auto ctx = std::make_shared<host_view_context>(access_token.get(), std::move(hnd));
 
         return hpx::make_ready_future(cpu_scalar_view<T>(value, std::move(ctx)));
     }
@@ -96,18 +84,19 @@ public:
         return cpu_scalar_view<T>(value, std::move(ctx));
     }
 
-    static hpx::future<cpu_scalar_view<T>> construct_from_locked_object(object obj)
+    template <typename AddressSpace>
+    [[nodiscard]] static hpx::future<cpu_scalar_view<T>>
+    construct_from_locked_object(object obj, AddressSpace& addr_space)
     {
-        auto& addr_space = get_local_runtime().get_address_space();
-
         auto hnd = addr_space.resolve_object(obj).get();
 
         auto value = static_cast<T*>(hnd.data().ptr());
 
-        auto ctx = std::make_shared<host_view_context>(token(), std::move(hnd));
+        auto ctx = std::make_shared<host_view_context>(distributed_access_token(), std::move(hnd));
 
         return hpx::make_ready_future(cpu_scalar_view<T>(value, std::move(ctx)));
     }
+
 private:
     cpu_scalar_view(T* value_, std::shared_ptr<host_view_context> ctx_)
     : value_(value_), ctx_(std::move(ctx_))
@@ -122,22 +111,16 @@ private:
 template <typename T>
 struct object_view_traits<cpu_scalar_view<T>>
 {
-static constexpr bool is_immutable = std::is_const<T>::value;
+    static constexpr bool is_immutable = std::is_const<T>::value;
 
-static type associated_type()
-{
-    return associated_qubus_type<T>::get();
-}
+    static type associated_type()
+    {
+        return associated_qubus_type<T>::get();
+    }
 };
 
 template <typename T>
 using host_scalar_view = cpu_scalar_view<T>;
-
-struct array_metadata
-{
-    void* data;
-    void* shape;
-};
 
 template <typename T, util::index_t Rank>
 class cpu_array_view
@@ -195,49 +178,61 @@ public:
 
     // TODO: implement shape
 
-    static hpx::future<cpu_array_view<T, Rank>> construct(object obj)
+    template <typename AddressSpace>
+    [[nodiscard]] static hpx::future<cpu_array_view<T, Rank>>
+    construct(object obj, hpx::future<distributed_access_token> access_token,
+              AddressSpace& addr_space)
     {
-        auto token = acquire_access_for_view<cpu_array_view<T, Rank>>(obj);
-
-        token.when_valid().get();
-
-        auto& addr_space = get_local_runtime().get_address_space();
-
         auto hnd = addr_space.resolve_object(obj).get();
 
-        auto array_md = static_cast<array_metadata*>(hnd.data().ptr());
+        auto base_ptr = hnd.data().ptr();
 
-        auto ctx = std::make_shared<host_view_context>(std::move(token), std::move(hnd));
+        auto shape_ptr = static_cast<util::index_t*>(base_ptr) + 1;
 
-        return hpx::make_ready_future(
-            cpu_array_view<T, Rank>(Rank, static_cast<util::index_t*>(array_md->shape),
-                                    static_cast<T*>(array_md->data), std::move(ctx)));
+        auto data_ptr = static_cast<T*>(static_cast<void*>(shape_ptr + Rank));
+
+        auto service_executor = std::make_shared<hpx::threads::executors::pool_executor>("/qubus/service");
+
+        return access_token.then(
+            *service_executor,
+            [hnd, shape_ptr, data_ptr, service_executor](hpx::future<distributed_access_token> token) mutable {
+                auto ctx = std::make_shared<host_view_context>(token.get(), std::move(hnd));
+
+                return cpu_array_view<T, Rank>(Rank, shape_ptr, data_ptr, std::move(ctx));
+            });
     }
 
     static cpu_array_view<T, Rank> construct_from_reference(void* ref)
     {
-        auto array_md = static_cast<array_metadata*>(ref);
+        auto base_ptr = ref;
+
+        auto shape_ptr = static_cast<util::index_t*>(base_ptr) + 1;
+
+        auto data_ptr = static_cast<T*>(static_cast<void*>(shape_ptr + Rank));
 
         auto ctx = std::shared_ptr<host_view_context>();
 
-        return cpu_array_view<T, Rank>(Rank, static_cast<util::index_t*>(array_md->shape),
-                                        static_cast<T*>(array_md->data), std::move(ctx));
+        return cpu_array_view<T, Rank>(Rank, shape_ptr, data_ptr, std::move(ctx));
     }
 
-    static hpx::future<cpu_array_view<T, Rank>> construct_from_locked_object(object obj)
+    template <typename AddressSpace>
+    [[nodiscard]] static hpx::future<cpu_array_view<T, Rank>>
+    construct_from_locked_object(object obj, AddressSpace& addr_space)
     {
-        auto& addr_space = get_local_runtime().get_address_space();
-
         auto hnd = addr_space.resolve_object(obj).get();
 
-        auto array_md = static_cast<array_metadata*>(hnd.data().ptr());
+        auto base_ptr = hnd.data().ptr();
 
-        auto ctx = std::make_shared<host_view_context>(token(), std::move(hnd));
+        auto shape_ptr = static_cast<util::index_t*>(base_ptr) + 1;
+
+        auto data_ptr = static_cast<T*>(static_cast<void*>(shape_ptr + Rank));
+
+        auto ctx = std::make_shared<host_view_context>(distributed_access_token(), std::move(hnd));
 
         return hpx::make_ready_future(
-                cpu_array_view<T, Rank>(Rank, static_cast<util::index_t*>(array_md->shape),
-                                        static_cast<T*>(array_md->data), std::move(ctx)));
+            cpu_array_view<T, Rank>(Rank, shape_ptr, data_ptr, std::move(ctx)));
     }
+
 private:
     cpu_array_view(util::index_t rank_, util::index_t* shape_, T* data_,
                    std::shared_ptr<host_view_context> ctx_)
@@ -278,14 +273,13 @@ class mutable_cpu_sparse_tensor_view
 public:
     using value_type = T;
 
-    static hpx::future<mutable_cpu_sparse_tensor_view<T, Rank>> construct(object obj)
+    template <typename AddressSpace>
+    [[nodiscard]] static hpx::future<mutable_cpu_sparse_tensor_view<T, Rank>>
+    construct(object obj, hpx::future<distributed_access_token> access_token,
+              AddressSpace& addr_space)
     {
-        auto token = acquire_access_for_view<mutable_cpu_sparse_tensor_view<T, Rank>>(obj);
-
-        token.when_valid().get();
-
-        auto ctx =
-            std::make_shared<host_view_context>(std::move(token), local_address_space::handle());
+        /*auto ctx =
+            std::make_shared<host_view_context>(access_token.get(), local_address_space::handle());
 
         auto tensor_components = obj.components();
 
@@ -301,7 +295,9 @@ public:
         auto shape = cpu_array_view<util::index_t, 1>::construct(tensor_components.at(1)).get();
 
         return hpx::make_ready_future(
-            mutable_cpu_sparse_tensor_view<T, Rank>(col, cl, cs, values, shape, std::move(ctx)));
+            mutable_cpu_sparse_tensor_view<T, Rank>(col, cl, cs, values, shape, std::move(ctx)));*/
+
+        std::terminate();
     }
 
     void dump()
@@ -424,6 +420,12 @@ struct object_view_traits<mutable_cpu_sparse_tensor_view<T, Rank>>
         return types::sparse_tensor(associated_qubus_type<T>::get());
     }
 };
+
+template <typename View, typename AddressSpace>
+hpx::future<View> get_view_for_locked_object(object obj, AddressSpace& addr_space)
+{
+    return View::construct_from_locked_object(std::move(obj), addr_space);
 }
+} // namespace qubus
 
 #endif

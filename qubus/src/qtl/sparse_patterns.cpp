@@ -2,6 +2,7 @@
 
 #include <qubus/qtl/deduce_iteration_space.hpp>
 
+#include <qubus/IR/unique_variable_generator.hpp>
 #include <qubus/pattern/IR.hpp>
 #include <qubus/pattern/core.hpp>
 
@@ -29,11 +30,11 @@ bool contains(Iterator first, Iterator last, const T& value)
     return std::find(first, last, value) != last;
 }
 
-std::unique_ptr<expression> generate_init_part(const expression& lhs)
+std::unique_ptr<expression> generate_init_part(const expression& lhs, unique_variable_generator& var_gen)
 {
+    using pattern::index;
     using qubus::pattern::_;
     using qubus::pattern::variable;
-    using pattern::index;
 
     variable<variable_declaration> var;
     variable<std::vector<variable_declaration>> indices;
@@ -50,13 +51,13 @@ std::unique_ptr<expression> generate_init_part(const expression& lhs)
 
     for (std::size_t i = 0; i < indices.get().size(); ++i)
     {
-        init_indices.emplace_back(types::integer());
+        init_indices.push_back(var_gen.create_new_variable(types::integer()));
         init_index_refs.push_back(qubus::var(init_indices.back()));
         bounds.push_back(deduce_iteration_space(indices.get()[i], lhs));
     }
 
-    std::unique_ptr<expression> init_lhs = assign(
-        subscription(qubus::var(var.get()), std::move(init_index_refs)), integer_literal(0));
+    std::unique_ptr<expression> init_lhs =
+        assign(subscription(qubus::var(var.get()), std::move(init_index_refs)), integer_literal(0));
 
     for (std::size_t i = init_indices.size(); i-- > 0;)
     {
@@ -76,20 +77,20 @@ enum class computational_part_kind
 std::unique_ptr<expression> generate_computational_part(
     std::unique_ptr<expression> current_expr, const variable_declaration& the_sparse_tensor,
     const std::vector<variable_declaration>& dense_indices,
-    const std::vector<variable_declaration>& sparse_indices, computational_part_kind kind)
+    const std::vector<variable_declaration>& sparse_indices, computational_part_kind kind, unique_variable_generator& var_gen)
 {
+    using pattern::index;
     using qubus::pattern::_;
     using qubus::pattern::variable;
-    using pattern::index;
 
     variable<variable_declaration> idx;
 
     auto data = member_access(var(the_sparse_tensor), "data");
 
-    variable_declaration new_body{types::unknown()};
+    variable_declaration new_body("new_body", types::unknown());
 
-    variable_declaration i{types::integer()};
-    variable_declaration ii{types::integer()};
+    variable_declaration i = var_gen.create_new_variable(types::integer(), "i");
+    variable_declaration ii = var_gen.create_new_variable(types::integer(), "ii");
 
     util::index_t block_width = 4;
 
@@ -111,7 +112,7 @@ std::unique_ptr<expression> generate_computational_part(
 
     auto block_index = var(i) / integer_literal(block_width);
 
-    variable_declaration j{types::integer()};
+    variable_declaration j = var_gen.create_new_variable(types::integer(), "j");
     skeleton = for_(j, integer_literal(0),
                     subscription(member_access(clone(*data), "cl"), clone(*block_index)),
                     std::move(skeleton));
@@ -135,7 +136,7 @@ std::unique_ptr<expression> generate_computational_part(
 
     for (auto iter = dense_indices.begin(), end = dense_indices.end(); iter != end; ++iter)
     {
-        variable_declaration idx{types::integer()};
+        variable_declaration idx = var_gen.create_new_variable(types::integer(), "idx");
 
         auto bounds = deduce_iteration_space(*iter, *current_expr);
 
@@ -152,7 +153,7 @@ std::unique_ptr<expression> generate_computational_part(
 
     for (auto iter = sparse_indices.begin(), end = sparse_indices.end() - 2; iter != end; ++iter)
     {
-        variable_declaration idx{types::integer()};
+        variable_declaration idx = var_gen.create_new_variable(types::integer(), "idx");
 
         skeleton = for_(idx, integer_literal(0), integer_literal(16), std::move(skeleton));
 
@@ -244,19 +245,20 @@ private:
 
     std::reference_wrapper<const expression> collect_outer_indices(const expression& expr)
     {
-        using qubus::pattern::variable;
         using pattern::for_all;
+        using qubus::pattern::variable;
 
         variable<variable_declaration> idx;
         variable<const expression&> body;
 
         std::reference_wrapper<const expression> current_expr = expr;
 
-        auto m = qubus::pattern::make_matcher<expression, void>().case_(for_all(idx, body), [&, this] {
-            current_expr = body.get();
+        auto m =
+            qubus::pattern::make_matcher<expression, void>().case_(for_all(idx, body), [&, this] {
+                current_expr = body.get();
 
-            dense_indices.push_back(idx.get());
-        });
+                dense_indices.push_back(idx.get());
+            });
 
         qubus::pattern::for_each(expr, m);
 
@@ -268,7 +270,7 @@ private:
     {
         using qubus::pattern::variable;
 
-        variable<const expression &> lhs, rhs;
+        variable<const expression&> lhs, rhs;
 
         auto m = qubus::pattern::make_matcher<expression, void>().case_(
             binary_operator(qubus::pattern::value(binary_op_tag::assign), lhs, protect(rhs)),
@@ -289,8 +291,8 @@ private:
     boost::optional<std::reference_wrapper<const expression>>
     collect_top_level_contractions(const expression& rhs)
     {
-        using qubus::pattern::variable;
         using pattern::sum;
+        using qubus::pattern::variable;
 
         variable<variable_declaration> idx;
         variable<const expression&> body;
@@ -370,15 +372,17 @@ std::unique_ptr<expression> lower_sparse_contraction(const expression& expr)
 
     auto rhs = plus_assign(clone(*analysis.lhs), clone(*analysis.body));
 
-    auto init_lhs_part = generate_init_part(*analysis.lhs);
+    unique_variable_generator var_gen;
+
+    auto init_lhs_part = generate_init_part(*analysis.lhs, var_gen);
 
     auto vectorizable_part =
         generate_computational_part(clone(*rhs), analysis.the_sparse_tensor, analysis.dense_indices,
-                                    analysis.sparse_indices, computational_part_kind::vectorizable);
+                                    analysis.sparse_indices, computational_part_kind::vectorizable, var_gen);
 
     auto remainder_part = generate_computational_part(
         std::move(rhs), analysis.the_sparse_tensor, analysis.dense_indices, analysis.sparse_indices,
-        computational_part_kind::remainder);
+        computational_part_kind::remainder, var_gen);
 
     std::vector<std::unique_ptr<expression>> tasks;
     tasks.push_back(std::move(init_lhs_part));
@@ -393,15 +397,6 @@ std::unique_ptr<expression> lower_sparse_contraction(const expression& expr)
 std::unique_ptr<expression> optimize_sparse_patterns(const expression& expr)
 {
     return lower_sparse_contraction(expr);
-}
-
-function_declaration optimize_sparse_patterns(function_declaration decl)
-{
-    auto new_body = optimize_sparse_patterns(decl.body());
-
-    decl.substitute_body(std::move(new_body));
-
-    return decl;
 }
 }
 }

@@ -1,5 +1,6 @@
 #include <qubus/alias_analysis.hpp>
 
+#include <qubus/IR/unique_variable_generator.hpp>
 #include <qubus/affine_constraints.hpp>
 
 #include <qubus/pattern/IR.hpp>
@@ -42,7 +43,7 @@ alias_result evaluate_alias_query_stage(
 
     return alias_result::may_alias;
 }
-}
+} // namespace
 
 alias_result alias_query_driver::alias(const access& first_access,
                                        const access& second_access) const
@@ -123,8 +124,8 @@ alias_result basic_aliasing_rule(alias_result current_state,
 
 boost::optional<affine_constraint>
 try_generate_slice_constraints_1D(const affine_expr& var, const expression& offset,
-                             const expression& extend, const expression& stride,
-                             affine_expr_context& aff_ctx, isl::context& isl_ctx)
+                                  const expression& bound, const expression& stride,
+                                  affine_expr_context& aff_ctx, isl::context& isl_ctx)
 {
     auto zero = aff_ctx.create_literal(0);
 
@@ -133,9 +134,9 @@ try_generate_slice_constraints_1D(const affine_expr& var, const expression& offs
     if (!aff_offset)
         return boost::none;
 
-    auto aff_extend = try_construct_affine_expr(extend, aff_ctx);
+    auto aff_bound = try_construct_affine_expr(bound, aff_ctx);
 
-    if (!aff_extend)
+    if (!aff_bound)
         return boost::none;
 
     auto aff_stride = try_construct_affine_expr(stride, aff_ctx);
@@ -144,7 +145,7 @@ try_generate_slice_constraints_1D(const affine_expr& var, const expression& offs
         return boost::none;
 
     auto constraint1 = less_equal(*aff_offset, var);
-    auto constraint2 = less(var, *aff_offset + *aff_extend);
+    auto constraint2 = less(var, *aff_bound);
     auto constraint3 = equal_to((var - *aff_offset) % *aff_stride, zero);
 
     affine_constraint constraint = constraint1 && constraint2 && constraint3;
@@ -155,22 +156,22 @@ try_generate_slice_constraints_1D(const affine_expr& var, const expression& offs
 boost::optional<isl::set>
 try_generate_slice_region(const std::vector<affine_expr>& vars,
                           const std::vector<std::reference_wrapper<const expression>>& offset,
-                          const std::vector<std::reference_wrapper<const expression>>& shape,
+                          const std::vector<std::reference_wrapper<const expression>>& bounds,
                           const std::vector<std::reference_wrapper<const expression>>& strides,
                           affine_expr_context& aff_ctx, isl::context& isl_ctx)
 {
-    const auto rank = shape.size();
+    const auto rank = offset.size();
 
     QUBUS_ASSERT(rank == vars.size(), "The number of variables need to match the rank.");
     QUBUS_ASSERT(rank == offset.size(), "The number of offsets need to match the rank.");
-    QUBUS_ASSERT(rank == shape.size(), "The number of extends need to match the rank.");
+    QUBUS_ASSERT(rank == bounds.size(), "The number of extends need to match the rank.");
     QUBUS_ASSERT(rank == strides.size(), "The number of strides need to match the rank.");
 
     if (rank == 0)
         return boost::none;
 
-    auto partial_constraint = try_generate_slice_constraints_1D(vars[0], offset[0], shape[0], strides[0],
-                                                                aff_ctx, isl_ctx);
+    auto partial_constraint = try_generate_slice_constraints_1D(vars[0], offset[0], bounds[0],
+                                                                strides[0], aff_ctx, isl_ctx);
 
     if (!partial_constraint)
         return boost::none;
@@ -179,8 +180,8 @@ try_generate_slice_region(const std::vector<affine_expr>& vars,
 
     for (std::size_t i = 1; i < rank; ++i)
     {
-        auto partial_constraint = try_generate_slice_constraints_1D(vars[i], offset[i], shape[i], strides[i],
-                                                        aff_ctx, isl_ctx);
+        auto partial_constraint = try_generate_slice_constraints_1D(vars[i], offset[i], bounds[i],
+                                                                    strides[i], aff_ctx, isl_ctx);
 
         if (!partial_constraint)
             return boost::none;
@@ -211,97 +212,150 @@ public:
     {
         using pattern::_;
 
-        pattern::variable<std::vector<std::reference_wrapper<const expression>>> indices1, indices2,
-            offset1, offset2, shape1, shape2, strides1, strides2;
+        pattern::variable<std::vector<std::reference_wrapper<const expression>>> indices1, indices2;
 
-        auto m = pattern::make_matcher<
-                     std::tuple<const access_qualifier_expr&, const access_qualifier_expr&>,
-                     alias_result>()
-                     .case_(tuple(subscription(_, indices1), subscription(_, indices2)),
-                            [&] {
+        auto m =
+            pattern::make_matcher<
+                std::tuple<const access_qualifier_expr&, const access_qualifier_expr&>,
+                alias_result>()
+                .case_(
+                    tuple(subscription(_, bind_to(all_of(typeof_(pattern::integer_t)), indices1)),
+                          subscription(_, bind_to(all_of(typeof_(pattern::integer_t)), indices2))),
+                    [&] {
+                        if (indices1.get().size() != indices2.get().size())
+                        {
+                            return alias_result::noalias;
+                        }
 
-                                if (indices1.get().size() != indices2.get().size())
+                        auto order = indices1.get().size();
+
+                        std::vector<std::reference_wrapper<const expression>> expressions;
+                        expressions.reserve(2 * order);
+
+                        expressions.insert(expressions.end(), indices1.get().begin(),
+                                           indices1.get().end());
+                        expressions.insert(expressions.end(), indices2.get().begin(),
+                                           indices2.get().end());
+
+                        using boost::adaptors::transformed;
+
+                        auto value_sets = value_set_analysis_->determine_value_sets(
+                            expressions | transformed(unwrap_reference()), *context_);
+
+                        using boost::adaptors::sliced;
+
+                        for (const auto& pair :
+                             boost::range::combine(value_sets | sliced(0, order),
+                                                   value_sets | sliced(order, 2 * order)))
+                        {
+                            auto common_values = intersect(boost::get<0>(pair).values(),
+                                                           boost::get<1>(pair).values());
+
+                            if (is_empty(common_values))
+                            {
+                                return alias_result::noalias;
+                            }
+                        }
+
+                        return alias_result::may_alias;
+                    })
+                .case_(tuple(subscription(_, indices1), subscription(_, indices2)), [&] {
+                    if (indices1.get().size() != indices2.get().size())
+                        return alias_result::noalias;
+
+                    affine_expr_context aff_ctx([this](const expression& expr) {
+                        return task_invariants_analysis_->is_invariant(expr, *context_);
+                    });
+
+                    auto rank = indices1.get().size();
+
+                    std::vector<affine_expr> vars;
+                    vars.reserve(rank);
+
+                    unique_variable_generator var_gen;
+
+                    for (std::size_t i = 0; i < rank; ++i)
+                    {
+                        variable_declaration tmp =
+                            var_gen.create_new_variable(types::integer{}, "tmp");
+                        auto var = aff_ctx.declare_variable(std::move(tmp));
+
+                        vars.push_back(std::move(var));
+                    }
+
+                    std::vector<std::reference_wrapper<const expression>> offset1;
+                    std::vector<std::reference_wrapper<const expression>> bounds1;
+                    std::vector<std::reference_wrapper<const expression>> strides1;
+
+                    offset1.reserve(rank);
+                    bounds1.reserve(rank);
+                    strides1.reserve(rank);
+
+                    for (std::size_t i = 0; i < rank; ++i)
+                    {
+                        pattern::variable<const expression&> offset, bound, stride;
+
+                        auto m2 = pattern::make_matcher<expression, void>()
+                                .case_(integer_range(offset, bound, stride), [&]
                                 {
-                                    return alias_result::noalias;
-                                }
-
-                                auto order = indices1.get().size();
-
-                                std::vector<std::reference_wrapper<const expression>> expressions;
-                                expressions.reserve(2 * order);
-
-                                expressions.insert(expressions.end(), indices1.get().begin(),
-                                                   indices1.get().end());
-                                expressions.insert(expressions.end(), indices2.get().begin(),
-                                                   indices2.get().end());
-
-                                using boost::adaptors::transformed;
-
-                                auto value_sets = value_set_analysis_->determine_value_sets(
-                                    expressions | transformed(unwrap_reference()), *context_);
-
-                                using boost::adaptors::sliced;
-
-                                for (const auto& pair :
-                                     boost::range::combine(value_sets | sliced(0, order),
-                                                           value_sets | sliced(order, 2 * order)))
-                                {
-                                    auto common_values = intersect(boost::get<0>(pair).values(),
-                                                                   boost::get<1>(pair).values());
-
-                                    if (is_empty(common_values))
-                                    {
-                                        return alias_result::noalias;
-                                    }
-                                }
-
-                                return alias_result::may_alias;
-                            })
-                     .case_(tuple(array_slice(_, offset1, shape1, strides1),
-                                  array_slice(_, offset2, shape2, strides2)),
-                            [&] {
-
-                                if (shape1.get().size() != shape2.get().size())
-                                {
-                                    return alias_result::noalias;
-                                }
-
-                                affine_expr_context aff_ctx([this](const expression& expr) {
-                                    return task_invariants_analysis_->is_invariant(expr, *context_);
+                                    offset1.push_back(offset.get());
+                                    bounds1.push_back(bound.get());
+                                    strides1.push_back(stride.get());
                                 });
 
-                                auto rank = shape1.get().size();
+                        if (!pattern::try_match(indices1.get()[i], m2))
+                            return alias_result::may_alias;
+                    }
 
-                                std::vector<affine_expr> vars;
-                                vars.reserve(rank);
+                    QUBUS_ASSERT(offset1.size() == rank, "The number of offsets need to match the rank.");
+                    QUBUS_ASSERT(bounds1.size() == rank, "The number of bounds need to match the rank.");
+                    QUBUS_ASSERT(strides1.size() == rank, "The number of strides need to match the rank.");
 
-                                for (std::size_t i = 0; i < rank; ++i)
+                    std::vector<std::reference_wrapper<const expression>> offset2;
+                    std::vector<std::reference_wrapper<const expression>> bounds2;
+                    std::vector<std::reference_wrapper<const expression>> strides2;
+
+                    offset2.reserve(rank);
+                    bounds2.reserve(rank);
+                    strides2.reserve(rank);
+
+                    for (std::size_t i = 0; i < rank; ++i)
+                    {
+                        pattern::variable<const expression&> offset, bound, stride;
+
+                        auto m2 = pattern::make_matcher<expression, void>()
+                                .case_(integer_range(offset, bound, stride), [&]
                                 {
-                                    variable_declaration tmp(types::integer{});
-                                    auto var = aff_ctx.declare_variable(tmp);
+                                    offset2.push_back(offset.get());
+                                    bounds2.push_back(bound.get());
+                                    strides2.push_back(stride.get());
+                                });
 
-                                    vars.push_back(std::move(var));
-                                }
+                        if (!pattern::try_match(indices2.get()[i], m2))
+                            return alias_result::may_alias;
+                    }
 
-                                auto set1 =
-                                    try_generate_slice_region(vars, offset1.get(), shape1.get(),
-                                                              strides1.get(), aff_ctx, *isl_ctx_);
-                                auto set2 =
-                                    try_generate_slice_region(vars, offset2.get(), shape2.get(),
-                                                              strides2.get(), aff_ctx, *isl_ctx_);
+                    QUBUS_ASSERT(offset2.size() == rank, "The number of offsets need to match the rank.");
+                    QUBUS_ASSERT(bounds2.size() == rank, "The number of bounds need to match the rank.");
+                    QUBUS_ASSERT(strides2.size() == rank, "The number of strides need to match the rank.");
 
-                                if (!set1 || !set2)
-                                    return alias_result::may_alias;
+                    auto set1 = try_generate_slice_region(vars, offset1, bounds1, strides1, aff_ctx,
+                                                          *isl_ctx_);
+                    auto set2 = try_generate_slice_region(vars, offset2, bounds2, strides2, aff_ctx,
+                                                          *isl_ctx_);
 
-                                auto common_values = intersect(*set1, *set2);
+                    if (!set1 || !set2)
+                        return alias_result::may_alias;
 
-                                if (is_empty(common_values))
-                                {
-                                    return alias_result::noalias;
-                                }
+                    auto common_values = intersect(*set1, *set2);
 
-                                return alias_result::may_alias;
-                            });
+                    if (is_empty(common_values))
+                    {
+                        return alias_result::noalias;
+                    }
+
+                    return alias_result::may_alias;
+                });
 
         return pattern::match(std::tie(first_access_qualifier, second_access_qualifier), m);
     }
@@ -312,7 +366,7 @@ private:
     const task_invariants_analysis_result* task_invariants_analysis_;
     isl::context* isl_ctx_;
 };
-}
+} // namespace
 
 basic_alias_analysis_result::basic_alias_analysis_result()
 {
@@ -406,4 +460,4 @@ std::vector<analysis_id> alias_analysis_pass::required_analyses() const
 
 QUBUS_REGISTER_ANALYSIS_PASS(basic_alias_analysis_pass);
 QUBUS_REGISTER_ANALYSIS_PASS(alias_analysis_pass);
-}
+} // namespace qubus

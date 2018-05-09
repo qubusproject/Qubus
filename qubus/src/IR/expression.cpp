@@ -66,11 +66,6 @@ bool operator!=(const expression_cursor& lhs, const expression_cursor& rhs)
     return !(lhs == rhs);
 }
 
-util::implementation_table expression::implementation_table_ = {};
-
-util::multi_method<bool(const util::virtual_<expression>&,
-                             const util::virtual_<expression>&)> equal = {};
-
 namespace
 {
 

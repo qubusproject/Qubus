@@ -4,14 +4,12 @@
 #include <qubus/IR/access_qualifier.hpp>
 #include <qubus/util/unused.hpp>
 
-#include <hpx/runtime/serialization/string.hpp>
-
 #include <string>
 
 namespace qubus
 {
 
-class member_access_expr : public access_qualifier_base<member_access_expr>
+class member_access_expr final : public access_qualifier_base<member_access_expr>
 {
 public:
     member_access_expr() = default;
@@ -33,14 +31,6 @@ public:
     std::unique_ptr<expression> substitute_subexpressions(
             std::vector<std::unique_ptr<expression>> new_children) const override final;
 
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar & object_;
-        ar & member_name_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(member_access_expr);
 private:
     std::unique_ptr<access_expr> object_;
     std::string member_name_;

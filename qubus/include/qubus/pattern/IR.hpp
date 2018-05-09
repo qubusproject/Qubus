@@ -11,15 +11,14 @@
 #include <qubus/pattern/for.hpp>
 #include <qubus/pattern/variable_ref.hpp>
 #include <qubus/pattern/macro.hpp>
-#include <qubus/pattern/spawn.hpp>
 #include <qubus/pattern/local_variable_def.hpp>
 #include <qubus/pattern/variable_scope.hpp>
 #include <qubus/pattern/construct.hpp>
 #include <qubus/pattern/if.hpp>
 #include <qubus/pattern/member_access.hpp>
-#include <qubus/pattern/foreign_call.hpp>
 #include <qubus/pattern/access.hpp>
-#include <qubus/pattern/array_slice.hpp>
+#include <qubus/pattern/integer_range.hpp>
+#include <qubus/pattern/typeof.hpp>
 
 #include <qubus/pattern/type.hpp>
 

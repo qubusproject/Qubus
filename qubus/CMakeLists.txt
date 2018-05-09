@@ -1,6 +1,6 @@
 include(Qubus_SetOutputName)
 
-find_package(HPX 1.0.0 REQUIRED)
+find_package(HPX 1.1.0 REQUIRED)
 
 add_subdirectory(src)
 add_subdirectory(tests)

@@ -14,7 +14,7 @@ namespace qubus
 namespace qtl
 {
 
-class object_expr : public access_expr_base<object_expr>
+class object_expr final : public access_expr_base<object_expr>
 {
 public:
     object_expr() = default;
@@ -33,13 +33,6 @@ public:
     std::unique_ptr<expression> substitute_subexpressions(
             std::vector<std::unique_ptr<expression>> new_children) const override final;
 
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar & obj_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(object_expr);
 private:
     object obj_;
 

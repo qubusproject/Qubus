@@ -16,7 +16,7 @@ class sparse_support : public ::testing::TestWithParam<long int>
 INSTANTIATE_TEST_CASE_P(base_extents, sparse_support,
                         ::testing::Values(10l, 11l, 100l, 101l, 512l, 1234l));
 
-TEST_P(sparse_support, sparse_matrix_vector_product)
+TEST_P(sparse_support, DISABLED_sparse_matrix_vector_product)
 {
     using namespace qubus;
     using namespace qtl;
@@ -63,7 +63,7 @@ TEST_P(sparse_support, sparse_matrix_vector_product)
     tensor<double, 1> B(N);
     tensor<double, 1> C(N);
 
-    kernel spmv = [A, B, C]{
+    kernel spmv = [A, B, C] {
         qtl::index i, j;
 
         C(i) = sum(j, A(i, j) * B(j));
@@ -104,7 +104,7 @@ TEST_P(sparse_support, sparse_matrix_vector_product)
     ASSERT_NEAR(error, 0.0, 1e-12);
 }
 
-TEST_P(sparse_support, sparse_matrix_matrix_product)
+TEST_P(sparse_support, DISABLED_sparse_matrix_matrix_product)
 {
     using namespace qubus;
     using namespace qtl;
@@ -218,5 +218,10 @@ int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
 
-    return hpx::init(argc, argv, qubus::get_hpx_config());
+    hpx::resource::partitioner rp(argc, argv, qubus::get_hpx_config(),
+                                  hpx::resource::partitioner_mode::mode_allow_oversubscription);
+
+    qubus::setup(rp);
+
+    return hpx::init();
 }

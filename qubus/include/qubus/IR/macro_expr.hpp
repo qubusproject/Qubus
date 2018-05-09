@@ -12,7 +12,7 @@
 namespace qubus
 {
  
-class macro_expr : public expression_base<macro_expr>
+class macro_expr final : public expression_base<macro_expr>
 {
 public:
     macro_expr() = default;
@@ -32,14 +32,6 @@ public:
     std::unique_ptr<expression> substitute_subexpressions(
             std::vector<std::unique_ptr<expression>> new_children) const override final;
 
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar & params_;
-        ar & body_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(macro_expr);
 private:
     std::vector<variable_declaration> params_;
     std::unique_ptr<expression> body_;

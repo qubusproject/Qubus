@@ -18,7 +18,7 @@ class uniform_fill_scheduler final : public scheduler
 public:
     ~uniform_fill_scheduler() override = default;
 
-    hpx::future<void> schedule(computelet c, execution_context ctx) override;
+    hpx::future<void> schedule(const symbol_id& func, execution_context ctx) override;
     void add_resource(vpu& execution_resource) override;
 
 private:

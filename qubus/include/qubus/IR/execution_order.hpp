@@ -7,7 +7,8 @@ namespace qubus
 enum class execution_order
 {
     sequential,
-    unordered
+    unordered,
+    parallel
 };
 
 }

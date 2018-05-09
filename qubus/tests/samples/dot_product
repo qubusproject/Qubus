@@ -1,0 +1,10 @@
+module test
+
+function dot(a :: Array{Double, 1}, b :: Array{Double, 1}) -> r :: Double
+    let N :: Int = a.shape[0]
+
+    for i :: Int in 0:N
+        r += a[i] * b[i]
+    end
+end
+

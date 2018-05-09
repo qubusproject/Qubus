@@ -109,6 +109,8 @@ public:
 
     llvm::Function* get_dealloc_scratch_mem() const;
 
+    void log(llvm::Value* value);
+
     // llvm::Value* lookup_intrinsic_function(const std::string& name,
     //                                       const std::vector<type>& arg_types)const;
 

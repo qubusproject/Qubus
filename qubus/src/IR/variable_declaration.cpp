@@ -7,25 +7,20 @@
 namespace qubus
 {
 
-variable_declaration_info::variable_declaration_info()
-: intent_(variable_intent::generic)
-{
-}
-
-variable_declaration_info::variable_declaration_info(type var_type_, variable_intent intent_)
-: var_type_(var_type_), intent_(intent_)
+variable_declaration_info::variable_declaration_info(std::string name_, type var_type_)
+: name_(std::move(name_)), var_type_(std::move(var_type_))
 {
     QUBUS_ASSERT(static_cast<bool>(this->var_type_), "Invalid variable type.");
+}
+
+const std::string& variable_declaration_info::name() const
+{
+    return name_;
 }
 
 const type& variable_declaration_info::var_type() const
 {
     return var_type_;
-}
-
-variable_intent variable_declaration_info::intent() const
-{
-    return intent_;
 }
 
 annotation_map& variable_declaration_info::annotations() const
@@ -37,20 +32,20 @@ annotation_map& variable_declaration_info::annotations()
 {
     return annotations_;
 }
-    
-variable_declaration::variable_declaration(type var_type_, variable_intent intent_)
-: info_(std::make_shared<variable_declaration_info>(std::move(var_type_), intent_))
+
+variable_declaration::variable_declaration(std::string name_, type var_type_)
+: info_(std::make_shared<variable_declaration_info>(std::move(name_), std::move(var_type_)))
 {
+}
+
+const std::string& variable_declaration::name() const
+{
+    return info_->name();
 }
 
 const type& variable_declaration::var_type() const
 {
     return info_->var_type();
-}
-
-variable_intent variable_declaration::intent() const
-{
-    return info_->intent();
 }
 
 util::handle variable_declaration::id() const

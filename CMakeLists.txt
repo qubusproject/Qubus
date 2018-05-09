@@ -48,6 +48,8 @@ include(CPack)
 include(GenerateExportHeader)
 include(FeatureSummary)
 
+include(TargetHeaderFiles)
+
 include (CheckSIMD)
 include (CheckFMA)
 
@@ -93,6 +95,12 @@ endif()
 if(QUBUS_ENABLE_UB_SANITIZER)
     add_compile_options(-fsanitize=undefined)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
+endif()
+
+include(CheckFuzzingSupport)
+
+if (QUBUS_HAS_FUZZING_SUPPORT)
+    add_compile_options(${QUBUS_FUZZING_FLAGS})
 endif()
 
 option(QUBUS_RUN_IWYU "Toggle if CMake should run include-what-you-use during compilation." OFF)

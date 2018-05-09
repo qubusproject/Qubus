@@ -3,16 +3,31 @@
 
 #include <hpx/config.hpp>
 
-#include <qubus/IR/expression.hpp>
-#include <qubus/IR/function_declaration.hpp>
-#include <qubus/IR/type.hpp>
+#include <qubus/exception.hpp>
+
+#include <carrot/carrot.hpp>
+
+#include <stdexcept>
 
 namespace qubus
 {
 
-void pretty_print(const expression& expr, bool print_types = false);
-void pretty_print(const function_declaration& decl, bool print_types = false);
-void pretty_print_type(const type& t);
+class type;
+class expression;
+class function;
+class module;
+
+class printing_error : virtual public exception, virtual public std::logic_error
+{
+public:
+    explicit printing_error(const char* what_);
+    explicit printing_error(const std::string& what_);
+};
+
+//carrot::block pretty_print(const type& t);
+carrot::block pretty_print(const expression& expr);
+carrot::block pretty_print(const function& decl);
+carrot::block pretty_print(const module& mod);
 }
 
 #endif

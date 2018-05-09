@@ -1,6 +1,7 @@
 #include <qubus/qtl/lower_abstract_indices.hpp>
 
 #include <qubus/IR/qir.hpp>
+#include <qubus/IR/unique_variable_generator.hpp>
 #include <qubus/pattern/IR.hpp>
 #include <qubus/pattern/core.hpp>
 #include <qubus/pattern/substitute.hpp>
@@ -26,13 +27,15 @@ namespace
 
 std::unique_ptr<expression> lower_abstract_indices_impl(const expression& expr)
 {
-    using qubus::pattern::_;
-    using qubus::pattern::variable;
     using pattern::for_all;
     using pattern::index;
+    using qubus::pattern::_;
+    using qubus::pattern::variable;
 
     variable<variable_declaration> decl;
     variable<const expression&> body;
+
+    unique_variable_generator var_gen;
 
     auto m = qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
         for_all(decl, body), [&]() -> std::unique_ptr<expression> {
@@ -44,9 +47,7 @@ std::unique_ptr<expression> lower_abstract_indices_impl(const expression& expr)
             std::unique_ptr<expression> lower_bound = std::move(bounds[0]);
             std::unique_ptr<expression> upper_bound = std::move(bounds[1]);
 
-            variable_declaration loop_index{types::integer()};
-            loop_index.annotations().add("qubus.debug.name",
-                                         decl.get().annotations().lookup("qubus.debug.name"));
+            variable_declaration loop_index = var_gen.create_new_variable(types::integer(), decl.get().name());
 
             auto m2 = qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
                 index(protect(decl)), [&] { return var(loop_index); });
@@ -62,10 +63,10 @@ std::unique_ptr<expression> lower_abstract_indices_impl(const expression& expr)
 
 std::unique_ptr<expression> fixup_kronecker_deltas(const expression& expr)
 {
-    using qubus::pattern::variable;
     using pattern::delta;
+    using qubus::pattern::variable;
 
-    variable<const expression &> i, j;
+    variable<const expression&> i, j;
 
     auto m = qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
         delta(i, j), [&] {
@@ -86,15 +87,6 @@ std::unique_ptr<expression> lower_abstract_indices(const expression& expr)
     auto lowered_expr = lower_abstract_indices_impl(expr);
 
     return fixup_kronecker_deltas(*lowered_expr);
-}
-
-function_declaration lower_abstract_indices(function_declaration decl)
-{
-    auto new_body = lower_abstract_indices(decl.body());
-
-    decl.substitute_body(std::move(new_body));
-
-    return decl;
 }
 }
 }

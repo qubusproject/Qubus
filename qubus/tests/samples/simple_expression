@@ -1,0 +1,6 @@
+module test
+
+function calc(x::Double) -> r :: Double
+    r = (x * 2.0 + 1)  / -0.5
+end
+

@@ -11,10 +11,10 @@ TEST(value_range_anaylsis, simple_array_access_in_loop_nest)
 {
     using namespace qubus;
 
-    variable_declaration var(types::array(types::double_{}, 1));
+    variable_declaration var("var", types::array(types::double_{}, 1));
 
-    variable_declaration i(types::integer{});
-    variable_declaration N(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration N("N", types::integer{});
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(variable_ref(i));
@@ -46,10 +46,10 @@ TEST(value_range_anaylsis, array_access_in_loop_nest)
 {
     using namespace qubus;
 
-    variable_declaration var(types::array(types::double_{}, 1));
+    variable_declaration var("var", types::array(types::double_{}, 1));
 
-    variable_declaration i(types::integer{});
-    variable_declaration j(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration j("j", types::integer{});
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(variable_ref(i) + variable_ref(j));
@@ -82,10 +82,10 @@ TEST(value_range_anaylsis, dependent_loops)
 {
     using namespace qubus;
 
-    variable_declaration var(types::array(types::double_{}, 1));
+    variable_declaration var("var", types::array(types::double_{}, 1));
 
-    variable_declaration i(types::integer{});
-    variable_declaration j(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration j("j", types::integer{});
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(variable_ref(j));
@@ -118,13 +118,13 @@ TEST(value_range_anaylsis, blocking)
 {
     using namespace qubus;
 
-    variable_declaration var(types::array(types::double_{}, 1));
+    variable_declaration var("var", types::array(types::double_{}, 1));
 
-    variable_declaration i(types::integer{});
-    variable_declaration j(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration j("j", types::integer{});
 
-    variable_declaration ii(types::integer{});
-    variable_declaration jj(types::integer{});
+    variable_declaration ii("ii", types::integer{});
+    variable_declaration jj("jj", types::integer{});
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(variable_ref(jj));
@@ -176,6 +176,11 @@ int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
 
-    return hpx::init(argc, argv, qubus::get_hpx_config());
+    hpx::resource::partitioner rp(argc, argv, qubus::get_hpx_config(),
+                                  hpx::resource::partitioner_mode::mode_allow_oversubscription);
+
+    qubus::setup(rp);
+
+    return hpx::init();
 }
 

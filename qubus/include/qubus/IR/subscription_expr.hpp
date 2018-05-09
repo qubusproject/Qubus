@@ -6,8 +6,6 @@
 #include <qubus/IR/access_qualifier.hpp>
 #include <qubus/util/unused.hpp>
 
-#include <hpx/runtime/serialization/vector.hpp>
-
 #include <boost/range/adaptor/indirected.hpp>
 
 #include <vector>
@@ -15,7 +13,7 @@
 namespace qubus
 {
 
-class subscription_expr : public access_qualifier_base<subscription_expr>
+class subscription_expr final : public access_qualifier_base<subscription_expr>
 {
 public:
     subscription_expr() = default;
@@ -41,15 +39,6 @@ public:
 
     std::unique_ptr<expression> substitute_subexpressions(
         std::vector<std::unique_ptr<expression>> new_children) const override final;
-
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar& indexed_expr_;
-        ar& indices_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(subscription_expr);
 
 private:
     std::unique_ptr<access_expr> indexed_expr_;

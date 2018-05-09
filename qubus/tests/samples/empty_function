@@ -1,0 +1,5 @@
+module test
+
+function empty() -> r :: Bool
+end
+

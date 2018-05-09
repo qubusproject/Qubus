@@ -23,11 +23,7 @@ public:
     template <typename BaseType>
     bool match(const BaseType& value, const variable<T>* var = nullptr) const
     {
-        using variable_type = typename std::remove_pointer<typename util::function_traits<decltype(
-            &Pattern::template match<BaseType>)>::template arg<1>::type>::type;
-        using value_type = typename variable_type::value_type;
-
-        variable<value_type> temp_var;
+        variable<T> temp_var;
 
         bool result = bound_pattern_.match(value, &temp_var);
 

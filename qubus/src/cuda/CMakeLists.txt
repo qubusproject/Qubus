@@ -2,18 +2,18 @@ find_package(CUDA 7.0)
 
 if (CUDA_FOUND)
 
+    set(qubus_cuda_header_files core.hpp support.hpp)
     set(qubus_cuda_source_files core.cpp support.cpp)
 
     add_library(qubus_cuda STATIC ${qubus_cuda_source_files})
+    qubus_target_header_files(TARGET qubus_cuda ROOT ${qubus_include_dir}/cuda FILES ${qubus_cuda_header_files})
 
-    target_include_directories(qubus_cuda PUBLIC ${CUDA_INCLUDE_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>
+    target_include_directories(qubus_cuda PUBLIC  ${HPX_INCLUDE_DIRS} ${CUDA_INCLUDE_DIRS}
+                                                  $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>
                                                   $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>)
-    target_compile_features(qubus_cuda PUBLIC cxx_std_14)
-    target_link_libraries(qubus_cuda qubus_util ${CUDA_CUDA_LIBRARY})
+    target_compile_features(qubus_cuda PUBLIC cxx_std_17)
+    target_link_libraries(qubus_cuda qubus_util ${CUDA_CUDA_LIBRARY} hpx)
     #set_target_properties(qubus_cuda PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${QUBUS_HAS_LTO_SUPPORT})
-    hpx_setup_target(qubus_cuda)
-    hpx_set_lib_name(qubus_cuda qubus_cuda)
-    qubus_set_output_name(qubus_cuda qubus_cuda)
 
     set_target_properties(qubus_cuda PROPERTIES POSITION_INDEPENDENT_CODE ON)
 

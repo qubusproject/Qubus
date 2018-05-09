@@ -23,9 +23,9 @@ public:
 
     void add_member_vpu(std::unique_ptr<vpu> new_member_vpu);
 
-    hpx::future<void> execute(computelet c, execution_context ctx) override;
+    hpx::future<void> execute(const symbol_id& func, execution_context ctx) override;
     hpx::future<boost::optional<performance_estimate>>
-    try_estimate_execution_time(const computelet& c, const execution_context& ctx) const override;
+    try_estimate_execution_time(const symbol_id& func, const execution_context& ctx) const override;
 private:
     std::vector<std::unique_ptr<vpu>> member_vpus_;
     std::unique_ptr<scheduler> scheduler_;

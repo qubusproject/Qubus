@@ -23,17 +23,14 @@ TEST(alias_analysis, basic_alias_analysis)
 
     auto result = analysis.run(*dummy, analysis_man, resource_manager);
 
-    auto A = variable_ref(variable_declaration(types::integer{}));
-    auto B = variable_ref(variable_declaration(types::integer{}));
+    auto A = variable_ref(variable_declaration("A", types::integer{}));
+    auto B = variable_ref(variable_declaration("B", types::integer{}));
 
-    EXPECT_EQ(result.alias(qubus::access(*A), qubus::access(*A), false),
-              alias_result::must_alias);
+    EXPECT_EQ(result.alias(qubus::access(*A), qubus::access(*A), false), alias_result::must_alias);
 
-    EXPECT_EQ(result.alias(qubus::access(*B), qubus::access(*B), false),
-              alias_result::must_alias);
+    EXPECT_EQ(result.alias(qubus::access(*B), qubus::access(*B), false), alias_result::must_alias);
 
-    EXPECT_EQ(result.alias(qubus::access(*A), qubus::access(*B), false),
-              alias_result::noalias);
+    EXPECT_EQ(result.alias(qubus::access(*A), qubus::access(*B), false), alias_result::noalias);
 
     auto A_memb1 = member_access(clone(*A), "memb1");
     auto A_memb2 = member_access(clone(*A), "memb2");
@@ -59,10 +56,10 @@ TEST(alias_analysis, array_alias_analysis)
     alias_analysis_pass analysis;
     variable_access_analysis access_analysis;
 
-    variable_declaration i(types::integer{});
-    variable_declaration N(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration N("N", types::integer{});
 
-    variable_declaration A(types::array(types::double_{}, 1));
+    variable_declaration A("A", types::array(types::double_{}, 1));
 
     auto task1 = assign(subscription(variable_ref(A), variable_ref(i)), double_literal(0.0));
     auto task2 = assign(subscription(variable_ref(A), variable_ref(i) + integer_literal(1)),
@@ -95,26 +92,26 @@ TEST(alias_analysis, slice_alias_analysis)
     alias_analysis_pass analysis;
     variable_access_analysis access_analysis;
 
-    variable_declaration i(types::integer{});
-    variable_declaration N(types::integer{});
-    variable_declaration M(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration N("N", types::integer{});
+    variable_declaration M("M", types::integer{});
 
-    variable_declaration A(types::array(types::double_{}, 1));
+    variable_declaration A("A", types::array(types::double_{}, 1));
 
-    std::vector<std::unique_ptr<expression>> offset1, offset2, shape1, shape2;
+    std::unique_ptr<expression> offset1 = var(M);
+    std::unique_ptr<expression> bound1 = var(M) + integer_literal(10);
 
-    offset1.push_back(var(M));
-    shape1.push_back(integer_literal(10));
+    std::unique_ptr<expression> offset2 = var(M) + integer_literal(10);
+    std::unique_ptr<expression> bound2 = var(M) + integer_literal(17);
 
-    offset2.push_back(var(M) + integer_literal(10));
-    shape2.push_back(integer_literal(7));
-
-    auto task1 = assign(subscription(slice(variable_ref(A), std::move(offset1), std::move(shape1)),
-                                     variable_ref(i)),
-                        double_literal(0.0));
-    auto task2 = assign(subscription(slice(variable_ref(A), std::move(offset2), std::move(shape2)),
-                                     variable_ref(i)),
-                        double_literal(1.0));
+    auto task1 = assign(
+        subscription(subscription(variable_ref(A), range(std::move(offset1), std::move(bound1))),
+                     variable_ref(i)),
+        double_literal(0.0));
+    auto task2 = assign(
+        subscription(subscription(variable_ref(A), range(std::move(offset2), std::move(bound2))),
+                     variable_ref(i)),
+        double_literal(1.0));
 
     auto body = sequenced_tasks(std::move(task1), std::move(task2));
 
@@ -143,27 +140,27 @@ TEST(alias_analysis, slice_with_overlap_alias_analysis)
     alias_analysis_pass analysis;
     variable_access_analysis access_analysis;
 
-    variable_declaration i(types::integer{});
-    variable_declaration N(types::integer{});
-    variable_declaration M(types::integer{});
-    variable_declaration P(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration N("N", types::integer{});
+    variable_declaration M("M", types::integer{});
+    variable_declaration P("P", types::integer{});
 
-    variable_declaration A(types::array(types::double_{}, 1));
+    variable_declaration A("A", types::array(types::double_{}, 1));
 
-    std::vector<std::unique_ptr<expression>> offset1, offset2, shape1, shape2;
+    std::unique_ptr<expression> offset1 = var(M);
+    std::unique_ptr<expression> bound1 = var(M) + integer_literal(10);
 
-    offset1.push_back(var(M));
-    shape1.push_back(integer_literal(10));
+    std::unique_ptr<expression> offset2 = var(P) + integer_literal(10);
+    std::unique_ptr<expression> bound2 = var(P) + integer_literal(17);
 
-    offset2.push_back(var(P) + integer_literal(10));
-    shape2.push_back(integer_literal(7));
-
-    auto task1 = assign(subscription(slice(variable_ref(A), std::move(offset1), std::move(shape1)),
-                                     variable_ref(i)),
-                        double_literal(0.0));
-    auto task2 = assign(subscription(slice(variable_ref(A), std::move(offset2), std::move(shape2)),
-                                     variable_ref(i)),
-                        double_literal(1.0));
+    auto task1 = assign(
+        subscription(subscription(variable_ref(A), range(std::move(offset1), std::move(bound1))),
+                     variable_ref(i)),
+        double_literal(0.0));
+    auto task2 = assign(
+        subscription(subscription(variable_ref(A), range(std::move(offset2), std::move(bound2))),
+                     variable_ref(i)),
+        double_literal(1.0));
 
     auto body = sequenced_tasks(std::move(task1), std::move(task2));
 
@@ -192,35 +189,29 @@ TEST(alias_analysis, 2d_slice_alias_analysis)
     alias_analysis_pass analysis;
     variable_access_analysis access_analysis;
 
-    variable_declaration i(types::integer{});
-    variable_declaration N(types::integer{});
-    variable_declaration M(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration N("N", types::integer{});
+    variable_declaration M("M", types::integer{});
 
-    variable_declaration A(types::array(types::double_{}, 2));
+    variable_declaration A("A", types::array(types::double_{}, 2));
 
-    std::vector<std::unique_ptr<expression>> indices, offset1, offset2, shape1, shape2, strides;
+    std::vector<std::unique_ptr<expression>> indices, ranges1, ranges2;
 
     indices.push_back(var(i));
 
-    offset1.push_back(var(M));
-    offset1.push_back(integer_literal(0));
-    shape1.push_back(integer_literal(10));
-    shape1.push_back(integer_literal(42));
+    ranges1.push_back(range(var(M), var(M) + integer_literal(10)));
+    ranges1.push_back(range(integer_literal(0), integer_literal(42)));
 
-    offset2.push_back(var(M) + integer_literal(10));
-    offset2.push_back(integer_literal(7));
-    shape2.push_back(integer_literal(7));
-    shape2.push_back(integer_literal(9));
+    ranges2.push_back(
+        range(var(M) + integer_literal(10), var(M) + integer_literal(17), integer_literal(1)));
+    ranges2.push_back(range(integer_literal(7), integer_literal(16), integer_literal(2)));
 
-    strides.push_back(integer_literal(1));
-    strides.push_back(integer_literal(2));
-
-    auto task1 = assign(
-        subscription(slice(variable_ref(A), std::move(offset1), std::move(shape1)), clone(indices)),
-        double_literal(0.0));
-    auto task2 = assign(
-        subscription(slice(variable_ref(A), std::move(offset2), std::move(shape2), std::move(strides)), clone(indices)),
-        double_literal(1.0));
+    auto task1 =
+        assign(subscription(subscription(variable_ref(A), std::move(ranges1)), clone(indices)),
+               double_literal(0.0));
+    auto task2 =
+        assign(subscription(subscription(variable_ref(A), std::move(ranges2)), clone(indices)),
+               double_literal(1.0));
 
     auto body = sequenced_tasks(std::move(task1), std::move(task2));
 
@@ -256,5 +247,10 @@ int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
 
-    return hpx::init(argc, argv, qubus::get_hpx_config());
+    hpx::resource::partitioner rp(argc, argv, qubus::get_hpx_config(),
+                                  hpx::resource::partitioner_mode::mode_allow_oversubscription);
+
+    qubus::setup(rp);
+
+    return hpx::init();
 }

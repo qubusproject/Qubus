@@ -1,0 +1,17 @@
+module test
+
+struct Foo
+    x :: Double
+    y :: Array{Float, 2}
+end
+
+function calc(A :: Array{Double, 1}, b :: Array{Double, 1}) -> r :: Array{Double, 1}
+    let N :: Int = A(shape[0]
+
+   [for i :: Int in 0:N
+        for j :: Int in 0:N
+            r[i] += A[i, j] * b[z]
+        end
+    end
+end
+

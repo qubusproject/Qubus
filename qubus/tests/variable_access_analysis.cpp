@@ -11,10 +11,10 @@ TEST(variable_access_analysis, scalar_write)
 {
     using namespace qubus;
 
-    variable_declaration var(types::double_{});
+    variable_declaration var("var", types::double_{});
 
-    variable_declaration i(types::integer{});
-    variable_declaration N(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration N("N", types::integer{});
 
     auto access = assign(variable_ref(var), lit(42));
 
@@ -44,10 +44,10 @@ TEST(variable_access_analysis, array_write)
 {
     using namespace qubus;
 
-    variable_declaration var(types::array(types::double_{}, 1));
+    variable_declaration var("var", types::double_{});
 
-    variable_declaration i(types::integer{});
-    variable_declaration N(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration N("N", types::integer{});
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(variable_ref(i));
@@ -80,11 +80,11 @@ TEST(variable_access_analysis, copy)
 {
     using namespace qubus;
 
-    variable_declaration A(types::array(types::double_{}, 1));
-    variable_declaration B(types::array(types::double_{}, 1));
+    variable_declaration A("A", types::array(types::double_{}, 1));
+    variable_declaration B("B", types::array(types::double_{}, 1));
 
-    variable_declaration i(types::integer{});
-    variable_declaration N(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration N("N", types::integer{});
 
     std::vector<std::unique_ptr<expression>> indices;
     indices.push_back(variable_ref(i));
@@ -120,11 +120,11 @@ TEST(variable_access_analysis, indirect_addressing)
 {
     using namespace qubus;
 
-    variable_declaration var(types::array(types::double_{}, 1));
-    variable_declaration indices(types::array(types::integer{}, 1));
+    variable_declaration var("var", types::array(types::double_{}, 1));
+    variable_declaration indices("indices", types::array(types::integer{}, 1));
 
-    variable_declaration i(types::integer{});
-    variable_declaration N(types::integer{});
+    variable_declaration i("i", types::integer{});
+    variable_declaration N("N", types::integer{});
 
     auto idx = subscription(variable_ref(indices), variable_ref(i));
 
@@ -171,5 +171,10 @@ int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
 
-    return hpx::init(argc, argv, qubus::get_hpx_config());
+    hpx::resource::partitioner rp(argc, argv, qubus::get_hpx_config(),
+                                  hpx::resource::partitioner_mode::mode_allow_oversubscription);
+
+    qubus::setup(rp);
+
+    return hpx::init();
 }

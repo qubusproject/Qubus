@@ -8,16 +8,12 @@ using server_type = hpx::components::component<qubus::object_factory_server>;
 HPX_REGISTER_COMPONENT(server_type, qubus_object_factory_server);
 
 using create_scalar_action = qubus::object_factory_server::create_scalar_action;
-HPX_REGISTER_ACTION_DECLARATION(create_scalar_action, qubus_object_factory_create_scalar_action);
 HPX_REGISTER_ACTION(create_scalar_action, qubus_object_factory_create_scalar_action);
 
 using create_array_action = qubus::object_factory_server::create_array_action;
-HPX_REGISTER_ACTION_DECLARATION(create_array_action, qubus_object_factory_create_array_action);
 HPX_REGISTER_ACTION(create_array_action, qubus_object_factory_create_array_action);
 
 using create_sparse_tensor_action = qubus::object_factory_server::create_sparse_tensor_action;
-HPX_REGISTER_ACTION_DECLARATION(create_sparse_tensor_action,
-                                qubus_object_factory_create_sparse_tensor_action);
 HPX_REGISTER_ACTION(create_sparse_tensor_action, qubus_object_factory_create_sparse_tensor_action);
 
 namespace qubus
@@ -61,7 +57,7 @@ hpx::future<hpx::id_type>
 object_factory_server::create_sparse_tensor(type value_type, std::vector<util::index_t> shape,
                                             const sparse_tensor_layout& layout)
 {
-    auto choosen_factory = local_factories_.at(0);
+    /*auto choosen_factory = local_factories_.at(0);
 
     auto shape_array =
         choosen_factory.create_array(types::integer(), {util::to_uindex(shape.size())});
@@ -99,7 +95,13 @@ object_factory_server::create_sparse_tensor(type value_type, std::vector<util::i
     auto sparse_tensor =
         choosen_factory.create_struct(sparse_tensor_type, std::move(sparse_tensor_members));
 
-    return hpx::make_ready_future(sparse_tensor.get());
+    return hpx::make_ready_future(sparse_tensor.get());*/
+
+    std::terminate(); // TODO: Reimplement this.
+}
+
+object_factory::object_factory(hpx::id_type&& id) : base_type(std::move(id))
+{
 }
 
 object_factory::object_factory(hpx::future<hpx::id_type>&& id) : base_type(std::move(id))
@@ -108,20 +110,23 @@ object_factory::object_factory(hpx::future<hpx::id_type>&& id) : base_type(std::
 
 object object_factory::create_scalar(type data_type)
 {
+    // FIXME: Reevaluate the impact of the manual unwrapping of the future.
     return hpx::async<object_factory_server::create_scalar_action>(
-            this->get_id(), std::move(data_type));
+            this->get_id(), std::move(data_type)).get();
 }
 
 object object_factory::create_array(type value_type, std::vector<util::index_t> shape)
 {
+    // FIXME: Reevaluate the impact of the manual unwrapping of the future.
     return hpx::async<object_factory_server::create_array_action>(
-        this->get_id(), std::move(value_type), std::move(shape));
+        this->get_id(), std::move(value_type), std::move(shape)).get();
 }
 
 object object_factory::create_sparse_tensor(type value_type, std::vector<util::index_t> shape,
                                             const sparse_tensor_layout& layout)
 {
+    // FIXME: Reevaluate the impact of the manual unwrapping of the future.
     return hpx::async<object_factory_server::create_sparse_tensor_action>(
-        this->get_id(), std::move(value_type), std::move(shape), std::move(layout));
+        this->get_id(), std::move(value_type), std::move(shape), std::move(layout)).get();
 }
 }

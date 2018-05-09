@@ -13,7 +13,7 @@ namespace qubus
 namespace qtl
 {
 
-class kronecker_delta_expr : public expression_base<kronecker_delta_expr>
+class kronecker_delta_expr final : public expression_base<kronecker_delta_expr>
 {
 public:
     kronecker_delta_expr() = default;
@@ -34,16 +34,6 @@ public:
 
     std::unique_ptr<expression> substitute_subexpressions(
         std::vector<std::unique_ptr<expression>> new_children) const override final;
-
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar& extent_;
-        ar& first_index_;
-        ar& second_index_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(kronecker_delta_expr);
 
 private:
     util::index_t extent_;

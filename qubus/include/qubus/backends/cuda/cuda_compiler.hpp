@@ -5,7 +5,8 @@
 
 #include <qubus/cuda/core.hpp>
 
-#include <qubus/IR/function_declaration.hpp>
+#include <qubus/IR/module.hpp>
+#include <qubus/IR/symbol_id.hpp>
 
 #include <memory>
 #include <functional>
@@ -25,7 +26,7 @@ public:
     cuda_plan(const cuda_plan&) = delete;
     cuda_plan& operator=(const cuda_plan&) = delete;
 
-    virtual void execute(const std::vector<void*>& args, cuda::stream& stream) const = 0;
+    virtual void execute(const symbol_id& entry_point, const std::vector<void*>& args, cuda::stream& stream) const = 0;
 };
 
 class cuda_compiler
@@ -40,7 +41,7 @@ public:
     cuda_compiler& operator=(const cuda_compiler&) = delete;
     cuda_compiler& operator=(cuda_compiler&&) = delete;
 
-    std::unique_ptr<cuda_plan> compile_computelet(const function_declaration& computelet);
+    std::unique_ptr<cuda_plan> compile_computelet(std::unique_ptr<module> computelet);
 private:
     class impl;
 

@@ -4,6 +4,7 @@
 #include <qubus/local_address_space.hpp>
 
 #include <hpx/include/lcos.hpp>
+#include <hpx/include/naming.hpp>
 #include <hpx/runtime/serialization/serialize.hpp>
 
 #include <qubus/util/span.hpp>
@@ -17,9 +18,12 @@ class object_instance
 {
 public:
     object_instance();
-    object_instance(local_address_space::handle local_handle_);
+    explicit object_instance(local_address_space::handle local_handle_);
 
     ~object_instance();
+
+    object_instance(const object_instance& other);
+    object_instance& operator=(const object_instance& other);
 
     object_instance(object_instance&& other) noexcept;
     object_instance& operator=(object_instance&& other) noexcept;
@@ -27,6 +31,8 @@ public:
     explicit operator bool() const;
 
     hpx::future<void> copy(util::span<char> buffer) const;
+
+    hpx::future<hpx::naming::id_type> location() const;
 
     void load(hpx::serialization::input_archive & ar, unsigned version);
     void save(hpx::serialization::output_archive & ar, unsigned version) const;
