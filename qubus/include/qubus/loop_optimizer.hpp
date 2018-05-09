@@ -1,12 +1,12 @@
 #ifndef QUBUS_LOOP_OPTIMIZER_HPP
 #define QUBUS_LOOP_OPTIMIZER_HPP
 
-#include <qubus/IR/function_declaration.hpp>
+#include <qubus/IR/function.hpp>
 
 namespace qubus
 {
  
-function_declaration optimize_loops(function_declaration expr);
+std::unique_ptr<function> optimize_loops(const function& expr);
     
 }
 

@@ -98,13 +98,5 @@ std::unique_ptr<expression> lower_top_level_sums(const expression& expr)
     return qubus::pattern::match(expr, m);
 }
 
-function_declaration lower_top_level_sums(function_declaration decl)
-{
-    auto new_body = lower_top_level_sums(decl.body());
-
-    decl.substitute_body(std::move(new_body));
-
-    return decl;
-}
 }
 }

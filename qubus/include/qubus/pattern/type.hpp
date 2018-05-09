@@ -239,6 +239,7 @@ constexpr primitive_type_pattern<types::float_> float_t = {};
 constexpr primitive_type_pattern<types::integer> integer_t = {};
 constexpr primitive_type_pattern<types::bool_> bool_t = {};
 constexpr primitive_type_pattern<types::index> index_t = {};
+constexpr primitive_type_pattern<types::integer_range_type> integer_range_t = {};
 
 template <typename RealType>
 complex_type_pattern<RealType> complex_t(RealType real_type)

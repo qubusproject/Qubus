@@ -48,6 +48,8 @@ include(CPack)
 include(GenerateExportHeader)
 include(FeatureSummary)
 
+include(TargetHeaderFiles)
+
 include (CheckSIMD)
 include (CheckFMA)
 
@@ -57,9 +59,12 @@ CheckFMA()
 if (CMAKE_VERSION VERSION_LESS 3.9)
     set(QUBUS_HAS_LTO_SUPPORT NO)
     set(QUBUS_LTO_ERROR_MSG "CMake versions < 3.9")
+elseif (NOT ${CMAKE_BUILD_TYPE} STREQUAL "Release")
+    set(QUBUS_HAS_LTO_SUPPORT NO)
+    set(QUBUS_LTO_ERROR_MSG "Only release builds are supported.")
 else()
-    include(CheckIPOSupport)
-    check_ipo_supported(RESULT QUBUS_HAS_LTO_SUPPORT OUTPUT QUBUS_LTO_ERROR_MSG LANGUAGES cxx)
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT QUBUS_HAS_LTO_SUPPORT OUTPUT QUBUS_LTO_ERROR_MSG LANGUAGES CXX)
 endif()
 
 if (NOT QUBUS_HAS_LTO_SUPPORT)
@@ -90,6 +95,12 @@ endif()
 if(QUBUS_ENABLE_UB_SANITIZER)
     add_compile_options(-fsanitize=undefined)
     set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -fsanitize=undefined")
+endif()
+
+include(CheckFuzzingSupport)
+
+if (QUBUS_HAS_FUZZING_SUPPORT)
+    add_compile_options(${QUBUS_FUZZING_FLAGS})
 endif()
 
 option(QUBUS_RUN_IWYU "Toggle if CMake should run include-what-you-use during compilation." OFF)

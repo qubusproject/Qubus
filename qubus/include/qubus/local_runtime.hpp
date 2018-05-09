@@ -8,17 +8,17 @@
 
 #include <qubus/abi_info.hpp>
 
-#include <qubus/IR/function_declaration.hpp>
-#include <qubus/computelet.hpp>
+#include <qubus/IR/function.hpp>
 #include <qubus/execution_context.hpp>
 
 #include <qubus/backend_registry.hpp>
 #include <qubus/host_backend.hpp>
 #include <qubus/local_address_space.hpp>
 #include <qubus/local_object_factory.hpp>
+#include <qubus/module_library.hpp>
 
 #include <hpx/include/components.hpp>
-#include <hpx/include/thread_executors.hpp>
+#include <hpx/runtime/threads/executors/pool_executor.hpp>
 
 #include <boost/filesystem.hpp>
 
@@ -31,7 +31,7 @@ namespace qubus
 class local_runtime
 {
 public:
-    local_runtime(std::unique_ptr<virtual_address_space> global_address_space_);
+    local_runtime(std::unique_ptr<virtual_address_space> global_address_space_, module_library mod_library_);
 
     local_runtime(const local_runtime&) = delete;
     local_runtime& operator=(const local_runtime&) = delete;
@@ -54,15 +54,15 @@ public:
     }
 
 private:
-    void try_to_load_host_backend(const boost::filesystem::path& library_path);
-    void try_to_load_backend(const boost::filesystem::path& library_path);
-    void scan_for_host_backends();
-    void scan_for_vpu_backends();
+    void try_to_load_host_backend(const boost::filesystem::path& library_path, module_library mod_library);
+    void try_to_load_backend(const boost::filesystem::path& library_path, module_library mod_library);
+    void scan_for_host_backends(module_library mod_library);
+    void scan_for_vpu_backends(module_library mod_library);
 
-    hpx::future<local_address_space::address_entry>
+    hpx::future<local_address_space::handle>
     resolve_page_fault(const object& obj, local_address_space::page_fault_context ctx);
 
-    hpx::threads::executors::local_priority_queue_os_executor service_executor_;
+    hpx::threads::executors::pool_executor service_executor_;
 
     abi_info abi_info_;
 
@@ -81,7 +81,7 @@ class local_runtime_reference_server
 {
 public:
     local_runtime_reference_server() = default;
-    explicit local_runtime_reference_server(local_runtime* runtime_);
+    explicit local_runtime_reference_server(std::weak_ptr<local_runtime> runtime_);
 
     hpx::future<hpx::id_type> get_local_object_factory() const;
 
@@ -93,7 +93,7 @@ public:
                                 get_local_vpu_action);
 
 private:
-    local_runtime* runtime_;
+    std::weak_ptr<local_runtime> runtime_;
 };
 
 class local_runtime_reference
@@ -112,13 +112,13 @@ public:
     std::unique_ptr<remote_vpu_reference> get_local_vpu() const;
 };
 
-local_runtime& init_local_runtime(virtual_address_space_wrapper::client global_addr_space);
+std::weak_ptr<local_runtime> init_local_runtime(virtual_address_space_wrapper::client global_addr_space, module_library mod_library);
 void shutdown_local_runtime();
 local_runtime& get_local_runtime();
 
 local_runtime_reference
 init_local_runtime_on_locality(const hpx::id_type& locality,
-                               virtual_address_space_wrapper::client global_addr_space);
+                               virtual_address_space_wrapper::client global_addr_space, module_library mod_library);
 void shutdown_local_runtime_on_locality(const hpx::id_type& locality);
 
 local_runtime_reference get_local_runtime_on_locality(const hpx::id_type& locality);

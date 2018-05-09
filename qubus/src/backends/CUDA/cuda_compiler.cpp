@@ -129,10 +129,25 @@ llvm::Function* get_div_ceil32(llvm::IRBuilder<>& builder, llvm::Module& mod)
     return round_up;
 }
 
+std::string mangle_function_name(const symbol_id& func_name)
+{
+    std::string result;
+
+    for (const auto& component : func_name.components())
+    {
+        result += component;
+        result += '_';
+    }
+
+    result += "ffi";
+
+    return result;
+}
+
 class nvptx_compiler final : public jit::compiler
 {
 public:
-    llvm::Function* compile_entry_function(const function_declaration& func) override
+    /*llvm::Function* compile_entry_function(const function& func) override
     {
         auto kernel = jit::compiler::compile_entry_function(func);
 
@@ -152,9 +167,9 @@ public:
         kernel_annotations->addOperand(kernel_annotation);
 
         return kernel;
-    }
+    }*/
 
-    jit::reference compile_root_skeleton(const expression& root_skel) override
+    /*jit::reference compile_root_skeleton(const expression& root_skel) override
     {
         using pattern::_;
 
@@ -267,36 +282,38 @@ public:
                 });
 
         return pattern::match(root_skel, m);
-    }
+    }*/
 };
 
 class cuda_plan_impl : public cuda_plan
 {
 public:
-    cuda_plan_impl(cuda::function entry_, std::unique_ptr<jit::module> module_)
-    : entry_(std::move(entry_)), module_(std::move(module_))
+    cuda_plan_impl(cuda::module mod_, std::unique_ptr<jit::module> module_)
+    : mod_(std::move(mod_)), module_(std::move(module_))
     {
     }
 
     virtual ~cuda_plan_impl() = default;
 
-    void execute(const std::vector<void*>& args, cuda::stream& stream) const override
+    void execute(const symbol_id& entry_point, const std::vector<void*>& args, cuda::stream& stream) const override
     {
-        auto launch_config = cuda::calculate_launch_config_with_max_occupancy(entry_, 0);
+        auto entry = mod_.get_function(mangle_function_name(entry_point));
 
-        cuda::launch_kernel(entry_, launch_config.min_grid_size, launch_config.block_size, 0,
+        auto launch_config = cuda::calculate_launch_config_with_max_occupancy(entry, 0);
+
+        cuda::launch_kernel(entry, launch_config.min_grid_size, launch_config.block_size, 0,
                             stream, args.data(), nullptr);
     }
 
 private:
-    cuda::function entry_;
+    cuda::module mod_;
     std::unique_ptr<jit::module> module_;
 };
 
-std::unique_ptr<cuda_plan> compile(function_declaration entry_point, jit::compiler& comp,
+std::unique_ptr<cuda_plan> compile(std::unique_ptr<module> computelet, jit::compiler& comp,
                                    llvm::TargetMachine& target_machine)
 {
-    auto mod = jit::compile(entry_point, comp);
+    auto mod = jit::compile(std::move(computelet), comp);
 
     std::unique_ptr<llvm::Module> the_module = llvm::CloneModule(&mod->env().module());
 
@@ -342,9 +359,7 @@ std::unique_ptr<cuda_plan> compile(function_declaration entry_point, jit::compil
 
     cuda::module cuda_module(std::string(buffer.data()));
 
-    auto entry = cuda_module.get_function(mod->get_namespace());
-
-    return util::make_unique<cuda_plan_impl>(entry, std::move(mod));
+    return util::make_unique<cuda_plan_impl>(std::move(cuda_module), std::move(mod));
 }
 }
 
@@ -411,11 +426,11 @@ public:
             builder.selectTarget(nvptx_triple, "", "sm_35", attrs));
     }
 
-    std::unique_ptr<cuda_plan> compile_computelet(function_declaration computelet)
+    std::unique_ptr<cuda_plan> compile_computelet(std::unique_ptr<module> code)
     {
-        computelet = make_implicit_conversions_explicit(computelet);
+        code = make_implicit_conversions_explicit(*code);
 
-        return compile(std::move(computelet), *comp_, *target_machine_);
+        return compile(std::move(code), *comp_, *target_machine_);
     }
 
 private:
@@ -429,8 +444,8 @@ cuda_compiler::cuda_compiler() : impl_(std::make_unique<cuda_compiler::impl>())
 
 cuda_compiler::~cuda_compiler() = default;
 
-std::unique_ptr<cuda_plan> cuda_compiler::compile_computelet(const function_declaration& computelet)
+std::unique_ptr<cuda_plan> cuda_compiler::compile_computelet(std::unique_ptr<module> computelet)
 {
-    return impl_->compile_computelet(computelet);
+    return impl_->compile_computelet(std::move(computelet));
 }
 }

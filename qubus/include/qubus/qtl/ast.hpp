@@ -186,19 +186,15 @@ struct is_term<unary_operator<Tag, Arg>> : std::true_type
 {
 };
 
-template <typename Arg>
+template <typename Arg, typename = typename std::enable_if<is_term<Arg>::value>::type>
 auto operator+(Arg arg)
 {
-    static_assert(is_term<Arg>::value, "Expecting a term as the argument.");
-
     return unary_operator<unary_operator_tag::plus, Arg>(std::move(arg));
 }
 
-template <typename Arg>
+template <typename Arg, typename = typename std::enable_if<is_term<Arg>::value>::type>
 auto operator-(Arg arg)
 {
-    static_assert(is_term<Arg>::value, "Expecting a term as the argument.");
-
     return unary_operator<unary_operator_tag::negate, Arg>(std::move(arg));
 }
 
@@ -243,40 +239,32 @@ struct is_term<binary_operator<Tag, LHS, RHS>> : std::true_type
 {
 };
 
-template <typename LHS, typename RHS>
+template <typename LHS, typename RHS,
+          typename = typename std::enable_if<is_term<LHS>::value && is_term<RHS>::value>::type>
 auto operator+(LHS lhs, RHS rhs)
 {
-    static_assert(is_term<LHS>::value, "Expecting a term as the left-hand side.");
-    static_assert(is_term<RHS>::value, "Expecting a term as the right-hand side.");
-
     return binary_operator<binary_operator_tag::plus, LHS, RHS>(std::move(lhs), std::move(rhs));
 }
 
-template <typename LHS, typename RHS>
+template <typename LHS, typename RHS,
+          typename = typename std::enable_if<is_term<LHS>::value && is_term<RHS>::value>::type>
 auto operator-(LHS lhs, RHS rhs)
 {
-    static_assert(is_term<LHS>::value, "Expecting a term as the left-hand side.");
-    static_assert(is_term<RHS>::value, "Expecting a term as the right-hand side.");
-
     return binary_operator<binary_operator_tag::minus, LHS, RHS>(std::move(lhs), std::move(rhs));
 }
 
-template <typename LHS, typename RHS>
+template <typename LHS, typename RHS,
+          typename = typename std::enable_if<is_term<LHS>::value && is_term<RHS>::value>::type>
 auto operator*(LHS lhs, RHS rhs)
 {
-    static_assert(is_term<LHS>::value, "Expecting a term as the left-hand side.");
-    static_assert(is_term<RHS>::value, "Expecting a term as the right-hand side.");
-
     return binary_operator<binary_operator_tag::multiplies, LHS, RHS>(std::move(lhs),
                                                                       std::move(rhs));
 }
 
-template <typename LHS, typename RHS>
+template <typename LHS, typename RHS,
+          typename = typename std::enable_if<is_term<LHS>::value && is_term<RHS>::value>::type>
 auto operator/(LHS lhs, RHS rhs)
 {
-    static_assert(is_term<LHS>::value, "Expecting a term as the left-hand side.");
-    static_assert(is_term<RHS>::value, "Expecting a term as the right-hand side.");
-
     return binary_operator<binary_operator_tag::divides, LHS, RHS>(std::move(lhs), std::move(rhs));
 }
 
@@ -309,12 +297,11 @@ struct is_term<contraction<ContractionIndex, Body>> : std::true_type
 {
 };
 
-template <typename ContractionIndex, typename Body>
+template <typename ContractionIndex, typename Body,
+          typename = typename std::enable_if<is_index<ContractionIndex>::value &&
+                                             is_term<Body>::value>::type>
 auto sum(ContractionIndex contraction_index, Body body)
 {
-    static_assert(is_index<ContractionIndex>::value, "Expecting an index.");
-    static_assert(is_term<Body>::value, "Expecting a term as the sum body.");
-
     return contraction<ContractionIndex, Body>(std::move(contraction_index), std::move(body));
 }
 
@@ -355,12 +342,11 @@ struct is_term<kronecker_delta<FirstIndex, SecondIndex>> : std::true_type
 {
 };
 
-template <typename FirstIndex, typename SecondIndex>
+template <typename FirstIndex, typename SecondIndex,
+          typename = typename std::enable_if<is_index<FirstIndex>::value &&
+                                             is_index<SecondIndex>::value>::type>
 auto delta(util::index_t extent, FirstIndex first_index, SecondIndex second_index)
 {
-    static_assert(is_index<FirstIndex>::value, "Expecting an index as the first argument.");
-    static_assert(is_index<SecondIndex>::value, "Expecting an index as the second argument.");
-
     return kronecker_delta<FirstIndex, SecondIndex>(std::move(extent), std::move(first_index),
                                                     std::move(second_index));
 }
@@ -369,7 +355,8 @@ template <typename T, long int Rank>
 class tensor_var
 {
 public:
-    tensor_var() : var_(types::array(associated_qubus_type<T>::get(), Rank))
+    // FIXME: Add a proper name for each tensor.
+    tensor_var() : var_("tensor", types::array(associated_qubus_type<T>::get(), Rank))
     {
     }
 
@@ -389,6 +376,7 @@ public:
     {
         return var_;
     }
+
 private:
     variable_declaration var_;
 };
@@ -402,7 +390,8 @@ template <typename T, long int Rank>
 class sparse_tensor_var
 {
 public:
-    sparse_tensor_var() : var_(types::sparse_tensor(associated_qubus_type<T>::get()))
+    // FIXME: Add a proper name for each tensor.
+    sparse_tensor_var() : var_("tensor", types::sparse_tensor(associated_qubus_type<T>::get()))
     {
     }
 
@@ -410,10 +399,10 @@ public:
     auto operator()(Indices... indices) const
     {
         using subscription_type =
-        std::conditional_t<boost::hana::any(
-                boost::hana::make_tuple(std::is_same<Indices, range>::value...)),
-                sliced_tensor<sparse_tensor_var<T, Rank>, Indices...>,
-                subscripted_tensor<sparse_tensor_var<T, Rank>, Indices...>>;
+            std::conditional_t<boost::hana::any(
+                                   boost::hana::make_tuple(std::is_same<Indices, range>::value...)),
+                               sliced_tensor<sparse_tensor_var<T, Rank>, Indices...>,
+                               subscripted_tensor<sparse_tensor_var<T, Rank>, Indices...>>;
 
         return subscription_type(*this, std::move(indices)...);
     }
@@ -422,6 +411,7 @@ public:
     {
         return var_;
     }
+
 private:
     variable_declaration var_;
 };

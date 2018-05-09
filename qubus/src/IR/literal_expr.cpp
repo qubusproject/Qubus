@@ -134,4 +134,47 @@ bool operator!=(const integer_literal_expr& lhs, const integer_literal_expr& rhs
 {
     return !(lhs == rhs);
 }
+
+bool_literal_expr::bool_literal_expr(bool value_) : value_{value_}
+{
+}
+
+bool bool_literal_expr::value() const
+{
+    return value_;
+}
+
+bool_literal_expr* bool_literal_expr::clone() const
+{
+    return new bool_literal_expr(value_);
+}
+
+const expression& bool_literal_expr::child(std::size_t QUBUS_UNUSED(index)) const
+{
+    throw 0;
+}
+
+std::size_t bool_literal_expr::arity() const
+{
+    return 0;
+}
+
+std::unique_ptr<expression> bool_literal_expr::substitute_subexpressions(
+        std::vector<std::unique_ptr<expression>> new_children) const
+{
+    if (!new_children.empty())
+        throw 0;
+
+    return std::make_unique<bool_literal_expr>(value_);
+}
+
+bool operator==(const bool_literal_expr& lhs, const bool_literal_expr& rhs)
+{
+    return lhs.value() == rhs.value();
+}
+
+bool operator!=(const bool_literal_expr& lhs, const bool_literal_expr& rhs)
+{
+    return !(lhs == rhs);
+}
 }

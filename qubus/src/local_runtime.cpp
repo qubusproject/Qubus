@@ -6,9 +6,8 @@
 
 #include <qubus/prefix.hpp>
 
-#include <qubus/hpx_utils.hpp>
-
 #include <hpx/include/lcos.hpp>
+#include <hpx/parallel/executors.hpp> // Workaround for missing includes.
 
 #include <boost/dll.hpp>
 #include <boost/regex.hpp>
@@ -21,11 +20,9 @@ HPX_REGISTER_COMPONENT(server_type, qubus_local_runtime_reference_server);
 
 typedef qubus::local_runtime_reference_server::get_local_object_factory_action
     get_local_object_factory_action;
-HPX_REGISTER_ACTION_DECLARATION(get_local_object_factory_action);
 HPX_REGISTER_ACTION(get_local_object_factory_action)
 
 typedef qubus::local_runtime_reference_server::get_local_vpu_action get_local_vpu_action;
-HPX_REGISTER_ACTION_DECLARATION(get_local_vpu_action);
 HPX_REGISTER_ACTION(get_local_vpu_action);
 
 namespace qubus
@@ -36,17 +33,19 @@ extern "C" unsigned long int cpu_backend_get_api_version();
 namespace
 {
 
-std::unique_ptr<local_runtime> local_qubus_runtime;
+std::shared_ptr<local_runtime> local_qubus_runtime;
 }
 
-local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_address_space_)
-: service_executor_(1), global_address_space_(std::move(global_address_space_))
+local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_address_space_,
+                             module_library mod_library_) try
+: service_executor_("/qubus/service"),
+  global_address_space_(std::move(global_address_space_))
 {
     // Force the CPU backend to be linked.
     // FIXME: After we have fixed our lifetime issues, we should remove this line.
     cpu_backend_get_api_version();
 
-    scan_for_host_backends();
+    scan_for_host_backends(mod_library_);
 
     QUBUS_ASSERT(static_cast<bool>(backend_registry_.get_host_backend()),
                  "No host backend has been loaded.");
@@ -61,9 +60,9 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
             return resolve_page_fault(obj, std::move(ctx));
         });
 
-    scan_for_vpu_backends();
+    scan_for_vpu_backends(mod_library_);
 
-    object_factory_ = new_here<local_object_factory_server>(address_space_.get());
+    object_factory_ = hpx::local_new<local_object_factory>(address_space_.get());
 
     //local_vpu_ = std::make_unique<aggregate_vpu>(std::make_unique<round_robin_scheduler>());
 
@@ -73,6 +72,9 @@ local_runtime::local_runtime(std::unique_ptr<virtual_address_space> global_addre
     }*/
 
     local_vpu_ = std::move(the_host_backend.create_vpus()[0]);
+}
+catch (const std::exception&)
+{
 }
 
 local_object_factory local_runtime::get_local_object_factory() const
@@ -90,9 +92,10 @@ local_address_space& local_runtime::get_address_space() const
     return *address_space_;
 }
 
-void local_runtime::try_to_load_host_backend(const boost::filesystem::path& library_path)
+void local_runtime::try_to_load_host_backend(const boost::filesystem::path& library_path,
+                                             module_library mod_library)
 {
-    BOOST_LOG_NAMED_SCOPE("runtime");
+    //BOOST_LOG_NAMED_SCOPE("runtime");
 
     logger slg;
 
@@ -105,15 +108,15 @@ void local_runtime::try_to_load_host_backend(const boost::filesystem::path& libr
     {
         auto backend_name = match[1];
 
-        QUBUS_LOG(slg, normal) << "Loading backend '" << backend_name << "' (located at "
-                               << library_path << ")";
+        //QUBUS_LOG(slg, normal) << "Loading backend '" << backend_name << "' (located at "
+        //                       << library_path << ")";
 
         boost::dll::shared_library backend_library(library_path);
 
         if (!backend_library)
         {
-            QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
-                                    << "' (located at " << library_path << ")";
+            //QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+            //                        << "' (located at " << library_path << ")";
 
             return;
         }
@@ -122,8 +125,8 @@ void local_runtime::try_to_load_host_backend(const boost::filesystem::path& libr
 
         if (!backend_library.has(get_type_name))
         {
-            QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
-                                    << "': Missing backend type accessor.";
+            //QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+            //                        << "': Missing backend type accessor.";
 
             return;
         }
@@ -140,22 +143,23 @@ void local_runtime::try_to_load_host_backend(const boost::filesystem::path& libr
 
             if (!backend_library.has(init_func_name))
             {
-                QUBUS_LOG(slg, warning)
-                    << "Failed to load backend '" << backend_name << "': No viable init function.";
+                //QUBUS_LOG(slg, warning)
+                //    << "Failed to load backend '" << backend_name << "': No viable init function.";
 
                 return;
             }
 
-            using init_function_type = host_backend*(const abi_info*);
+            using init_function_type = host_backend*(const abi_info*, module_library,
+                                                     hpx::threads::executors::pool_executor*);
 
             auto& init_backend = backend_library.get<init_function_type>(init_func_name);
 
-            auto backend = init_backend(&abi_info_);
+            auto backend = init_backend(&abi_info_, mod_library, &service_executor_);
 
             if (!backend)
             {
-                QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
-                                        << "': Backend initialization failed.";
+                //QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+                //                        << "': Backend initialization failed.";
 
                 return;
             }
@@ -167,18 +171,19 @@ void local_runtime::try_to_load_host_backend(const boost::filesystem::path& libr
             }
             catch (const host_backend_already_set_exception& /*unused*/)
             {
-                QUBUS_LOG(slg, warning)
-                    << "Host backend has already been chosen. Ignoring new backend.";
+                //QUBUS_LOG(slg, warning)
+                //    << "Host backend has already been chosen. Ignoring new backend.";
             }
         }
     }
 }
 
-void local_runtime::try_to_load_backend(const boost::filesystem::path& library_path)
+void local_runtime::try_to_load_backend(const boost::filesystem::path& library_path,
+                                        module_library mod_library)
 {
-    BOOST_LOG_NAMED_SCOPE("runtime");
+    //BOOST_LOG_NAMED_SCOPE("runtime");
 
-    logger slg;
+    //logger slg;
 
     boost::regex backend_pattern("^libqubus_([\\S]+)\\.so$");
 
@@ -189,15 +194,15 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
     {
         auto backend_name = match[1];
 
-        QUBUS_LOG(slg, normal) << "Loading backend '" << backend_name << "' (located at "
-                               << library_path << ")";
+        //QUBUS_LOG(slg, normal) << "Loading backend '" << backend_name << "' (located at "
+        //                       << library_path << ")";
 
         boost::dll::shared_library backend_library(library_path);
 
         if (!backend_library)
         {
-            QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
-                                    << "' (located at " << library_path << ")";
+            //QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+            //                        << "' (located at " << library_path << ")";
 
             return;
         }
@@ -206,8 +211,8 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
 
         if (!backend_library.has(get_type_name))
         {
-            QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
-                                    << "': Missing backend type accessor.";
+            //QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+            //                        << "': Missing backend type accessor.";
 
             return;
         }
@@ -224,24 +229,27 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
 
             if (!backend_library.has(init_func_name))
             {
-                QUBUS_LOG(slg, warning)
-                    << "Failed to load backend '" << backend_name << "': No viable init function.";
+                //QUBUS_LOG(slg, warning)
+                //    << "Failed to load backend '" << backend_name << "': No viable init function.";
 
                 return;
             }
 
-            using init_function_type = backend*(const abi_info*, local_address_space*);
+            using init_function_type =
+                backend*(const abi_info*, local_address_space*, module_library,
+                         hpx::threads::executors::pool_executor*);
 
             auto& init_backend = backend_library.get<init_function_type>(init_func_name);
 
             QUBUS_ASSERT(address_space_, "Invalid address space");
 
-            auto backend = init_backend(&abi_info_, address_space_.get());
+            auto backend =
+                init_backend(&abi_info_, address_space_.get(), mod_library, &service_executor_);
 
             if (!backend)
             {
-                QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
-                                        << "': Backend initialization failed.";
+                //QUBUS_LOG(slg, warning) << "Failed to load backend '" << backend_name
+                //                        << "': Backend initialization failed.";
 
                 return;
             }
@@ -252,14 +260,14 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
     }
 }
 
-void local_runtime::scan_for_host_backends()
+void local_runtime::scan_for_host_backends(module_library mod_library)
 {
     {
-        BOOST_LOG_NAMED_SCOPE("runtime");
+        //BOOST_LOG_NAMED_SCOPE("runtime");
 
-        logger slg;
+        //logger slg;
 
-        QUBUS_LOG(slg, normal) << "Scanning for host backends";
+        //QUBUS_LOG(slg, normal) << "Scanning for host backends";
     }
 
     auto backend_search_path = get_prefix() / "qubus/backends";
@@ -270,7 +278,7 @@ void local_runtime::scan_for_host_backends()
 
         for (auto iter = first; iter != last; ++iter)
         {
-            try_to_load_host_backend(iter->path());
+            try_to_load_host_backend(iter->path(), mod_library);
         }
     }
 
@@ -291,14 +299,14 @@ void local_runtime::scan_for_host_backends()
     }
 }
 
-void local_runtime::scan_for_vpu_backends()
+void local_runtime::scan_for_vpu_backends(module_library mod_library)
 {
     {
-        BOOST_LOG_NAMED_SCOPE("runtime");
+        //BOOST_LOG_NAMED_SCOPE("runtime");
 
-        logger slg;
+        //logger slg;
 
-        QUBUS_LOG(slg, normal) << "Scanning for VPU backends";
+        //QUBUS_LOG(slg, normal) << "Scanning for VPU backends";
     }
 
     auto backend_search_path = get_prefix() / "qubus/backends";
@@ -309,64 +317,71 @@ void local_runtime::scan_for_vpu_backends()
 
         for (auto iter = first; iter != last; ++iter)
         {
-            try_to_load_backend(iter->path());
+            try_to_load_backend(iter->path(), mod_library);
         }
     }
 }
 
-hpx::future<local_address_space::address_entry>
+hpx::future<local_address_space::handle>
 local_runtime::resolve_page_fault(const object& obj, local_address_space::page_fault_context ctx)
 {
     auto instance = global_address_space_->resolve_object(obj);
 
-    auto page = instance.then(
-        get_local_runtime().get_service_executor(),
-        [this, obj, ctx](hpx::future<object_instance> instance) mutable {
-            auto instance_v = instance.get();
+    auto page = instance.then(get_local_runtime().get_service_executor(),
+                              [this, obj, ctx](hpx::future<object_instance> instance) mutable {
+                                  auto instance_v = instance.get();
 
-            if (!instance_v)
-                throw std::runtime_error("Page fault");
+                                  if (!instance_v)
+                                      throw std::runtime_error("Page fault");
 
-            const auto& obj_type = obj.object_type();
+                                  const auto& obj_type = obj.object_type();
 
-            auto size = obj.size();
-            auto alignment = obj.alignment();
+                                  auto size = obj.size();
+                                  auto alignment = obj.alignment();
 
-            auto page = ctx.allocate_page(obj, size, alignment).get();
+                                  auto page = ctx.allocate_page(size, alignment);
 
-            auto& data = page.data();
+                                  auto& data = page.data();
 
-            util::span<char> obj_memory(static_cast<char*>(data.ptr()), size);
+                                  util::span<char> obj_memory(static_cast<char*>(data.ptr()), size);
 
-            auto finished = instance_v.copy(obj_memory);
+                                  auto finished = instance_v.copy(obj_memory);
 
-            return finished.then(
-                get_local_runtime().get_service_executor(), [page = std::move(page)](
-                                                                hpx::future<void>
-                                                                    finished) mutable {
-                    finished.get();
+                                  return finished.then(
+                                      get_local_runtime().get_service_executor(),
+                                      [page = std::move(page)](hpx::future<void> finished) mutable {
+                                          finished.get();
 
-                    return std::move(page);
-                });
-        });
+                                          return std::move(page);
+                                      });
+                              });
 
     return page;
 }
 
-local_runtime_reference_server::local_runtime_reference_server(local_runtime* runtime_)
+local_runtime_reference_server::local_runtime_reference_server(
+    std::weak_ptr<local_runtime> runtime_)
 : runtime_(runtime_)
 {
 }
 
 hpx::future<hpx::id_type> local_runtime_reference_server::get_local_object_factory() const
 {
-    return hpx::make_ready_future(runtime_->get_local_object_factory().get());
+    auto runtime = runtime_.lock();
+
+    QUBUS_ASSERT(runtime, "The referenced local runtime is invalid.");
+
+    return hpx::make_ready_future(runtime->get_local_object_factory().get());
 }
 
 std::unique_ptr<remote_vpu_reference> local_runtime_reference_server::get_local_vpu() const
 {
+    auto runtime = runtime_.lock();
+
+    QUBUS_ASSERT(runtime, "The referenced local runtime is invalid.");
+
     return std::make_unique<remote_vpu_reference>(
-        new_here<remote_vpu_reference_server>(&runtime_->get_local_vpu()));
+        hpx::local_new<remote_vpu_reference>(&runtime->get_local_vpu()));
 }
 
 local_runtime_reference::local_runtime_reference(hpx::future<hpx::id_type>&& id)
@@ -376,8 +391,10 @@ local_runtime_reference::local_runtime_reference(hpx::future<hpx::id_type>&& id)
 
 local_object_factory local_runtime_reference::get_local_object_factory() const
 {
+    // FIXME: Reevaluate the impact of the manual unwrapping of the future.
     return hpx::async<local_runtime_reference_server::get_local_object_factory_action>(
-        this->get_id());
+               this->get_id())
+        .get();
 }
 
 std::unique_ptr<remote_vpu_reference> local_runtime_reference::get_local_vpu() const
@@ -385,14 +402,17 @@ std::unique_ptr<remote_vpu_reference> local_runtime_reference::get_local_vpu() c
     return hpx::async<local_runtime_reference_server::get_local_vpu_action>(this->get_id()).get();
 }
 
-local_runtime& init_local_runtime(std::unique_ptr<virtual_address_space> global_addr_space)
+std::weak_ptr<local_runtime>
+init_local_runtime(std::unique_ptr<virtual_address_space> global_addr_space,
+                   module_library mod_library)
 {
     if (local_qubus_runtime)
         throw 0;
 
-    local_qubus_runtime = std::make_unique<local_runtime>(std::move(global_addr_space));
+    local_qubus_runtime =
+        std::make_shared<local_runtime>(std::move(global_addr_space), std::move(mod_library));
 
-    return *local_qubus_runtime;
+    return local_qubus_runtime;
 }
 
 void shutdown_local_runtime()
@@ -408,12 +428,14 @@ local_runtime& get_local_runtime()
 }
 
 hpx::future<hpx::id_type>
-init_local_runtime_remote(virtual_address_space_wrapper::client global_addr_space)
+init_local_runtime_remote(virtual_address_space_wrapper::client global_addr_space,
+                          module_library mod_library)
 {
     auto copy =
         std::make_unique<virtual_address_space_wrapper::client>(std::move(global_addr_space));
 
-    return new_here<local_runtime_reference_server>(&init_local_runtime(std::move(copy)));
+    return hpx::local_new<local_runtime_reference_server>(
+        init_local_runtime(std::move(copy), std::move(mod_library)));
 }
 
 void shutdown_local_runtime_remote()
@@ -423,7 +445,7 @@ void shutdown_local_runtime_remote()
 
 hpx::future<hpx::id_type> get_local_runtime_remote()
 {
-    return new_here<local_runtime_reference_server>(&get_local_runtime());
+    return hpx::local_new<local_runtime_reference_server>(local_qubus_runtime);
 }
 
 HPX_DEFINE_PLAIN_ACTION(init_local_runtime_remote, init_local_runtime_remote_action);
@@ -432,9 +454,13 @@ HPX_DEFINE_PLAIN_ACTION(get_local_runtime_remote, get_local_runtime_remote_actio
 
 local_runtime_reference
 init_local_runtime_on_locality(const hpx::id_type& locality,
-                               virtual_address_space_wrapper::client superior_addr_space)
+                               virtual_address_space_wrapper::client superior_addr_space,
+                               module_library mod_library)
 {
-    return hpx::async<init_local_runtime_remote_action>(locality, std::move(superior_addr_space));
+    // FIXME: Reevaluate the impact of the manual unwrapping of the future.
+    return hpx::async<init_local_runtime_remote_action>(locality, std::move(superior_addr_space),
+                                                        std::move(mod_library))
+        .get();
 }
 
 void shutdown_local_runtime_on_locality(const hpx::id_type& locality)
@@ -444,9 +470,10 @@ void shutdown_local_runtime_on_locality(const hpx::id_type& locality)
 
 local_runtime_reference get_local_runtime_on_locality(const hpx::id_type& locality)
 {
-    return hpx::async<get_local_runtime_remote_action>(locality);
+    // FIXME: Reevaluate the impact of the manual unwrapping of the future.
+    return hpx::async<get_local_runtime_remote_action>(locality).get();
 }
-}
+} // namespace qubus
 
 HPX_REGISTER_ACTION(qubus::init_local_runtime_remote_action,
                     QUBUS_init_local_runtime_remote_action);

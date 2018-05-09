@@ -13,6 +13,7 @@
 
 #include <hpx/include/lcos.hpp>
 #include <hpx/include/local_lcos.hpp>
+#include <hpx/runtime/threads/executors/pool_executor.hpp>
 
 #include <exception>
 #include <functional>
@@ -41,6 +42,10 @@ public:
 
         explicit operator bool() const;
 
+        bool unique() const;
+
+        void free();
+
     private:
         std::shared_ptr<address_entry> entry_;
     };
@@ -49,7 +54,6 @@ public:
     {
     public:
         explicit address_entry(std::unique_ptr<memory_block> data_);
-        address_entry(std::unique_ptr<memory_block> data_, std::vector<handle> referenced_pages_);
 
         address_entry(const address_entry&) = delete;
         address_entry& operator=(const address_entry&) = delete;
@@ -58,35 +62,34 @@ public:
         address_entry& operator=(address_entry&& other) = default;
 
         memory_block& data() const;
-        const std::vector<handle>& referenced_pages() const;
 
     private:
         std::unique_ptr<memory_block> data_;
-        std::vector<handle> referenced_pages_;
     };
 
     class page_fault_context
     {
     public:
-        page_fault_context(allocator& allocator_, address_space& addr_space_);
+        explicit page_fault_context(address_space& addr_space_);
 
-        hpx::future<address_entry> allocate_page(const object& obj, long int size,
-                                                 long int alignment);
+        handle allocate_page(long int size, long int alignment);
 
     private:
-        allocator* allocator_;
         address_space* addr_space_;
     };
 
-    explicit address_space(std::unique_ptr<allocator> allocator_);
+    address_space(std::unique_ptr<allocator> allocator_,
+                  hpx::threads::executors::pool_executor& service_executor_);
 
-    handle allocate_object_page(const object& obj, long int size, long int alignment);
+    handle allocate_page(long int size, long int alignment);
+    void register_page(const object& obj, handle page);
+
     void free_object(const object& obj);
     hpx::future<handle> resolve_object(const object& obj);
     handle try_resolve_object(const object& obj) const;
 
     void on_page_fault(
-        std::function<hpx::future<address_entry>(const object& obj, page_fault_context)> callback);
+        std::function<hpx::future<handle>(const object& obj, page_fault_context)> callback);
 
     void dump() const;
 
@@ -95,12 +98,12 @@ private:
 
     std::unique_ptr<allocator> allocator_;
 
-    mutable util::dense_hash_map<hpx::naming::gid_type,
-                                 hpx::shared_future<std::shared_ptr<address_entry>>>
-        entry_table_;
+    mutable util::dense_hash_map<hpx::naming::gid_type, hpx::shared_future<handle>> entry_table_;
     mutable hpx::lcos::local::spinlock address_translation_table_mutex_;
 
-    util::delegate<hpx::future<address_entry>(const object&, page_fault_context)> on_page_fault_;
+    util::delegate<hpx::future<handle>(const object&, page_fault_context)> on_page_fault_;
+
+    hpx::threads::executors::pool_executor* service_executor_;
 };
 
 using host_address_space = address_space;
@@ -119,8 +122,7 @@ public:
     public:
         explicit page_fault_context(host_address_space::page_fault_context host_ctx_);
 
-        hpx::future<address_entry> allocate_page(const object& obj, long int size,
-                                                 long int alignment);
+        handle allocate_page(long int size, long int alignment);
 
     private:
         host_address_space::page_fault_context host_ctx_;
@@ -128,19 +130,23 @@ public:
 
     explicit local_address_space(host_address_space& host_addr_space_);
 
-    handle allocate_object_page(const object& obj, long int size, long int alignment);
+    handle allocate_page(long int size, long int alignment);
+    void register_page(const object& obj, handle page);
+
     void free_object(const object& obj);
     hpx::future<handle> resolve_object(const object& obj);
     handle try_resolve_object(const object& obj) const;
 
-    void on_page_fault(
-        std::function<hpx::future<address_entry>(const object&, page_fault_context)> callback);
+    void
+    on_page_fault(std::function<hpx::future<handle>(const object&, page_fault_context)> callback);
+
+    host_address_space& host_addr_space();
 
 private:
     std::reference_wrapper<host_address_space> host_addr_space_;
 
-    util::delegate<hpx::future<address_entry>(const object&, page_fault_context)> on_page_fault_;
+    util::delegate<hpx::future<handle>(const object&, page_fault_context)> on_page_fault_;
 };
-}
+} // namespace qubus
 
 #endif

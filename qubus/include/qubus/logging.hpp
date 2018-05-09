@@ -21,7 +21,7 @@ enum severity_level
 
 std::ostream& operator<<(std::ostream& strm, severity_level level);
 
-using logger = boost::log::sources::severity_logger<severity_level>;
+using logger = boost::log::sources::severity_logger_mt<severity_level>;
 
 void init_logging();
 void finalize_logging();

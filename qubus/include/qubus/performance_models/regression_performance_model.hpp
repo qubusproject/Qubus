@@ -8,19 +8,21 @@
 namespace qubus
 {
 
+class address_space;
+
 class regression_performance_model_impl;
 
 class regression_performance_model final : public performance_model
 {
 public:
-    regression_performance_model();
+    explicit regression_performance_model(address_space& host_addr_space_);
     virtual ~regression_performance_model();
 
-    void sample_execution_time(const computelet& c, const execution_context& ctx,
+    void sample_execution_time(const symbol_id& func, const execution_context& ctx,
                                std::chrono::microseconds execution_time) override;
 
     boost::optional<performance_estimate>
-    try_estimate_execution_time(const computelet& c, const execution_context& ctx) const override;
+    try_estimate_execution_time(const symbol_id& func, const execution_context& ctx) const override;
 private:
     std::unique_ptr<regression_performance_model_impl> impl_;
 };

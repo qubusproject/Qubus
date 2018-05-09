@@ -158,7 +158,7 @@ TEST(scalar_support, decrement)
     }
 }
 
-qubus::foreign_kernel<const qubus::scalar<double>, qubus::scalar<double>>
+/*qubus::foreign_kernel<const qubus::scalar<double>, qubus::scalar<double>>
     kernel_with_scalar_param("kernel_with_scalar_param");
 
 void kernel_with_scalar_param_host(qubus::host_scalar_view<const double> alpha,
@@ -182,7 +182,7 @@ TEST(scalar_support, foreign_kernel_with_scalar_param)
     auto pi_value = get_view<host_scalar_view<const double>>(pi).get().get();
 
     EXPECT_EQ(pi_value, 3.1415926);
-}
+}*/
 
 int hpx_main(int argc, char** argv)
 {
@@ -201,5 +201,10 @@ int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
 
-    return hpx::init(argc, argv, qubus::get_hpx_config());
+    hpx::resource::partitioner rp(argc, argv, qubus::get_hpx_config(),
+                                  hpx::resource::partitioner_mode::mode_allow_oversubscription);
+
+    qubus::setup(rp);
+
+    return hpx::init();
 }

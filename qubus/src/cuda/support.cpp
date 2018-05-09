@@ -77,7 +77,7 @@ void future_data::stream_callback(CUstream QUBUS_UNUSED(stream), CUresult status
 
             if (status != CUDA_SUCCESS)
             {
-                this_->set_exception(boost::copy_exception(cuda_error(status)));
+                this_->set_exception(std::make_exception_ptr(cuda_error(status)));
             }
 
             this_->set_data(hpx::util::unused);

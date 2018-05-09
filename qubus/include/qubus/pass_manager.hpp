@@ -2,7 +2,7 @@
 #define QUBUS_PASS_MANAGER_HPP
 
 #include <qubus/IR/expression.hpp>
-#include <qubus/IR/function_declaration.hpp>
+#include <qubus/IR/function.hpp>
 
 #include <qubus/isl/context.hpp>
 
@@ -353,7 +353,7 @@ public:
     {
     }
 
-    preserved_analyses_info run(function_declaration& fun, analysis_manager& manager) const
+    preserved_analyses_info run(function& fun, analysis_manager& manager) const
     {
         return self_->run(fun, manager);
     }
@@ -371,7 +371,7 @@ private:
         transformation_pass_interface& operator=(const transformation_pass_interface&) = delete;
         transformation_pass_interface& operator=(transformation_pass_interface&&) = delete;
 
-        virtual preserved_analyses_info run(function_declaration& fun,
+        virtual preserved_analyses_info run(function& fun,
                                             analysis_manager& manager) const = 0;
     };
 
@@ -386,7 +386,7 @@ private:
         {
         }
 
-        preserved_analyses_info run(function_declaration& fun,
+        preserved_analyses_info run(function& fun,
                                     analysis_manager& manager) const override
         {
             return transformation_.run(fun, manager);
@@ -410,7 +410,7 @@ public:
         optimization_pipeline_.emplace_back(std::move(transformation));
     }
 
-    preserved_analyses_info run(function_declaration& fun);
+    preserved_analyses_info run(function& fun);
 private:
     pass_resource_manager resource_manager_;
     analysis_manager analysis_man_;

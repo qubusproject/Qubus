@@ -1,5 +1,6 @@
 #include <qubus/qtl/object_extraction_pass.hpp>
 
+#include <qubus/IR/unique_variable_generator.hpp>
 #include <qubus/qtl/pattern/object.hpp>
 
 #include <qubus/pattern/matcher.hpp>
@@ -18,6 +19,8 @@ extract_objects(const expression& expr,
 {
     ::qubus::pattern::variable<object> object;
 
+    unique_variable_generator var_gen;
+
     auto m = ::qubus::pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
         pattern::obj(object), [&] {
             auto search_result =
@@ -28,7 +31,7 @@ extract_objects(const expression& expr,
             {
                 auto type = object.get().object_type();
 
-                variable_declaration variable(std::move(type));
+                variable_declaration variable = var_gen.create_new_variable(std::move(type), "obj");
 
                 parameter_map.push_back(std::make_tuple(variable, object.get()));
 

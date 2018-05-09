@@ -15,7 +15,7 @@
 namespace qubus
 {
 
-class double_literal_expr : public expression_base<double_literal_expr>
+class double_literal_expr final : public expression_base<double_literal_expr>
 {
 
 public:
@@ -34,14 +34,6 @@ public:
 
     std::unique_ptr<expression> substitute_subexpressions(
         std::vector<std::unique_ptr<expression>> new_children) const override final;
-
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar& value_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(double_literal_expr);
 
 private:
     double value_;
@@ -62,7 +54,7 @@ inline std::unique_ptr<double_literal_expr> lit(double value)
     return double_literal(value);
 }
 
-class float_literal_expr : public expression_base<float_literal_expr>
+class float_literal_expr final : public expression_base<float_literal_expr>
 {
 
 public:
@@ -81,14 +73,6 @@ public:
 
     std::unique_ptr<expression> substitute_subexpressions(
         std::vector<std::unique_ptr<expression>> new_children) const override final;
-
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar& value_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(float_literal_expr);
 
 private:
     float value_;
@@ -109,7 +93,7 @@ inline std::unique_ptr<float_literal_expr> lit(float value)
     return float_literal(value);
 }
 
-class integer_literal_expr : public expression_base<integer_literal_expr>
+class integer_literal_expr final : public expression_base<integer_literal_expr>
 {
 
 public:
@@ -129,14 +113,6 @@ public:
     std::unique_ptr<expression> substitute_subexpressions(
         std::vector<std::unique_ptr<expression>> new_children) const override final;
 
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar& value_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(integer_literal_expr);
-
 private:
     util::index_t value_;
 };
@@ -149,6 +125,21 @@ inline std::unique_ptr<integer_literal_expr> integer_literal(util::index_t value
     return std::make_unique<integer_literal_expr>(value);
 }
 
+inline std::unique_ptr<integer_literal_expr> lit(short value)
+{
+    return integer_literal(value);
+}
+
+inline std::unique_ptr<integer_literal_expr> lit(int value)
+{
+    return integer_literal(value);
+}
+
+inline std::unique_ptr<integer_literal_expr> lit(util::index_t value)
+{
+    return integer_literal(value);
+}
+
 template <typename Integral>
 typename std::enable_if<std::is_integral<Integral>::value,
                         std::unique_ptr<integer_literal_expr>>::type
@@ -156,6 +147,48 @@ lit(Integral value)
 {
     return integer_literal(value);
 }
+
+class bool_literal_expr final : public expression_base<bool_literal_expr>
+{
+
+public:
+    bool_literal_expr() = default;
+    explicit bool_literal_expr(bool value_);
+
+    virtual ~bool_literal_expr() = default;
+
+    bool value() const;
+
+    bool_literal_expr* clone() const override final;
+
+    const expression& child(std::size_t index) const override final;
+
+    std::size_t arity() const override final;
+
+    std::unique_ptr<expression> substitute_subexpressions(
+            std::vector<std::unique_ptr<expression>> new_children) const override final;
+
+private:
+    bool value_;
+
+    mutable annotation_map annotations_;
+};
+
+bool operator==(const bool_literal_expr& lhs, const bool_literal_expr& rhs);
+bool operator!=(const bool_literal_expr& lhs, const bool_literal_expr& rhs);
+
+inline std::unique_ptr<bool_literal_expr> bool_literal(bool value)
+{
+    return std::make_unique<bool_literal_expr>(value);
+}
+
+inline std::unique_ptr<bool_literal_expr> lit(bool value)
+{
+    return bool_literal(value);
+}
+
+template <typename T>
+std::unique_ptr<expression> lit(T&) = delete;
 }
 
 #endif

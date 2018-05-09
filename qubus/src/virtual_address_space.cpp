@@ -7,14 +7,10 @@ HPX_REGISTER_COMPONENT(hpx::components::component<qubus::virtual_address_space_w
                        qubus_virtual_address_space_wrapper);
 
 using resolve_object_action = qubus::virtual_address_space_wrapper::resolve_object_action;
-HPX_REGISTER_ACTION_DECLARATION(resolve_object_action,
-                                qubus_virtual_address_space_wrapper_resolve_object_action);
 HPX_REGISTER_ACTION(resolve_object_action,
                     qubus_virtual_address_space_wrapper_resolve_object_action);
 
 using try_resolve_object_action = qubus::virtual_address_space_wrapper::try_resolve_object_action;
-HPX_REGISTER_ACTION_DECLARATION(try_resolve_object_action,
-                                qubus_virtual_address_space_wrapper_try_resolve_object_action);
 HPX_REGISTER_ACTION(try_resolve_object_action,
                     qubus_virtual_address_space_wrapper_try_resolve_object_action);
 

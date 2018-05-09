@@ -6,9 +6,6 @@
 #include <qubus/IR/expression.hpp>
 #include <qubus/util/unused.hpp>
 
-#include <hpx/runtime/serialization/string.hpp>
-#include <hpx/runtime/serialization/vector.hpp>
-
 #include <boost/range/adaptor/indirected.hpp>
 
 #include <string>
@@ -17,7 +14,7 @@
 namespace qubus
 {
 
-class intrinsic_function_expr : public expression_base<intrinsic_function_expr>
+class intrinsic_function_expr final : public expression_base<intrinsic_function_expr>
 {
 public:
     intrinsic_function_expr() = default;
@@ -41,14 +38,6 @@ public:
     std::unique_ptr<expression> substitute_subexpressions(
             std::vector<std::unique_ptr<expression>> new_children) const override final;
 
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar & name_;
-        ar & args_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(intrinsic_function_expr);
 private:
     std::string name_;
     std::vector<std::unique_ptr<expression>> args_;

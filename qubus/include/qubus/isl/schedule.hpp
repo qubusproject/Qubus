@@ -3,7 +3,6 @@
 
 #include <qubus/isl/set.hpp>
 #include <qubus/isl/map.hpp>
-#include <qubus/isl/band.hpp>
 #include <qubus/isl/schedule_node.hpp>
 
 #include <isl/schedule.h>
@@ -58,8 +57,6 @@ public:
     
     union_map get_map() const;
     union_set get_domain() const;
-
-    std::vector<band> get_band_forest() const;
 
     isl_schedule* native_handle() const;
     isl_schedule* release() noexcept;

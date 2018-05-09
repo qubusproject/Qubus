@@ -5,12 +5,13 @@
 
 #include <qubus/abi_info.hpp>
 #include <qubus/local_address_space.hpp>
+#include <qubus/module_library.hpp>
 #include <qubus/performance_models/unified_performance_model.hpp>
 
 #include <qubus/host_allocator.hpp>
 
-#include <qubus/backends/cpu/cpu_compiler.hpp>
 #include <qubus/backends/cpu/cpu_allocator.hpp>
+#include <qubus/backends/cpu/cpu_compiler.hpp>
 
 #include <qubus/IR/qir.hpp>
 #include <qubus/pattern/IR.hpp>
@@ -26,8 +27,6 @@
 
 #include <hpx/include/lcos.hpp>
 #include <hpx/include/threads.hpp>
-
-#include <qubus/hpx_utils.hpp>
 
 #include <boost/optional.hpp>
 #include <boost/signals2.hpp>
@@ -77,14 +76,13 @@ private:
     char* current_stack_ptr_;
 };
 
-extern "C" QUBUS_EXPORT void* QUBUS_cpurt_alloc_scatch_mem(cpu_runtime* runtime,
-                                                                   util::index_t size)
+extern "C" QUBUS_EXPORT void* QUBUS_cpurt_alloc_scatch_mem(cpu_runtime* runtime, util::index_t size)
 {
     return runtime->alloc_scratch_mem(size);
 }
 
 extern "C" QUBUS_EXPORT void QUBUS_cpurt_dealloc_scratch_mem(cpu_runtime* runtime,
-                                                                     util::index_t size)
+                                                             util::index_t size)
 {
     runtime->dealloc_scratch_mem(size);
 }
@@ -92,11 +90,18 @@ extern "C" QUBUS_EXPORT void QUBUS_cpurt_dealloc_scratch_mem(cpu_runtime* runtim
 class caching_cpu_comiler
 {
 public:
-    const cpu_plan& compile(const computelet& c) const
+    explicit caching_cpu_comiler(module_library mod_library_)
+    : mod_library_(std::move(mod_library_))
     {
+    }
+
+    const cpu_plan& compile(const symbol_id& func) const
+    {
+        auto module_id = func.get_prefix();
+
         std::unique_lock<hpx::lcos::local::mutex> guard(cache_mutex_);
 
-        auto pos = compilation_cache_.find(c.get_id().get_gid());
+        auto pos = compilation_cache_.find(module_id);
 
         if (pos != compilation_cache_.end())
         {
@@ -106,86 +111,89 @@ public:
         {
             hpx::threads::executors::default_executor executor(hpx::threads::thread_stacksize_huge);
 
-            auto compilation = hpx::async(executor, [&c, this] {
-                                   return underlying_compiler_.compile_computelet(c.code().get());
-                               }).get();
+            auto compilation =
+                hpx::async(executor,
+                           [module_id, this] {
+                               auto code = mod_library_.lookup(module_id).get();
 
-            pos = compilation_cache_.emplace(c.get_id().get_gid(), std::move(compilation)).first;
+                               return underlying_compiler_.compile_computelet(std::move(code));
+                           })
+                    .get();
+
+            pos = compilation_cache_.emplace(module_id, std::move(compilation)).first;
 
             return *pos->second;
         }
     }
 
 private:
+    module_library mod_library_;
     mutable cpu_compiler underlying_compiler_; // FIXME: Make the cpmpiler non-mutable.
-    mutable std::unordered_map<hpx::naming::gid_type, std::unique_ptr<cpu_plan>> compilation_cache_;
+    mutable std::unordered_map<symbol_id, std::unique_ptr<cpu_plan>> compilation_cache_;
     mutable hpx::lcos::local::mutex cache_mutex_;
 };
 
 class cpu_vpu : public vpu
 {
 public:
-    cpu_vpu(host_address_space& address_space_, abi_info abi_)
-    : address_space_(&address_space_), abi_(std::move(abi_))
+    cpu_vpu(host_address_space& address_space_, abi_info abi_, module_library mod_library_)
+    : compiler_(mod_library_),
+      address_space_(&address_space_),
+      abi_(std::move(abi_)),
+      perf_model_(mod_library_, address_space_)
     {
     }
 
     virtual ~cpu_vpu() = default;
 
-    hpx::future<void> execute(computelet c, execution_context ctx) override
-    {
-        const auto& compilation = compiler_.compile(c);
+    [[nodiscard]] hpx::future<void> execute(const symbol_id& func, execution_context ctx) override {
+        const auto& compilation = compiler_.compile(func);
 
-        auto deps_ready = ctx.when_ready();
+        hpx::future<void> task_done = hpx::async([this, &compilation, func, ctx]() mutable {
+            auto task_start = std::chrono::steady_clock::now();
 
-        hpx::future<void> task_done = hpx::dataflow(
-            [this, &compilation, c, ctx](hpx::future<void> deps_ready) mutable {
-                deps_ready.get();
+            std::vector<void*> task_args;
 
-                auto task_start = std::chrono::steady_clock::now();
+            std::vector<host_address_space::handle> pages;
 
-                std::vector<void*> task_args;
+            for (const auto& arg : ctx.args())
+            {
+                auto page = address_space_->resolve_object(arg).get();
 
-                std::vector<host_address_space::handle> pages;
+                task_args.push_back(page.data().ptr());
 
-                for (const auto& arg : ctx.args())
-                {
-                    auto page = address_space_->resolve_object(arg).get();
+                pages.push_back(std::move(page));
+            }
 
-                    task_args.push_back(page.data().ptr());
+            for (const auto& result : ctx.results())
+            {
+                auto page = address_space_->resolve_object(result).get();
 
-                    pages.push_back(std::move(page));
-                }
+                task_args.push_back(page.data().ptr());
 
-                for (const auto& result : ctx.results())
-                {
-                    auto page = address_space_->resolve_object(result).get();
+                pages.push_back(std::move(page));
+            }
 
-                    task_args.push_back(page.data().ptr());
+            cpu_runtime runtime;
 
-                    pages.push_back(std::move(page));
-                }
+            compilation.execute(func, task_args, runtime);
 
-                cpu_runtime runtime;
+            auto task_end = std::chrono::steady_clock::now();
 
-                compilation.execute(task_args, runtime);
+            auto task_duration =
+                std::chrono::duration_cast<std::chrono::microseconds>(task_end - task_start);
 
-                auto task_end = std::chrono::steady_clock::now();
-
-                auto task_duration =
-                    std::chrono::duration_cast<std::chrono::microseconds>(task_end - task_start);
-
-                perf_model_.sample_execution_time(c, ctx, std::move(task_duration));
-            },
-            std::move(deps_ready));
+            perf_model_.sample_execution_time(func, ctx, std::move(task_duration));
+        });
 
         return task_done;
     }
 
-    hpx::future<boost::optional<performance_estimate>>
-    try_estimate_execution_time(const computelet& c, const execution_context& ctx) const override
+        [[nodiscard]] hpx::
+            future<boost::optional<performance_estimate>> try_estimate_execution_time(
+                const symbol_id& func, const execution_context& ctx) const override
     {
-        auto estimate = perf_model_.try_estimate_execution_time(c, ctx);
+        auto estimate = perf_model_.try_estimate_execution_time(func, ctx);
 
         return hpx::make_ready_future(std::move(estimate));
     }
@@ -201,9 +209,10 @@ private:
 class cpu_backend final : public host_backend
 {
 public:
-    cpu_backend(const abi_info& abi_)
+    cpu_backend(const abi_info& abi_, module_library mod_library_, hpx::threads::executors::pool_executor& service_executor_)
     : abi_(&abi_),
-      address_space_(std::make_unique<host_address_space>(std::make_unique<host_allocator>()))
+      address_space_(std::make_unique<host_address_space>(std::make_unique<host_allocator>(), service_executor_)),
+      mod_library_(std::move(mod_library_))
     {
         // use hwloc to obtain informations over all local CPUs
     }
@@ -219,7 +228,7 @@ public:
     {
         std::vector<std::unique_ptr<vpu>> vpus;
 
-        vpus.push_back(std::make_unique<cpu_vpu>(*address_space_, *abi_));
+        vpus.push_back(std::make_unique<cpu_vpu>(*address_space_, *abi_, mod_library_));
 
         return vpus;
     }
@@ -232,6 +241,7 @@ public:
 private:
     const abi_info* abi_;
     std::unique_ptr<host_address_space> address_space_;
+    module_library mod_library_;
 };
 
 extern "C" QUBUS_EXPORT unsigned int cpu_backend_get_backend_type()
@@ -247,11 +257,14 @@ extern "C" QUBUS_EXPORT unsigned long int cpu_backend_get_api_version()
 std::unique_ptr<cpu_backend> the_cpu_backend;
 std::once_flag cpu_backend_init_flag;
 
-extern "C" QUBUS_EXPORT host_backend* init_cpu_backend(const abi_info* abi)
+extern "C" QUBUS_EXPORT host_backend*
+init_cpu_backend(const abi_info* abi, module_library mod_library,
+                 hpx::threads::executors::pool_executor* service_executor)
 {
-    std::call_once(cpu_backend_init_flag,
-                   [&] { the_cpu_backend = util::make_unique<cpu_backend>(*abi); });
+    std::call_once(cpu_backend_init_flag, [&] {
+        the_cpu_backend = util::make_unique<cpu_backend>(*abi, std::move(mod_library), *service_executor);
+    });
 
     return the_cpu_backend.get();
 }
-}
+} // namespace qubus

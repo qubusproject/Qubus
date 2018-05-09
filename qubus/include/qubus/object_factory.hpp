@@ -73,6 +73,7 @@ public:
     using base_type = hpx::components::client_base<object_factory, object_factory_server>;
 
     object_factory() = default;
+    object_factory(hpx::id_type&& id);
     object_factory(hpx::future<hpx::id_type>&& id);
 
     object create_scalar(type data_type);

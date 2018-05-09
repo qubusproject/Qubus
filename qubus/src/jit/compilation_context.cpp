@@ -71,23 +71,6 @@ const std::map<util::handle, reference>& compilation_context::symbol_table() con
     return symbol_table_;
 }
 
-boost::optional<function_declaration> compilation_context::get_next_plan_to_compile()
-{
-    if (plans_to_compile_.empty())
-        return boost::none;
-
-    auto next_plan_to_compile = plans_to_compile_.back();
-
-    plans_to_compile_.pop_back();
-
-    return next_plan_to_compile;
-}
-
-void compilation_context::add_plan_to_compile(function_declaration fn)
-{
-    plans_to_compile_.push_back(std::move(fn));
-}
-
 scope& compilation_context::enter_new_scope()
 {
     scopes_.emplace_back();
@@ -97,16 +80,22 @@ scope& compilation_context::enter_new_scope()
 
 scope& compilation_context::get_current_scope()
 {
+    QUBUS_ASSERT(!scopes_.empty(), "Expecting a scope to be available.");
+
     return scopes_.back();
 }
 
 const scope& compilation_context::get_current_scope() const
 {
+    QUBUS_ASSERT(!scopes_.empty(), "Expecting a scope to be available.");
+
     return scopes_.back();
 }
 
 void compilation_context::exit_current_scope()
 {
+    QUBUS_ASSERT(!scopes_.empty(), "Expecting a scope to be available.");
+
     scopes_.pop_back();
 }
 

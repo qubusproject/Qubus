@@ -1,0 +1,9 @@
+module Foo
+
+struct Bar
+    a :: Array{1, 2}
+end
+
+function foo(A :: Array{Double, Int}, b :: Array{Double, Float}) -> r :: Array{Double, 1}
+end
+

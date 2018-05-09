@@ -19,7 +19,7 @@ namespace qubus
 namespace qtl
 {
 
-class sum_expr : public expression_base<sum_expr>
+class sum_expr final : public expression_base<sum_expr>
 {
 public:
     sum_expr() = default;
@@ -44,16 +44,6 @@ public:
 
     std::unique_ptr<expression> substitute_subexpressions(
         std::vector<std::unique_ptr<expression>> new_children) const override final;
-
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar& body_;
-        ar& contraction_indices_;
-        ar& alias_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(sum_expr);
 
 private:
     std::unique_ptr<expression> body_;

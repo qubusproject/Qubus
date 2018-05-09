@@ -1,0 +1,8 @@
+module test
+
+function think_deep() -> r :: Int
+    for i :: Int in 0:43
+    end
+
+    r = i
+end

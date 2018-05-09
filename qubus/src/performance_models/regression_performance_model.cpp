@@ -1,3 +1,5 @@
+#include <hpx/config.hpp>
+
 #include <qubus/performance_models/regression_performance_model.hpp>
 
 #include <qubus/performance_models/symbolic_regression.hpp>
@@ -113,7 +115,8 @@ std::vector<hpx::naming::gid_type> generate_key_from_ctx(const execution_context
     return key;
 }
 
-std::vector<double> extract_arguments_from_ctx(const execution_context& ctx)
+std::vector<double> extract_arguments_from_ctx(const execution_context& ctx,
+                                               address_space& host_addr_space)
 {
     std::vector<double> arguments;
     arguments.reserve(ctx.args().size());
@@ -124,19 +127,20 @@ std::vector<double> extract_arguments_from_ctx(const execution_context& ctx)
 
         if (datatype == types::integer{})
         {
-            auto view = get_view_for_locked_object<host_scalar_view<util::index_t>>(obj).get();
+            auto view =
+                get_view_for_locked_object<host_scalar_view<util::index_t>>(obj, host_addr_space).get();
 
             arguments.push_back(view.get());
         }
         else if (datatype == types::double_{})
         {
-            auto view = get_view_for_locked_object<host_scalar_view<double>>(obj).get();
+            auto view = get_view_for_locked_object<host_scalar_view<double>>(obj, host_addr_space).get();
 
             arguments.push_back(view.get());
         }
         else if (datatype == types::float_{})
         {
-            auto view = get_view_for_locked_object<host_scalar_view<float>>(obj).get();
+            auto view = get_view_for_locked_object<host_scalar_view<float>>(obj, host_addr_space).get();
 
             arguments.push_back(view.get());
         }
@@ -144,18 +148,23 @@ std::vector<double> extract_arguments_from_ctx(const execution_context& ctx)
 
     return arguments;
 }
-}
+} // namespace
 
 class regression_performance_model_impl
 {
 public:
-    void sample_execution_time(const computelet& QUBUS_UNUSED(c), const execution_context& ctx,
+    explicit regression_performance_model_impl(address_space& host_addr_space_)
+    : host_addr_space_(&host_addr_space_)
+    {
+    }
+
+    void sample_execution_time(const symbol_id& QUBUS_UNUSED(func), const execution_context& ctx,
                                std::chrono::microseconds execution_time)
     {
         std::lock_guard<hpx::lcos::local::mutex> guard(regression_analyses_mutex_);
 
         auto key = generate_key_from_ctx(ctx);
-        auto arguments = extract_arguments_from_ctx(ctx);
+        auto arguments = extract_arguments_from_ctx(ctx, *host_addr_space_);
 
         auto search_result = regression_analyses_.find(key);
 
@@ -168,7 +177,8 @@ public:
     }
 
     boost::optional<performance_estimate>
-    try_estimate_execution_time(const computelet& QUBUS_UNUSED(c), const execution_context& ctx) const
+    try_estimate_execution_time(const symbol_id& QUBUS_UNUSED(func),
+                                const execution_context& ctx) const
     {
         std::lock_guard<hpx::lcos::local::mutex> guard(regression_analyses_mutex_);
 
@@ -178,7 +188,7 @@ public:
 
         if (search_result != regression_analyses_.end())
         {
-            auto arguments = extract_arguments_from_ctx(ctx);
+            auto arguments = extract_arguments_from_ctx(ctx, *host_addr_space_);
 
             auto query_result = search_result->second.query(arguments);
             auto accuracy_result = search_result->second.accuracy();
@@ -199,32 +209,34 @@ public:
     }
 
 private:
+    address_space* host_addr_space_;
+
     mutable hpx::lcos::local::mutex regression_analyses_mutex_;
     std::map<std::vector<hpx::naming::gid_type>, regression_analysis> regression_analyses_;
 };
 
-regression_performance_model::regression_performance_model()
-: impl_(std::make_unique<regression_performance_model_impl>())
+regression_performance_model::regression_performance_model(address_space& host_addr_space_)
+: impl_(std::make_unique<regression_performance_model_impl>(host_addr_space_))
 {
 }
 
 regression_performance_model::~regression_performance_model() = default;
 
-void regression_performance_model::sample_execution_time(const computelet& c,
+void regression_performance_model::sample_execution_time(const symbol_id& func,
                                                          const execution_context& ctx,
                                                          std::chrono::microseconds execution_time)
 {
     QUBUS_ASSERT(impl_, "Uninitialized object.");
 
-    impl_->sample_execution_time(c, ctx, std::move(execution_time));
+    impl_->sample_execution_time(func, ctx, std::move(execution_time));
 }
 
 boost::optional<performance_estimate>
-regression_performance_model::try_estimate_execution_time(const computelet& c,
+regression_performance_model::try_estimate_execution_time(const symbol_id& func,
                                                           const execution_context& ctx) const
 {
     QUBUS_ASSERT(impl_, "Uninitialized object.");
 
-    return impl_->try_estimate_execution_time(c, ctx);
+    return impl_->try_estimate_execution_time(func, ctx);
 }
-}
+} // namespace qubus

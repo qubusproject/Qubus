@@ -2,7 +2,7 @@
 #define QUBUS_JIT_COMPILER_HPP
 
 #include <qubus/IR/expression.hpp>
-#include <qubus/IR/function_declaration.hpp>
+#include <qubus/IR/module.hpp>
 
 #include <qubus/jit/compilation_context.hpp>
 #include <qubus/jit/llvm_environment.hpp>
@@ -21,9 +21,7 @@ namespace jit
 class module
 {
 public:
-    module(std::string namespace_, llvm::LLVMContext& llvm_ctx_);
-
-    const std::string& get_namespace() const;
+    explicit module(llvm::LLVMContext& llvm_ctx_);
 
     std::unique_ptr<llvm::Module> detach_module();
 
@@ -32,7 +30,6 @@ public:
 
     void finish();
 private:
-    std::string namespace_;
     llvm_environment env_;
     std::unique_ptr<compilation_context> ctx_;
 };
@@ -50,10 +47,12 @@ public:
     compiler& operator=(compiler&&) = delete;
 
     virtual reference compile(const expression& expr);
-    virtual void compile(const function_declaration& func);
+    virtual void compile(const function& func);
 
-    virtual llvm::Function* compile_entry_function(const function_declaration& func);
     virtual reference compile_root_skeleton(const expression& root_skel);
+
+    virtual std::string mangle_function_name(const symbol_id& func_name);
+    virtual std::string mangle_foreign_function_name(const symbol_id& func_name);
 
     void set_module(module& current_module);
     module& get_module();
@@ -66,7 +65,7 @@ private:
     module* current_module_;
 };
 
-std::unique_ptr<module> compile(const function_declaration& func, compiler& comp);
+std::unique_ptr<module> compile(std::unique_ptr<::qubus::module> mod, compiler& comp);
 
 }
 }

@@ -1,0 +1,10 @@
+module test
+
+function is_negative(x :: Double) -> r :: Bool
+    if (x < 0)
+        r = true
+    else
+        r = false
+    end
+end
+

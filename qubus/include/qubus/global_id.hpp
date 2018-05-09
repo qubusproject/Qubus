@@ -17,7 +17,8 @@ public:
 
     global_id() = default;
 
-    global_id(hpx::future <hpx::id_type> &&id);
+    global_id(hpx::id_type id);
+    global_id(hpx::future<hpx::id_type>&& id);
 };
 
 bool operator==(const global_id& lhs, const global_id& rhs);

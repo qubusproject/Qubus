@@ -14,7 +14,7 @@
 namespace qubus
 {
 
-class construct_expr : public expression_base<construct_expr>
+class construct_expr final : public expression_base<construct_expr>
 {
 public:
     construct_expr() = default;
@@ -38,14 +38,6 @@ public:
     std::unique_ptr<expression> substitute_subexpressions(
             std::vector<std::unique_ptr<expression>> new_children) const override final;
 
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar & result_type_;
-        ar & parameters_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(construct_expr);
 private:
     type result_type_;
     std::vector<std::unique_ptr<expression>> parameters_;

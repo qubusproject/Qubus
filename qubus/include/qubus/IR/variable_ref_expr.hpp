@@ -16,7 +16,7 @@
 namespace qubus
 {
     
-class variable_ref_expr : public access_expr_base<variable_ref_expr>
+class variable_ref_expr final : public access_expr_base<variable_ref_expr>
 {
 public:
     variable_ref_expr() = default;
@@ -35,13 +35,6 @@ public:
     std::unique_ptr<expression> substitute_subexpressions(
             std::vector<std::unique_ptr<expression>> new_children) const override final;
 
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar & declaration_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(variable_ref_expr);
 private:
     variable_declaration declaration_;
     

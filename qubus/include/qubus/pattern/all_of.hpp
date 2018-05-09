@@ -22,16 +22,14 @@ public:
     {
     }
 
-    template <typename Sequence>
-    bool match(const Sequence& sequence, const variable<std::vector<typename pattern_traits<Pattern>::template value_type<Sequence>>>* var = nullptr) const
+    template <typename Sequence, typename ResultType>
+    bool match(const Sequence& sequence, const variable<std::vector<ResultType>>* var) const
     {
-        using result_type = typename pattern_traits<Pattern>::template value_type<Sequence>;
-
-        std::vector<result_type> result;
+        std::vector<ResultType> result;
 
         for (const auto& value : sequence)
         {
-            variable<result_type> var;
+            variable<ResultType> var;
 
             if (!pattern_.match(value, &var))
                 return false;
@@ -44,6 +42,20 @@ public:
         if (var)
         {
             var->set(result);
+        }
+
+        return true;
+    }
+
+    template <typename Sequence>
+    bool match(const Sequence& sequence) const
+    {
+        for (const auto& value : sequence)
+        {
+            if (!pattern_.match(value))
+                return false;
+
+            pattern_.reset();
         }
 
         return true;

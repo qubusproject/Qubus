@@ -11,12 +11,10 @@
 
 #include <qubus/IR/compound_expr.hpp>
 
-#include <hpx/include/local_lcos.hpp>
-
 #include <boost/range/adaptor/reversed.hpp>
 
 #include <algorithm>
-#include <mutex>
+#include <atomic>
 
 namespace qubus
 {
@@ -25,8 +23,7 @@ namespace qtl
 
 namespace
 {
-hpx::lcos::local::mutex current_kernel_mutex;
-kernel* current_kernel = nullptr;
+std::atomic<kernel*> current_kernel{nullptr};
 }
 
 namespace this_kernel
@@ -34,22 +31,22 @@ namespace this_kernel
 
 void add_code(std::unique_ptr<expression> code)
 {
-    QUBUS_ASSERT(current_kernel, "add_code has to be called from a kernel definition.");
+    auto kernel = current_kernel.load();
 
-    current_kernel->add_code(std::move(code));
+    QUBUS_ASSERT(kernel, "add_code has to be called from a kernel definition.");
+
+    kernel->add_code(std::move(code));
 }
 
 void construct(kernel& new_kernel, std::function<void()> constructor)
 {
-    std::lock_guard<hpx::lcos::local::mutex> lock(current_kernel_mutex);
+    QUBUS_ASSERT(current_kernel.load() == nullptr, "Another kernel is currently constructed.");
 
-    QUBUS_ASSERT(current_kernel == nullptr, "Another kernel is currently constructed.");
-
-    current_kernel = &new_kernel;
+    current_kernel.store(&new_kernel);
 
     constructor();
 
-    current_kernel = nullptr;
+    current_kernel.store(nullptr);
 }
 }
 
@@ -76,7 +73,11 @@ void kernel::translate_kernel(std::vector<variable_declaration> params)
 
     auto root_task = sequenced_tasks(std::move(computations_));
 
-    auto entry = wrap_code_in_task(std::move(root_task));
+    auto mod = wrap_code_in_task(std::move(root_task));
+
+    const auto& entry = mod->lookup_function("entry");
+
+    code_ = symbol_id(entry.full_name());
 
     for (const auto& entry : parameter_map)
     {
@@ -101,7 +102,7 @@ void kernel::translate_kernel(std::vector<variable_declaration> params)
                  "Wrong number of arguments mappings.");
     QUBUS_ASSERT(mutable_argument_map_.size() == 1, "Wrong number of arguments mappings.");
 
-    code_ = make_computelet(std::move(entry));
+    get_runtime().get_module_library().add(std::move(mod)).get();
 }
 
 }

@@ -86,7 +86,7 @@ TEST(parametrized_kernel, vector_add)
     ASSERT_NEAR(error, 0.0, 1e-14);
 }
 
-TEST(parametrized_kernel, sparse_matrix_vector_product)
+TEST(parametrized_kernel, DISABLED_sparse_matrix_vector_product)
 {
     using namespace qubus;
     using namespace qtl;
@@ -264,5 +264,10 @@ int main(int argc, char** argv)
 {
     ::testing::InitGoogleTest(&argc, argv);
 
-    return hpx::init(argc, argv, qubus::get_hpx_config());
+    hpx::resource::partitioner rp(argc, argv, qubus::get_hpx_config(),
+                                  hpx::resource::partitioner_mode::mode_allow_oversubscription);
+
+    qubus::setup(rp);
+
+    return hpx::init();
 }

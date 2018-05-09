@@ -67,6 +67,11 @@ public:
     {
     }
 
+    ~tensor()
+    {
+        data_.finalize();
+    }
+
     template <typename... Indices>
     auto operator()(Indices... indices) const
     {

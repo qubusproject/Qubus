@@ -30,7 +30,7 @@ enum class binary_op_tag
     logical_or
 };
 
-class binary_operator_expr : public expression_base<binary_operator_expr>
+class binary_operator_expr final : public expression_base<binary_operator_expr>
 {
 public:
     binary_operator_expr();
@@ -52,16 +52,6 @@ public:
 
     std::unique_ptr<expression> substitute_subexpressions(
         std::vector<std::unique_ptr<expression>> new_children) const override final;
-
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar& tag_;
-        ar& left_;
-        ar& right_;
-    }
-
-    HPX_SERIALIZATION_POLYMORPHIC(binary_operator_expr);
 
 private:
     binary_op_tag tag_;
