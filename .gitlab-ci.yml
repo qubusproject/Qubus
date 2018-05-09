@@ -117,6 +117,7 @@ build:doc:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
   - ls -la
+  - ./install_ci_dependencies.sh
   - mkdir build
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
