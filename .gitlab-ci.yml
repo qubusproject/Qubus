@@ -152,6 +152,7 @@ deploy:doc:
 deploy:source_code:
   script:
   - "sudo chown -R `whoami`: ."
+  - ./install_ci_dependencies.sh
   - mkdir build
   - cd build
   - cmake -DCMAKE_BUILD_TYPE=Release -DHPX_IGNORE_COMPILER_COMPATIBILITY=ON ../
