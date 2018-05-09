@@ -8,12 +8,14 @@
 namespace qubus
 {
 
+class address_space;
+
 class regression_performance_model_impl;
 
 class regression_performance_model final : public performance_model
 {
 public:
-    regression_performance_model();
+    explicit regression_performance_model(address_space& host_addr_space_);
     virtual ~regression_performance_model();
 
     void sample_execution_time(const symbol_id& func, const execution_context& ctx,

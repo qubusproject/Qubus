@@ -149,11 +149,12 @@ void local_runtime::try_to_load_host_backend(const boost::filesystem::path& libr
                 return;
             }
 
-            using init_function_type = host_backend*(const abi_info*, module_library);
+            using init_function_type = host_backend*(const abi_info*, module_library,
+                                                     hpx::threads::executors::pool_executor*);
 
             auto& init_backend = backend_library.get<init_function_type>(init_func_name);
 
-            auto backend = init_backend(&abi_info_, mod_library);
+            auto backend = init_backend(&abi_info_, mod_library, &service_executor_);
 
             if (!backend)
             {
@@ -235,13 +236,15 @@ void local_runtime::try_to_load_backend(const boost::filesystem::path& library_p
             }
 
             using init_function_type =
-                backend*(const abi_info*, local_address_space*, module_library);
+                backend*(const abi_info*, local_address_space*, module_library,
+                         hpx::threads::executors::pool_executor*);
 
             auto& init_backend = backend_library.get<init_function_type>(init_func_name);
 
             QUBUS_ASSERT(address_space_, "Invalid address space");
 
-            auto backend = init_backend(&abi_info_, address_space_.get(), mod_library);
+            auto backend =
+                init_backend(&abi_info_, address_space_.get(), mod_library, &service_executor_);
 
             if (!backend)
             {
@@ -324,36 +327,34 @@ local_runtime::resolve_page_fault(const object& obj, local_address_space::page_f
 {
     auto instance = global_address_space_->resolve_object(obj);
 
-    auto page = instance.then(
-        get_local_runtime().get_service_executor(),
-        [this, obj, ctx](hpx::future<object_instance> instance) mutable {
-            auto instance_v = instance.get();
+    auto page = instance.then(get_local_runtime().get_service_executor(),
+                              [this, obj, ctx](hpx::future<object_instance> instance) mutable {
+                                  auto instance_v = instance.get();
 
-            if (!instance_v)
-                throw std::runtime_error("Page fault");
+                                  if (!instance_v)
+                                      throw std::runtime_error("Page fault");
 
-            const auto& obj_type = obj.object_type();
+                                  const auto& obj_type = obj.object_type();
 
-            auto size = obj.size();
-            auto alignment = obj.alignment();
+                                  auto size = obj.size();
+                                  auto alignment = obj.alignment();
 
-            auto page = ctx.allocate_page(size, alignment);
+                                  auto page = ctx.allocate_page(size, alignment);
 
-            auto& data = page.data();
+                                  auto& data = page.data();
 
-            util::span<char> obj_memory(static_cast<char*>(data.ptr()), size);
+                                  util::span<char> obj_memory(static_cast<char*>(data.ptr()), size);
 
-            auto finished = instance_v.copy(obj_memory);
+                                  auto finished = instance_v.copy(obj_memory);
 
-            return finished.then(
-                get_local_runtime().get_service_executor(), [page = std::move(page)](
-                                                                hpx::future<void>
-                                                                    finished) mutable {
-                    finished.get();
+                                  return finished.then(
+                                      get_local_runtime().get_service_executor(),
+                                      [page = std::move(page)](hpx::future<void> finished) mutable {
+                                          finished.get();
 
-                    return std::move(page);
-                });
-        });
+                                          return std::move(page);
+                                      });
+                              });
 
     return page;
 }
@@ -472,7 +473,7 @@ local_runtime_reference get_local_runtime_on_locality(const hpx::id_type& locali
     // FIXME: Reevaluate the impact of the manual unwrapping of the future.
     return hpx::async<get_local_runtime_remote_action>(locality).get();
 }
-}
+} // namespace qubus
 
 HPX_REGISTER_ACTION(qubus::init_local_runtime_remote_action,
                     QUBUS_init_local_runtime_remote_action);

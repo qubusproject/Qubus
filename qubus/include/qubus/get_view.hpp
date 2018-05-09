@@ -3,6 +3,9 @@
 
 #include <qubus/host_object_views.hpp>
 
+#include <qubus/runtime.hpp>
+#include <qubus/local_runtime.hpp>
+
 #include <qubus/object.hpp>
 
 #include <hpx/include/lcos.hpp>
@@ -13,16 +16,28 @@ namespace qubus
 {
 
 template <typename View>
-hpx::future<View> get_view(object obj)
+[[nodiscard]] hpx::future<distributed_access_token> acquire_access_for_view(object& obj)
 {
-    return View::construct(std::move(obj));
+    if (!object_view_traits<View>::is_immutable)
+    {
+        return get_runtime().acquire_write_access(obj);
+    }
+    else
+    {
+        return get_runtime().acquire_read_access(obj);
+    }
 }
 
 template <typename View>
-hpx::future<View> get_view_for_locked_object(object obj)
+hpx::future<View> get_view(object obj)
 {
-    return View::construct_from_locked_object(std::move(obj));
+    auto access_token = acquire_access_for_view<View>(obj);
+
+    auto& address_space = get_local_runtime().get_address_space();
+
+    return View::construct(std::move(obj), std::move(access_token), address_space);
 }
+
 }
 
 #endif

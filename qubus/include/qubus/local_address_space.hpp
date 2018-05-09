@@ -13,6 +13,7 @@
 
 #include <hpx/include/lcos.hpp>
 #include <hpx/include/local_lcos.hpp>
+#include <hpx/runtime/threads/executors/pool_executor.hpp>
 
 #include <exception>
 #include <functional>
@@ -44,6 +45,7 @@ public:
         bool unique() const;
 
         void free();
+
     private:
         std::shared_ptr<address_entry> entry_;
     };
@@ -76,7 +78,8 @@ public:
         address_space* addr_space_;
     };
 
-    explicit address_space(std::unique_ptr<allocator> allocator_);
+    address_space(std::unique_ptr<allocator> allocator_,
+                  hpx::threads::executors::pool_executor& service_executor_);
 
     handle allocate_page(long int size, long int alignment);
     void register_page(const object& obj, handle page);
@@ -99,6 +102,8 @@ private:
     mutable hpx::lcos::local::spinlock address_translation_table_mutex_;
 
     util::delegate<hpx::future<handle>(const object&, page_fault_context)> on_page_fault_;
+
+    hpx::threads::executors::pool_executor* service_executor_;
 };
 
 using host_address_space = address_space;
@@ -132,14 +137,16 @@ public:
     hpx::future<handle> resolve_object(const object& obj);
     handle try_resolve_object(const object& obj) const;
 
-    void on_page_fault(
-        std::function<hpx::future<handle>(const object&, page_fault_context)> callback);
+    void
+    on_page_fault(std::function<hpx::future<handle>(const object&, page_fault_context)> callback);
+
+    host_address_space& host_addr_space();
 
 private:
     std::reference_wrapper<host_address_space> host_addr_space_;
 
     util::delegate<hpx::future<handle>(const object&, page_fault_context)> on_page_fault_;
 };
-}
+} // namespace qubus
 
 #endif

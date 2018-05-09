@@ -20,7 +20,9 @@ namespace qubus
 
 namespace
 {
-std::unique_ptr<performance_model> create_performance_model(const symbol_id& func, const module_library& mod_library)
+std::unique_ptr<performance_model> create_performance_model(const symbol_id& func,
+                                                            const module_library& mod_library,
+                                                            address_space& host_addr_space)
 {
     auto mod = mod_library.lookup(func.get_prefix()).get();
 
@@ -37,20 +39,21 @@ std::unique_ptr<performance_model> create_performance_model(const symbol_id& fun
 
     if (has_scalar_params)
     {
-        return std::make_unique<regression_performance_model>();
+        return std::make_unique<regression_performance_model>(host_addr_space);
     }
     else
     {
         return std::make_unique<simple_statistical_performance_model>();
     }
 }
-}
+} // namespace
 
 class unified_performance_model_impl
 {
 public:
-    explicit unified_performance_model_impl(module_library mod_library_)
-    : mod_library_(std::move(mod_library_))
+    explicit unified_performance_model_impl(module_library mod_library_,
+                                            address_space& host_addr_space_)
+    : mod_library_(std::move(mod_library_)), host_addr_space_(&host_addr_space_)
     {
     }
 
@@ -63,7 +66,10 @@ public:
 
         if (search_result == kernel_models_.end())
         {
-            search_result = kernel_models_.emplace(func, create_performance_model(func, mod_library_)).first;
+            search_result =
+                kernel_models_
+                    .emplace(func, create_performance_model(func, mod_library_, *host_addr_space_))
+                    .first;
         }
 
         search_result->second->sample_execution_time(func, ctx, std::move(execution_time));
@@ -91,10 +97,12 @@ private:
     std::unordered_map<symbol_id, std::unique_ptr<performance_model>> kernel_models_;
 
     module_library mod_library_;
+    address_space* host_addr_space_;
 };
 
-unified_performance_model::unified_performance_model(module_library mod_library_)
-: impl_(std::make_unique<unified_performance_model_impl>(std::move(mod_library_)))
+unified_performance_model::unified_performance_model(module_library mod_library_,
+                                                     address_space& host_addr_space_)
+: impl_(std::make_unique<unified_performance_model_impl>(std::move(mod_library_), host_addr_space_))
 {
 }
 
@@ -117,4 +125,4 @@ unified_performance_model::try_estimate_execution_time(const symbol_id& func,
 
     return impl_->try_estimate_execution_time(func, ctx);
 }
-}
+} // namespace qubus

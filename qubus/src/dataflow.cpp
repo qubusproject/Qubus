@@ -1,8 +1,7 @@
 #include <qubus/dataflow.hpp>
 
-#include <qubus/local_runtime.hpp>
-
 #include <hpx/parallel/executors.hpp> // Workaround for missing includes.
+#include <hpx/runtime/threads/executors/pool_executor.hpp>
 
 using server_type = hpx::components::component<qubus::distributed_access_token_server>;
 HPX_REGISTER_COMPONENT(server_type, qubus_distributed_access_token_server);
@@ -89,14 +88,15 @@ hpx::future<access_token> dataflow_graph::schedule_modification(const object& ob
     {
         auto f = token.get_future();
 
-        auto ready_token = search_result->second.then(
-                get_local_runtime().get_service_executor(), [token = std::move(token)](
-                        const hpx::shared_future<void>&
-                        value) mutable {
-                    value.get();
+        auto service_executor = std::make_shared<hpx::threads::executors::pool_executor>("/qubus/service");
 
-                    return std::move(token);
-                });
+        auto ready_token = search_result->second.then(
+            *service_executor,
+            [token = std::move(token), service_executor](const hpx::shared_future<void>& value) mutable {
+                value.get();
+
+                return std::move(token);
+            });
 
         search_result->second = std::move(f);
 
@@ -114,4 +114,4 @@ hpx::future<access_token> dataflow_graph::schedule_read(const object& obj)
 {
     return schedule_modification(obj);
 }
-}
+} // namespace qubus

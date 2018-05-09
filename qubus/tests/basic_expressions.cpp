@@ -26,7 +26,7 @@ TEST(basic_expressions, constant_expr)
         A(i, j) = 42;
     };
 
-    /*const_kernel();
+    const_kernel();
 
     double error = 0.0;
 
@@ -44,7 +44,7 @@ TEST(basic_expressions, constant_expr)
         }
     }
 
-    ASSERT_NEAR(error, 0.0, 1e-14);*/
+    ASSERT_NEAR(error, 0.0, 1e-14);
 }
 
 TEST(basic_expressions, complex_addition)
