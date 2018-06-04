@@ -28,7 +28,7 @@ TEST(kronecker_delta, identity)
     double error = 0.0;
 
     {
-        auto A_view = get_view<host_tensor_view<const double, 2>>(A).get();
+        auto A_view = get_view(A, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -60,7 +60,7 @@ TEST(kronecker_delta, identity_contraction)
     double error = 0.0;
 
     {
-        auto A_view = get_view<host_tensor_view<const double, 1>>(A).get();
+        auto A_view = get_view(A, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {

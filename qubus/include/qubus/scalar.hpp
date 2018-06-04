@@ -24,13 +24,13 @@ public:
 
         auto& self = static_cast<Derived&>(*this);
 
-        auto view = get_view<host_scalar_view<value_type>>(self.get_object());
+        auto view = get_view<Derived>(self.get_object(), qubus::writable, qubus::arch::host);
 
         // TODO: Add this as a pending task
-        view.then([value =
-                       std::move(value)](hpx::future<host_scalar_view<value_type>> view) mutable {
-            view.get().get() += std::move(value);
-        });
+        view.then(
+            [value = std::move(value)](hpx::future<host_scalar_view<value_type>> view) mutable {
+                view.get().get() += std::move(value);
+            });
 
         return self;
     }
@@ -41,13 +41,13 @@ public:
 
         auto& self = static_cast<Derived&>(*this);
 
-        auto view = get_view<host_scalar_view<value_type>>(self.get_object());
+        auto view = get_view<Derived>(self.get_object(), qubus::writable, qubus::arch::host);
 
         // TODO: Add this as a pending task
-        view.then([value =
-                       std::move(value)](hpx::future<host_scalar_view<value_type>> view) mutable {
-            view.get().get() -= std::move(value);
-        });
+        view.then(
+            [value = std::move(value)](hpx::future<host_scalar_view<value_type>> view) mutable {
+                view.get().get() -= std::move(value);
+            });
 
         return self;
     }
@@ -58,13 +58,13 @@ public:
 
         auto& self = static_cast<Derived&>(*this);
 
-        auto view = get_view<host_scalar_view<value_type>>(self.get_object());
+        auto view = get_view<Derived>(self.get_object(), qubus::writable, qubus::arch::host);
 
         // TODO: Add this as a pending task
-        view.then([value =
-                       std::move(value)](hpx::future<host_scalar_view<value_type>> view) mutable {
-            view.get().get() *= std::move(value);
-        });
+        view.then(
+            [value = std::move(value)](hpx::future<host_scalar_view<value_type>> view) mutable {
+                view.get().get() *= std::move(value);
+            });
 
         return self;
     }
@@ -75,13 +75,13 @@ public:
 
         auto& self = static_cast<Derived&>(*this);
 
-        auto view = get_view<host_scalar_view<value_type>>(self.get_object());
+        auto view = get_view<Derived>(self.get_object(), qubus::writable, qubus::arch::host);
 
         // TODO: Add this as a pending task
-        view.then([value =
-                       std::move(value)](hpx::future<host_scalar_view<value_type>> view) mutable {
-            view.get().get() /= std::move(value);
-        });
+        view.then(
+            [value = std::move(value)](hpx::future<host_scalar_view<value_type>> view) mutable {
+                view.get().get() /= std::move(value);
+            });
 
         return self;
     }
@@ -98,7 +98,7 @@ public:
 
         auto& self = static_cast<Derived&>(*this);
 
-        auto view = get_view<host_scalar_view<value_type>>(self.get_object());
+        auto view = get_view<Derived>(self.get_object(), qubus::writable, qubus::arch::host);
 
         // TODO: Add this as a pending task
         view.then(
@@ -113,7 +113,7 @@ public:
 
         auto& self = static_cast<Derived&>(*this);
 
-        auto view = get_view<host_scalar_view<value_type>>(self.get_object());
+        auto view = get_view<Derived>(self.get_object(), qubus::writable, qubus::arch::host);
 
         // TODO: Add this as a pending task
         view.then(
@@ -128,7 +128,7 @@ public:
 
         auto& self = static_cast<Derived&>(*this);
 
-        auto view = get_view<host_scalar_view<value_type>>(self.get_object());
+        auto view = get_view<Derived>(self.get_object(), qubus::writable, qubus::arch::host);
 
         // TODO: Add this as a pending task
         view.then(
@@ -143,7 +143,7 @@ public:
 
         auto& self = static_cast<Derived&>(*this);
 
-        auto view = get_view<host_scalar_view<value_type>>(self.get_object());
+        auto view = get_view<Derived>(self.get_object(), qubus::writable, qubus::arch::host);
 
         // TODO: Add this as a pending task
         view.then(
@@ -167,14 +167,14 @@ public:
 
     explicit scalar(T value_) : scalar()
     {
-        auto view = get_view<host_scalar_view<T>>(handle_).get();
+        auto view = get_view<scalar<T>>(handle_, qubus::writable, qubus::arch::host).get();
 
         view.get() = std::move(value_);
     }
 
     scalar<T>& operator=(T value)
     {
-        auto view = get_view<host_scalar_view<T>>(handle_);
+        auto view = get_view<scalar<T>>(handle_, qubus::writable, qubus::arch::host);
 
         // TODO: Add this as a pending task
         view.then([value = std::move(value)](hpx::future<host_scalar_view<T>> view) mutable {
@@ -193,10 +193,17 @@ private:
     object handle_;
 };
 
-template <typename View, typename T>
-auto get_view(const scalar<T>& value)
+template <typename T, typename AccessType>
+struct get_view_type<scalar<T>, AccessType, arch::host_type>
 {
-    return get_view<View>(value.get_object());
+    using type = std::conditional_t<std::is_same_v<AccessType, detail::immutable_tag>,
+                                    host_scalar_view<const T>, host_scalar_view<T>>;
+};
+
+template <typename T, typename AccessType, typename Arch>
+auto get_view(const scalar<T>& value, AccessType access_type, Arch arch)
+{
+    return get_view<scalar<T>>(value.get_object(), access_type, arch);
 }
 
 template <typename T>
@@ -207,6 +214,6 @@ struct associated_qubus_type<scalar<T>>
         return associated_qubus_type<T>::get();
     }
 };
-}
+} // namespace qubus
 
 #endif

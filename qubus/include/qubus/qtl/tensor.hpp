@@ -11,6 +11,7 @@
 #include <qubus/IR/expression.hpp>
 
 #include <qubus/get_view.hpp>
+#include <qubus/array.hpp>
 
 #include <qubus/associated_qubus_type.hpp>
 
@@ -91,10 +92,10 @@ private:
     object data_;
 };
 
-template <typename View, typename T, long int Rank>
-auto get_view(const tensor<T, Rank>& value)
+template <typename T, long int Rank, typename AccessType, typename ArchTag>
+auto get_view(const tensor<T, Rank>& value, AccessType access_type, ArchTag arch)
 {
-    return get_view<View>(value.get_object());
+    return get_view<array<T, Rank>>(value.get_object(), access_type, arch);
 }
 }
 

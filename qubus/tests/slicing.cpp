@@ -34,7 +34,7 @@ TEST(slicing, simple_slice_base)
     auto r = obj_factory.create_scalar(qubus::types::double_{});
 
     {
-        auto x_view = qubus::get_view<host_array_view<double, 1>>(x).get();
+        auto x_view = qubus::get_view<qubus::array<double, 1>>(x, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < 10; ++i)
         {
@@ -66,7 +66,7 @@ TEST(slicing, simple_slice_base)
     runtime.execute(qubus::symbol_id("slicing.calc"), args).get();
 
     {
-        auto r_view = qubus::get_view<host_scalar_view<const double>>(r).get();
+        auto r_view = qubus::get_view<qubus::scalar<double>>(r, qubus::immutable, qubus::arch::host).get();
 
         auto result = r_view.get();
 
@@ -85,7 +85,7 @@ TEST(slicing, simple_slice)
     tensor<double, 1> B(N);
 
     {
-        auto B_view = get_view<host_tensor_view<double, 1>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -111,7 +111,7 @@ TEST(slicing, simple_slice)
     double error = 0.0;
 
     {
-        auto A_view = get_view<host_tensor_view<const double, 1>>(A).get();
+        auto A_view = get_view(A, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N / 2; ++i)
         {
@@ -136,7 +136,7 @@ TEST(slicing, DISABLED_recursive_slicing)
     tensor<double, 1> B(N);
 
     {
-        auto B_view = get_view<host_tensor_view<double, 1>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -176,7 +176,7 @@ TEST(slicing, DISABLED_recursive_slicing)
     double error = 0.0;
 
     {
-        auto A_view = get_view<host_tensor_view<const double, 1>>(A).get();
+        auto A_view = get_view(A, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N / 8; ++i)
         {

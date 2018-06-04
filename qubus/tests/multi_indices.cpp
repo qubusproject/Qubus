@@ -31,7 +31,7 @@ TEST(multi_indices, simple_expr)
     double error = 0.0;
 
     {
-        auto A_view = get_view<host_tensor_view<const double, 2>>(A).get();
+        auto A_view = get_view(A, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -73,7 +73,7 @@ TEST(multi_indices, index_splitting)
     tensor<double, 2> A(N, N);
 
     {
-        auto A_view = get_view<host_tensor_view<double, 2>>(A).get();
+        auto A_view = get_view(A, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -100,7 +100,7 @@ TEST(multi_indices, index_splitting)
     double error = 0.0;
 
     {
-        auto R_view = get_view<host_tensor_view<const double, 2>>(R).get();
+        auto R_view = get_view(R, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -214,7 +214,7 @@ TEST(multi_indices, multi_sum)
     tensor<double, 3> A(N, N, N);
 
     {
-        auto A_view = get_view<host_tensor_view<double, 3>>(A).get();
+        auto A_view = get_view(A, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -253,7 +253,7 @@ TEST(multi_indices, multi_sum)
     double error = 0.0;
 
     {
-        auto R_view = get_view<host_tensor_view<const double, 1>>(R).get();
+        auto R_view = get_view(R, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -296,7 +296,7 @@ TEST(multi_indices, multi_sum_index_splitting)
     tensor<double, 3> A(N, N, N);
 
     {
-        auto A_view = get_view<host_tensor_view<double, 3>>(A).get();
+        auto A_view = get_view(A, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -335,7 +335,7 @@ TEST(multi_indices, multi_sum_index_splitting)
     double error = 0.0;
 
     {
-        auto R_view = get_view<host_tensor_view<const double, 1>>(R).get();
+        auto R_view = get_view(R, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
