@@ -80,16 +80,12 @@ llvm_environment::llvm_environment(llvm::LLVMContext& ctx_)
 {
     llvm::FastMathFlags fast_math_flags;
 
-#if LLVM_VERSION_MAJOR < 6
-    fast_math_flags.setUnsafeAlgebra();
-#else
     fast_math_flags.setAllowReassoc();
     fast_math_flags.setNoNaNs();
     fast_math_flags.setNoInfs();
     fast_math_flags.setNoSignedZeros();
     fast_math_flags.setAllowReciprocal();
     fast_math_flags.setAllowContract(true);
-#endif
 
     builder_.setFastMathFlags(fast_math_flags);
 

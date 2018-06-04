@@ -73,11 +73,8 @@ public:
 
         auto entry = jit_engine_->find_symbol(mangle_function_name(entry_point));
 
-#if LLVM_VERSION_MAJOR >= 5
         auto address = reinterpret_cast<entry_t>(cantFail(entry.getAddress()));
-#else
-        auto address = reinterpret_cast<entry_t>(entry.getAddress());
-#endif
+
         QUBUS_ASSERT(address != nullptr, "Invalid address.");
 
         address(args.data(), &runtime);
