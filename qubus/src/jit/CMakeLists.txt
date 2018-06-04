@@ -1,9 +1,9 @@
 find_package(LLVM REQUIRED)
 
-if (${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR} VERSION_EQUAL 6.0)
-    message(WARNING "Support for LLVM 6.0 is experimental.")
-elseif (${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR} VERSION_LESS 3.8)
-    message(SEND_ERROR "Only LLVM >= 3.8 is supported. Please choose a suitable version.")
+if (${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR} VERSION_EQUAL 7.0)
+    message(WARNING "Support for LLVM 7.0 is experimental.")
+elseif (${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR} VERSION_LESS 6.0)
+    message(SEND_ERROR "Only LLVM >= 6.0 is supported. Please choose a suitable version.")
 endif()
 
 message(STATUS "found LLVM version: ${LLVM_PACKAGE_VERSION}")
