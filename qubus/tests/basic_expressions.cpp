@@ -31,7 +31,7 @@ TEST(basic_expressions, constant_expr)
     double error = 0.0;
 
     {
-        auto A_view = get_view<host_tensor_view<const double, 2>>(A).get();
+        auto A_view = get_view(A, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -75,14 +75,14 @@ TEST(basic_expressions, complex_addition)
     tensor<std::complex<double>, 1> C(N);
 
     {
-        auto A_view = get_view<host_tensor_view<std::complex<double>, 1>>(A).get();
+        auto A_view = get_view(A, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
             A_view(i) = A2[i];
         }
 
-        auto B_view = get_view<host_tensor_view<std::complex<double>, 1>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -105,7 +105,7 @@ TEST(basic_expressions, complex_addition)
     double error = 0.0;
 
     {
-        auto C_view = get_view<host_tensor_view<const std::complex<double>, 1>>(C).get();
+        auto C_view = get_view(C, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -146,14 +146,14 @@ TEST(basic_expressions, complex_substraction)
     tensor<std::complex<double>, 1> C(N);
 
     {
-        auto A_view = get_view<host_tensor_view<std::complex<double>, 1>>(A).get();
+        auto A_view = get_view(A, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
             A_view(i) = A2[i];
         }
 
-        auto B_view = get_view<host_tensor_view<std::complex<double>, 1>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -176,7 +176,7 @@ TEST(basic_expressions, complex_substraction)
     double error = 0.0;
 
     {
-        auto C_view = get_view<host_tensor_view<const std::complex<double>, 1>>(C).get();
+        auto C_view = get_view(C, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -217,14 +217,14 @@ TEST(basic_expressions, complex_multiplication)
     tensor<std::complex<double>, 1> C(N);
 
     {
-        auto A_view = get_view<host_tensor_view<std::complex<double>, 1>>(A).get();
+        auto A_view = get_view(A, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
             A_view(i) = A2[i];
         }
 
-        auto B_view = get_view<host_tensor_view<std::complex<double>, 1>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -247,7 +247,7 @@ TEST(basic_expressions, complex_multiplication)
     double error = 0.0;
 
     {
-        auto C_view = get_view<host_tensor_view<const std::complex<double>, 1>>(C).get();
+        auto C_view = get_view(C, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -288,14 +288,14 @@ TEST(basic_expressions, complex_division)
     tensor<std::complex<double>, 1> C(N);
 
     {
-        auto A_view = get_view<host_tensor_view<std::complex<double>, 1>>(A).get();
+        auto A_view = get_view(A, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
             A_view(i) = A2[i];
         }
 
-        auto B_view = get_view<host_tensor_view<std::complex<double>, 1>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -318,7 +318,7 @@ TEST(basic_expressions, complex_division)
     double error = 0.0;
 
     {
-        auto C_view = get_view<host_tensor_view<const std::complex<double>, 1>>(C).get();
+        auto C_view = get_view(C, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {

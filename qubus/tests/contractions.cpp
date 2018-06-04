@@ -43,7 +43,7 @@ TEST(contractions, simple_contraction)
     tensor<double, 2> C(N, N);
 
     {
-        auto A_view = get_view<host_tensor_view<double, 2>>(A).get();
+        auto A_view = get_view(A, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -53,7 +53,7 @@ TEST(contractions, simple_contraction)
             }
         }
 
-        auto B_view = get_view<host_tensor_view<double, 2>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -86,7 +86,7 @@ TEST(contractions, simple_contraction)
     double error = 0.0;
 
     {
-        auto C_view = get_view<host_tensor_view<const double, 2>>(C).get();
+        auto C_view = get_view(C, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -133,7 +133,7 @@ TEST(contractions, complex_matrix_multiplication)
     tensor<std::complex<double>, 2> C(N, N);
 
     {
-        auto A_view = get_view<host_tensor_view<std::complex<double>, 2>>(A).get();
+        auto A_view = get_view(A, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -143,7 +143,7 @@ TEST(contractions, complex_matrix_multiplication)
             }
         }
 
-        auto B_view = get_view<host_tensor_view<std::complex<double>, 2>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -176,7 +176,7 @@ TEST(contractions, complex_matrix_multiplication)
     double error = 0.0;
 
     {
-        auto C_view = get_view<host_tensor_view<const std::complex<double>, 2>>(C).get();
+        auto C_view = get_view(C, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -223,7 +223,7 @@ TEST(contractions, reduction_to_r1)
     tensor<double, 1> C(N);
 
     {
-        auto A_view = get_view<host_tensor_view<double, 2>>(A).get();
+        auto A_view = get_view(A, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -233,7 +233,7 @@ TEST(contractions, reduction_to_r1)
             }
         }
 
-        auto B_view = get_view<host_tensor_view<double, 2>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -266,7 +266,7 @@ TEST(contractions, reduction_to_r1)
     double error = 0.0;
 
     {
-        auto C_view = get_view<host_tensor_view<const double, 1>>(C).get();
+        auto C_view = get_view(C, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -310,7 +310,7 @@ TEST(contractions, matrix_vector_product)
     tensor<double, 1> C(N);
 
     {
-        auto A_view = get_view<host_tensor_view<double, 2>>(A).get();
+        auto A_view = get_view(A, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -320,7 +320,7 @@ TEST(contractions, matrix_vector_product)
             }
         }
 
-        auto B_view = get_view<host_tensor_view<double, 1>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -344,7 +344,7 @@ TEST(contractions, matrix_vector_product)
         }
     }
 
-    auto C_view = get_view<host_tensor_view<const double, 1>>(C).get();
+    auto C_view = get_view(C, qubus::immutable, qubus::arch::host).get();
 
     double error = 0.0;
 
@@ -394,7 +394,7 @@ TEST(contractions, basis_change_r2)
     tensor<double, 2> C(N, N);
 
     {
-        auto A_view = get_view<host_tensor_view<double, 2>>(A).get();
+        auto A_view = get_view(A, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -404,7 +404,7 @@ TEST(contractions, basis_change_r2)
             }
         }
 
-        auto B_view = get_view<host_tensor_view<double, 2>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -440,7 +440,7 @@ TEST(contractions, basis_change_r2)
     double error = 0.0;
 
     {
-        auto C_view = get_view<host_tensor_view<const double, 2>>(C).get();
+        auto C_view = get_view(C, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {

@@ -41,7 +41,7 @@ TEST(qm_patterns, commutator)
     tensor<std::complex<double>, 2> C(N, N);
 
     {
-        auto A_view = get_view<host_tensor_view<std::complex<double>, 2>>(A).get();
+        auto A_view = get_view(A, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -51,7 +51,7 @@ TEST(qm_patterns, commutator)
             }
         }
 
-        auto B_view = get_view<host_tensor_view<std::complex<double>, 2>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -83,7 +83,7 @@ TEST(qm_patterns, commutator)
     double error = 0.0;
 
     {
-        auto C_view = get_view<host_tensor_view<const std::complex<double>, 2>>(C).get();
+        auto C_view = get_view(C, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {

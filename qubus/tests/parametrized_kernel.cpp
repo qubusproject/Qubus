@@ -40,14 +40,14 @@ TEST(parametrized_kernel, vector_add)
     tensor<std::complex<double>, 1> C(N);
 
     {
-        auto A_view = get_view<host_tensor_view<std::complex<double>, 1>>(A).get();
+        auto A_view = get_view(A, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
             A_view(i) = A2[i];
         }
 
-        auto B_view = get_view<host_tensor_view<std::complex<double>, 1>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -73,7 +73,7 @@ TEST(parametrized_kernel, vector_add)
     double error = 0.0;
 
     {
-        auto C_view = get_view<host_tensor_view<const std::complex<double>, 1>>(C).get();
+        auto C_view = get_view(C, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -86,7 +86,7 @@ TEST(parametrized_kernel, vector_add)
     ASSERT_NEAR(error, 0.0, 1e-14);
 }
 
-TEST(parametrized_kernel, DISABLED_sparse_matrix_vector_product)
+/*TEST(parametrized_kernel, DISABLED_sparse_matrix_vector_product)
 {
     using namespace qubus;
     using namespace qtl;
@@ -134,7 +134,7 @@ TEST(parametrized_kernel, DISABLED_sparse_matrix_vector_product)
     tensor<double, 1> C(N);
 
     {
-        auto B_view = get_view<host_tensor_view<double, 1>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -162,7 +162,7 @@ TEST(parametrized_kernel, DISABLED_sparse_matrix_vector_product)
     double error = 0.0;
 
     {
-        auto C_view = get_view<host_tensor_view<const double, 1>>(C).get();
+        auto C_view = get_view(C, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -173,7 +173,7 @@ TEST(parametrized_kernel, DISABLED_sparse_matrix_vector_product)
     }
 
     ASSERT_NEAR(error, 0.0, 1e-12);
-}
+}*/
 
 TEST(parametrized_kernel, partial_parameterization)
 {
@@ -203,14 +203,14 @@ TEST(parametrized_kernel, partial_parameterization)
     tensor<std::complex<double>, 1> C(N);
 
     {
-        auto A_view = get_view<host_tensor_view<std::complex<double>, 1>>(A).get();
+        auto A_view = get_view(A, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
             A_view(i) = A2[i];
         }
 
-        auto B_view = get_view<host_tensor_view<std::complex<double>, 1>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -234,7 +234,7 @@ TEST(parametrized_kernel, partial_parameterization)
     double error = 0.0;
 
     {
-        auto C_view = get_view<host_tensor_view<const std::complex<double>, 1>>(C).get();
+        auto C_view = get_view(C, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {

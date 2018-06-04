@@ -45,7 +45,7 @@ TEST(lang, extent)
     runtime.execute(qubus::symbol_id("extent.test1"), args).get();
 
     {
-        auto r_view = qubus::get_view<host_scalar_view<const util::index_t>>(r).get();
+        auto r_view = qubus::get_view<qubus::scalar<util::index_t>>(r, qubus::immutable, qubus::arch::host).get();
 
         auto result = r_view.get();
 
@@ -55,7 +55,7 @@ TEST(lang, extent)
     runtime.execute(qubus::symbol_id("extent.test2"), args).get();
 
     {
-        auto r_view = qubus::get_view<host_scalar_view<const util::index_t>>(r).get();
+        auto r_view = qubus::get_view<qubus::scalar<util::index_t>>(r, qubus::immutable, qubus::arch::host).get();
 
         auto result = r_view.get();
 

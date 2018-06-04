@@ -19,7 +19,7 @@ TEST(scalar_support, init)
     double error = 0.0;
 
     {
-        auto a_view = get_view<host_scalar_view<const double>>(a).get();
+        auto a_view = get_view(a, qubus::immutable, qubus::arch::host).get();
 
         auto value = a_view.get();
 
@@ -38,7 +38,7 @@ TEST(scalar_support, assignment)
     double error = 0.0;
 
     {
-        auto a_view = get_view<host_scalar_view<const double>>(a).get();
+        auto a_view = get_view(a, qubus::immutable, qubus::arch::host).get();
 
         auto value = a_view.get();
 
@@ -57,7 +57,7 @@ TEST(scalar_support, plus_assign)
     double error = 0.0;
 
     {
-        auto a_view = get_view<host_scalar_view<const double>>(a).get();
+        auto a_view = get_view(a, qubus::immutable, qubus::arch::host).get();
 
         auto value = a_view.get();
 
@@ -76,7 +76,7 @@ TEST(scalar_support, minus_assign)
     double error = 0.0;
 
     {
-        auto a_view = get_view<host_scalar_view<const double>>(a).get();
+        auto a_view = get_view(a, qubus::immutable, qubus::arch::host).get();
 
         auto value = a_view.get();
 
@@ -95,7 +95,7 @@ TEST(scalar_support, mul_assign)
     double error = 0.0;
 
     {
-        auto a_view = get_view<host_scalar_view<const double>>(a).get();
+        auto a_view = get_view(a, qubus::immutable, qubus::arch::host).get();
 
         auto value = a_view.get();
 
@@ -114,7 +114,7 @@ TEST(scalar_support, div_assign)
     double error = 0.0;
 
     {
-        auto a_view = get_view<host_scalar_view<const double>>(a).get();
+        auto a_view = get_view(a, qubus::immutable, qubus::arch::host).get();
 
         auto value = a_view.get();
 
@@ -132,7 +132,7 @@ TEST(scalar_support, increment)
     ++a;
 
     {
-        auto a_view = get_view<host_scalar_view<const util::index_t>>(a).get();
+        auto a_view = get_view(a, qubus::immutable, qubus::arch::host).get();
 
         auto value = a_view.get();
 
@@ -150,7 +150,7 @@ TEST(scalar_support, decrement)
     a--;
 
     {
-        auto a_view = get_view<host_scalar_view<const util::index_t>>(a).get();
+        auto a_view = get_view(a, qubus::immutable, qubus::arch::host).get();
 
         auto value = a_view.get();
 

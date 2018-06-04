@@ -17,6 +17,11 @@ public:
     using iterator = pointer;
     using const_iterator = const pointer;
 
+    constexpr span()
+    : data_(nullptr), size_(0)
+    {
+    }
+
     constexpr span(pointer data_, std::size_t size_)
     : data_(data_), size_(size_)
     {

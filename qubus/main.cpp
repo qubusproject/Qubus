@@ -133,7 +133,7 @@ int hpx_main(int argc, char** argv)
 
     for (long int loc = 0; loc < num_localities; ++loc)
     {
-        get_view<host_tensor_view<const double, 1>>(results[loc]).get();
+        get_view(results[loc], qubus::immutable, qubus::arch::host).get();
     }
 
     auto start = std::chrono::high_resolution_clock::now();
@@ -157,7 +157,7 @@ int hpx_main(int argc, char** argv)
 
     for (long int loc = 0; loc < num_localities; ++loc)
     {
-        get_view<host_tensor_view<const double, 1>>(results[loc]).get();
+        get_view(results[loc], qubus::immutable, qubus::arch::host).get();
         hpx::cout << "calculation " << loc << " terminated!!!" << hpx::endl;
     }
 

@@ -1,4 +1,4 @@
-#include <qubus/qubus.hpp>
+/*#include <qubus/qubus.hpp>
 
 #include <qubus/qtl/all.hpp>
 
@@ -70,7 +70,7 @@ TEST_P(sparse_support, DISABLED_sparse_matrix_vector_product)
     };
 
     {
-        auto B_view = get_view<host_tensor_view<double, 1>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -91,7 +91,7 @@ TEST_P(sparse_support, DISABLED_sparse_matrix_vector_product)
     double error = 0.0;
 
     {
-        auto C_view = get_view<host_tensor_view<const double, 1>>(C).get();
+        auto C_view = get_view(C, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -152,7 +152,7 @@ TEST_P(sparse_support, DISABLED_sparse_matrix_matrix_product)
     tensor<double, 2> C(N, N);
 
     {
-        auto B_view = get_view<host_tensor_view<double, 2>>(B).get();
+        auto B_view = get_view(B, qubus::writable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -185,7 +185,7 @@ TEST_P(sparse_support, DISABLED_sparse_matrix_matrix_product)
     double error = 0.0;
 
     {
-        auto C_view = get_view<host_tensor_view<const double, 2>>(C).get();
+        auto C_view = get_view(C, qubus::immutable, qubus::arch::host).get();
 
         for (long int i = 0; i < N; ++i)
         {
@@ -224,4 +224,4 @@ int main(int argc, char** argv)
     qubus::setup(rp);
 
     return hpx::init();
-}
+}*/
