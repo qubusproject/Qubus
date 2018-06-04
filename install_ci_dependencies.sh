@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+set -e
 
 wget https://qubusproject.org/carrot/downloads/src/carrot-0.2.0-dev-src.tar.bz2
 
