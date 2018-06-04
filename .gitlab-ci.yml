@@ -79,8 +79,8 @@ test:ubuntu:gcc:release:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
   - ls -la
-  - export CC=gcc-7
-  - export CXX=g++-7
+  - export CC=gcc
+  - export CXX=g++
   - ./install_ci_dependencies.sh
   - mkdir build
   - cd build
@@ -88,7 +88,7 @@ test:ubuntu:gcc:release:
   - make
   - ctest -E cuda --output-on-failure
   stage: test
-  image: localhost:5000/td-quantum/ubuntu-ci
+  image: localhost:5000/td-quantum/ubuntu-lts-ci
   tags:
   - docker
 
@@ -97,8 +97,8 @@ test:ubuntu:gcc:debug:
   - "sudo chown -R `whoami`: ."
   - git submodule update --init
   - ls -la
-  - export CC=gcc-7
-  - export CXX=g++-7
+  - export CC=gcc
+  - export CXX=g++
   - ./install_ci_dependencies.sh
   - mkdir build
   - cd build
@@ -106,7 +106,7 @@ test:ubuntu:gcc:debug:
   - make
   - ctest -E cuda --output-on-failure
   stage: test
-  image: localhost:5000/td-quantum/ubuntu-ci
+  image: localhost:5000/td-quantum/ubuntu-lts-ci
   tags:
   - docker
 
