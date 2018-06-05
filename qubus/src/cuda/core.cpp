@@ -88,10 +88,8 @@ std::size_t device::total_mem() const
 
 compute_capability_info device::compute_capability() const
 {
-    int major_revision;
-    int minor_revision;
-
-    check_cuda_error(cuDeviceComputeCapability(&major_revision, &minor_revision, device_));
+    int major_revision = get_attribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MAJOR);
+    int minor_revision = get_attribute(CU_DEVICE_ATTRIBUTE_COMPUTE_CAPABILITY_MINOR);
 
     return compute_capability_info(major_revision, minor_revision);
 }
