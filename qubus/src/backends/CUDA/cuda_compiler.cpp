@@ -315,7 +315,11 @@ std::unique_ptr<cuda_plan> compile(std::unique_ptr<module> computelet, jit::comp
 {
     auto mod = jit::compile(std::move(computelet), comp);
 
+#if LLVM_VERSION_MAJOR >= 7
+    std::unique_ptr<llvm::Module> the_module = llvm::CloneModule(mod->env().module());
+#else
     std::unique_ptr<llvm::Module> the_module = llvm::CloneModule(&mod->env().module());
+#endif
 
     the_module->setDataLayout(target_machine.createDataLayout());
     the_module->setTargetTriple(target_machine.getTargetTriple().getTriple());
@@ -335,11 +339,19 @@ std::unique_ptr<cuda_plan> compile(std::unique_ptr<module> computelet, jit::comp
     llvm::SmallVector<char, 10> buffer;
     llvm::raw_svector_ostream sstream(buffer);
 
+#if LLVM_VERSION_MAJOR >= 7
+    if (target_machine.addPassesToEmitFile(
+            pass_man, sstream, nullptr, llvm::TargetMachine::CodeGenFileType::CGFT_AssemblyFile, true))
+    {
+        throw 0;
+    }
+#else
     if (target_machine.addPassesToEmitFile(
             pass_man, sstream, llvm::TargetMachine::CodeGenFileType::CGFT_AssemblyFile, true))
     {
         throw 0;
     }
+#endif
 
     fn_pass_man.doInitialization();
 

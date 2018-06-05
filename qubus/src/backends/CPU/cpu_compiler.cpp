@@ -92,7 +92,11 @@ std::unique_ptr<cpu_plan> compile(std::unique_ptr<module> program, jit::compiler
 
     auto mod = jit::compile(std::move(program), comp);
 
+#if LLVM_VERSION_MAJOR >= 7
+    std::unique_ptr<llvm::Module> the_module = llvm::CloneModule(mod->env().module());
+#else
     std::unique_ptr<llvm::Module> the_module = llvm::CloneModule(&mod->env().module());
+#endif
 
     the_module->setDataLayout(engine.get_target_machine().createDataLayout());
     the_module->setTargetTriple(engine.get_target_machine().getTargetTriple().getTriple());

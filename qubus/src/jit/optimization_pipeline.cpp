@@ -1,21 +1,28 @@
 #include <qubus/jit/optimization_pipeline.hpp>
 
 #include <llvm/Analysis/BasicAliasAnalysis.h>
-#include <llvm/Analysis/ScalarEvolutionAliasAnalysis.h>
 #include <llvm/Analysis/CFLAndersAliasAnalysis.h>
 #include <llvm/Analysis/CFLSteensAliasAnalysis.h>
 #include <llvm/Analysis/GlobalsModRef.h>
+#include <llvm/Analysis/ScalarEvolutionAliasAnalysis.h>
 #include <llvm/Analysis/ScopedNoAliasAA.h>
 #include <llvm/Analysis/TypeBasedAliasAnalysis.h>
 #include <llvm/Config/llvm-config.h>
+#if LLVM_VERSION_MAJOR >= 7
+#include <llvm/Transforms/AggressiveInstCombine/AggressiveInstCombine.h>
+#endif
+#include <llvm/Transforms/IPO.h>
+#include <llvm/Transforms/IPO/ForceFunctionAttrs.h>
+#include <llvm/Transforms/IPO/FunctionAttrs.h>
+#include <llvm/Transforms/IPO/InferFunctionAttrs.h>
+#include <llvm/Transforms/InstCombine/InstCombine.h>
+#include <llvm/Transforms/Instrumentation.h>
 #include <llvm/Transforms/Scalar.h>
 #include <llvm/Transforms/Scalar/GVN.h>
-#include <llvm/Transforms/IPO.h>
-#include <llvm/Transforms/IPO/FunctionAttrs.h>
-#include <llvm/Transforms/Instrumentation.h>
-#include <llvm/Transforms/IPO/ForceFunctionAttrs.h>
-#include <llvm/Transforms/IPO/InferFunctionAttrs.h>
 #include <llvm/Transforms/Vectorize.h>
+#if LLVM_VERSION_MAJOR >= 7
+#include <llvm/Transforms/Utils.h>
+#endif
 
 namespace qubus
 {
@@ -66,18 +73,36 @@ void add_function_simplification_passes(llvm::legacy::PassManager& manager,
     // Start of function pass.
     // Break up aggregate allocas, using SSAUpdater.
     manager.add(createSROAPass());
-    manager.add(createEarlyCSEPass()); // Catch trivial redundancies
+    manager.add(createEarlyCSEPass(true)); // Catch trivial redundancies
+
+#if LLVM_VERSION_MAJOR >= 7
+    if (use_experimental_passes)
+    {
+        manager.add(createGVNHoistPass());
+    }
+
+    if (use_experimental_passes)
+    {
+        manager.add(createGVNSinkPass());
+        manager.add(createCFGSimplificationPass());
+    }
+#endif
+
     // Speculative execution if the target has divergent branches; otherwise nop.
     manager.add(createSpeculativeExecutionIfHasBranchDivergencePass());
     manager.add(createJumpThreadingPass());              // Thread jumps.
     manager.add(createCorrelatedValuePropagationPass()); // Propagate conditionals
     manager.add(createCFGSimplificationPass());          // Merge & remove BBs
     // Combine silly seq's
+#if LLVM_VERSION_MAJOR >= 7
+    manager.add(createAggressiveInstCombinerPass());
+#endif
     manager.add(createInstructionCombiningPass(true));
 
     manager.add(createTailCallEliminationPass()); // Eliminate tail calls
     manager.add(createCFGSimplificationPass());   // Merge & remove BBs
     manager.add(createReassociatePass());         // Reassociate expressions
+
     // Rotate Loop - disable header duplication at -Oz
     manager.add(createLoopRotatePass(-1));
     manager.add(createLICMPass()); // Hoist loop invariants
@@ -123,7 +148,7 @@ void add_function_simplification_passes(llvm::legacy::PassManager& manager,
     // Clean up after everything.
     manager.add(createInstructionCombiningPass(true));
 }
-}
+} // namespace
 
 void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimize, bool vectorize)
 {
@@ -272,5 +297,5 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
     manager.add(createConstantMergePass()); // Merge dup global constants
 }
 
-}
-}
+} // namespace jit
+} // namespace qubus
