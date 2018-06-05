@@ -27,9 +27,9 @@ if (NOT TARGET LLVM)
 endif()
 
 add_library(qubus_llvm SHARED llvm_version.cpp)
-target_include_directories(qubus_llvm PUBLIC ${LLVM_INCLUDE_DIRS})
+target_include_directories(qubus_llvm PUBLIC ${LLVM_INCLUDE_DIRS} ${Boost_LIBRARY_DIRS})
 target_compile_definitions(qubus_llvm PUBLIC ${LLVM_DEFINITIONS})
-target_link_libraries(qubus_llvm PUBLIC LLVM)
+target_link_libraries(qubus_llvm PUBLIC LLVM ${Boost_LIBRARIES})
 
 add_library(qubus_jit SHARED compiler.cpp compile.cpp llvm_environment.cpp entry_block_alloca.cpp load_store.cpp
             loops.cpp control_flow.cpp operators.cpp type_conversion.cpp array_access.cpp optimization_pipeline.cpp
