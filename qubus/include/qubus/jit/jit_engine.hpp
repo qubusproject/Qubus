@@ -8,7 +8,7 @@
 #include <llvm/ExecutionEngine/Orc/IRCompileLayer.h>
 
 #include <llvm/ExecutionEngine/Orc/CompileUtils.h>
-#include "llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h"
+#include <llvm/ExecutionEngine/Orc/RTDyldObjectLinkingLayer.h>
 
 #include <llvm/IR/Module.h>
 
@@ -23,8 +23,13 @@ class jit_engine
 {
 public:
     using object_layer_type = llvm::orc::RTDyldObjectLinkingLayer;
-    using compile_layer_type = llvm::orc::IRCompileLayer<object_layer_type, llvm::orc::SimpleCompiler>;
+    using compile_layer_type =
+        llvm::orc::IRCompileLayer<object_layer_type, llvm::orc::SimpleCompiler>;
+#if LLVM_VERSION_MAJOR >= 7
+    using module_handle_type = llvm::orc::VModuleKey;
+#else
     using module_handle_type = compile_layer_type::ModuleHandleT;
+#endif
 
     explicit jit_engine(std::unique_ptr<llvm::TargetMachine> target_machine_);
 
@@ -47,12 +52,18 @@ private:
         return vec;
     }
 
+#if LLVM_VERSION_MAJOR >= 7
+    llvm::orc::ExecutionSession session_;
+
+    std::shared_ptr<llvm::orc::SymbolResolver> resolver_;
+#endif
+
     std::unique_ptr<llvm::TargetMachine> target_machine_;
     llvm::DataLayout data_layout_;
     object_layer_type object_layer_;
     compile_layer_type compile_layer_;
 };
-}
+} // namespace qubus
 
 #pragma pop_macro("DEBUG")
 
