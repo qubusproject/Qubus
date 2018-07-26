@@ -4,7 +4,6 @@
 
 #include <qubus/performance_models/regression_performance_model.hpp>
 #include <qubus/performance_models/simple_statistical_performance_model.hpp>
-#include <qubus/runtime.hpp>
 
 #include <hpx/include/local_lcos.hpp>
 
