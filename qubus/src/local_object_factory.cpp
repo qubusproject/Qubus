@@ -86,7 +86,7 @@ hpx::future<hpx::id_type> local_object_factory_server::create_native_object(obje
 
     auto data_type = compute_type(description);
 
-    auto obj = hpx::local_new<object>(data_type, size, alignment, instance);
+    auto obj = hpx::local_new<object>(data_type, size, instance);
 
     address_space_->register_page(obj, instance);
 

@@ -67,8 +67,7 @@ class object_server : public hpx::components::component_base<object_server>
 {
 public:
     object_server() = default;
-    explicit object_server(type object_type_, std::size_t size_, std::size_t alignment_,
-                           local_address_space::handle data_);
+    explicit object_server(type object_type_, std::size_t size_, local_address_space::handle data_);
     void finalize();
 
     object_server(const object_server&) = delete;
@@ -76,7 +75,6 @@ public:
 
     type object_type() const;
     std::size_t size() const;
-    std::size_t alignment() const;
     object_id id() const;
 
     object_instance primary_instance() const;
@@ -88,7 +86,6 @@ public:
     HPX_DEFINE_COMPONENT_ACTION(object_server, finalize, finalize_action);
     HPX_DEFINE_COMPONENT_ACTION(object_server, object_type, object_type_action);
     HPX_DEFINE_COMPONENT_ACTION(object_server, size, size_action);
-    HPX_DEFINE_COMPONENT_ACTION(object_server, alignment, alignment_action);
     HPX_DEFINE_COMPONENT_ACTION(object_server, primary_instance, primary_instance_action);
     HPX_DEFINE_COMPONENT_ACTION(object_server, has_data, has_data_action);
     HPX_DEFINE_COMPONENT_ACTION(object_server, components, components_action);
@@ -98,7 +95,6 @@ public:
 private:
     type object_type_;
     std::size_t size_;
-    std::size_t alignment_;
     local_address_space::handle data_;
     std::vector<object> components_;
 };
@@ -116,7 +112,6 @@ public:
 
     type object_type() const;
     std::size_t size() const;
-    std::size_t alignment() const;
 
     object_id id() const;
 
@@ -136,7 +131,7 @@ public:
         return !(lhs == rhs);
     }
 };
-}
+} // namespace qubus
 
 namespace std
 {
@@ -156,6 +151,6 @@ struct hash<qubus::object_id>
         return result;
     }
 };
-}
+} // namespace std
 
 #endif

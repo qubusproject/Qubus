@@ -337,7 +337,7 @@ local_runtime::resolve_page_fault(const object& obj, local_address_space::page_f
                                   const auto& obj_type = obj.object_type();
 
                                   auto size = obj.size();
-                                  auto alignment = obj.alignment();
+                                  auto alignment = get_abi_info().get_align_of(obj_type);
 
                                   auto page = ctx.allocate_page(size, alignment);
 

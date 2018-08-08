@@ -16,9 +16,6 @@ HPX_REGISTER_ACTION(object_type_action, qubus_object_server_type_action);
 using size_action = qubus::object_server::size_action;
 HPX_REGISTER_ACTION(size_action, qubus_object_server_size_action);
 
-using alignment_action = qubus::object_server::alignment_action;
-HPX_REGISTER_ACTION(alignment_action, qubus_object_server_alignment_action);
-
 using primary_instance_action = qubus::object_server::primary_instance_action;
 HPX_REGISTER_ACTION(primary_instance_action, qubus_object_server_primary_instance_action);
 
@@ -31,12 +28,9 @@ HPX_REGISTER_ACTION(components_action, qubus_object_server_components_action);
 namespace qubus
 {
 
-object_server::object_server(type object_type_, std::size_t size_, std::size_t alignment_,
+object_server::object_server(type object_type_, std::size_t size_,
                              local_address_space::handle data_)
-: object_type_(std::move(object_type_)),
-  size_(size_),
-  alignment_(alignment_),
-  data_(std::move(data_))
+: object_type_(std::move(object_type_)), size_(size_), data_(std::move(data_))
 {
 }
 
@@ -48,11 +42,6 @@ type object_server::object_type() const
 std::size_t object_server::size() const
 {
     return size_;
-}
-
-std::size_t object_server::alignment() const
-{
-    return alignment_;
 }
 
 void object_server::finalize()
@@ -118,11 +107,6 @@ std::size_t object::size() const
     return hpx::async<object_server::size_action>(this->get_id()).get();
 }
 
-std::size_t object::alignment() const
-{
-    return hpx::async<object_server::alignment_action>(this->get_id()).get();
-}
-
 object_id object::id() const
 {
     return object_id(get_id());
@@ -142,4 +126,4 @@ std::vector<object> object::components() const
 {
     return hpx::async<object_server::components_action>(this->get_id()).get();
 }
-}
+} // namespace qubus
