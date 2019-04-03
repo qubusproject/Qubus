@@ -2,7 +2,7 @@
 set -e
 
 apt update
-apt install -y g++ python3 python3-pip
+apt install -y g++ python3 python3-pip cmake
 
 pip3 install conan
 

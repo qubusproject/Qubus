@@ -4,6 +4,3 @@ hwloc/1.11.10@qubusproject/stable
 llvm/8.0.0@qubusproject/stable
 hpx/1.3.0@qubusproject/dev
 carrot/0.2.0@qubusproject/dev
-
-[build_requires]
-cmake_installer/3.13.0@conan/stable
