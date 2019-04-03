@@ -1,17 +1,9 @@
 #!/usr/bin/env bash
 set -e
 
-wget https://qubusproject.org/carrot/downloads/src/carrot-0.2.0-dev-src.tar.bz2
+apt update
+apt install -y g++ python3 python3-pip
 
-tar xvf carrot-0.2.0-dev-src.tar.bz2
+pip3 install conan
 
-cd carrot-0.2.0-dev-src
-
-mkdir build
-cd build
-
-cmake -DCMAKE_BUILD_TYPE=Release ..
-
-make
-
-sudo make install
+conan install -G -b outdated CI/
