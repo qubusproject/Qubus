@@ -22,9 +22,16 @@ namespace qubus
 class jit_engine
 {
 public:
+#if LLVM_VERSION_MAJOR >= 8
+    using object_layer_type = llvm::orc::LegacyRTDyldObjectLinkingLayer;
+    using compile_layer_type =
+        llvm::orc::LegacyIRCompileLayer<object_layer_type, llvm::orc::SimpleCompiler>;
+#else
     using object_layer_type = llvm::orc::RTDyldObjectLinkingLayer;
     using compile_layer_type =
         llvm::orc::IRCompileLayer<object_layer_type, llvm::orc::SimpleCompiler>;
+#endif
+
 #if LLVM_VERSION_MAJOR >= 7
     using module_handle_type = llvm::orc::VModuleKey;
 #else
