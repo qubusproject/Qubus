@@ -27,10 +27,10 @@ test:gcc/release:
   image: ubuntu:18.10
 
 after_script:
-  - conan upload -r ci-cache boost/1.67.0@conan/stable
-  - conan upload -r hwloc/1.11.10@qubusproject/stable
-  - conan upload -r llvm/8.0.0@qubusproject/stable
-  - conan upload -r hpx/1.3.0@qubusproject/dev
-  - conan upload -r carrot/0.2.0@qubusproject/dev
-  - conan upload -r eigen/3.3.7@conan/stable
-  - conan upload -r isl/0.21@qubusproject/stable
+  - conan upload -r ci-cache --all boost/1.67.0@conan/stable
+  - conan upload -r ci-cache --all hwloc/1.11.10@qubusproject/stable
+  - conan upload -r ci-cache --all llvm/8.0.0@qubusproject/stable
+  - conan upload -r ci-cache --all hpx/1.3.0@qubusproject/dev
+  - conan upload -r ci-cache --all carrot/0.2.0@qubusproject/dev
+  - conan upload -r ci-cache --all eigen/3.3.7@conan/stable
+  - conan upload -r ci-cache --all isl/0.21@qubusproject/stable
