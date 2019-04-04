@@ -17,7 +17,7 @@ test:gcc/release:
   - ls -la
   - export CC=gcc
   - export CXX=g++
-  - conan install -g cmake_paths -s build_type=Release -s compiler.libcxx=libstdc++11 -o llvm:build_dylib=True -b outdated CI/
+  - conan install -g cmake_paths -s build_type=Release -s compiler.libcxx=libstdc++11 -b outdated CI/
   - mkdir build
   - cd build
   - cmake -DCMAKE_TOOLCHAIN_FILE=../conan_paths.cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON ../
