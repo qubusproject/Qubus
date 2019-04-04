@@ -6,6 +6,6 @@ apt install -y g++ python3 python3-pip cmake ninja-build libicu-dev libgmp-dev l
 
 pip3 install conan
 
+conan remote add ci-cache https://api.bintray.com/conan/qubusproject/ci-cache
 conan remote add conan-community https://api.bintray.com/conan/conan-community/conan
 conan remote add qubusproject https://api.bintray.com/conan/qubusproject/conan
-conan remote add ci-cache https://api.bintray.com/conan/qubusproject/ci-cache
