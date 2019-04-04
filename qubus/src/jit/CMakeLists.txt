@@ -23,7 +23,7 @@ else ()
 endif ()
 
 if (NOT TARGET LLVM)
-    message(ERROR "The shared version of the LLVM library is not available.")
+    message(SEND_ERROR "The shared version of the LLVM library is not available.")
 endif()
 
 add_library(qubus_llvm SHARED llvm_version.cpp)
