@@ -9,12 +9,15 @@ stages:
 variables:
   GIT_SUBMODULE_STRATEGY: normal
 
+before_script:
+  - ./install_ci_dependencies.sh
+
 test:gcc/release:
   script:
   - ls -la
   - export CC=gcc
   - export CXX=g++
-  - ./install_ci_dependencies.sh
+  - conan install -g cmake_paths -s build_type=Release -s compiler.libcxx=libstdc++11 -o llvm:build_dylib=True -b outdated CI/
   - mkdir build
   - cd build
   - cmake -DCMAKE_TOOLCHAIN_FILE=../conan_paths.cmake -DCMAKE_BUILD_TYPE=Release -DQUBUS_BUILD_TESTS=ON -DQUBUS_UTIL_BUILD_TESTS=ON ../
@@ -22,3 +25,12 @@ test:gcc/release:
   - ctest -E cuda --output-on-failure
   stage: test
   image: ubuntu:18.10
+
+after_script:
+  - conan upload -r ci-cache boost/1.67.0@conan/stable
+  - conan upload -r hwloc/1.11.10@qubusproject/stable
+  - conan upload -r llvm/8.0.0@qubusproject/stable
+  - conan upload -r hpx/1.3.0@qubusproject/dev
+  - conan upload -r carrot/0.2.0@qubusproject/dev
+  - conan upload -r eigen/3.3.7@conan/stable
+  - conan upload -r isl/0.21@qubusproject/stable
