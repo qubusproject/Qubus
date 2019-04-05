@@ -79,26 +79,26 @@ void module::dump(std::ostream& out) const
 {
     auto serialized_code = pretty_print(*this);
 
-    carrot::plain_form form;
+    auto target = carrot::get_file_target();
+
+    carrot::plain_form form(target);
 
     carrot::render(serialized_code, form);
 
-    auto target = carrot::get_file_target();
-
-    out << form.to_string(target);
+    out << form.to_string();
 }
 
 void module::save(hpx::serialization::output_archive& ar, unsigned QUBUS_UNUSED(version)) const
 {
     auto serialized_code = pretty_print(*this);
 
-    carrot::plain_form form;
+    auto target = carrot::get_file_target();
+
+    carrot::plain_form form(target);
 
     carrot::render(serialized_code, form);
 
-    auto target = carrot::get_file_target();
-
-    ar & form.to_string(target);
+    ar & form.to_string();
 }
 
 void module::load(hpx::serialization::input_archive& ar, unsigned QUBUS_UNUSED(version))

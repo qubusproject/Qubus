@@ -1,17 +1,11 @@
 #!/usr/bin/env bash
 set -e
 
-wget https://qubusproject.org/carrot/downloads/src/carrot-0.2.0-dev-src.tar.bz2
+apt update
+apt install -y g++ python3 python3-pip cmake ninja-build libicu-dev libgmp-dev libncurses-dev libgtest-dev
 
-tar xvf carrot-0.2.0-dev-src.tar.bz2
+pip3 install conan
 
-cd carrot-0.2.0-dev-src
-
-mkdir build
-cd build
-
-cmake -DCMAKE_BUILD_TYPE=Release ..
-
-make
-
-sudo make install
+conan remote add ci-cache https://api.bintray.com/conan/qubusproject/ci-cache
+conan remote add conan-community https://api.bintray.com/conan/conan-community/conan
+conan remote add qubusproject https://api.bintray.com/conan/qubusproject/conan

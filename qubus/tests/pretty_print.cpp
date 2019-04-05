@@ -7,13 +7,13 @@ std::string render_expression(const qubus::expression& expr)
 {
     auto block = qubus::pretty_print(expr);
 
-    carrot::plain_form form;
+    auto target = carrot::get_stdout_target();
+
+    carrot::plain_form form(target);
 
     carrot::render(block, form);
 
-    auto target = carrot::get_stdout_target();
-
-    auto result = form.to_string(target);
+    auto result = form.to_string();
 
     if (!result.empty())
     {
@@ -44,13 +44,13 @@ TEST(pretty_print, function)
 
     auto block = qubus::pretty_print(mod);
 
-    carrot::plain_form form;
+    auto target = carrot::get_stdout_target();
+
+    carrot::plain_form form(target);
 
     carrot::render(block, form);
 
-    auto target = carrot::get_stdout_target();
-
-    auto code = form.to_string(target);
+    auto code = form.to_string();
 
     EXPECT_EQ(code, "module test\n\nfunction foo(a :: Int, b :: Int) -> r :: Int\nend\n");
 }
@@ -74,13 +74,13 @@ TEST(pretty_print, expression)
 
     auto block = qubus::pretty_print(mod);
 
-    carrot::plain_form form;
+    auto target = carrot::get_stdout_target();
+
+    carrot::plain_form form(target);
 
     carrot::render(block, form);
 
-    auto target = carrot::get_stdout_target();
-
-    auto code = form.to_string(target);
+    auto code = form.to_string();
 
     EXPECT_EQ(
         code,
@@ -102,13 +102,13 @@ TEST(pretty_print, struct_)
 
     auto block = qubus::pretty_print(mod);
 
-    carrot::plain_form form;
+    auto target = carrot::get_stdout_target();
+
+    carrot::plain_form form(target);
 
     carrot::render(block, form);
 
-    auto target = carrot::get_stdout_target();
-
-    auto code = form.to_string(target);
+    auto code = form.to_string();
 
     EXPECT_EQ(code, "module test\n\nstruct Foo\n    a :: Double\n    b :: Int\nend\n");
 }

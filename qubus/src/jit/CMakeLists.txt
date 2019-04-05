@@ -1,7 +1,7 @@
 find_package(LLVM REQUIRED)
 
-if (${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR} VERSION_EQUAL 7.0)
-    message(WARNING "Support for LLVM 7.0 is experimental.")
+if (${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR} VERSION_EQUAL 9.0)
+    message(WARNING "Support for LLVM 9.0 is experimental.")
 elseif (${LLVM_VERSION_MAJOR}.${LLVM_VERSION_MINOR} VERSION_LESS 6.0)
     message(SEND_ERROR "Only LLVM >= 6.0 is supported. Please choose a suitable version.")
 endif()
@@ -23,11 +23,11 @@ else ()
 endif ()
 
 if (NOT TARGET LLVM)
-    message(ERROR "The shared version of the LLVM library is not available.")
+    message(SEND_ERROR "The shared version of the LLVM library is not available.")
 endif()
 
 add_library(qubus_llvm SHARED llvm_version.cpp)
-target_include_directories(qubus_llvm PUBLIC ${LLVM_INCLUDE_DIRS} ${Boost_LIBRARY_DIRS})
+target_include_directories(qubus_llvm PUBLIC ${LLVM_INCLUDE_DIRS} ${Boost_INCLUDE_DIRS})
 target_compile_definitions(qubus_llvm PUBLIC ${LLVM_DEFINITIONS})
 target_link_libraries(qubus_llvm PUBLIC LLVM ${Boost_LIBRARIES})
 
