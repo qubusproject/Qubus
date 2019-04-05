@@ -9,3 +9,4 @@ isl/0.21@qubusproject/stable
 
 [options]
 llvm:build_dylib=True
+boost:shared=True
