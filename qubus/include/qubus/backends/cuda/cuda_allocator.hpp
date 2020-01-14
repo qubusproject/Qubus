@@ -1,28 +1,31 @@
 #ifndef QUBUS_BACKENDS_CUDA_CUDA_ALLOCATOR_HPP
 #define QUBUS_BACKENDS_CUDA_CUDA_ALLOCATOR_HPP
 
-#include <qubus/allocator.hpp>
+#include <qubus/backends/cuda/cuda_memory_block.hpp>
 
 #include <qubus/cuda/core.hpp>
 
-#include <memory>
 #include <cstddef>
+#include <memory>
 
 namespace qubus
 {
 
-class cuda_allocator : public allocator
+class cuda_allocator
 {
 public:
+    using memory_block_type = cuda_memory_block;
+
     explicit cuda_allocator(cuda::context& ctx_);
 
-    std::unique_ptr<memory_block> allocate(std::size_t size, std::size_t alignment);
+    cuda_memory_block allocate(std::size_t size);
 
-    void deallocate(memory_block& mem_block);
+    void deallocate(cuda_memory_block& mem_block);
 
 private:
     cuda::context* ctx_;
 };
-}
+
+} // namespace qubus
 
 #endif

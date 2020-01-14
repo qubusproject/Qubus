@@ -2,14 +2,14 @@
 
 namespace qubus
 {
-cuda_memory_block::cuda_memory_block(void* data_, std::size_t size_, cuda_allocator& allocator_)
+cuda_memory_block::cuda_memory_block(cuda::device_ptr data_, std::size_t size_, cuda_allocator& allocator_)
 : data_(data_), size_(size_), allocator_(&allocator_)
 {
 }
 
 cuda_memory_block::~cuda_memory_block()
 {
-    allocator_->deallocate(*this);
+
 }
 
 std::size_t cuda_memory_block::size() const
@@ -17,8 +17,13 @@ std::size_t cuda_memory_block::size() const
     return size_;
 }
 
-void* cuda_memory_block::ptr() const
+cuda::device_ptr cuda_memory_block::ptr() const
 {
     return data_;
+}
+
+cuda_memory_block allocate(arch::cuda_type context, std::size_t size, std::size_t alignment)
+{
+    cuda::device_malloc(size);
 }
 }

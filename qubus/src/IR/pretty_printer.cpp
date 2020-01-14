@@ -141,37 +141,7 @@ carrot::block print_type(const type& t)
 
     using carrot::text;
 
-    pattern::variable<type> subtype;
-    pattern::variable<util::index_t> rank;
-    pattern::variable<std::string> id;
-
-    auto m = pattern::make_matcher<type, carrot::block>()
-                 .case_(pattern::double_t, [&] { return text("Double"); })
-                 .case_(pattern::float_t, [&] { return text("Float"); })
-                 .case_(pattern::integer_t, [&] { return text("Int"); })
-                 .case_(pattern::bool_t, [&] { return text("Bool"); })
-                 .case_(pattern::complex_t(subtype),
-                        [&] { return text("Complex{") << print_type(subtype.get()) << text("}"); })
-                 .case_(pattern::array_t(subtype, rank),
-                        [&] {
-                            return text("Array{") << print_type(subtype.get()) << text(", ")
-                                                  << text(std::to_string(rank.get())) << text("}");
-                        })
-                 .case_(pattern::array_slice_t(subtype, rank),
-                        [&] {
-                            return text("Slice{") << print_type(subtype.get()) << text(", ")
-                                                  << text(std::to_string(rank.get())) << text("}");
-                        })
-                 .case_(pattern::struct_t(id, _), [&] { return text(id.get()); });
-
-    try
-    {
-        return pattern::match(t, m);
-    }
-    catch (const std::logic_error&)
-    {
-        throw printing_error("Encountered an unknown type.");
-    }
+    return text(t.name());
 }
 
 carrot::block bracket(carrot::block b, bool enabled = true)
@@ -208,14 +178,14 @@ carrot::block print(const expression& expr, precedence_level prec_level)
     pattern::variable<util::index_t> ival;
     pattern::variable<bool> bval;
 
-    pattern::variable<variable_declaration> decl;
+    pattern::variable<std::shared_ptr<const variable_declaration>> decl;
     pattern::variable<const function&> plan;
     pattern::variable<type> t;
 
     pattern::variable<execution_order> order;
 
-    pattern::variable<std::vector<variable_declaration>> params;
-    pattern::variable<std::vector<variable_declaration>> index_decls;
+    pattern::variable<std::shared_ptr<const variable_declaration>> params;
+    pattern::variable<std::shared_ptr<const variable_declaration>> index_decls;
 
     auto m =
         pattern::make_matcher<expression, carrot::block>()
@@ -236,7 +206,7 @@ carrot::block print(const expression& expr, precedence_level prec_level)
                                           << print(a.get(), new_prec_level),
                                       new_prec_level < prec_level);
                    })
-            .case_(variable_ref(decl), [&] { return text(decl.get().name()); })
+            .case_(variable_ref(decl), [&] { return text(decl.get()->name()); })
             // TODO: Improve float literal printing.
             .case_(double_literal(dval), [&] { return text(std::to_string(dval.get())); })
             .case_(float_literal(fval), [&] { return text(std::to_string(fval.get())); })
@@ -352,8 +322,8 @@ carrot::block print(const expression& expr, precedence_level prec_level)
                        }();
 
                        loop_head = loop_head
-                                   << text(decl.get().name()) << text(" :: ")
-                                   << print_type(decl.get().var_type()) << text(" in ")
+                                   << text(decl.get()->name()) << text(" :: ")
+                                   << print_type(decl.get()->var_type()) << text(" in ")
                                    << print(a.get(), precedence_level::statement) << text(":")
                                    << print(c.get(), precedence_level::statement) << text(":")
                                    << print(b.get(), precedence_level::statement);
@@ -388,8 +358,8 @@ carrot::block print(const expression& expr, precedence_level prec_level)
                    })
             .case_(local_variable_def(decl, a),
                    [&] {
-                       return text("let ") << text(decl.get().name()) << text(" :: ")
-                                           << print_type(decl.get().var_type()) << text(" = ")
+                       return text("let ") << text(decl.get()->name()) << text(" :: ")
+                                           << print_type(decl.get()->var_type()) << text(" = ")
                                            << print(a.get(), precedence_level::statement);
                    })
             /*.case_(construct(t, args),
@@ -405,12 +375,11 @@ carrot::block print(const expression& expr, precedence_level prec_level)
 
                        std::cout << ")";
                    })*/
-            .case_(member_access(a, id),
-                   [&] {
-                       return bracket(print(a.get(), precedence_level::qualifier)
-                                          << text(".") << text(id.get()),
-                                      precedence_level::qualifier < prec_level);
-                   });
+            .case_(member_access(a, id), [&] {
+                return bracket(print(a.get(), precedence_level::qualifier)
+                                   << text(".") << text(id.get()),
+                               precedence_level::qualifier < prec_level);
+            });
 
     try
     {
@@ -422,21 +391,22 @@ carrot::block print(const expression& expr, precedence_level prec_level)
     }
 }
 
-carrot::block pretty_print_user_defined_type(const types::struct_& t)
+carrot::block pretty_print_user_defined_type(const object_type& t)
 {
     using carrot::text;
 
     auto result = carrot::make_line(carrot::growth_direction::down);
 
-    auto struct_header = text("struct ") << text(t.id());
+    auto struct_header = text("struct ") << text(t.name());
 
     result.add(std::move(struct_header));
 
     auto struct_body = carrot::make_line(carrot::growth_direction::down);
 
-    for (const auto& member : t.members())
+    for (const auto& member : t.properties())
     {
-        auto member_declaration = text(member.id) << text(" :: ") << print_type(member.datatype);
+        auto member_declaration = text(member.id())
+                                  << text(" :: ") << print_type(member.datatype());
 
         struct_body.add(std::move(member_declaration));
     }
@@ -472,16 +442,16 @@ carrot::block pretty_print(const function& func)
 
     for (auto iter = func.params().begin(), end = func.params().end(); iter != end; ++iter)
     {
-        function_declaration = function_declaration << text(iter->name()) << text(" :: ")
-                                                    << print_type(iter->var_type());
+        function_declaration = function_declaration << text((*iter)->name()) << text(" :: ")
+                                                    << print_type((*iter)->var_type());
 
         if (iter != end - 1)
             function_declaration = function_declaration << text(", ");
     }
 
-    function_declaration = function_declaration << text(") -> ") << text(func.result().name())
+    function_declaration = function_declaration << text(") -> ") << text(func.result()->name())
                                                 << text(" :: ")
-                                                << print_type(func.result().var_type());
+                                                << print_type(func.result()->var_type());
 
     result.add(std::move(function_declaration));
 
@@ -490,6 +460,29 @@ carrot::block pretty_print(const function& func)
     result.add(text("end"));
 
     return result;
+}
+
+namespace
+{
+
+struct module_type_printer
+{
+    carrot::block operator()(const object_type& type) const
+    {
+        return pretty_print_user_defined_type(type);
+    }
+
+    carrot::block operator()(const symbolic_type& type) const
+    {
+        throw 0; // A symbolic type can never be a part of a module.
+    }
+
+    carrot::block operator()(const void_type& type) const
+    {
+        throw 0; // void can never be a part of a module.
+    }
+};
+
 }
 
 carrot::block pretty_print(const module& mod)
@@ -504,7 +497,7 @@ carrot::block pretty_print(const module& mod)
 
     for (const auto& type : mod.types())
     {
-        module.add(pretty_print_user_defined_type(type));
+        module.add(visit(type, module_type_printer{}));
     }
 
     for (const auto& function : mod.functions())

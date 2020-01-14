@@ -25,8 +25,8 @@ namespace jit
 
 reference compile(const expression& expr, compiler& comp)
 {
-    auto& env = comp.get_module().env();
-    auto& ctx = comp.get_module().ctx();
+    auto& env = comp.env();
+    auto& ctx = comp.compiler_ctx();
 
     using pattern::_;
 
@@ -425,11 +425,11 @@ reference compile(const expression& expr, compiler& comp)
                                     args.push_back(llvm::ConstantInt::get(size_type, mem_size));
 
                                     data_ptr = builder.CreateBitCast(
-                                        builder.CreateCall(env.get_alloc_scratch_mem(), args),
+                                        builder.CreateCall(env.get_alloc_scratch_mem(comp.get_module().llvm_module()), args),
                                         env.map_qubus_type(value_type.get())->getPointerTo(0));
 
-                                    ctx.get_current_scope().on_exit([args, &env, &builder] {
-                                        builder.CreateCall(env.get_dealloc_scratch_mem(), args);
+                                    ctx.get_current_scope().on_exit([args, &env, &builder, &comp] {
+                                        builder.CreateCall(env.get_dealloc_scratch_mem(comp.get_module().llvm_module()), args);
                                     });
                                 }
 

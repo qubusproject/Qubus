@@ -131,6 +131,8 @@ if (QUBUS_ANALYSE_COVERAGE)
     endif()
 endif()
 
+find_package(Fmt REQUIRED)
+
 add_subdirectory(util)
 add_subdirectory(qubus)
 

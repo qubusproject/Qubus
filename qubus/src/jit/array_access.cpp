@@ -223,8 +223,8 @@ reference extent(const expression& array_like, const expression& dim, compiler& 
 {
     using pattern::_;
 
-    auto& env = comp.get_module().env();
-    auto& ctx = comp.get_module().ctx();
+    auto& env = comp.env();
+    auto& ctx = comp.compiler_ctx();
 
     auto& builder = env.builder();
 
@@ -296,8 +296,8 @@ reference emit_array_access(const expression& array,
                             const std::vector<std::reference_wrapper<const expression>>& indices,
                             compiler& comp)
 {
-    auto& env = comp.get_module().env();
-    auto& ctx = comp.get_module().ctx();
+    auto& env = comp.env();
+    auto& ctx = comp.compiler_ctx();
 
     std::unique_ptr<expression> linearized_index = integer_literal(0);
 
@@ -337,8 +337,8 @@ emit_array_slice_access(const reference& slice,
                         const std::vector<std::reference_wrapper<const expression>>& indices,
                         compiler& comp)
 {
-    auto& env = comp.get_module().env();
-    auto& ctx = comp.get_module().ctx();
+    auto& env = comp.env();
+    auto& ctx = comp.compiler_ctx();
 
     auto& builder = env.builder();
 
@@ -437,8 +437,8 @@ reference emit_array_slice(const reference& array,
 {
     using pattern::_;
 
-    auto& env = comp.get_module().env();
-    auto& ctx = comp.get_module().ctx();
+    auto& env = comp.env();
+    auto& ctx = comp.compiler_ctx();
 
     auto& builder = env.builder();
 
@@ -545,8 +545,8 @@ reference emit_subscription(const expression& array_like,
                             const std::vector<std::reference_wrapper<const expression>>& indices,
                             compiler& comp)
 {
-    auto& env = comp.get_module().env();
-    auto& ctx = comp.get_module().ctx();
+    auto& env = comp.env();
+    auto& ctx = comp.compiler_ctx();
 
     using pattern::_;
 

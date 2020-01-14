@@ -25,14 +25,14 @@ namespace qubus
 
 namespace
 {
-std::vector<hpx::naming::gid_type> generate_key_from_ctx(const execution_context& ctx)
+std::vector<object_id> generate_key_from_ctx(const execution_context& ctx)
 {
-    std::vector<hpx::naming::gid_type> key;
+    std::vector<object_id> key;
     key.reserve(ctx.args().size());
 
     for (const auto& obj : ctx.args())
     {
-        key.push_back(obj.get_raw_gid());
+        key.push_back(obj.id());
     }
 
     return key;
@@ -77,12 +77,12 @@ private:
                         boost::accumulators::tag::error_of<boost::accumulators::tag::mean>>>
         acc_;
 };
-}
+} // namespace
 
 class simple_statistical_performance_model_impl
 {
 public:
-    void sample_execution_time(const symbol_id& QUBUS_UNUSED(func), const execution_context& ctx,
+    void sample_execution_time(const execution_context& ctx,
                                std::chrono::microseconds execution_time)
     {
         std::lock_guard<hpx::lcos::local::mutex> guard(accumulators_mutex_);
@@ -100,7 +100,7 @@ public:
     }
 
     boost::optional<performance_estimate>
-    try_estimate_execution_time(const symbol_id& QUBUS_UNUSED(func), const execution_context& ctx) const
+    try_estimate_execution_time(const execution_context& ctx) const
     {
         std::lock_guard<hpx::lcos::local::mutex> guard(accumulators_mutex_);
 
@@ -121,7 +121,7 @@ public:
 
 private:
     mutable hpx::lcos::local::mutex accumulators_mutex_;
-    std::map<std::vector<hpx::naming::gid_type>, accumulator> accumulators_;
+    std::map<std::vector<object_id>, accumulator> accumulators_;
 };
 
 simple_statistical_performance_model::simple_statistical_performance_model()
@@ -132,19 +132,19 @@ simple_statistical_performance_model::simple_statistical_performance_model()
 simple_statistical_performance_model::~simple_statistical_performance_model() = default;
 
 void simple_statistical_performance_model::sample_execution_time(
-    const symbol_id& func, const execution_context& ctx, std::chrono::microseconds execution_time)
+    const execution_context& ctx, std::chrono::microseconds execution_time)
 {
     QUBUS_ASSERT(impl_, "Uninitialized object.");
 
-    impl_->sample_execution_time(func, ctx, std::move(execution_time));
+    impl_->sample_execution_time(ctx, std::move(execution_time));
 }
 
 boost::optional<performance_estimate>
 simple_statistical_performance_model::try_estimate_execution_time(
-    const symbol_id& func, const execution_context& ctx) const
+    const execution_context& ctx) const
 {
     QUBUS_ASSERT(impl_, "Uninitialized object.");
 
-    return impl_->try_estimate_execution_time(func, ctx);
+    return impl_->try_estimate_execution_time(ctx);
 }
-}
+} // namespace qubus

@@ -40,11 +40,14 @@ public:
     cpu_compiler& operator=(const cpu_compiler&) = delete;
     cpu_compiler& operator=(cpu_compiler&&) = delete;
 
+    std::function<void(void*, const std::vector<void*>&, void*)>
+    get_constructor(const type& datatype);
+
     std::unique_ptr<cpu_plan> compile_computelet(std::unique_ptr<module> program);
 
 private:
     std::shared_ptr<cpu_compiler_impl> impl_;
 };
-}
+} // namespace qubus
 
 #endif

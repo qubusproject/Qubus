@@ -1,7 +1,7 @@
 macro(CheckSIMD)
 include (CheckCXXSourceRuns)
 
-option(USE_SIMD "enable or disable SIMD" ON)
+option(USE_SIMD "enable or disable SIMD" OFF)
 
 if(NOT USE_SIMD)
   message(STATUS "skip test for SIMD support")

@@ -3,20 +3,19 @@
 
 #include <qubus/module_library.hpp>
 #include <qubus/performance_models/performance_model.hpp>
+#include <qubus/local_address_space.hpp>
 
 #include <memory>
 
 namespace qubus
 {
 
-class address_space;
-
 class unified_performance_model_impl;
 
 class unified_performance_model final : public performance_model
 {
 public:
-    explicit unified_performance_model(module_library mod_library_, address_space& host_addr_space_);
+    explicit unified_performance_model(module_library mod_library_, host_address_space& host_addr_space_);
     virtual ~unified_performance_model();
 
     void sample_execution_time(const symbol_id& func, const execution_context& ctx,

@@ -20,20 +20,26 @@ unique_variable_generator::unique_variable_generator(const function& func)
 {
     for (const auto& param : func.params())
     {
-        reserved_names_.insert(param.name());
+        std::string_view param_name = param->name();
+
+        reserved_names_.insert(std::string(param_name.data(), param_name.size()));
     }
 
-    reserved_names_.insert(func.result().name());
+    std::string_view result_name = func.result()->name();
+
+    reserved_names_.insert(std::string(result_name.data(), result_name.size()));
 }
 
 unique_variable_generator::unique_variable_generator(const expression& expr)
 {
-    pattern::variable<variable_declaration> decl;
+    pattern::variable<std::shared_ptr<const variable_declaration>> decl;
 
     auto m = pattern::make_matcher<expression, void>()
     .case_(pattern::var(decl), [&, this]
     {
-        reserved_names_.insert(decl.get().name());
+       std::string_view var_name = decl.get()->name();
+
+        reserved_names_.insert(std::string(var_name.data(), var_name.size()));
     });
 
     pattern::for_each(expr, m);

@@ -1,7 +1,11 @@
 #include <qubus/virtual_address_space.hpp>
 
+#include <qubus/util/hpx/serialization/optional.hpp>
+
 #include <hpx/runtime/serialization/serialize.hpp>
 #include <hpx/runtime/serialization/unique_ptr.hpp>
+
+#include <qubus/util/unused.hpp>
 
 HPX_REGISTER_COMPONENT(hpx::components::component<qubus::virtual_address_space_wrapper>,
                        qubus_virtual_address_space_wrapper);
@@ -10,9 +14,13 @@ using resolve_object_action = qubus::virtual_address_space_wrapper::resolve_obje
 HPX_REGISTER_ACTION(resolve_object_action,
                     qubus_virtual_address_space_wrapper_resolve_object_action);
 
-using try_resolve_object_action = qubus::virtual_address_space_wrapper::try_resolve_object_action;
-HPX_REGISTER_ACTION(try_resolve_object_action,
-                    qubus_virtual_address_space_wrapper_try_resolve_object_action);
+using invalidate_object_action = qubus::virtual_address_space_wrapper::invalidate_object_action;
+HPX_REGISTER_ACTION(invalidate_object_action,
+                    qubus_virtual_address_space_wrapper_invalidate_object_action);
+
+using free_object_action = qubus::virtual_address_space_wrapper::free_object_action;
+HPX_REGISTER_ACTION(free_object_action,
+                    qubus_virtual_address_space_wrapper_free_object_action);
 
 namespace qubus
 {
@@ -26,16 +34,19 @@ virtual_address_space_wrapper::client::client(hpx::future<hpx::id_type>&& id)
 {
 }
 
-hpx::future<object_instance>
-virtual_address_space_wrapper::client::resolve_object(const object& obj)
+hpx::future<instance_token> virtual_address_space_wrapper::client::resolve_object(object_id id)
 {
-    return hpx::async<virtual_address_space_wrapper::resolve_object_action>(this->get_id(), obj);
+    return hpx::async<virtual_address_space_wrapper::resolve_object_action>(this->get_id(), id);
 }
 
-object_instance virtual_address_space_wrapper::client::try_resolve_object(const object& obj) const
+hpx::future<void> virtual_address_space_wrapper::client::invalidate_object(object_id id)
 {
-    return hpx::async<virtual_address_space_wrapper::try_resolve_object_action>(this->get_id(), obj)
-        .get();
+    return hpx::async<virtual_address_space_wrapper::invalidate_object_action>(this->get_id(), id);
+}
+
+hpx::future<void> virtual_address_space_wrapper::client::free_object(object_id id)
+{
+    return hpx::async<virtual_address_space_wrapper::free_object_action>(this->get_id(), id);
 }
 
 virtual_address_space_wrapper::virtual_address_space_wrapper(
@@ -44,13 +55,19 @@ virtual_address_space_wrapper::virtual_address_space_wrapper(
 {
 }
 
-hpx::future<object_instance> virtual_address_space_wrapper::resolve_object(const object& obj)
+hpx::future<instance_token> virtual_address_space_wrapper::resolve_object(object_id id)
 {
-    return wrapped_address_space_->resolve_object(obj);
+    return wrapped_address_space_->resolve_object(id);
 }
 
-object_instance virtual_address_space_wrapper::try_resolve_object(const object& obj) const
+hpx::future<void> virtual_address_space_wrapper::invalidate_object(object_id id)
 {
-    return wrapped_address_space_->try_resolve_object(obj);
+    return wrapped_address_space_->invalidate_object(id);
 }
+
+hpx::future<void> virtual_address_space_wrapper::free_object(object_id id)
+{
+    return wrapped_address_space_->free_object(id);
 }
+
+} // namespace qubus

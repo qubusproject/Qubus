@@ -1,10 +1,9 @@
 #ifndef QUBUS_VALUE_RANGE_ANALYSIS_HPP
 #define QUBUS_VALUE_RANGE_ANALYSIS_HPP
 
-#include <qubus/axiom_analysis.hpp>
-#include <qubus/value_set_analysis.hpp>
-
-#include <qubus/pass_manager.hpp>
+#include <qubus/IR/axiom_analysis.hpp>
+#include <qubus/IR/value_set_analysis.hpp>
+#include <qubus/IR/pass_manager.hpp>
 
 #include <boost/optional.hpp>
 

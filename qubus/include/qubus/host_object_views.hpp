@@ -15,6 +15,7 @@
 #include <hpx/runtime/threads/executors/pool_executor.hpp>
 
 #include <qubus/util/assert.hpp>
+#include <qubus/util/bit.hpp>
 #include <qubus/util/integers.hpp>
 
 #include <memory>
@@ -66,9 +67,9 @@ public:
     construct(object obj, hpx::future<distributed_access_token> access_token,
               AddressSpace& addr_space)
     {
-        auto hnd = addr_space.resolve_object(obj).get();
+        auto hnd = addr_space.resolve_object(obj.id()).get();
 
-        auto value = static_cast<T*>(hnd.data().ptr());
+        auto value = reinterpret_cast<T*>(hnd.data().ptr());
 
         auto ctx = std::make_shared<host_view_context>(access_token.get(), std::move(hnd));
 
@@ -88,9 +89,9 @@ public:
     [[nodiscard]] static hpx::future<cpu_scalar_view<T>>
     construct_from_locked_object(object obj, AddressSpace& addr_space)
     {
-        auto hnd = addr_space.resolve_object(obj).get();
+        auto hnd = addr_space.resolve_object(obj.id()).get();
 
-        auto value = static_cast<T*>(hnd.data().ptr());
+        auto value = util::bit_cast<T*>(hnd.data().ptr());
 
         auto ctx = std::make_shared<host_view_context>(distributed_access_token(), std::move(hnd));
 
@@ -183,19 +184,20 @@ public:
     construct(object obj, hpx::future<distributed_access_token> access_token,
               AddressSpace& addr_space)
     {
-        auto hnd = addr_space.resolve_object(obj).get();
+        auto hnd = addr_space.resolve_object(obj.id()).get();
 
         auto base_ptr = hnd.data().ptr();
 
-        auto shape_ptr = static_cast<util::index_t*>(base_ptr) + 1;
+        auto shape_ptr = reinterpret_cast<util::index_t*>(base_ptr) + 1;
 
         auto data_ptr = static_cast<T*>(static_cast<void*>(shape_ptr + Rank));
 
-        auto service_executor = std::make_shared<hpx::threads::executors::pool_executor>("/qubus/service");
+        auto service_executor =
+            std::make_shared<hpx::threads::executors::pool_executor>("/qubus/service");
 
         return access_token.then(
-            *service_executor,
-            [hnd, shape_ptr, data_ptr, service_executor](hpx::future<distributed_access_token> token) mutable {
+            *service_executor, [hnd, shape_ptr, data_ptr, service_executor](
+                                   hpx::future<distributed_access_token> token) mutable {
                 auto ctx = std::make_shared<host_view_context>(token.get(), std::move(hnd));
 
                 return cpu_array_view<T, Rank>(Rank, shape_ptr, data_ptr, std::move(ctx));

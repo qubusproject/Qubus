@@ -18,14 +18,17 @@ HPX_REGISTER_ACTION(shutdown_action, qubus_runtime_server_shutdown_action);
 typedef qubus::runtime_server::execute_action execute_action;
 HPX_REGISTER_ACTION(execute_action, qubus_runtime_server_execute_action);
 
+typedef qubus::runtime_server::construct_action construct_action;
+HPX_REGISTER_ACTION(construct_action, qubus_runtime_server_construct_action);
+
+typedef qubus::runtime_server::destruct_action destruct_action;
+HPX_REGISTER_ACTION(destruct_action, qubus_runtime_server_destruct_action);
+
 using acquire_write_access_action = qubus::runtime_server::acquire_write_access_action;
 HPX_REGISTER_ACTION(acquire_write_access_action, qubus_runtime_acquire_write_access_action);
 
 using acquire_read_access_action = qubus::runtime_server::acquire_read_access_action;
 HPX_REGISTER_ACTION(acquire_read_access_action, qubus_runtime_acquire_read_access_action);
-
-typedef qubus::runtime_server::get_object_factory_action get_object_factory_action;
-HPX_REGISTER_ACTION(get_object_factory_action, qubus_runtime_server_get_object_factory_action);
 
 typedef qubus::runtime_server::get_module_library_action get_module_library_action;
 HPX_REGISTER_ACTION(get_module_library_action, qubus_runtime_server_get_module_library_action);
@@ -34,7 +37,8 @@ namespace qubus
 {
 
 runtime_server::runtime_server()
-: mod_library_(hpx::local_new<module_library>())
+: mod_library_(hpx::local_new<module_library>()),
+  address_block_pool_(hpx::local_new<global_block_pool>())
 {
     init_logging();
 
@@ -58,10 +62,9 @@ runtime_server::runtime_server()
 
     for (const auto& locality : hpx::find_all_localities())
     {
-        local_runtimes_.push_back(init_local_runtime_on_locality(locality, *global_address_space_, mod_library_));
+        local_runtimes_.push_back(init_local_runtime_on_locality(
+            locality, *global_address_space_, address_block_pool_, mod_library_));
     }
-
-    obj_factory_ = hpx::new_<object_factory>(hpx::find_here(), abi_info(), local_runtimes_);
 
     /*{
         BOOST_LOG_NAMED_SCOPE("runtime");
@@ -79,7 +82,6 @@ runtime_server::runtime_server()
     }
 
     hpx::wait_all(local_runtimes_);
-    hpx::wait_all(obj_factory_);
 }
 
 void runtime_server::shutdown()
@@ -89,8 +91,6 @@ void runtime_server::shutdown()
     mod_library_.free();
 
     global_vpu_.reset();
-
-    obj_factory_.free();
 
     for (const auto& locality : hpx::find_all_localities())
     {
@@ -183,17 +183,49 @@ void runtime_server::execute(const symbol_id& func, kernel_arguments kernel_args
         results.push_back(result);
     }
 
-    hpx::future<std::vector<hpx::future<access_token>>> dependencies_ready = hpx::when_all(std::move(dependencies));
+    hpx::future<std::vector<hpx::future<access_token>>> dependencies_ready =
+        hpx::when_all(std::move(dependencies));
 
     execution_context ctx(std::move(args), std::move(results));
 
     dependencies_ready.then(
-            get_local_runtime().get_service_executor(),
-            [this, func, ctx = std::move(ctx)](hpx::future<std::vector<hpx::future<access_token>>> dependencies_ready) {
-                auto tokens = dependencies_ready.get();
+        get_local_runtime().get_service_executor(),
+        [this, func, ctx = std::move(ctx)](
+            hpx::future<std::vector<hpx::future<access_token>>> dependencies_ready) {
+            auto tokens = dependencies_ready.get();
 
-                global_vpu_->execute(func, std::move(ctx)).get();
-            });
+            global_vpu_->execute(func, std::move(ctx)).get();
+        });
+}
+
+hpx::future<object> runtime_server::construct(type object_type, std::vector<object> arguments)
+{
+    std::vector<hpx::future<access_token>> dependencies;
+
+    for (auto& arg : arguments)
+    {
+        auto token = df_graph_.schedule_read(arg);
+
+        dependencies.push_back(std::move(token));
+    }
+
+    hpx::future<std::vector<hpx::future<access_token>>> dependencies_ready =
+        hpx::when_all(std::move(dependencies));
+
+    return dependencies_ready.then(
+        get_local_runtime().get_service_executor(),
+        [this, object_type = std::move(object_type),
+         arguments = std::move(arguments)](auto dependencies_ready) mutable {
+            auto tokens = dependencies_ready.get();
+
+            return global_vpu_->construct_local_object(std::move(object_type), std::move(arguments))
+                .get();
+        });
+}
+
+hpx::future<void> runtime_server::destruct(object obj)
+{
+    return global_address_space_->free_object(obj.id());
 }
 
 distributed_access_token runtime_server::acquire_write_access(const object& obj)
@@ -204,11 +236,6 @@ distributed_access_token runtime_server::acquire_write_access(const object& obj)
 distributed_access_token runtime_server::acquire_read_access(const object& obj)
 {
     return df_graph_.schedule_read(obj).get();
-}
-
-hpx::future<hpx::id_type> runtime_server::get_object_factory() const
-{
-    return hpx::make_ready_future(obj_factory_.get());
 }
 
 hpx::future<hpx::id_type> runtime_server::get_module_library() const
@@ -231,8 +258,18 @@ void runtime::shutdown()
 
 hpx::future<void> runtime::execute(const symbol_id& func, kernel_arguments args)
 {
-    return hpx::async<runtime_server::execute_action>(this->get_id(), func,
-                                                      std::move(args));
+    return hpx::async<runtime_server::execute_action>(this->get_id(), func, std::move(args));
+}
+
+hpx::future<object> runtime::construct(type object_type, std::vector<object> arguments)
+{
+    return hpx::async<runtime_server::construct_action>(this->get_id(), std::move(object_type),
+                                                        std::move(arguments));
+}
+
+hpx::future<void> runtime::destruct(object obj)
+{
+    return hpx::async<runtime_server::destruct_action>(this->get_id(), std::move(obj));
 }
 
 hpx::future<distributed_access_token> runtime::acquire_write_access(const object& obj)
@@ -243,12 +280,6 @@ hpx::future<distributed_access_token> runtime::acquire_write_access(const object
 hpx::future<distributed_access_token> runtime::acquire_read_access(const object& obj)
 {
     return hpx::async<runtime_server::acquire_read_access_action>(this->get_id(), obj);
-}
-
-object_factory runtime::get_object_factory() const
-{
-    // FIXME: Reevaluate the impact of the manual unwrapping of the future.
-    return hpx::async<runtime_server::get_object_factory_action>(this->get_id()).get();
 }
 
 module_library runtime::get_module_library() const
@@ -268,7 +299,7 @@ void setup(hpx::resource::partitioner& resource_partitioner)
 
 namespace
 {
-    runtime global_runtime;
+runtime global_runtime;
 }
 
 void init(int QUBUS_UNUSED(argc), char** QUBUS_UNUSED(argv))
@@ -307,4 +338,4 @@ std::vector<std::string> get_hpx_config()
 
     return cfg;
 }
-}
+} // namespace qubus

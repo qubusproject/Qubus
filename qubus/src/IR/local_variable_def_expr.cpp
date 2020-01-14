@@ -7,13 +7,13 @@
 namespace qubus
 {
 
-local_variable_def_expr::local_variable_def_expr(variable_declaration decl_,
+local_variable_def_expr::local_variable_def_expr(std::shared_ptr<const variable_declaration> decl_,
                                                  std::unique_ptr<expression> initializer_)
 : decl_(std::move(decl_)), initializer_(take_over_child(initializer_))
 {
 }
 
-const variable_declaration& local_variable_def_expr::decl() const
+std::shared_ptr<const variable_declaration> local_variable_def_expr::decl() const
 {
     return decl_;
 }

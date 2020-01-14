@@ -6,11 +6,12 @@
 namespace qubus
 {
 
-variable_ref_expr::variable_ref_expr(variable_declaration declaration_) : declaration_(declaration_)
+variable_ref_expr::variable_ref_expr(std::shared_ptr<const variable_declaration> declaration_)
+: declaration_(declaration_)
 {
 }
 
-const variable_declaration& variable_ref_expr::declaration() const
+std::shared_ptr<const variable_declaration> variable_ref_expr::declaration() const
 {
     return declaration_;
 }
@@ -31,7 +32,7 @@ std::size_t variable_ref_expr::arity() const
 }
 
 std::unique_ptr<expression> variable_ref_expr::substitute_subexpressions(
-        std::vector<std::unique_ptr<expression>> new_children) const
+    std::vector<std::unique_ptr<expression>> new_children) const
 {
     if (new_children.size() != 0)
         throw 0;

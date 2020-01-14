@@ -10,7 +10,7 @@ add_subdirectory(examples)
 generate_export_header(qubus BASE_NAME QUBUS)
 
 add_executable(qubus_test main.cpp)
-target_link_libraries(qubus_test qubus qubus_qtl)
+target_link_libraries(qubus_test PRIVATE qubus qubus_qtl)
 target_compile_options(qubus_test PRIVATE -mavx2 -mfma)
 target_compile_definitions(qubus_test PRIVATE -DEIGEN_DONT_VECTORIZE -DEIGEN_DONT_PARALLELIZE)
 hpx_setup_target(qubus_test COMPONENT_DEPENDENCIES iostreams)

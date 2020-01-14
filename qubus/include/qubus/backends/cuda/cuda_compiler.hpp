@@ -8,8 +8,8 @@
 #include <qubus/IR/module.hpp>
 #include <qubus/IR/symbol_id.hpp>
 
-#include <memory>
 #include <functional>
+#include <memory>
 #include <vector>
 
 namespace qubus
@@ -26,7 +26,8 @@ public:
     cuda_plan(const cuda_plan&) = delete;
     cuda_plan& operator=(const cuda_plan&) = delete;
 
-    virtual void execute(const symbol_id& entry_point, const std::vector<void*>& args, cuda::stream& stream) const = 0;
+    virtual void execute(const symbol_id& entry_point, const std::vector<cuda::device_ptr>& args,
+                         cuda::stream& stream) const = 0;
 };
 
 class cuda_compiler
@@ -42,11 +43,12 @@ public:
     cuda_compiler& operator=(cuda_compiler&&) = delete;
 
     std::unique_ptr<cuda_plan> compile_computelet(std::unique_ptr<module> computelet);
+
 private:
     class impl;
 
     std::unique_ptr<impl> impl_;
 };
-}
+} // namespace qubus
 
 #endif

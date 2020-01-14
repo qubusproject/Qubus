@@ -7,6 +7,7 @@
 #include <qubus/host_object_views.hpp>
 #include <qubus/object.hpp>
 #include <qubus/runtime.hpp>
+#include <qubus/scalar.hpp>
 
 #include <qubus/util/integers.hpp>
 
@@ -22,18 +23,41 @@ public:
     using value_type = T;
 
     template <typename... SizeTypes>
-    explicit array(SizeTypes... sizes_)
-    : data_(get_runtime().get_object_factory().create_array(associated_qubus_type<T>::get(),
-                                                            {util::to_uindex(sizes_)...}))
+    explicit array(SizeTypes... sizes_) : data_(init(sizes_...))
     {
     }
 
-    object get_object()
+    ~array()
+    {
+        get_runtime().destruct(data_);
+    }
+
+    object get_object() const
     {
         return data_;
     }
 
 private:
+    template <typename... SizeTypes>
+    static object init(SizeTypes... sizes)
+    {
+        auto arg_objects = {scalar<util::index_t>(util::to_uindex(sizes))...};
+
+        std::vector<object> args;
+        args.reserve(arg_objects.size());
+
+        for (const auto& obj : arg_objects)
+        {
+            args.push_back(obj.get_object());
+        }
+
+        auto value_type = associated_qubus_type<T>::get();
+
+        return get_runtime()
+            .construct(types::array(std::move(value_type), sizeof...(sizes)), std::move(args))
+            .get();
+    }
+
     object data_;
 };
 

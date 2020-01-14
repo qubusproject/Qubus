@@ -95,8 +95,8 @@ llvm::Function* get_div_ceil32(llvm::IRBuilder<>& builder, llvm::Module& mod)
     llvm::FunctionType* func_type = llvm::FunctionType::get(
         builder.getInt32Ty(), {builder.getInt32Ty(), builder.getInt32Ty()}, false);
 
-    llvm::Function* round_up =
-        llvm::Function::Create(func_type, llvm::Function::InternalLinkage, "qubus_div_ceil32", &mod);
+    llvm::Function* round_up = llvm::Function::Create(func_type, llvm::Function::InternalLinkage,
+                                                      "qubus_div_ceil32", &mod);
 
     llvm::BasicBlock* entry = llvm::BasicBlock::Create(mod.getContext(), "entry", round_up);
     builder.SetInsertPoint(entry);
@@ -295,14 +295,15 @@ public:
 
     virtual ~cuda_plan_impl() = default;
 
-    void execute(const symbol_id& entry_point, const std::vector<void*>& args, cuda::stream& stream) const override
+    void execute(const symbol_id& entry_point, const std::vector<cuda::device_ptr>& args,
+                 cuda::stream& stream) const override
     {
         auto entry = mod_.get_function(mangle_function_name(entry_point));
 
         auto launch_config = cuda::calculate_launch_config_with_max_occupancy(entry, 0);
 
-        cuda::launch_kernel(entry, launch_config.min_grid_size, launch_config.block_size, 0,
-                            stream, args.data(), nullptr);
+        cuda::launch_kernel(entry, launch_config.min_grid_size, launch_config.block_size, 0, stream,
+                            args.data(), nullptr);
     }
 
 private:
@@ -340,8 +341,9 @@ std::unique_ptr<cuda_plan> compile(std::unique_ptr<module> computelet, jit::comp
     llvm::raw_svector_ostream sstream(buffer);
 
 #if LLVM_VERSION_MAJOR >= 7
-    if (target_machine.addPassesToEmitFile(
-            pass_man, sstream, nullptr, llvm::TargetMachine::CodeGenFileType::CGFT_AssemblyFile, true))
+    if (target_machine.addPassesToEmitFile(pass_man, sstream, nullptr,
+                                           llvm::TargetMachine::CodeGenFileType::CGFT_AssemblyFile,
+                                           true))
     {
         throw 0;
     }
@@ -373,7 +375,7 @@ std::unique_ptr<cuda_plan> compile(std::unique_ptr<module> computelet, jit::comp
 
     return util::make_unique<cuda_plan_impl>(std::move(cuda_module), std::move(mod));
 }
-}
+} // namespace
 
 class cuda_compiler::impl
 {
@@ -460,4 +462,4 @@ std::unique_ptr<cuda_plan> cuda_compiler::compile_computelet(std::unique_ptr<mod
 {
     return impl_->compile_computelet(std::move(computelet));
 }
-}
+} // namespace qubus

@@ -19,6 +19,7 @@
 
 #include <qubus/jit/jit_engine.hpp>
 #include <qubus/jit/optimization_pipeline.hpp>
+#include <qubus/jit/runtime_library.hpp>
 
 #include <llvm/IR/DataLayout.h>
 #include <llvm/IR/Verifier.h>
@@ -33,6 +34,10 @@
 #include <qubus/jit/execution_stack.hpp>
 #include <qubus/jit/llvm_environment.hpp>
 
+#include <qubus/IR/type.hpp>
+#include <qubus/pattern/core.hpp>
+#include <qubus/pattern/type.hpp>
+
 #include <cstdlib>
 #include <utility>
 
@@ -46,7 +51,8 @@ std::string mangle_function_name(const symbol_id& func_name)
 {
     std::string result;
 
-    for (auto iter = func_name.components().begin(), end = func_name.components().end(); iter != end; ++iter)
+    for (auto iter = func_name.components().begin(), end = func_name.components().end();
+         iter != end; ++iter)
     {
         result += *iter;
 
@@ -145,7 +151,7 @@ std::unique_ptr<cpu_plan> compile(std::unique_ptr<module> program, jit::compiler
 
     return util::make_unique<cpu_plan_impl>(engine, std::move(mod));
 }
-}
+} // namespace
 
 class cpu_compiler_impl
 {
@@ -177,12 +183,30 @@ public:
 
         engine_ = std::make_unique<jit_engine>(std::move(TM));
 
+        rt_library_ = std::make_unique<jit::host_runtime_library>(comp_->get_context(), *engine_);
+
 #if LLVM_USE_INTEL_JITEVENTS
 // TODO: Reenable this
 // llvm::JITEventListener* vtuneProfiler =
 //    llvm::JITEventListener::createIntelJITEventListener();
 // engine_->RegisterJITEventListener(vtuneProfiler);
 #endif
+    }
+
+    std::function<void(void*, const std::vector<void*>&, void*)>
+    get_constructor(const type& datatype)
+    {
+        pattern::variable<type> value_type;
+        pattern::variable<util::index_t> rank;
+
+        auto m =
+            pattern::make_matcher<type,
+                                  std::function<void(void*, const std::vector<void*>&, void*)>>()
+                .case_(array_t(value_type, rank), [&] {
+                    return rt_library_->get_array_constructor(value_type.get(), rank.get());
+                });
+
+        return pattern::match(datatype, m);
     }
 
     std::unique_ptr<cpu_plan> compile_computelet(std::unique_ptr<module> program)
@@ -193,14 +217,21 @@ public:
 private:
     std::unique_ptr<jit::compiler> comp_;
     std::unique_ptr<jit_engine> engine_;
+    std::unique_ptr<jit::host_runtime_library> rt_library_;
 };
 
 cpu_compiler::cpu_compiler() : impl_(std::make_unique<cpu_compiler_impl>())
 {
 }
 
+std::function<void(void*, const std::vector<void*>&, void*)>
+cpu_compiler::get_constructor(const type& datatype)
+{
+    return impl_->get_constructor(datatype);
+}
+
 std::unique_ptr<cpu_plan> cpu_compiler::compile_computelet(std::unique_ptr<module> program)
 {
     return impl_->compile_computelet(std::move(program));
 }
-}
+} // namespace qubus

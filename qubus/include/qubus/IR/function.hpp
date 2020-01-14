@@ -26,7 +26,7 @@ class function
 {
 public:
     explicit function(module& containing_module_, std::string name_,
-                      std::vector<variable_declaration> params_, variable_declaration result_,
+                      std::vector<std::shared_ptr<const variable_declaration>> params_, std::shared_ptr<const variable_declaration> result_,
                       std::unique_ptr<expression> body_);
 
     function(const function&) = delete;
@@ -40,9 +40,9 @@ public:
 
     util::handle id() const;
 
-    const std::vector<variable_declaration>& params() const;
+    const std::vector<std::shared_ptr<const variable_declaration>>& params() const;
 
-    const variable_declaration& result() const;
+    std::shared_ptr<const variable_declaration> result() const;
 
     std::size_t arity() const;
 
@@ -56,17 +56,17 @@ public:
 
     annotation_map& annotations();
 
-    variable_declaration declare_new_local_variable(type datatype);
-    variable_declaration declare_new_local_variable(type datatype, const std::string& hint);
+    std::shared_ptr<const variable_declaration> declare_new_local_variable(type datatype);
+    std::shared_ptr<const variable_declaration> declare_new_local_variable(type datatype, const std::string& hint);
 
 private:
     module* containing_module_;
     std::string name_;
-    std::vector<variable_declaration> params_;
-    variable_declaration result_;
+    std::vector<std::shared_ptr<const variable_declaration>> params_;
+    std::shared_ptr<const variable_declaration> result_;
     std::unique_ptr<expression> body_;
 
-    std::unordered_map<std::string, variable_declaration> local_variable_table_;
+    std::unordered_map<std::string, std::shared_ptr<const variable_declaration>> local_variable_table_;
     mutable annotation_map annotations_;
 };
 

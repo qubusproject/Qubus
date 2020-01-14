@@ -26,11 +26,15 @@ public:
     hpx::future<void> execute(const symbol_id& func, execution_context ctx) override;
     hpx::future<boost::optional<performance_estimate>>
     try_estimate_execution_time(const symbol_id& func, const execution_context& ctx) const override;
+
+    hpx::future<object> construct_local_object(type object_type,
+                                               std::vector<object> arguments) override;
+
 private:
     std::vector<std::unique_ptr<vpu>> member_vpus_;
     std::unique_ptr<scheduler> scheduler_;
 };
 
-}
+} // namespace qubus
 
 #endif

@@ -15,9 +15,11 @@
 #include <qubus/IR/if_expr.hpp>
 #include <qubus/IR/member_access_expr.hpp>
 #include <qubus/IR/integer_range_expr.hpp>
+#include <qubus/IR/symbol_expr.hpp>
 
 #include <qubus/IR/expression.hpp>
 #include <qubus/IR/type.hpp>
+#include <qubus/IR/types.hpp>
 #include <qubus/IR/module.hpp>
 
 #include <qubus/IR/intrinsic_function_table.hpp>
@@ -25,6 +27,7 @@
 #include <qubus/IR/variable_ref_expr.hpp>
 #include <qubus/IR/variable_declaration.hpp>
 #include <qubus/IR/function.hpp>
+#include <qubus/IR/constructor.hpp>
 
 #include <qubus/IR/pretty_printer.hpp>
 

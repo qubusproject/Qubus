@@ -11,17 +11,6 @@ struct is_expression : std::true_type
 {
 };
 
-template<typename T>
-class type_base
-{
-protected:
-    ~type_base() = default;
-};
-
-template<typename T>
-struct is_type : std::is_base_of<type_base<T>, T>
-{
-};
 }
 
 #endif

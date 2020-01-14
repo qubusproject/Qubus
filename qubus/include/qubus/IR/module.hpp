@@ -6,7 +6,8 @@
 #include <qubus/IR/expression.hpp>
 #include <qubus/IR/function.hpp>
 #include <qubus/IR/symbol_id.hpp>
-#include <qubus/IR/type.hpp>
+#include <qubus/IR/templates.hpp>
+#include <qubus/IR/types.hpp>
 #include <qubus/IR/variable_declaration.hpp>
 #include <qubus/exception.hpp>
 
@@ -104,6 +105,11 @@ public:
         return id_;
     }
 
+    const std::vector<symbol_id>& imports() const
+    {
+        return m_imports;
+    }
+
     auto functions() const
     {
         return function_index_ | boost::adaptors::map_values | boost::adaptors::indirected;
@@ -114,11 +120,26 @@ public:
         return type_index_ | boost::adaptors::map_values;
     }
 
+    auto type_templates() const
+    {
+        return type_templates_ | boost::adaptors::map_values;
+    }
+
+    auto function_templates() const
+    {
+        return function_templates_ | boost::adaptors::map_values;
+    }
+
     const function& lookup_function(const std::string& id) const;
 
-    void add_function(std::string name, std::vector<variable_declaration> params,
-                      variable_declaration result, std::unique_ptr<expression> body);
-    void add_type(types::struct_ user_defined_type);
+    const type_template& lookup_type_template(const std::string& id) const;
+    const function_template& lookup_function_template(const std::string& id) const;
+
+    void add_function(std::string name,
+                      std::vector<std::shared_ptr<const variable_declaration>> params,
+                      std::shared_ptr<const variable_declaration> result,
+                      std::unique_ptr<expression> body);
+    void add_type(object_type user_defined_type);
 
     template <typename Range>
     void add_types(const Range& types)
@@ -135,17 +156,24 @@ public:
     void load(hpx::serialization::input_archive& ar, unsigned version);
 
     HPX_SERIALIZATION_SPLIT_MEMBER();
+
 private:
     symbol_id id_;
+
+    std::vector<symbol_id> m_imports;
+
     std::unordered_map<std::string, std::unique_ptr<function>> function_index_;
-    std::unordered_map<std::string, types::struct_> type_index_;
+    std::unordered_map<std::string, type> type_index_;
+    std::unordered_map<std::string, type_template> type_templates_;
+    std::unordered_map<std::string, function_template> function_templates_;
 
     module() = default;
 
-    friend void load_construct_data(hpx::serialization::input_archive& ar, module* mod, unsigned version);
+    friend void load_construct_data(hpx::serialization::input_archive& ar, module* mod,
+                                    unsigned version);
 };
 
 std::unique_ptr<module> clone(const module& other);
-}
+} // namespace qubus
 
 #endif

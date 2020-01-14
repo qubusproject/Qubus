@@ -3,14 +3,15 @@
 #include <qubus/IR/module.hpp>
 #include <qubus/IR/type_inference.hpp>
 
-#include <utility>
 #include <limits>
+#include <utility>
 
 namespace qubus
 {
 
 function::function(module& containing_module_, std::string name_,
-                   std::vector<variable_declaration> params_, variable_declaration result_,
+                   std::vector<std::shared_ptr<const variable_declaration>> params_,
+                   std::shared_ptr<const variable_declaration> result_,
                    std::unique_ptr<expression> body_)
 : containing_module_(&containing_module_),
   name_(std::move(name_)),
@@ -35,12 +36,12 @@ util::handle function::id() const
     return util::handle_from_ptr(this);
 }
 
-const std::vector<variable_declaration>& function::params() const
+const std::vector<std::shared_ptr<const variable_declaration>>& function::params() const
 {
     return params_;
 }
 
-const variable_declaration& function::result() const
+std::shared_ptr<const variable_declaration> function::result() const
 {
     return result_;
 }
@@ -75,18 +76,19 @@ annotation_map& function::annotations()
     return annotations_;
 }
 
-variable_declaration function::declare_new_local_variable(type datatype)
+std::shared_ptr<const variable_declaration> function::declare_new_local_variable(type datatype)
 {
     return declare_new_local_variable(std::move(datatype), "var");
 }
 
-variable_declaration function::declare_new_local_variable(type datatype, const std::string& hint)
+std::shared_ptr<const variable_declaration>
+function::declare_new_local_variable(type datatype, const std::string& hint)
 {
     long int index = 0;
 
     constexpr auto largest_index = std::numeric_limits<long int>::max();
 
-    for(;;)
+    for (;;)
     {
         auto var_name = hint + std::to_string(index);
 
@@ -94,7 +96,7 @@ variable_declaration function::declare_new_local_variable(type datatype, const s
 
         if (search_result == local_variable_table_.end())
         {
-            variable_declaration var(var_name, std::move(datatype));
+            auto var = std::make_shared<variable_declaration>(var_name, std::move(datatype));
 
             local_variable_table_.emplace(std::move(var_name), var);
 

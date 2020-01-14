@@ -1,7 +1,7 @@
 #include <qubus/IR/macro_expr.hpp>
 
-#include <qubus/pattern/core.hpp>
 #include <qubus/pattern/IR.hpp>
+#include <qubus/pattern/core.hpp>
 
 #include <qubus/util/assert.hpp>
 
@@ -9,12 +9,13 @@
 
 namespace qubus
 {
-macro_expr::macro_expr(std::vector<variable_declaration> params_, std::unique_ptr<expression> body_)
+macro_expr::macro_expr(std::vector<std::shared_ptr<const variable_declaration>> params_,
+                       std::unique_ptr<expression> body_)
 : params_(std::move(params_)), body_(std::move(body_))
 {
 }
 
-const std::vector<variable_declaration>& macro_expr::params() const
+const std::vector<std::shared_ptr<const variable_declaration>>& macro_expr::params() const
 {
     return params_;
 }
@@ -46,8 +47,8 @@ std::size_t macro_expr::arity() const
     return 1;
 }
 
-std::unique_ptr<expression> macro_expr::substitute_subexpressions(
-        std::vector<std::unique_ptr<expression>> new_children) const
+std::unique_ptr<expression>
+macro_expr::substitute_subexpressions(std::vector<std::unique_ptr<expression>> new_children) const
 {
     if (new_children.size() != 1)
         throw 0;
@@ -65,29 +66,26 @@ bool operator!=(const macro_expr& lhs, const macro_expr& rhs)
     return !(lhs == rhs);
 }
 
-std::unique_ptr<expression> expand_macro(const macro_expr& macro, std::vector<std::unique_ptr<expression>> args)
+std::unique_ptr<expression> expand_macro(const macro_expr& macro,
+                                         std::vector<std::unique_ptr<expression>> args)
 {
     using pattern::value;
-    
+
     std::size_t n_params = macro.params().size();
-    
+
     if (args.size() != n_params)
         throw 0; //wrong number of arguments
- 
+
     auto body = clone(macro.body());
- 
+
     for (std::size_t i = 0; i < n_params; ++i)
     {
-        auto m = pattern::make_matcher<expression, std::unique_ptr<expression>>()
-                    .case_(variable_ref(value(macro.params()[i])), [&]
-                        {
-                            return clone(*args[i]);
-                        }
-                    );
-                    
+        auto m = pattern::make_matcher<expression, std::unique_ptr<expression>>().case_(
+            variable_ref(value(macro.params()[i])), [&] { return clone(*args[i]); });
+
         body = pattern::substitute(*body, m);
     }
-    
+
     return body;
 }
 

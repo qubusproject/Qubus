@@ -19,6 +19,11 @@ public:
     {
     }
 
+    optional_ref(std::nullopt_t)
+    : optional_ref()
+    {
+    }
+
     optional_ref(T& ref_) : ref_(&ref_)
     {
     }

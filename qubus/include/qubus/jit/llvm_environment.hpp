@@ -3,6 +3,8 @@
 
 #include <hpx/config.hpp>
 
+#include <qubus/jit/runtime_library.hpp>
+
 #include <qubus/IR/type.hpp>
 #include <qubus/IR/expression.hpp>
 
@@ -72,10 +74,12 @@ inline access_path operator/(access_path path, std::string component)
     return path;
 }
 
+class compiler;
+
 class llvm_environment
 {
 public:
-    llvm_environment(llvm::LLVMContext& ctx_);
+    explicit llvm_environment(compiler& compiler_);
 
     llvm::LLVMContext& ctx() const;
 
@@ -83,9 +87,7 @@ public:
 
     llvm::MDBuilder& md_builder();
 
-    llvm::Module& module();
-
-    const llvm::Module& module() const;
+    runtime_library& rt_library();
 
     llvm::Type* map_qubus_type(const type& t) const;
 
@@ -103,46 +105,25 @@ public:
 
     void set_current_function(llvm::Function* func);
 
-    llvm::Function* get_assume_align() const;
+    llvm::Function* get_assume_align(llvm::Module& mod);
 
-    llvm::Function* get_alloc_scratch_mem() const;
+    llvm::Function* get_alloc_scratch_mem(llvm::Module& mod);
 
-    llvm::Function* get_dealloc_scratch_mem() const;
-
-    void log(llvm::Value* value);
-
-    // llvm::Value* lookup_intrinsic_function(const std::string& name,
-    //                                       const std::vector<type>& arg_types)const;
-
-    std::unique_ptr<llvm::Module> detach_module();
-
+    llvm::Function* get_dealloc_scratch_mem(llvm::Module& mod);
 private:
     llvm::LLVMContext* ctx_;
 
     mutable llvm::IRBuilder<> builder_;
     mutable llvm::MDBuilder md_builder_;
 
-    std::unique_ptr<llvm::Module> the_module_;
+    runtime_library rt_library_;
 
     llvm::MDNode* global_alias_domain_;
 
     llvm::Function* current_function_;
 
-    mutable std::unordered_map<type, llvm::Type*> type_map_;
     mutable std::map<std::string, llvm::MDNode*> alias_scope_table_;
     std::map<std::string, llvm::Value*> symbol_table_;
-
-    llvm::Function* assume_align_;
-    llvm::Function* alloc_scratch_mem_;
-    llvm::Function* dealloc_scratch_mem_;
-
-    void init_assume_align();
-
-    void init_alloc_scratch_mem();
-
-    void init_dealloc_scratch_mem();
-
-    // intrinsic_lookup_table instrinsic_lookup_table_;
 };
 }
 }

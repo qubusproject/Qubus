@@ -23,8 +23,8 @@ reference emit_type_conversion(const type& target_type, const expression& arg,
 {
     using pattern::_;
 
-    auto& env = comp.get_module().env();
-    auto& ctx = comp.get_module().ctx();
+    auto& env = comp.env();
+    auto& ctx = comp.compiler_ctx();
 
     reference arg_value_ptr = comp.compile(arg);
 

@@ -8,7 +8,8 @@ set(qubus_ir_header_files access.hpp access_qualifier.hpp annotations.hpp
                           macro_expr.hpp member_access_expr.hpp module.hpp parsing.hpp pretty_printer.hpp
                           subscription_expr.hpp symbol_id.hpp type.hpp type_conversion_expr.hpp type_inference.hpp
                           unary_operator_expr.hpp variable_ref_expr.hpp variable_declaration.hpp function.hpp
-                          integer_range_expr.hpp qir.hpp)
+                          integer_range_expr.hpp constructor.hpp types.hpp member.hpp pass_manager.hpp
+                          loop_optimizer.hpp assembly.hpp qir.hpp)
 
 set(qubus_ir_source_files annotations.cpp binary_operator_expr.cpp compound_expr.cpp
                           for_expr.cpp intrinsic_function_expr.cpp intrinsic_function_table.cpp
@@ -20,7 +21,10 @@ set(qubus_ir_source_files annotations.cpp binary_operator_expr.cpp compound_expr
                           if_expr.cpp member_access_expr.cpp expression.cpp
                           pretty_printer.cpp type_inference.cpp
                           constant_folding.cpp module.cpp symbol_id.cpp parsing.cpp unique_variable_generator.cpp
-                          integer_range_expr.cpp)
+                          integer_range_expr.cpp constructor.cpp types.cpp member.cpp templates.cpp pass_manager.cpp
+                          variable_access_analysis.cpp alias_analysis.cpp axiom_analysis.cpp
+                          task_invariants_analysis.cpp affine_constraints.cpp value_set_analysis.cpp
+                          value_range_analysis.cpp static_schedule.cpp static_schedule_analysis.cpp loop_optimizer.cpp assembly_inference_pass.cpp assembly.cpp module_loader.cpp symbol_expr.cpp)
 
 set(qubus_pattern_header_files access.hpp all_of.hpp any.hpp any_of.hpp binary_operator.hpp
                                bind_to.hpp compound.hpp construct.hpp contains.hpp control_flow.hpp core.hpp
@@ -28,7 +32,7 @@ set(qubus_pattern_header_files access.hpp all_of.hpp any.hpp any_of.hpp binary_o
                                literal.hpp local_variable_def.hpp macro.hpp match.hpp matcher.hpp member_access.hpp
                                or.hpp pattern.hpp pattern_traits.hpp protect.hpp search.hpp sequence.hpp subscription.hpp
                                substitute.hpp tuple.hpp type.hpp type_conversion.hpp unary_operator.hpp value.hpp variable.hpp
-                               variable_ref.hpp variable_scope.hpp typeof.hpp)
+                               variable_ref.hpp typeof.hpp)
 
 add_library(qubus_ir SHARED ${qubus_ir_source_files})
 qubus_target_header_files(TARGET qubus_ir ROOT ${qubus_include_dir}/IR FILES ${qubus_ir_header_files})
@@ -36,7 +40,7 @@ qubus_target_header_files(TARGET qubus_ir ROOT ${qubus_include_dir}/pattern FILE
 
 target_include_directories(qubus_ir PUBLIC ${HPX_INCLUDE_DIRS} ${Boost_LIBRARY_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include>)
 target_compile_features(qubus_ir PUBLIC cxx_std_17)
-target_link_libraries(qubus_ir qubus_util hpx carrot::carrot)
+target_link_libraries(qubus_ir qubus_isl qubus_util hpx carrot::carrot)
 #set_target_properties(qubus_ir PROPERTIES INTERPROCEDURAL_OPTIMIZATION ${QUBUS_HAS_LTO_SUPPORT})
 set_property(TARGET qubus_ir PROPERTY POSITION_INDEPENDENT_CODE ON)
 

@@ -1,5 +1,6 @@
 option(QUBUS_BUILD_BENCHMARKS "build the Qubus benchmark suite" OFF)
 
+add_subdirectory(hpx)
 add_subdirectory(runtime)
 
 if(QUBUS_BUILD_BENCHMARKS)
@@ -23,4 +24,8 @@ if(QUBUS_BUILD_BENCHMARKS)
 
     add_executable(const_init_bench const_init_bench.cpp)
     target_link_libraries(const_init_bench PUBLIC qubus_qtl qubus hpx_init)
+
+    add_executable(memcpy_benchmark memcpy.cpp)
+    target_include_directories(memcpy_benchmark PUBLIC ${CMAKE_SOURCE_DIR}/external/nonius/include)
+    target_link_libraries(memcpy_benchmark PUBLIC ${CMAKE_THREAD_LIBS_INIT})
 endif()

@@ -5,6 +5,7 @@
 
 #include <qubus/IR/annotations.hpp>
 #include <qubus/IR/expression.hpp>
+#include <qubus/IR/type.hpp>
 
 #include <qubus/util/integers.hpp>
 #include <qubus/util/unused.hpp>
@@ -166,7 +167,7 @@ public:
     std::size_t arity() const override final;
 
     std::unique_ptr<expression> substitute_subexpressions(
-            std::vector<std::unique_ptr<expression>> new_children) const override final;
+        std::vector<std::unique_ptr<expression>> new_children) const override final;
 
 private:
     bool value_;
@@ -187,8 +188,41 @@ inline std::unique_ptr<bool_literal_expr> lit(bool value)
     return bool_literal(value);
 }
 
+class type_literal_expr final : public expression_base<type_literal_expr>
+{
+public:
+    explicit type_literal_expr(type value_);
+
+    const type& value() const;
+
+    type_literal_expr* clone() const override final;
+
+    const expression& child(std::size_t index) const override final;
+
+    std::size_t arity() const override final;
+
+    std::unique_ptr<expression> substitute_subexpressions(
+        std::vector<std::unique_ptr<expression>> new_children) const override final;
+
+private:
+    type value_;
+};
+
+bool operator==(const type_literal_expr& lhs, const type_literal_expr& rhs);
+bool operator!=(const type_literal_expr& lhs, const type_literal_expr& rhs);
+
+inline std::unique_ptr<type_literal_expr> type_literal(type value)
+{
+    return std::make_unique<type_literal_expr>(std::move(value));
+}
+
+inline std::unique_ptr<type_literal_expr> lit(type value)
+{
+    return type_literal(std::move(value));
+}
+
 template <typename T>
 std::unique_ptr<expression> lit(T&) = delete;
-}
+} // namespace qubus
 
 #endif

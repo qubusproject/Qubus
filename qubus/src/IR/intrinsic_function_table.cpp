@@ -1,5 +1,7 @@
 #include <qubus/IR/intrinsic_function_table.hpp>
 
+#include <qubus/IR/types.hpp>
+
 #include <algorithm>
 #include <map>
 #include <memory>
@@ -59,7 +61,7 @@ class intrinsic_function_table
 public:
     intrinsic_function_table()
     {
-        const char* math_functions[] = {"sin", "cos", "tan", "exp", "abs", "sqrt"};
+        /*const char* math_functions[] = {"sin", "cos", "tan", "exp", "abs", "sqrt"};
         type real_types[] = {types::double_{}, types::float_{}};
         type math_types[] = {types::double_{}, types::float_{}, types::complex(types::double_{}),
                              types::complex(types::float_{})};
@@ -102,7 +104,7 @@ public:
         add_intrinsic_function("max", {types::integer{}, types::integer{}}, types::integer{});
 
         add_intrinsic_function("select", {types::bool_{}, types::integer{}, types::integer{}},
-                               types::integer{});
+                               types::integer{});*/
     }
 
     const type& lookup_result_type(const std::string& name,

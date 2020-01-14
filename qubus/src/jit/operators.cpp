@@ -21,8 +21,8 @@ reference emit_binary_operator(binary_op_tag tag, const expression& left, const 
 {
     using pattern::_;
 
-    auto& env = comp.get_module().env();
-    auto& ctx = comp.get_module().ctx();
+    auto& env = comp.env();
+    auto& ctx = comp.compiler_ctx();
 
     reference left_value_ptr = comp.compile(left);
     reference right_value_ptr = comp.compile(right);
@@ -424,8 +424,8 @@ reference emit_unary_operator(unary_op_tag tag, const expression& arg, compiler&
 {
     using pattern::_;
 
-    auto& env = comp.get_module().env();
-    auto& ctx = comp.get_module().ctx();
+    auto& env = comp.env();
+    auto& ctx = comp.compiler_ctx();
 
     reference arg_value_ptr = comp.compile(arg);
 

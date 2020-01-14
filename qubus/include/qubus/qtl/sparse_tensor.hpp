@@ -6,7 +6,6 @@
 #include <qubus/get_view.hpp>
 #include <qubus/host_object_views.hpp>
 
-#include <qubus/object_factory.hpp>
 #include <qubus/qtl/assembly_tensor.hpp>
 #include <qubus/qtl/ast.hpp>
 

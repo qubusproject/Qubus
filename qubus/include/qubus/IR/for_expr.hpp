@@ -9,6 +9,7 @@
 #include <qubus/IR/variable_declaration.hpp>
 #include <qubus/util/unused.hpp>
 
+#include <memory>
 #include <vector>
 
 namespace qubus
@@ -18,15 +19,16 @@ class for_expr final : public expression_base<for_expr>
 {
 public:
     for_expr() = default;
-    for_expr(variable_declaration loop_index_, std::unique_ptr<expression> lower_bound_,
-             std::unique_ptr<expression> upper_bound_, std::unique_ptr<expression> body_);
-    for_expr(variable_declaration loop_index_, std::unique_ptr<expression> lower_bound_,
-             std::unique_ptr<expression> upper_bound_, std::unique_ptr<expression> increment_,
-             std::unique_ptr<expression> body_);
-    for_expr(execution_order order_, variable_declaration loop_index_,
+    for_expr(std::shared_ptr<const variable_declaration> loop_index_,
              std::unique_ptr<expression> lower_bound_, std::unique_ptr<expression> upper_bound_,
              std::unique_ptr<expression> body_);
-    for_expr(execution_order order_, variable_declaration loop_index_,
+    for_expr(std::shared_ptr<const variable_declaration> loop_index_,
+             std::unique_ptr<expression> lower_bound_, std::unique_ptr<expression> upper_bound_,
+             std::unique_ptr<expression> increment_, std::unique_ptr<expression> body_);
+    for_expr(execution_order order_, std::shared_ptr<const variable_declaration> loop_index_,
+             std::unique_ptr<expression> lower_bound_, std::unique_ptr<expression> upper_bound_,
+             std::unique_ptr<expression> body_);
+    for_expr(execution_order order_, std::shared_ptr<const variable_declaration> loop_index_,
              std::unique_ptr<expression> lower_bound_, std::unique_ptr<expression> upper_bound_,
              std::unique_ptr<expression> increment_, std::unique_ptr<expression> body_);
 
@@ -36,7 +38,7 @@ public:
 
     const expression& body() const;
 
-    const variable_declaration& loop_index() const;
+    std::shared_ptr<const variable_declaration> loop_index() const;
 
     const expression& lower_bound() const;
     const expression& upper_bound() const;
@@ -53,7 +55,7 @@ public:
 
 private:
     execution_order order_;
-    variable_declaration loop_index_;
+    std::shared_ptr<const variable_declaration> loop_index_;
     std::unique_ptr<expression> lower_bound_;
     std::unique_ptr<expression> upper_bound_;
     std::unique_ptr<expression> increment_;
@@ -63,7 +65,7 @@ private:
 bool operator==(const for_expr& lhs, const for_expr& rhs);
 bool operator!=(const for_expr& lhs, const for_expr& rhs);
 
-inline std::unique_ptr<for_expr> for_(variable_declaration loop_index,
+inline std::unique_ptr<for_expr> for_(std::shared_ptr<const variable_declaration> loop_index,
                                       std::unique_ptr<expression> lower_bound,
                                       std::unique_ptr<expression> upper_bound,
                                       std::unique_ptr<expression> body)
@@ -72,7 +74,7 @@ inline std::unique_ptr<for_expr> for_(variable_declaration loop_index,
                                       std::move(upper_bound), std::move(body));
 }
 
-inline std::unique_ptr<for_expr> for_(variable_declaration loop_index,
+inline std::unique_ptr<for_expr> for_(std::shared_ptr<const variable_declaration> loop_index,
                                       std::unique_ptr<expression> lower_bound,
                                       std::unique_ptr<expression> upper_bound,
                                       std::unique_ptr<expression> increment,
@@ -83,47 +85,45 @@ inline std::unique_ptr<for_expr> for_(variable_declaration loop_index,
                                       std::move(body));
 }
 
-inline std::unique_ptr<for_expr> unordered_for(variable_declaration loop_index,
-                                               std::unique_ptr<expression> lower_bound,
-                                               std::unique_ptr<expression> upper_bound,
-                                               std::unique_ptr<expression> body)
+inline std::unique_ptr<for_expr>
+unordered_for(std::shared_ptr<const variable_declaration> loop_index,
+              std::unique_ptr<expression> lower_bound, std::unique_ptr<expression> upper_bound,
+              std::unique_ptr<expression> body)
 {
     return std::make_unique<for_expr>(execution_order::unordered, std::move(loop_index),
                                       std::move(lower_bound), std::move(upper_bound),
                                       std::move(body));
 }
 
-inline std::unique_ptr<for_expr> unordered_for(variable_declaration loop_index,
-                                               std::unique_ptr<expression> lower_bound,
-                                               std::unique_ptr<expression> upper_bound,
-                                               std::unique_ptr<expression> increment,
-                                               std::unique_ptr<expression> body)
+inline std::unique_ptr<for_expr>
+unordered_for(std::shared_ptr<const variable_declaration> loop_index,
+              std::unique_ptr<expression> lower_bound, std::unique_ptr<expression> upper_bound,
+              std::unique_ptr<expression> increment, std::unique_ptr<expression> body)
 {
     return std::make_unique<for_expr>(execution_order::unordered, std::move(loop_index),
                                       std::move(lower_bound), std::move(upper_bound),
                                       std::move(increment), std::move(body));
 }
 
-inline std::unique_ptr<for_expr> parallel_for(variable_declaration loop_index,
-                                               std::unique_ptr<expression> lower_bound,
-                                               std::unique_ptr<expression> upper_bound,
-                                               std::unique_ptr<expression> body)
+inline std::unique_ptr<for_expr>
+parallel_for(std::shared_ptr<const variable_declaration> loop_index,
+             std::unique_ptr<expression> lower_bound, std::unique_ptr<expression> upper_bound,
+             std::unique_ptr<expression> body)
 {
     return std::make_unique<for_expr>(execution_order::parallel, std::move(loop_index),
                                       std::move(lower_bound), std::move(upper_bound),
                                       std::move(body));
 }
 
-inline std::unique_ptr<for_expr> parallel_for(variable_declaration loop_index,
-                                               std::unique_ptr<expression> lower_bound,
-                                               std::unique_ptr<expression> upper_bound,
-                                               std::unique_ptr<expression> increment,
-                                               std::unique_ptr<expression> body)
+inline std::unique_ptr<for_expr>
+parallel_for(std::shared_ptr<const variable_declaration> loop_index,
+             std::unique_ptr<expression> lower_bound, std::unique_ptr<expression> upper_bound,
+             std::unique_ptr<expression> increment, std::unique_ptr<expression> body)
 {
     return std::make_unique<for_expr>(execution_order::parallel, std::move(loop_index),
                                       std::move(lower_bound), std::move(upper_bound),
                                       std::move(increment), std::move(body));
 }
-}
+} // namespace qubus
 
 #endif

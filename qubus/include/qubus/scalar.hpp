@@ -161,7 +161,7 @@ public:
     using value_type = T;
 
     scalar()
-    : handle_(get_runtime().get_object_factory().create_scalar(associated_qubus_type<T>::get()))
+    : handle_(get_runtime().construct(associated_qubus_type<T>::get(), {}).get())
     {
     }
 
@@ -170,6 +170,11 @@ public:
         auto view = get_view<scalar<T>>(handle_, qubus::writable, qubus::arch::host).get();
 
         view.get() = std::move(value_);
+    }
+
+    ~scalar()
+    {
+        get_runtime().destruct(handle_);
     }
 
     scalar<T>& operator=(T value)

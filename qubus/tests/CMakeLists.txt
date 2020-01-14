@@ -85,4 +85,11 @@ if(QUBUS_BUILD_TESTS)
     target_link_libraries(cuda_support qubus_cuda ${GTEST_BOTH_LIBRARIES} hpx hpx_init)
     add_test(cuda_support ${CMAKE_CURRENT_BINARY_DIR}/cuda)
   endif()
+
+  add_executable(runtime_library runtime_library.cpp)
+  target_include_directories(runtime_library PUBLIC ${GTEST_INCLUDE_DIRS})
+  target_link_libraries(runtime_library qubus_jit ${GTEST_BOTH_LIBRARIES})
+  add_test(runtime_library ${CMAKE_CURRENT_BINARY_DIR}/runtime_library)
 endif()
+
+add_subdirectory(hpx)

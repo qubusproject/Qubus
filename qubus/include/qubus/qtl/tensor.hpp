@@ -4,6 +4,7 @@
 #include <qubus/runtime.hpp>
 
 #include <qubus/qtl/ast.hpp>
+#include <qubus/array.hpp>
 
 #include <qubus/util/handle.hpp>
 #include <qubus/util/integers.hpp>
@@ -63,14 +64,8 @@ public:
 
     template <typename... SizeTypes>
     explicit tensor(SizeTypes... sizes_)
-    : data_(get_runtime().get_object_factory().create_array(associated_qubus_type<T>::get(),
-                                                            {util::to_uindex(sizes_)...}))
+    : data_(sizes_...)
     {
-    }
-
-    ~tensor()
-    {
-        data_.finalize();
     }
 
     template <typename... Indices>
@@ -85,11 +80,11 @@ public:
 
     object get_object() const
     {
-        return data_;
+        return data_.get_object();
     }
 
 private:
-    object data_;
+    array<T, Rank> data_;
 };
 
 template <typename T, long int Rank, typename AccessType, typename ArchTag>

@@ -198,9 +198,16 @@ struct let_expr : x3::position_tagged
     expression initializer;
 };
 
+struct template_parameter : x3::position_tagged
+{
+    std::string name;
+    std::optional<type> datatype;
+};
+
 struct function : x3::position_tagged
 {
     std::string id;
+    std::vector<template_parameter> template_parameters;
     std::vector<variable_declaration> parameters;
     variable_declaration result;
     expression_block body;
@@ -209,6 +216,7 @@ struct function : x3::position_tagged
 struct struct_ : x3::position_tagged
 {
     std::string name;
+    std::vector<template_parameter> template_parameters;
     std::vector<variable_declaration> members;
 };
 
@@ -278,14 +286,21 @@ BOOST_FUSION_ADAPT_STRUCT(qubus::ast::integer_range,
 
 BOOST_FUSION_ADAPT_STRUCT(qubus::ast::module,
                           (std::string, id)(std::vector<qubus::ast::definition>, definitions));
+
+BOOST_FUSION_ADAPT_STRUCT(qubus::ast::template_parameter,
+                          (std::string, name)
+                          (std::optional<qubus::ast::type>, datatype));
+
 BOOST_FUSION_ADAPT_STRUCT(qubus::ast::function,
-                          (std::string, id)(std::vector<qubus::ast::variable_declaration>,
-                                            parameters)(qubus::ast::variable_declaration,
-                                                        result)(qubus::ast::expression_block,
-                                                                body));
+                          (std::string, id)
+                          (std::vector<qubus::ast::template_parameter>, template_parameters)
+                          (std::vector<qubus::ast::variable_declaration>, parameters)
+                          (qubus::ast::variable_declaration, result)
+                          (qubus::ast::expression_block, body));
 BOOST_FUSION_ADAPT_STRUCT(qubus::ast::struct_,
-                          (std::string, name)(std::vector<qubus::ast::variable_declaration>,
-                                              members));
+                          (std::string, name)
+                          (std::vector<qubus::ast::template_parameter>, template_parameters)
+                          (std::vector<qubus::ast::variable_declaration>, members));
 
 namespace qubus
 {
@@ -305,7 +320,8 @@ x3::rule<type, ast::type> type = "type";
 class module;
 x3::rule<module, ast::module> module = "module";
 
-x3::rule<class definition, ast::definition> definition = "definition";
+class definition;
+x3::rule<definition, ast::definition> definition = "definition";
 class function;
 x3::rule<function, ast::function> function = "function";
 x3::rule<class user_defined_type, ast::struct_> user_defined_type = "user_defined_type";
@@ -313,6 +329,9 @@ x3::rule<class struct_definition, ast::struct_> struct_definition = "struct_defi
 class variable_declaration;
 x3::rule<variable_declaration, ast::variable_declaration> variable_declaration =
     "variable_declaration";
+class template_parameter;
+x3::rule<template_parameter, qubus::ast::template_parameter> template_parameter = "template_parameter";
+x3::rule<class template_parameters, std::vector<qubus::ast::template_parameter>> template_parameters = "template_parameters";
 x3::rule<class expression_block, ast::expression_block> expression_block = "expression_block";
 
 class expression;
@@ -346,7 +365,7 @@ x3::rule<class integer_range, ast::integer_range> integer_range = "integer_range
 const auto keyword = x3::lit("for") | x3::lit("if") | x3::lit("else") | x3::lit("end") |
                      x3::lit("module") | x3::lit("struct") | x3::lit("function") | x3::lit("let") |
                      x3::lit("parallel") | x3::lit("unordered") | x3::lit("true") |
-                     x3::lit("false");
+                     x3::lit("false") | x3::lit("builtin");
 
 const auto id_def = x3::raw[x3::lexeme[x3::ascii::alpha >> *(x3::ascii::alnum | '_')]] - keyword;
 const auto boolean = "true" >> x3::attr(true) | "false" >> x3::attr(false);
@@ -362,12 +381,15 @@ const auto type_def = parameterized_type | basic_type;
 
 const auto variable_declaration_def = id >> ("::" > type);
 
+const auto template_parameter_def = id >> -("::" > type);
+const auto template_parameters_def = '{' > -(template_parameter % ',') > '}';
+
 const auto module_def = "module" > id > *definition;
 const auto definition_def = function | user_defined_type;
-const auto function_def = "function" > id > '(' > -(variable_declaration % ',') > ')' >
+const auto function_def = "function" > id > -template_parameters > '(' > -(variable_declaration % ',') > ')' >
                           "->" > variable_declaration > expression_block > "end";
 const auto user_defined_type_def = struct_definition;
-const auto struct_definition_def = "struct" > id > *variable_declaration > "end";
+const auto struct_definition_def = "struct" > id > -template_parameters > *variable_declaration > "end";
 
 const auto expression_block_def = *expression >> x3::attr(false);
 const auto expression_def = if_expr | for_expr | let_expr | assignment;
@@ -421,8 +443,9 @@ const auto let_expr_def = "let" > variable_declaration > '=' > non_task_expr;
 const auto skipper = x3::ascii::space;
 
 BOOST_SPIRIT_DEFINE(id, module, definition, function, expression_block, user_defined_type,
-                    struct_definition, variable_declaration, type, parameterized_type, basic_type,
-                    expression, variable, assignment, non_task_expr, logical_expr,
+                    struct_definition, variable_declaration, template_parameters, template_parameter,
+                    type, parameterized_type,
+                    basic_type, expression, variable, assignment, non_task_expr, logical_expr,
                     logical_expressions, comparison, comparisons, addition, additions,
                     multiplication, multiplications, qualified_expr, base_expression,
                     unary_operator, unary_operators, subscription, member_access, if_expr, for_expr,
@@ -503,32 +526,62 @@ public:
 class symbol_scope
 {
 public:
-    variable_declaration create_variable(const ast::variable_declaration& decl)
+    std::shared_ptr<const variable_declaration> create_variable(const std::string& name, const ast::type& datatype)
     {
-        auto datatype = decl.datatype.apply_visitor(type_analyzer());
+        auto ir_datatype = datatype.apply_visitor(type_analyzer());
 
-        variable_declaration var(decl.name, std::move(datatype));
+        auto var = std::make_shared<variable_declaration>(name, std::move(ir_datatype));
 
-        auto [iter, inserted] = variable_table_.emplace(decl.name, std::move(var));
+        auto [iter, inserted] = symbol_table_.emplace(name, std::move(var));
 
         if (!inserted)
             throw parsing_error("Duplicate definition.");
 
-        return iter->second;
+        return std::static_pointer_cast<const variable_declaration>(iter->second);
     }
 
-    boost::optional<variable_declaration> lookup_variable(const ast::variable& var) const
+    std::shared_ptr<const variable_declaration> create_variable(const ast::variable_declaration& decl)
     {
-        auto search_result = variable_table_.find(var.name);
-
-        if (search_result == variable_table_.end())
-            return boost::none;
-
-        return search_result->second;
+        return create_variable(decl.name, decl.datatype);
     }
 
+    std::shared_ptr<const variable_declaration> lookup_variable(const ast::variable& var) const
+    {
+        auto search_result = symbol_table_.find(var.name);
+
+        if (search_result == symbol_table_.end())
+            return nullptr;
+
+        if (auto var = std::dynamic_pointer_cast<const variable_declaration>(search_result->second))
+        {
+            return var;
+        }
+        else
+        {
+            throw parsing_error("The symbol is of the wrong type.");
+        }
+    }
+
+    std::shared_ptr<const symbolic_type> create_symbolic_type(const std::string& name)
+    {
+
+    }
+
+    std::shared_ptr<const template_parameter> create_template_parameter(const ast::template_parameter& template_param)
+    {
+        if (template_param.datatype)
+        {
+            return create_variable(template_param.name, *template_param.datatype);
+        }
+        else
+        {
+            // return create_symbolic_type(template_param.name);
+        }
+    }
 private:
-    std::unordered_map<std::string, variable_declaration> variable_table_;
+    using symbol_data_type = std::shared_ptr<const definition>;
+
+    std::unordered_map<std::string, symbol_data_type> symbol_table_;
 };
 
 class symbol_table
@@ -539,22 +592,32 @@ public:
         enter_scope();
     }
 
-    variable_declaration create_variable(const ast::variable_declaration& decl)
+    std::shared_ptr<const variable_declaration> create_variable(const ast::variable_declaration& decl)
     {
         return scopes_.back().create_variable(decl);
     }
 
-    variable_declaration lookup_variable(const ast::variable& var) const
+    std::shared_ptr<const variable_declaration> lookup_variable(const ast::variable& var) const
     {
         for (auto iter = scopes_.rbegin(), end = scopes_.rend(); iter != end; ++iter)
         {
             if (auto result = iter->lookup_variable(var))
             {
-                return *result;
+                return result;
             }
         }
 
         throw parsing_error("Unknown variable.");
+    }
+
+    std::shared_ptr<const symbolic_type> create_symbolic_type(const std::string& name)
+    {
+        return scopes_.back().create_symbolic_type(name);
+    }
+
+    std::shared_ptr<const template_parameter> create_template_parameter(const ast::template_parameter& template_param)
+    {
+        return scopes_.back().create_template_parameter(template_param);
     }
 
     void enter_scope()
@@ -913,20 +976,34 @@ public:
 
         scope_guard guard(sym_table_);
 
-        std::vector<variable_declaration> params;
+        std::vector<std::shared_ptr<const template_parameter>> template_params;
+
+        for (const auto& template_param : func.template_parameters)
+        {
+            template_params.push_back(sym_table_.create_template_parameter(template_param));
+        }
+
+        std::vector<std::shared_ptr<const variable_declaration>> params;
 
         for (const auto& param : func.parameters)
         {
             params.push_back(sym_table_.create_variable(param));
         }
 
-        variable_declaration result = sym_table_.create_variable(func.result);
+        std::shared_ptr<const variable_declaration> result = sym_table_.create_variable(func.result);
 
         expression_analyzer expr_analyzer(sym_table_);
 
         auto body = analyze_expression_block(func.body, expr_analyzer);
 
-        mod_->add_function(func.id, std::move(params), std::move(result), std::move(body));
+        if (params.empty())
+        {
+            mod_->add_function(func.id, std::move(params), std::move(result), std::move(body));
+        }
+        else
+        {
+            // TODO: Add a function template to the module.
+        }
     }
 
     result_type operator()(const ast::struct_& s)
@@ -942,7 +1019,7 @@ public:
             members.emplace_back(std::move(datatype), member.name);
         }
 
-        types::struct_ ss(s.name, std::move(members));
+        types::struct_ ss(s.name, std::move(members), {});
 
         mod_->add_type(std::move(ss));
     }

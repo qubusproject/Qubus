@@ -9,14 +9,16 @@
 namespace qubus
 {
 
-for_expr::for_expr(variable_declaration loop_index_, std::unique_ptr<expression> lower_bound_,
+for_expr::for_expr(std::shared_ptr<const variable_declaration> loop_index_,
+                   std::unique_ptr<expression> lower_bound_,
                    std::unique_ptr<expression> upper_bound_, std::unique_ptr<expression> body_)
 : for_expr(std::move(loop_index_), std::move(lower_bound_), std::move(upper_bound_),
            integer_literal(1), std::move(body_))
 {
 }
 
-for_expr::for_expr(variable_declaration loop_index_, std::unique_ptr<expression> lower_bound_,
+for_expr::for_expr(std::shared_ptr<const variable_declaration> loop_index_,
+                   std::unique_ptr<expression> lower_bound_,
                    std::unique_ptr<expression> upper_bound_, std::unique_ptr<expression> increment_,
                    std::unique_ptr<expression> body_)
 : for_expr(execution_order::sequential, std::move(loop_index_), std::move(lower_bound_),
@@ -25,21 +27,24 @@ for_expr::for_expr(variable_declaration loop_index_, std::unique_ptr<expression>
 {
 }
 
-for_expr::for_expr(execution_order order_, variable_declaration loop_index_,
+for_expr::for_expr(execution_order order_, std::shared_ptr<const variable_declaration> loop_index_,
                    std::unique_ptr<expression> lower_bound_,
                    std::unique_ptr<expression> upper_bound_, std::unique_ptr<expression> body_)
-: for_expr(order_, std::move(loop_index_), std::move(lower_bound_),
-           std::move(upper_bound_), integer_literal(1), std::move(body_))
+: for_expr(order_, std::move(loop_index_), std::move(lower_bound_), std::move(upper_bound_),
+           integer_literal(1), std::move(body_))
 {
 }
 
-for_expr::for_expr(execution_order order_, variable_declaration loop_index_,
+for_expr::for_expr(execution_order order_, std::shared_ptr<const variable_declaration> loop_index_,
                    std::unique_ptr<expression> lower_bound_,
                    std::unique_ptr<expression> upper_bound_, std::unique_ptr<expression> increment_,
                    std::unique_ptr<expression> body_)
-: order_(order_), loop_index_(std::move(loop_index_)),
-  lower_bound_(take_over_child(lower_bound_)), upper_bound_(take_over_child(upper_bound_)),
-  increment_(take_over_child(increment_)), body_(take_over_child(body_))
+: order_(order_),
+  loop_index_(std::move(loop_index_)),
+  lower_bound_(take_over_child(lower_bound_)),
+  upper_bound_(take_over_child(upper_bound_)),
+  increment_(take_over_child(increment_)),
+  body_(take_over_child(body_))
 {
 }
 
@@ -53,7 +58,7 @@ const expression& for_expr::body() const
     return *body_;
 }
 
-const variable_declaration& for_expr::loop_index() const
+std::shared_ptr<const variable_declaration> for_expr::loop_index() const
 {
     return loop_index_;
 }

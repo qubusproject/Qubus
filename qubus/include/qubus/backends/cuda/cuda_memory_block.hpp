@@ -1,30 +1,34 @@
 #ifndef QUBUS_BACKENDS_CUDA_CUDA_MEMORY_BLOCK_HPP
 #define QUBUS_BACKENDS_CUDA_CUDA_MEMORY_BLOCK_HPP
 
-#include <qubus/backends/cuda/cuda_allocator.hpp>
-#include <qubus/memory_block.hpp>
+#include <qubus/backends/cuda/cuda_arch.hpp>
+#include <qubus/cuda/core.hpp>
 
 #include <cstddef>
 
 namespace qubus
 {
 
-class cuda_memory_block : public memory_block
+class cuda_allocator;
+
+class cuda_memory_block
 {
 public:
-    explicit cuda_memory_block(void* data_, std::size_t size_, cuda_allocator& allocator_);
+    explicit cuda_memory_block(cuda::device_ptr data_, std::size_t size_, cuda_allocator& allocator_);
 
-    virtual ~cuda_memory_block();
+    ~cuda_memory_block();
 
-    std::size_t size() const override;
+    std::size_t size() const;
 
-    void* ptr() const override;
+    cuda::device_ptr ptr() const;
 
 private:
-    void* data_;
+    cuda::device_ptr data_;
     std::size_t size_;
     cuda_allocator* allocator_;
 };
+
+cuda_memory_block allocate(arch::cuda_type context, std::size_t size, std::size_t alignment);
 
 }
 

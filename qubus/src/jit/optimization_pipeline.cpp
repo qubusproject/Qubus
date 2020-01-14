@@ -284,7 +284,10 @@ void setup_optimization_pipeline(llvm::legacy::PassManager& manager, bool optimi
 #if LLVM_VERSION_MAJOR < 7
     // Get rid of LCSSA nodes.
     manager.add(createInstructionSimplifierPass());
+#else
+    manager.add(createInstructionCombiningPass());
 #endif
+
 
     // After vectorization and unrolling, assume intrinsics may tell us more
     // about pointer alignments.

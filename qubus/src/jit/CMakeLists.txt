@@ -33,7 +33,7 @@ target_link_libraries(qubus_llvm PUBLIC LLVM ${Boost_LIBRARIES})
 
 add_library(qubus_jit SHARED compiler.cpp compile.cpp llvm_environment.cpp entry_block_alloca.cpp load_store.cpp
             loops.cpp control_flow.cpp operators.cpp type_conversion.cpp array_access.cpp optimization_pipeline.cpp
-            compilation_context.cpp reference.cpp jit_engine.cpp cpuinfo.cpp)
+            compilation_context.cpp reference.cpp jit_engine.cpp cpuinfo.cpp runtime_library.cpp host_interop.cpp)
 target_include_directories(qubus_jit PUBLIC ${HPX_INCLUDE_DIRS} ${Boost_LIBRARY_DIRS} $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}/qubus/include> $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}>)
 target_compile_features(qubus_jit PUBLIC cxx_std_17)
 target_link_libraries(qubus_jit ${Boost_LIBRARIES} qubus_ir qubus_util qubus_llvm hpx)

@@ -16,8 +16,10 @@ public:
 
     void add_subspace(std::unique_ptr<virtual_address_space> subspace);
 
-    hpx::future<object_instance> resolve_object(const object& obj) override;
-    object_instance try_resolve_object(const object& obj) const override;
+    hpx::future<instance_token> resolve_object(object_id id) override;
+
+    hpx::future<void> invalidate_object(object_id id) override;
+    hpx::future<void> free_object(object_id id) override;
 private:
     std::vector<std::unique_ptr<virtual_address_space>> subspaces_;
 };

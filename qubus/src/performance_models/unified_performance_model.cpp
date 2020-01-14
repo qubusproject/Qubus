@@ -2,6 +2,7 @@
 
 #include <qubus/performance_models/unified_performance_model.hpp>
 
+#include <qubus/performance_models/kernel_performance_model.hpp>
 #include <qubus/performance_models/regression_performance_model.hpp>
 #include <qubus/performance_models/simple_statistical_performance_model.hpp>
 
@@ -19,9 +20,9 @@ namespace qubus
 
 namespace
 {
-std::unique_ptr<performance_model> create_performance_model(const symbol_id& func,
-                                                            const module_library& mod_library,
-                                                            address_space& host_addr_space)
+std::unique_ptr<kernel_performance_model> create_performance_model(const symbol_id& func,
+                                                                   const module_library& mod_library,
+                                                                   host_address_space& host_addr_space)
 {
     auto mod = mod_library.lookup(func.get_prefix()).get();
 
@@ -38,7 +39,7 @@ std::unique_ptr<performance_model> create_performance_model(const symbol_id& fun
 
     if (has_scalar_params)
     {
-        return std::make_unique<regression_performance_model>(host_addr_space);
+        return std::make_unique<regression_performance_model>(func_def, host_addr_space);
     }
     else
     {
@@ -51,7 +52,7 @@ class unified_performance_model_impl
 {
 public:
     explicit unified_performance_model_impl(module_library mod_library_,
-                                            address_space& host_addr_space_)
+                                            host_address_space& host_addr_space_)
     : mod_library_(std::move(mod_library_)), host_addr_space_(&host_addr_space_)
     {
     }
@@ -71,7 +72,7 @@ public:
                     .first;
         }
 
-        search_result->second->sample_execution_time(func, ctx, std::move(execution_time));
+        search_result->second->sample_execution_time(ctx, std::move(execution_time));
     }
 
     boost::optional<performance_estimate>
@@ -83,7 +84,7 @@ public:
 
         if (search_result != kernel_models_.end())
         {
-            return search_result->second->try_estimate_execution_time(func, ctx);
+            return search_result->second->try_estimate_execution_time(ctx);
         }
         else
         {
@@ -93,14 +94,14 @@ public:
 
 private:
     mutable hpx::lcos::local::mutex models_mutex_;
-    std::unordered_map<symbol_id, std::unique_ptr<performance_model>> kernel_models_;
+    std::unordered_map<symbol_id, std::unique_ptr<kernel_performance_model>> kernel_models_;
 
     module_library mod_library_;
-    address_space* host_addr_space_;
+    host_address_space* host_addr_space_;
 };
 
 unified_performance_model::unified_performance_model(module_library mod_library_,
-                                                     address_space& host_addr_space_)
+                                                     host_address_space& host_addr_space_)
 : impl_(std::make_unique<unified_performance_model_impl>(std::move(mod_library_), host_addr_space_))
 {
 }

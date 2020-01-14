@@ -10,9 +10,11 @@
 #include <hpx/include/local_lcos.hpp>
 
 #include <qubus/util/assert.hpp>
+#include <qubus/util/integers.hpp>
 
 #include <map>
 #include <mutex>
+#include <tuple>
 #include <utility>
 #include <vector>
 
@@ -96,75 +98,96 @@ private:
     long int number_of_new_data_points_ = 0;
 };
 
-std::vector<hpx::naming::gid_type> generate_key_from_ctx(const execution_context& ctx)
+std::vector<type> get_paramter_types_from_function(const function& fn)
 {
-    std::vector<hpx::naming::gid_type> key;
-    key.reserve(ctx.args().size());
+    std::vector<type> param_types;
+    param_types.reserve(fn.params().size());
 
-    for (const auto& obj : ctx.args())
+    for (const auto& param : fn.params())
     {
-        const auto& datatype = obj.object_type();
-
-        if (!(datatype == types::integer{} || datatype == types::float_{} ||
-              datatype == types::double_{}))
-        {
-            key.push_back(obj.get_raw_gid());
-        }
+        param_types.push_back(param.var_type());
     }
 
-    return key;
+    return param_types;
 }
 
-std::vector<double> extract_arguments_from_ctx(const execution_context& ctx,
-                                               address_space& host_addr_space)
+class key_generator
 {
-    std::vector<double> arguments;
-    arguments.reserve(ctx.args().size());
-
-    for (const auto& obj : ctx.args())
+public:
+    explicit key_generator(std::vector<type> parameter_types_)
+    : parameter_types_(std::move(parameter_types_))
     {
-        auto datatype = obj.object_type();
-
-        if (datatype == types::integer{})
-        {
-            auto view =
-                get_view_for_locked_object<host_scalar_view<util::index_t>>(obj, host_addr_space).get();
-
-            arguments.push_back(view.get());
-        }
-        else if (datatype == types::double_{})
-        {
-            auto view = get_view_for_locked_object<host_scalar_view<double>>(obj, host_addr_space).get();
-
-            arguments.push_back(view.get());
-        }
-        else if (datatype == types::float_{})
-        {
-            auto view = get_view_for_locked_object<host_scalar_view<float>>(obj, host_addr_space).get();
-
-            arguments.push_back(view.get());
-        }
     }
 
-    return arguments;
-}
+    auto generate(const execution_context& ctx, host_address_space& host_addr_space) const
+    {
+        std::vector<object_id> key;
+        key.reserve(ctx.args().size());
+
+        std::vector<double> arguments;
+        arguments.reserve(ctx.args().size());
+
+        auto param_count = util::integer_cast<long int>(parameter_types_.size());
+
+        QUBUS_ASSERT(param_count == ctx.args().size(), "Unexpected number of arguments.");
+
+        for (long int i = 0; i < param_count; ++i)
+        {
+            const auto& datatype = parameter_types_[i];
+            const auto& obj = ctx.args()[i];
+
+            if (datatype == types::integer{})
+            {
+                auto view = get_view_for_locked_object<host_scalar_view<util::index_t>>(
+                                obj, host_addr_space)
+                                .get();
+
+                arguments.push_back(view.get());
+            }
+            else if (datatype == types::double_{})
+            {
+                auto view =
+                    get_view_for_locked_object<host_scalar_view<double>>(obj, host_addr_space)
+                        .get();
+
+                arguments.push_back(view.get());
+            }
+            else if (datatype == types::float_{})
+            {
+                auto view =
+                    get_view_for_locked_object<host_scalar_view<float>>(obj, host_addr_space).get();
+
+                arguments.push_back(view.get());
+            }
+            else
+            {
+                key.push_back(obj.id());
+            }
+        }
+
+        return std::make_tuple(std::move(key), std::move(arguments));
+    }
+
+private:
+    std::vector<type> parameter_types_;
+};
+
 } // namespace
 
 class regression_performance_model_impl
 {
 public:
-    explicit regression_performance_model_impl(address_space& host_addr_space_)
-    : host_addr_space_(&host_addr_space_)
+    regression_performance_model_impl(const function& fn_, host_address_space& host_addr_space_)
+    : host_addr_space_(&host_addr_space_), key_gen_(get_paramter_types_from_function(fn_))
     {
     }
 
-    void sample_execution_time(const symbol_id& QUBUS_UNUSED(func), const execution_context& ctx,
+    void sample_execution_time(const execution_context& ctx,
                                std::chrono::microseconds execution_time)
     {
         std::lock_guard<hpx::lcos::local::mutex> guard(regression_analyses_mutex_);
 
-        auto key = generate_key_from_ctx(ctx);
-        auto arguments = extract_arguments_from_ctx(ctx, *host_addr_space_);
+        auto [key, args] = key_gen_.generate(ctx, *host_addr_space_);
 
         auto search_result = regression_analyses_.find(key);
 
@@ -173,24 +196,21 @@ public:
             search_result = regression_analyses_.emplace(key, regression_analysis()).first;
         }
 
-        search_result->second.add_datapoint(std::move(arguments), std::move(execution_time));
+        search_result->second.add_datapoint(std::move(args), std::move(execution_time));
     }
 
     boost::optional<performance_estimate>
-    try_estimate_execution_time(const symbol_id& QUBUS_UNUSED(func),
-                                const execution_context& ctx) const
+    try_estimate_execution_time(const execution_context& ctx) const
     {
         std::lock_guard<hpx::lcos::local::mutex> guard(regression_analyses_mutex_);
 
-        auto key = generate_key_from_ctx(ctx);
+        auto [key, args] = key_gen_.generate(ctx, *host_addr_space_);
 
         auto search_result = regression_analyses_.find(key);
 
         if (search_result != regression_analyses_.end())
         {
-            auto arguments = extract_arguments_from_ctx(ctx, *host_addr_space_);
-
-            auto query_result = search_result->second.query(arguments);
+            auto query_result = search_result->second.query(args);
             auto accuracy_result = search_result->second.accuracy();
 
             if (query_result && accuracy_result)
@@ -209,34 +229,34 @@ public:
     }
 
 private:
-    address_space* host_addr_space_;
+    host_address_space* host_addr_space_;
+    key_generator key_gen_;
 
     mutable hpx::lcos::local::mutex regression_analyses_mutex_;
-    std::map<std::vector<hpx::naming::gid_type>, regression_analysis> regression_analyses_;
+    std::map<std::vector<object_id>, regression_analysis> regression_analyses_;
 };
 
-regression_performance_model::regression_performance_model(address_space& host_addr_space_)
-: impl_(std::make_unique<regression_performance_model_impl>(host_addr_space_))
+regression_performance_model::regression_performance_model(const function& fn_,
+                                                           host_address_space& host_addr_space_)
+: impl_(std::make_unique<regression_performance_model_impl>(fn_, host_addr_space_))
 {
 }
 
 regression_performance_model::~regression_performance_model() = default;
 
-void regression_performance_model::sample_execution_time(const symbol_id& func,
-                                                         const execution_context& ctx,
+void regression_performance_model::sample_execution_time(const execution_context& ctx,
                                                          std::chrono::microseconds execution_time)
 {
     QUBUS_ASSERT(impl_, "Uninitialized object.");
 
-    impl_->sample_execution_time(func, ctx, std::move(execution_time));
+    impl_->sample_execution_time(ctx, std::move(execution_time));
 }
 
 boost::optional<performance_estimate>
-regression_performance_model::try_estimate_execution_time(const symbol_id& func,
-                                                          const execution_context& ctx) const
+regression_performance_model::try_estimate_execution_time(const execution_context& ctx) const
 {
     QUBUS_ASSERT(impl_, "Uninitialized object.");
 
-    return impl_->try_estimate_execution_time(func, ctx);
+    return impl_->try_estimate_execution_time(ctx);
 }
 } // namespace qubus

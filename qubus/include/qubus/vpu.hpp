@@ -4,6 +4,7 @@
 #include <qubus/performance_models/performance_model.hpp>
 
 #include <qubus/IR/symbol_id.hpp>
+#include <qubus/IR/type.hpp>
 #include <qubus/execution_context.hpp>
 
 #include <hpx/include/components.hpp>
@@ -30,6 +31,9 @@ public:
     [[nodiscard]] virtual hpx::future<boost::optional<performance_estimate>>
     try_estimate_execution_time(const symbol_id& func, const execution_context& ctx) const = 0;
 
+    [[nodiscard]] virtual hpx::future<object>
+    construct_local_object(type object_type, std::vector<object> arguments) = 0;
+
 protected:
     vpu(const vpu&) = default;
 
@@ -51,9 +55,13 @@ public:
     boost::optional<performance_estimate>
     try_estimate_execution_time(const symbol_id& func, const execution_context& ctx) const;
 
+    hpx::future<object> construct_local_object(type object_type, std::vector<object> arguments);
+
     HPX_DEFINE_COMPONENT_ACTION(remote_vpu_server, execute, execute_action);
     HPX_DEFINE_COMPONENT_ACTION(remote_vpu_server, try_estimate_execution_time,
                                 try_estimate_execution_time_action);
+    HPX_DEFINE_COMPONENT_ACTION(remote_vpu_server, construct_local_object,
+                                construct_local_object_action);
 
 private:
     std::unique_ptr<vpu> underlying_vpu_;
@@ -72,6 +80,9 @@ public:
     [[nodiscard]] hpx::future<void> execute(const symbol_id& func, execution_context ctx) override;
     [[nodiscard]] hpx::future<boost::optional<performance_estimate>>
     try_estimate_execution_time(const symbol_id& func, const execution_context& ctx) const override;
+
+    [[nodiscard]] hpx::future<object>
+    construct_local_object(type object_type, std::vector<object> arguments) override;
 };
 
 class remote_vpu_reference_server
@@ -86,9 +97,13 @@ public:
     boost::optional<performance_estimate>
     try_estimate_execution_time(const symbol_id& func, const execution_context& ctx) const;
 
+    hpx::future<object> construct_local_object(type object_type, std::vector<object> arguments);
+
     HPX_DEFINE_COMPONENT_ACTION(remote_vpu_reference_server, execute, execute_action);
     HPX_DEFINE_COMPONENT_ACTION(remote_vpu_reference_server, try_estimate_execution_time,
                                 try_estimate_execution_time_action);
+    HPX_DEFINE_COMPONENT_ACTION(remote_vpu_reference_server, construct_local_object,
+                                construct_local_object_action);
 
 private:
     vpu* underlying_vpu_;
@@ -110,6 +125,9 @@ public:
     [[nodiscard]] hpx::future<void> execute(const symbol_id& func, execution_context ctx) override;
     [[nodiscard]] hpx::future<boost::optional<performance_estimate>>
     try_estimate_execution_time(const symbol_id& func, const execution_context& ctx) const override;
+
+    [[nodiscard]] hpx::future<object>
+    construct_local_object(type object_type, std::vector<object> arguments) override;
 };
 } // namespace qubus
 

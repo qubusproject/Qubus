@@ -28,7 +28,8 @@ hpx::future<void> aggregate_vpu::execute(const symbol_id& func, execution_contex
 }
 
 hpx::future<boost::optional<performance_estimate>>
-aggregate_vpu::try_estimate_execution_time(const symbol_id& func, const execution_context& ctx) const
+aggregate_vpu::try_estimate_execution_time(const symbol_id& func,
+                                           const execution_context& ctx) const
 {
     // We will just forward the task and can simply base our estimate on the estimates of
     // the member VPUs.
@@ -76,4 +77,13 @@ aggregate_vpu::try_estimate_execution_time(const symbol_id& func, const executio
 
     return estimate;
 }
+
+hpx::future<object> aggregate_vpu::construct_local_object(type object_type,
+                                                          std::vector<object> arguments)
+{
+    if (member_vpus_.empty())
+        throw 0;
+
+    return member_vpus_[0]->construct_local_object(std::move(object_type), std::move(arguments));
 }
+} // namespace qubus

@@ -3,30 +3,14 @@
 
 #include <qubus/IR/symbol_id.hpp>
 #include <qubus/execution_context.hpp>
-
-#include <qubus/util/hpx/serialization/chrono.hpp>
+#include <qubus/performance_models/performance_estimate.hpp>
 
 #include <boost/optional.hpp>
 
 #include <qubus/util/unused.hpp>
 
-#include <chrono>
-
 namespace qubus
 {
-
-struct performance_estimate
-{
-    std::chrono::microseconds runtime;
-    std::chrono::microseconds accuracy;
-
-    template <typename Archive>
-    void serialize(Archive& ar, unsigned QUBUS_UNUSED(version))
-    {
-        ar & runtime;
-        ar & accuracy;
-    }
-};
 
 class performance_model
 {
@@ -46,6 +30,6 @@ public:
     virtual boost::optional<performance_estimate>
     try_estimate_execution_time(const symbol_id& func, const execution_context& ctx) const = 0;
 };
-}
+} // namespace qubus
 
 #endif

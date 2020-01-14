@@ -81,6 +81,8 @@ public:
 
     virtual annotation_map& annotations() const = 0;
 
+    virtual bool is_lexical_scope() const = 0;
+
     template <typename T>
     const T& as() const
     {
@@ -178,6 +180,10 @@ public:
         return annotations_;
     }
 
+    bool is_lexical_scope() const override
+    {
+        return false;
+    }
 protected:
     template <typename ChildExpression>
     std::unique_ptr<ChildExpression>&& take_over_child(std::unique_ptr<ChildExpression>& child)
