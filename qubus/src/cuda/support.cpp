@@ -116,7 +116,7 @@ hpx::future<void> when_finished(stream& s)
 
     // Make sure shared state stays alive even if the callback is invoked
     // during initialization.
-    boost::intrusive_ptr<shared_state_type> p(new shared_state_type());
+    hpx::memory::intrusive_ptr<shared_state_type> p(new shared_state_type());
 
     p->init(s);
 
