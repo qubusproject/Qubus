@@ -54,6 +54,5 @@ auto lexical_scope()
 }
 
 }
-}
 
 #endif

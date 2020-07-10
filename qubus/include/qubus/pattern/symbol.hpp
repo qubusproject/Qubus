@@ -1,6 +1,8 @@
 #ifndef QUBUS_PATTERN_SYMBOL_HPP
 #define QUBUS_PATTERN_SYMBOL_HPP
 
+#include <qubus/IR/symbol_expr.hpp>
+
 #include <utility>
 
 namespace qubus::pattern
