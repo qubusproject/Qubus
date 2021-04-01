@@ -18,7 +18,7 @@ std::optional<type> assembly::lookup_type(std::string_view name) const
 }
 
 std::optional<type>
-assembly::instantiate_type_template(std::string_view name, const std::vector<compile_time_value>& args)
+assembly::instantiate_type_template(std::string_view name, const std::vector<compile_time_value>& args) const
 {
     auto search_result = m_type_templates.find(std::string(name.data(), name.size()));
 
@@ -102,7 +102,7 @@ type assembly::get_type_void() const
     return *type_void;
 }
 
-type assembly::get_type_integer_range(type value_type)
+type assembly::get_type_integer_range(type value_type) const
 {
     std::optional<type> type_int_range =
         instantiate_type_template("IntRange", {compile_time_value(std::move(value_type))});
@@ -113,7 +113,7 @@ type assembly::get_type_integer_range(type value_type)
     return *type_int_range;
 }
 
-type assembly::get_type_array(type value_type, util::index_t rank)
+type assembly::get_type_array(type value_type, util::index_t rank) const
 {
     std::optional<type> type_array = instantiate_type_template(
         "Array", {compile_time_value(std::move(value_type)), compile_time_value(rank)});
@@ -124,7 +124,7 @@ type assembly::get_type_array(type value_type, util::index_t rank)
     return *type_array;
 }
 
-type assembly::get_type_array_slice(type value_type, util::index_t rank)
+type assembly::get_type_array_slice(type value_type, util::index_t rank) const
 {
     std::optional<type> type_array_slice = instantiate_type_template(
         "ArraySlice", {compile_time_value(std::move(value_type)), compile_time_value(rank)});

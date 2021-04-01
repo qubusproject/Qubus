@@ -1,7 +1,7 @@
 #ifndef QUBUS_STATIC_SCHEDULE_HPP
 #define QUBUS_STATIC_SCHEDULE_HPP
 
-#include <qubus/affine_constraints.hpp>
+#include <qubus/IR/affine_constraints.hpp>
 
 #include <qubus/IR/expression.hpp>
 #include <qubus/IR/macro_expr.hpp>

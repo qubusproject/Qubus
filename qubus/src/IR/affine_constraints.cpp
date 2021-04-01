@@ -1,4 +1,4 @@
-#include <qubus/affine_constraints.hpp>
+#include <qubus/IR/affine_constraints.hpp>
 
 #include <qubus/pattern/IR.hpp>
 #include <qubus/pattern/core.hpp>
@@ -735,6 +735,13 @@ std::unique_ptr<expression> affine_expr_context::get_constant(const std::string&
 affine_expr affine_expr_context::create_literal(util::index_t value)
 {
     return affine_expr(integer_literal(value), *this);
+}
+
+affine_expr affine_expr_context::create_temp_variable()
+{
+    auto name = "i" + std::to_string(free_variable_id_++);
+
+    return affine_expr(std::make_unique<affine_expr_variable>(name), *this);
 }
 
 isl::space affine_expr_context::construct_corresponding_space(isl::context& isl_ctx) const

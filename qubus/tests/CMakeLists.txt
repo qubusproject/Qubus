@@ -24,6 +24,10 @@ endfunction()
 
 if(QUBUS_BUILD_TESTS)
   find_package(GTest REQUIRED)
+  find_package(Catch2 REQUIRED)
+
+  add_library(catch2_runner OBJECT catch2_runner.cpp)
+  include(Catch)
 
   qubus_qtl_add_simple_test(basic_expressions)
   qubus_qtl_add_simple_test(contractions)
@@ -90,6 +94,10 @@ if(QUBUS_BUILD_TESTS)
   target_include_directories(runtime_library PUBLIC ${GTEST_INCLUDE_DIRS})
   target_link_libraries(runtime_library qubus_jit ${GTEST_BOTH_LIBRARIES})
   add_test(runtime_library ${CMAKE_CURRENT_BINARY_DIR}/runtime_library)
+
+  add_executable(qir $<TARGET_OBJECTS:catch2_runner> module_loader.cpp)
+  target_link_libraries(qir PRIVATE Catch2::Catch2 qubus_ir)
+  catch_discover_tests(qir)
 endif()
 
 add_subdirectory(hpx)

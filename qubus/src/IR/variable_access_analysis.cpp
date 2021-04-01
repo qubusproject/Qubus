@@ -1,4 +1,4 @@
-#include <qubus/variable_access_analysis.hpp>
+#include <qubus/IR/variable_access_analysis.hpp>
 
 #include <qubus/pattern/IR.hpp>
 #include <qubus/pattern/core.hpp>
@@ -133,16 +133,7 @@ public:
 
         if (kind == access_kind::external)
         {
-            pattern::variable<variable_declaration> var;
-
-            auto m = pattern::make_matcher<expression, void>().case_(variable_scope(var, _), [&] {
-                auto new_end =
-                    std::remove_if(read_accesses.begin(), read_accesses.end(),
-                                   [&](const access& acc) { return acc.variable() == var.get(); });
-                read_accesses.erase(new_end, read_accesses.end());
-            });
-
-            pattern::try_match(location(), m);
+            // TODO: Filter out internal accesses.
         }
 
         return read_accesses;
@@ -164,16 +155,7 @@ public:
 
         if (kind == access_kind::external)
         {
-            pattern::variable<variable_declaration> var;
-
-            auto m = pattern::make_matcher<expression, void>().case_(variable_scope(var, _), [&] {
-                auto new_end =
-                    std::remove_if(write_accesses.begin(), write_accesses.end(),
-                                   [&](const access& acc) { return acc.variable() == var.get(); });
-                write_accesses.erase(new_end, write_accesses.end());
-            });
-
-            pattern::try_match(location(), m);
+            // TODO: Filter out internal accesses.
         }
 
         return write_accesses;
@@ -416,7 +398,7 @@ std::unique_ptr<access_set_node> compute_access_set(const expression& expr)
 }
 
 variable_access_analyis_result
-variable_access_analysis::run(const expression& root, analysis_manager& manager,
+variable_access_analysis::run(const expression& root, expression_analysis_manager& manager,
                               pass_resource_manager& resource_manager) const
 {
     auto global_access_set = compute_access_set(root);
@@ -431,5 +413,5 @@ std::vector<analysis_id> variable_access_analysis::required_analyses() const
     return {};
 }
 
-QUBUS_REGISTER_ANALYSIS_PASS(variable_access_analysis);
+QUBUS_REGISTER_EXPRESSION_ANALYSIS_PASS(variable_access_analysis);
 }

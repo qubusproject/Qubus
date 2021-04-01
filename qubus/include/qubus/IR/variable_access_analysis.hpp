@@ -1,7 +1,7 @@
 #ifndef QUBUS_VARIABLE_ACCESS_ANALYSIS_HPP
 #define QUBUS_VARIABLE_ACCESS_ANALYSIS_HPP
 
-#include <qubus/pass_manager.hpp>
+#include <qubus/IR/pass_manager.hpp>
 
 #include <qubus/IR/access_qualifier.hpp>
 #include <qubus/IR/expression.hpp>
@@ -34,7 +34,7 @@ public:
         return direct_access_.get();
     }
 
-    const variable_declaration& variable() const
+    std::shared_ptr<const variable_declaration> variable() const
     {
         return base().declaration();
     }
@@ -66,8 +66,8 @@ class access_set_node;
 
 enum class access_kind
 {
-    external,
-    all
+    external, // Only accesses external to the queried expression.
+    all // All accesses within the queried expression.
 };
 
 class access_set
@@ -110,7 +110,7 @@ class variable_access_analysis
 public:
     using result_type = variable_access_analyis_result;
 
-    variable_access_analyis_result run(const expression& root, analysis_manager& manager,
+    variable_access_analyis_result run(const expression& root, expression_analysis_manager& manager,
                                        pass_resource_manager& resource_manager) const;
 
     std::vector<analysis_id> required_analyses() const;

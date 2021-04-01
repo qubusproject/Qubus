@@ -2,6 +2,7 @@
 #define QUBUS_PATTERN_TYPE_HPP
 
 #include <qubus/IR/type.hpp>
+#include <qubus/IR/types.hpp>
 
 #include <qubus/pattern/any.hpp>
 #include <qubus/pattern/sequence.hpp>
@@ -37,6 +38,31 @@ public:
     {
     }
 };
+
+class integer_type_pattern
+{
+public:
+    bool match(const type& value, const variable<type>* var = nullptr) const
+    {
+        if (is_integer(value))
+        {
+            if (var)
+            {
+                var->set(value);
+            }
+
+            return true;
+        }
+
+        return false;
+    }
+
+    void reset() const
+    {
+    }
+};
+
+constexpr integer_type_pattern integer_t = {};
 
 }
 

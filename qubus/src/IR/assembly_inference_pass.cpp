@@ -4,11 +4,16 @@ namespace qubus
 {
 
 assembly_inference_result
-assembly_inference_pass::run(const module& mod, analysis_manager<module>& manager,
+assembly_inference_pass::run(const function& func, function_analysis_manager& manager,
                              pass_resource_manager& resource_manager_) const
 {
 }
 
-QUBUS_REGISTER_MODULE_ANALYSIS_PASS(assembly_inference_pass);
+std::vector<analysis_id> assembly_inference_pass::required_analyses() const
+{
+    return {};
+}
+
+QUBUS_REGISTER_FUNCTION_ANALYSIS_PASS(assembly_inference_pass);
 
 } // namespace qubus

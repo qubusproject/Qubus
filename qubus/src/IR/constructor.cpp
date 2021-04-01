@@ -5,7 +5,7 @@
 namespace qubus
 {
 
-constructor::constructor(const types::struct_& parent_type_, std::vector<initializer> initializers_,
+constructor::constructor(const object_type& parent_type_, std::vector<initializer> initializers_,
                      std::unique_ptr<expression> body_)
     : parent_type_(&parent_type_), initializers_(std::move(initializers_)), body_(std::move(body_))
 {

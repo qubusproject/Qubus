@@ -1,11 +1,11 @@
 #ifndef QUBUS_ALIAS_ANALYSIS_HPP
 #define QUBUS_ALIAS_ANALYSIS_HPP
 
-#include <qubus/value_set_analysis.hpp>
-#include <qubus/variable_access_analysis.hpp>
-#include <qubus/task_invariants_analysis.hpp>
+#include <qubus/IR/value_set_analysis.hpp>
+#include <qubus/IR/variable_access_analysis.hpp>
+#include <qubus/IR/task_invariants_analysis.hpp>
 
-#include <qubus/pass_manager.hpp>
+#include <qubus/IR/pass_manager.hpp>
 
 #include <array>
 #include <functional>
@@ -55,7 +55,7 @@ class basic_alias_analysis_pass
 public:
     using result_type = basic_alias_analysis_result;
 
-    basic_alias_analysis_result run(const expression& root, analysis_manager& manager,
+    basic_alias_analysis_result run(const expression& root, function_analysis_manager& manager,
                                     pass_resource_manager& resource_manager) const;
 
     std::vector<analysis_id> required_analyses() const;
@@ -82,7 +82,7 @@ class alias_analysis_pass
 public:
     using result_type = alias_analysis_result;
 
-    alias_analysis_result run(const expression& root, analysis_manager& manager,
+    alias_analysis_result run(const expression& root, function_analysis_manager& manager,
                               pass_resource_manager& resource_manager) const;
 
     std::vector<analysis_id> required_analyses() const;

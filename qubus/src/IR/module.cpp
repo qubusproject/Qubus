@@ -65,14 +65,14 @@ void module::add_function(std::string name,
         throw duplicate_symbol_error(id(), name);
 }
 
-void module::add_type(types::struct_ user_defined_type)
+void module::add_type(type new_type)
 {
-    std::string type_id = user_defined_type.id();
+    std::string type_id = std::string(new_type.name());
 
     if (function_index_.count(type_id) > 0)
         throw duplicate_symbol_error(id(), type_id);
 
-    auto [pos, has_been_added] = type_index_.emplace(type_id, std::move(user_defined_type));
+    auto [pos, has_been_added] = type_index_.emplace(type_id, std::move(new_type));
 
     if (!has_been_added)
         throw duplicate_symbol_error(id(), type_id);

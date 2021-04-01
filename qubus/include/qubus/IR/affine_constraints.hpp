@@ -79,6 +79,8 @@ public:
     affine_expr define_constant(const expression& value);
     affine_expr create_literal(util::index_t value);
 
+    affine_expr create_temp_variable();
+
     boost::optional<variable_declaration> lookup_variable(const std::string& name) const;
     std::unique_ptr<expression> get_constant(const std::string& name) const;
 

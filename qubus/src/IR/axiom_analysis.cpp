@@ -1,4 +1,4 @@
-#include <qubus/axiom_analysis.hpp>
+#include <qubus/IR/axiom_analysis.hpp>
 
 #include <qubus/IR/constant_folding.hpp>
 
@@ -21,7 +21,7 @@ std::unique_ptr<axiom_scope> generate_axiom_scope_tree(const expression& ctx,
 {
     using pattern::_;
 
-    pattern::variable<variable_declaration> idx;
+    pattern::variable<std::shared_ptr<variable_declaration>> idx;
     pattern::variable<const expression &> lower_bound, upper_bound, condition, then_branch,
         increment, body;
     pattern::variable<util::optional_ref<const expression>> else_branch;
@@ -228,7 +228,7 @@ std::vector<axiom> axiom_analysis_result::get_valid_axioms(const expression& ctx
     return axioms;
 }
 
-axiom_analysis_result axiom_analysis_pass::run(const expression& root, analysis_manager& manager,
+axiom_analysis_result axiom_analysis_pass::run(const expression& root, expression_analysis_manager& manager,
                                                pass_resource_manager& resource_manager) const
 {
     return axiom_analysis_result(generate_axiom_scope_tree(root, {}));
@@ -239,5 +239,5 @@ std::vector<analysis_id> axiom_analysis_pass::required_analyses() const
     return {};
 }
 
-QUBUS_REGISTER_ANALYSIS_PASS(axiom_analysis_pass);
+QUBUS_REGISTER_EXPRESSION_ANALYSIS_PASS(axiom_analysis_pass);
 }

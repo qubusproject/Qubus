@@ -1,6 +1,6 @@
-#include <qubus/task_invariants_analysis.hpp>
+#include <qubus/IR/task_invariants_analysis.hpp>
 
-#include <qubus/alias_analysis.hpp>
+#include <qubus/IR/alias_analysis.hpp>
 
 #include <qubus/pattern/IR.hpp>
 #include <qubus/pattern/core.hpp>
@@ -19,7 +19,7 @@ bool is_referencing_invariant_object(const expression& obj, const expression& co
     using pattern::value;
 
     pattern::variable<const expression&> modified_object;
-    pattern::variable<variable_declaration> var;
+    pattern::variable<std::shared_ptr<variable_declaration>> var;
 
     bool is_modified = false;
 

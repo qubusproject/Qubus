@@ -31,4 +31,7 @@
 
 #include <qubus/IR/pretty_printer.hpp>
 
+#include <qubus/IR/visitor.hpp>
+#include <qubus/IR/traverse.hpp>
+
 #endif

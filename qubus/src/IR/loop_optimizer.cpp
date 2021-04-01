@@ -1707,7 +1707,7 @@ function_declaration optimize_loops(function_declaration decl)
 }
 }
 #else
-#include <qubus/loop_optimizer.hpp>
+#include <qubus/IR/loop_optimizer.hpp>
 
 namespace qubus
 {

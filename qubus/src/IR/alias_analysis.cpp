@@ -1,7 +1,7 @@
-#include <qubus/alias_analysis.hpp>
+#include <qubus/IR/alias_analysis.hpp>
 
 #include <qubus/IR/unique_variable_generator.hpp>
-#include <qubus/affine_constraints.hpp>
+#include <qubus/IR/affine_constraints.hpp>
 
 #include <qubus/pattern/IR.hpp>
 #include <qubus/pattern/core.hpp>
@@ -272,15 +272,11 @@ public:
                     std::vector<affine_expr> vars;
                     vars.reserve(rank);
 
-                    unique_variable_generator var_gen;
-
                     for (std::size_t i = 0; i < rank; ++i)
                     {
-                        variable_declaration tmp =
-                            var_gen.create_new_variable(types::integer{}, "tmp");
-                        auto var = aff_ctx.declare_variable(std::move(tmp));
+                        auto tmp = aff_ctx.create_temp_variable();
 
-                        vars.push_back(std::move(var));
+                        vars.push_back(std::move(tmp));
                     }
 
                     std::vector<std::reference_wrapper<const expression>> offset1;
@@ -400,7 +396,7 @@ alias_result basic_alias_analysis_result::alias(const access& first_access,
 
 basic_alias_analysis_result
 basic_alias_analysis_pass::run(const expression& QUBUS_UNUSED(root),
-                               analysis_manager& QUBUS_UNUSED(manager),
+                               expression_analysis_manager& QUBUS_UNUSED(manager),
                                pass_resource_manager& QUBUS_UNUSED(resource_manager)) const
 {
     return basic_alias_analysis_result();
@@ -444,7 +440,7 @@ alias_result alias_analysis_result::alias(const access& first_access, const acce
     return result;
 }
 
-alias_analysis_result alias_analysis_pass::run(const expression& root, analysis_manager& manager,
+alias_analysis_result alias_analysis_pass::run(const expression& root, expression_analysis_manager& manager,
                                                pass_resource_manager& resource_manager) const
 {
     return alias_analysis_result(root, manager.get_analysis<value_set_analysis_pass>(root),
@@ -458,6 +454,6 @@ std::vector<analysis_id> alias_analysis_pass::required_analyses() const
             get_analysis_id<task_invariants_analysis_pass>()};
 }
 
-QUBUS_REGISTER_ANALYSIS_PASS(basic_alias_analysis_pass);
-QUBUS_REGISTER_ANALYSIS_PASS(alias_analysis_pass);
+QUBUS_REGISTER_EXPRESSION_ANALYSIS_PASS(basic_alias_analysis_pass);
+QUBUS_REGISTER_EXPRESSION_ANALYSIS_PASS(alias_analysis_pass);
 } // namespace qubus

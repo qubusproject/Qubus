@@ -35,15 +35,15 @@ public:
         return std::static_pointer_cast<const variable_declaration>(iter->second);
     }
 
-    [[nodiscard]] std::shared_ptr<const variable_declaration> lookup_variable(const ast::variable& var) const
+    [[nodiscard]] std::shared_ptr<const variable_declaration> lookup_variable(const std::string& name) const
     {
-        auto search_result = m_symbol_table.find(var.name);
+        auto search_result = m_symbol_table.find(name);
 
         if (search_result == m_symbol_table.end())
         {
             if (m_parent_table)
             {
-                return m_parent_table->lookup_variable(var);
+                return m_parent_table->lookup_variable(name);
             }
 
             return nullptr;
@@ -89,28 +89,15 @@ struct loading_session
     std::unordered_map<symbol_id, assembly_unit> known_assembly_units;
 };
 
+class function_reification_visitor final : public non_exhaustive_visitor
+{
+};
+
 void reify_function(function& func, symbol_table& sym_table)
 {
-    pattern::variable<const expression&> scope;
-    pattern::variable<symbol_id> id;
+    function_reification_visitor visitor;
 
-    auto open_lexical_scope = pattern::make_matcher<expression, void>()
-        .case_(lexical_scope(), [&]
-        {
-
-        });
-
-    auto close_lexical_scope = pattern::make_matcher<expression, void>()
-        .case_(lexical_scope(), [&]
-        {
-
-        });
-
-    auto substitute_object_references = pattern::make_matcher<expression, std::unique_ptr<expression>>()
-        .case_(symbol(id), [&]
-        {
-
-        });
+    traverse(func.body(), visitor);
 }
 
 void reify_type(type& t, symbol_table& sym_table)

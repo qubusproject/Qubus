@@ -28,10 +28,11 @@ namespace qubus
 class pass_resource_manager
 {
 public:
+    explicit pass_resource_manager();
     isl::context& get_isl_ctx();
 
 private:
-    isl::context isl_ctx_;
+    std::unique_ptr<isl::context> isl_ctx_;
 };
 
 using analysis_id = std::type_index;
@@ -176,7 +177,7 @@ private:
         analysis_pass_interface& operator=(const analysis_pass_interface&) = delete;
         analysis_pass_interface& operator=(analysis_pass_interface&&) = delete;
 
-        virtual analysis_result run(const expression& expr, analysis_manager<IRUnit>& manager,
+        virtual analysis_result run(const IRUnit& expr, analysis_manager<IRUnit>& manager,
                                     pass_resource_manager& resource_manager_) const = 0;
 
         virtual std::vector<analysis_id> required_analyses() const = 0;
@@ -194,7 +195,7 @@ private:
         {
         }
 
-        analysis_result run(const expression& expr, analysis_manager<IRUnit>& manager,
+        analysis_result run(const IRUnit& expr, analysis_manager<IRUnit>& manager,
                             pass_resource_manager& resource_manager_) const override
         {
             return analysis_.run(expr, manager, resource_manager_);
@@ -269,6 +270,9 @@ public:
         analysis_pass_registry<IRUnit>::get_instance().template register_analysis_pass<AnalysisPass>();
     }
 };
+
+#define QUBUS_REGISTER_EXPRESSION_ANALYSIS_PASS(ANALYSIS_PASS)                                       \
+    register_analysis_pass<expression, ANALYSIS_PASS> ANALYSIS_PASS##_qubus_function_pass_init = {}
 
 #define QUBUS_REGISTER_FUNCTION_ANALYSIS_PASS(ANALYSIS_PASS)                                       \
     register_analysis_pass<function, ANALYSIS_PASS> ANALYSIS_PASS##_qubus_function_pass_init = {}
@@ -357,7 +361,7 @@ public:
         {
             auto id = pass.id();
 
-            auto node = std::make_unique<analysis_node>(std::move(pass), *this, resource_manager_);
+            auto node = std::make_unique<analysis_node<IRUnit>>(std::move(pass), *this, resource_manager_);
 
             analysis_table_.emplace(std::move(id), std::move(node));
         }
@@ -399,7 +403,7 @@ public:
     }
 
     template <typename Analysis>
-    const typename analysis_traits<Analysis>::result_type& get_analysis(const IRUnit& expr)
+    const typename analysis_traits<Analysis>::result_type& get_analysis(const IRUnit& expr) const
     {
         auto search_result = analysis_table_.find(get_analysis_id<Analysis>());
 
@@ -413,7 +417,7 @@ public:
         }
     }
 
-    void invalidate(const preserved_analyses_info& preserved_analyses)
+    void invalidate(const preserved_analyses_info& preserved_analyses) const
     {
         for (auto& id_and_node : analysis_table_)
         {
@@ -427,7 +431,7 @@ public:
         }
     }
 
-    void invalidate()
+    void invalidate() const
     {
         for (auto& id_and_node : analysis_table_)
         {
@@ -439,6 +443,7 @@ private:
     std::unordered_map<analysis_id, std::unique_ptr<analysis_node<IRUnit>>> analysis_table_;
 };
 
+using expression_analysis_manager = analysis_manager<expression>;
 using function_analysis_manager = analysis_manager<function>;
 using assembly_analysis_manager = analysis_manager<assembly>;
 
@@ -465,7 +470,7 @@ public:
     {
     }
 
-    transformation_result<IRUnit> run(IRUnit fun, analysis_manager<IRUnit>& manager) const
+    transformation_result<IRUnit> run(IRUnit fun, const analysis_manager<IRUnit>& manager) const
     {
         return self_->run(std::move(fun), manager);
     }
@@ -484,7 +489,7 @@ private:
         transformation_pass_interface& operator=(transformation_pass_interface&&) = delete;
 
         virtual transformation_result<IRUnit> run(IRUnit fun,
-                                                  analysis_manager<IRUnit>& manager) const = 0;
+                                                  const analysis_manager<IRUnit>& manager) const = 0;
     };
 
     template <typename TransformationPass>
@@ -499,7 +504,7 @@ private:
         }
 
         transformation_result<IRUnit> run(IRUnit fun,
-                                          analysis_manager<IRUnit>& manager) const override
+                                          const analysis_manager<IRUnit>& manager) const override
         {
             return transformation_.run(std::move(fun), manager);
         }
@@ -535,9 +540,9 @@ public:
     {
         for (const auto& transformation : optimization_pipeline_)
         {
-            auto preserved_analyses = transformation.run(std::move(fun), analysis_man_);
+            auto result = transformation.run(std::move(fun), analysis_man_);
 
-            analysis_man_.invalidate(preserved_analyses);
+            analysis_man_.invalidate(result.preserved_analyses);
         }
 
         return {};

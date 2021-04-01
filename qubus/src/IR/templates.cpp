@@ -3,12 +3,12 @@
 namespace qubus
 {
 
-type type_template::instantiate(const std::vector<template_argument>& args)
+type type_template::instantiate(const std::vector<compile_time_value>& args) const
 {
 
 }
 
-function function_template::instantiate(const std::vector<template_argument>& args)
+function function_template::instantiate(const std::vector<compile_time_value>& args) const
 {
 
 }

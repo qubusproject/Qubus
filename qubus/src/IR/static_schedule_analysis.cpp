@@ -1,6 +1,6 @@
-#include <qubus/static_schedule_analysis.hpp>
+#include <qubus/IR/static_schedule_analysis.hpp>
 
-#include <qubus/task_invariants_analysis.hpp>
+#include <qubus/IR/task_invariants_analysis.hpp>
 
 #include <qubus/pattern/IR.hpp>
 #include <qubus/pattern/core.hpp>

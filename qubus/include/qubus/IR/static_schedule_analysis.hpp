@@ -1,9 +1,9 @@
 #ifndef QUBUS_STATIC_SCHEDULE_ANALYSIS_HPP
 #define QUBUS_STATIC_SCHEDULE_ANALYSIS_HPP
 
-#include <qubus/static_schedule.hpp>
+#include <qubus/IR/static_schedule.hpp>
 
-#include <qubus/pass_manager.hpp>
+#include <qubus/IR/pass_manager.hpp>
 
 #include <boost/optional.hpp>
 
@@ -30,7 +30,7 @@ class static_schedule_analysis_pass
 public:
     using result_type = static_schedule_analysis_result;
 
-    static_schedule_analysis_result run(const expression& root, analysis_manager& manager,
+    static_schedule_analysis_result run(const expression& root, expression_analysis_manager& manager,
                                         pass_resource_manager& resource_manager) const;
 
     std::vector<analysis_id> required_analyses() const;

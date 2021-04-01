@@ -9,7 +9,7 @@ namespace qubus
 class assembly_inference_result
 {
 public:
-    const assembly& infered_assembly()
+    const assembly& infered_assembly() const
     {
         return m_infered_assembly;
     }
@@ -20,8 +20,12 @@ private:
 class assembly_inference_pass
 {
 public:
-    assembly_inference_result run(const module& mod, analysis_manager<module>& manager,
+    using result_type = assembly_inference_result;
+
+    assembly_inference_result run(const function& func, function_analysis_manager& manager,
                                   pass_resource_manager& resource_manager_) const;
+
+    std::vector<analysis_id> required_analyses() const;
 };
 }
 

@@ -1,6 +1,6 @@
-#include <qubus/value_range_analysis.hpp>
+#include <qubus/IR/value_range_analysis.hpp>
 
-#include <qubus/affine_constraints.hpp>
+#include <qubus/IR/affine_constraints.hpp>
 
 #include <qubus/isl/ast_builder.hpp>
 #include <qubus/isl/map.hpp>
@@ -97,7 +97,7 @@ value_range_analysis_result::determine_value_range(const expression& expr,
 }
 
 value_range_analysis_result
-value_range_analysis_pass::run(const expression& root, analysis_manager& manager,
+value_range_analysis_pass::run(const expression& root, expression_analysis_manager& manager,
                                pass_resource_manager& resource_manager) const
 {
     return value_range_analysis_result(manager.get_analysis<value_set_analysis_pass>(root),
@@ -110,5 +110,5 @@ std::vector<analysis_id> value_range_analysis_pass::required_analyses() const
     return {get_analysis_id<value_set_analysis_pass>()};
 }
 
-QUBUS_REGISTER_ANALYSIS_PASS(value_range_analysis_pass);
+QUBUS_REGISTER_EXPRESSION_ANALYSIS_PASS(value_range_analysis_pass);
 }

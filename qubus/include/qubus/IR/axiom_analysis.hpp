@@ -1,7 +1,7 @@
 #ifndef QUBUS_AXIOM_ANALYSIS_HPP
 #define QUBUS_AXIOM_ANALYSIS_HPP
 
-#include <qubus/pass_manager.hpp>
+#include <qubus/IR/pass_manager.hpp>
 
 #include <qubus/IR/expression.hpp>
 
@@ -86,7 +86,7 @@ class axiom_analysis_pass
 public:
     using result_type = axiom_analysis_result;
 
-    axiom_analysis_result run(const expression& root, analysis_manager& manager,
+    axiom_analysis_result run(const expression& root, expression_analysis_manager& manager,
                               pass_resource_manager& resource_manager) const;
 
     std::vector<analysis_id> required_analyses() const;

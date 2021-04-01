@@ -3,9 +3,16 @@
 namespace qubus
 {
 
+pass_resource_manager::pass_resource_manager()
+{
+    isl_ctx_ = std::make_unique<isl::context>();
+}
+
 isl::context& pass_resource_manager::get_isl_ctx()
 {
-    return isl_ctx_;
+    QUBUS_ASSERT(isl_ctx_, "Invalid object");
+
+    return *isl_ctx_;
 }
 
 template class analysis_pass_registry<function>;

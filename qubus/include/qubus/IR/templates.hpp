@@ -16,7 +16,7 @@ namespace qubus
 class type_template
 {
 public:
-    type instantiate(const std::vector<compile_time_value>& args);
+    type instantiate(const std::vector<compile_time_value>& args) const;
 
 private:
     std::vector<template_parameter> parameters_;
@@ -26,7 +26,7 @@ private:
 class function_template
 {
 public:
-    function instantiate(const std::vector<compile_time_value>& args);
+    function instantiate(const std::vector<compile_time_value>& args) const;
 
 private:
     std::vector<template_parameter> parameters_;

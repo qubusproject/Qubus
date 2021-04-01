@@ -14,13 +14,13 @@ type typeof_(const expression& expr);
 class type_inference_result
 {
 public:
-    explicit type_inference_result(assembly_inference_result& assembly_inference_,
+    explicit type_inference_result(const assembly_inference_result& assembly_inference_,
                                    pass_resource_manager& resource_manager_);
 
     type get_type(const expression& expr) const;
 
 private:
-    assembly_inference_result* m_assembly_inference_;
+    const assembly_inference_result* m_assembly_inference_;
     pass_resource_manager* m_resource_manager;
 };
 

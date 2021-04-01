@@ -1,12 +1,12 @@
 #ifndef QUBUS_VALUE_SET_ANALYSIS_HPP
 #define QUBUS_VALUE_SET_ANALYSIS_HPP
 
-#include <qubus/axiom_analysis.hpp>
-#include <qubus/task_invariants_analysis.hpp>
+#include <qubus/IR/axiom_analysis.hpp>
+#include <qubus/IR/task_invariants_analysis.hpp>
 
-#include <qubus/affine_constraints.hpp>
+#include <qubus/IR/affine_constraints.hpp>
 
-#include <qubus/pass_manager.hpp>
+#include <qubus/IR/pass_manager.hpp>
 
 #include <qubus/IR/expression.hpp>
 
@@ -67,7 +67,7 @@ class value_set_analysis_pass
 public:
     using result_type = value_set_analysis_result;
 
-    value_set_analysis_result run(const expression& root, analysis_manager& manager,
+    value_set_analysis_result run(const expression& root, expression_analysis_manager& manager,
                                   pass_resource_manager& resource_manager) const;
 
     std::vector<analysis_id> required_analyses() const;

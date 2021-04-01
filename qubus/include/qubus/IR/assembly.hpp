@@ -31,10 +31,20 @@ public:
         return m_type_table | boost::adaptors::map_values;
     }
 
+    [[nodiscard]] auto functions()
+    {
+        return m_function_table | boost::adaptors::map_values;
+    }
+
+    [[nodiscard]] auto types()
+    {
+        return m_type_table | boost::adaptors::map_values;
+    }
+
     [[nodiscard]] std::optional<type> lookup_type(std::string_view name) const;
 
     [[nodiscard]] std::optional<type>
-    instantiate_type_template(std::string_view name, const std::vector<compile_time_value>& args);
+    instantiate_type_template(std::string_view name, const std::vector<compile_time_value>& args) const;
 
     [[nodiscard]] type get_type_bool() const;
 
@@ -48,10 +58,10 @@ public:
 
     [[nodiscard]] type get_type_void() const;
 
-    [[nodiscard]] type get_type_integer_range(type value_type);
+    [[nodiscard]] type get_type_integer_range(type value_type) const;
 
-    [[nodiscard]] type get_type_array(type value_type, util::index_t rank);
-    [[nodiscard]] type get_type_array_slice(type value_type, util::index_t rank);
+    [[nodiscard]] type get_type_array(type value_type, util::index_t rank) const;
+    [[nodiscard]] type get_type_array_slice(type value_type, util::index_t rank) const;
 
 private:
     std::unordered_map<std::string, function> m_function_table;

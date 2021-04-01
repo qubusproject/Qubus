@@ -20,7 +20,7 @@ std::unique_ptr<expression> fold_impl(const expression& expr)
     using pattern::_;
 
     // TODO: Generalize this to arbitrary integer types.
-    if (typeof_(expr) != types::integer{})
+    if (!is_integer(typeof_(expr)))
         return clone(expr);
 
     pattern::variable<binary_op_tag> btag;

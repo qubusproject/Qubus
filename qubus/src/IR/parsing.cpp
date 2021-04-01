@@ -38,17 +38,9 @@ namespace ast
 struct basic_type;
 struct parameterized_type;
 
-struct type : x3::variant<x3::forward_ast<basic_type>, x3::forward_ast<parameterized_type>>
+struct type : x3::position_tagged
 {
-    // workaround for GCC <= 7
-    type(const type&) = default;
-    type(type&&) = default;
-
-    type& operator=(const type&) = default;
-    type& operator=(type&&) = default;
-
-    using base_type::base_type;
-    using base_type::operator=;
+    std::string name;
 };
 
 struct type_parameter : x3::variant<type, int>
@@ -62,17 +54,6 @@ struct type_parameter : x3::variant<type, int>
 
     using base_type::base_type;
     using base_type::operator=;
-};
-
-struct basic_type : x3::position_tagged
-{
-    std::string name;
-};
-
-struct parameterized_type : x3::position_tagged
-{
-    std::string name;
-    std::vector<type_parameter> parameters;
 };
 
 struct variable;
@@ -243,9 +224,8 @@ struct module : x3::position_tagged
 } // namespace
 } // namespace qubus
 
-BOOST_FUSION_ADAPT_STRUCT(qubus::ast::basic_type, (std::string, name));
-BOOST_FUSION_ADAPT_STRUCT(qubus::ast::parameterized_type,
-                          (std::string, name)(std::vector<qubus::ast::type_parameter>, parameters));
+BOOST_FUSION_ADAPT_STRUCT(qubus::ast::type, (std::string, name));
+
 BOOST_FUSION_ADAPT_STRUCT(qubus::ast::variable_declaration,
                           (std::string, name)(qubus::ast::type, datatype));
 
@@ -377,7 +357,7 @@ const auto integer_range_def = logical_expressions >> ':' >>
 const auto type_parameter = type | x3::long_;
 const auto basic_type_def = id;
 const auto parameterized_type_def = id >> ('{' > -(type_parameter % ',') > '}');
-const auto type_def = parameterized_type | basic_type;
+const auto type_def = x3::raw[parameterized_type | basic_type];
 
 const auto variable_declaration_def = id >> ("::" > type);
 
@@ -452,83 +432,12 @@ BOOST_SPIRIT_DEFINE(id, module, definition, function, expression_block, user_def
                     integer_range, let_expr, function_call);
 } // namespace grammar
 
-class type_analyzer
-{
-public:
-    using result_type = type;
-
-    result_type operator()(const ast::parameterized_type& pt) const
-    {
-        if (pt.name == "Array")
-        {
-            if (pt.parameters.size() != 2)
-                throw parsing_error("Invalid number of type parameters.");
-
-            auto value_type = boost::get<ast::type>(&pt.parameters[0]);
-            auto rank = boost::get<int>(&pt.parameters[1]);
-
-            if (value_type && rank)
-            {
-                return types::array(value_type->apply_visitor(*this), *rank);
-            }
-            else
-            {
-                throw parsing_error("Invalid parameters type.");
-            }
-        }
-        else if (pt.name == "Complex")
-        {
-            if (pt.parameters.size() != 1)
-                throw parsing_error("Invalid number of type parameters.");
-
-            auto value_type = boost::get<ast::type>(&pt.parameters[0]);
-
-            if (value_type)
-            {
-                return types::complex(value_type->apply_visitor(*this));
-            }
-            else
-            {
-                throw parsing_error("Invalid parameters type.");
-            }
-        }
-        else
-        {
-            throw parsing_error("Unknown type.");
-        }
-    }
-
-    result_type operator()(const ast::basic_type& bt) const
-    {
-        if (bt.name == "Int")
-        {
-            return types::integer();
-        }
-        else if (bt.name == "Double")
-        {
-            return types::double_();
-        }
-        else if (bt.name == "Float")
-        {
-            return types::float_();
-        }
-        else if (bt.name == "Bool")
-        {
-            return types::bool_();
-        }
-        else
-        {
-            throw parsing_error("Unknown type.");
-        }
-    }
-};
-
 class symbol_scope
 {
 public:
     std::shared_ptr<const variable_declaration> create_variable(const std::string& name, const ast::type& datatype)
     {
-        auto ir_datatype = datatype.apply_visitor(type_analyzer());
+        auto ir_datatype = create_symbolic_type(datatype.name);
 
         auto var = std::make_shared<variable_declaration>(name, std::move(ir_datatype));
 
@@ -1010,16 +919,17 @@ public:
     {
         QUBUS_ASSERT(mod_ != nullptr, "definition_analyzer has not been initialized.");
 
-        std::vector<types::struct_::member> members;
+        std::vector<property> properties;
 
         for (const auto& member : s.members)
         {
-            auto datatype = member.datatype.apply_visitor(type_analyzer());
+            auto datatype = create_symbolic_type(member.datatype.name);
 
-            members.emplace_back(std::move(datatype), member.name);
+            properties.emplace_back(std::move(datatype), member.name);
         }
 
         types::struct_ ss(s.name, std::move(members), {});
+        object_type obj_type(object_type::object_kind::concrete, s.name, std::move(properties), {});
 
         mod_->add_type(std::move(ss));
     }

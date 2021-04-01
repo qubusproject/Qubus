@@ -139,7 +139,7 @@ public:
                       std::vector<std::shared_ptr<const variable_declaration>> params,
                       std::shared_ptr<const variable_declaration> result,
                       std::unique_ptr<expression> body);
-    void add_type(object_type user_defined_type);
+    void add_type(type new_type);
 
     template <typename Range>
     void add_types(const Range& types)

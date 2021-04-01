@@ -202,7 +202,7 @@ type typeof_(const expression& expr, const assembly& active_assembly)
 }
 } // namespace
 
-type_inference_result::type_inference_result(assembly_inference_result& assembly_inference_,
+type_inference_result::type_inference_result(const assembly_inference_result& assembly_inference_,
                                              pass_resource_manager& resource_manager_)
 : m_assembly_inference_(&assembly_inference_), m_resource_manager(&resource_manager_)
 {

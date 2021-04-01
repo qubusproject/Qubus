@@ -103,6 +103,9 @@ public:
     }
 };
 
+bool is_integer(const type& type);
+bool is_integer(const object_type& type);
+
 //type sparse_tensor(type value_type);
 } // namespace qubus
 

@@ -1,4 +1,4 @@
-#include <qubus/value_set_analysis.hpp>
+#include <qubus/IR/value_set_analysis.hpp>
 
 #include <qubus/isl/map.hpp>
 
@@ -103,7 +103,7 @@ value_set value_set_analysis_result::determine_value_set(const expression& expr,
 }
 
 value_set_analysis_result
-value_set_analysis_pass::run(const expression& root, analysis_manager& manager,
+value_set_analysis_pass::run(const expression& root, expression_analysis_manager& manager,
                              pass_resource_manager& resource_manager) const
 {
     return value_set_analysis_result(manager.get_analysis<axiom_analysis_pass>(root),
@@ -116,5 +116,5 @@ std::vector<analysis_id> value_set_analysis_pass::required_analyses() const
     return {get_analysis_id<axiom_analysis_pass>()};
 }
 
-QUBUS_REGISTER_ANALYSIS_PASS(value_set_analysis_pass);
+QUBUS_REGISTER_EXPRESSION_ANALYSIS_PASS(value_set_analysis_pass);
 }

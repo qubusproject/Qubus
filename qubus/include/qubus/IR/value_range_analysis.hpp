@@ -39,7 +39,7 @@ class value_range_analysis_pass
 public:
     using result_type = value_range_analysis_result;
 
-    value_range_analysis_result run(const expression& root, analysis_manager& manager,
+    value_range_analysis_result run(const expression& root, expression_analysis_manager& manager,
                                     pass_resource_manager& resource_manager) const;
 
     std::vector<analysis_id> required_analyses() const;
